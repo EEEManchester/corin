@@ -1,0 +1,133 @@
+#!/usr/bin/env python
+
+## Function for manipulating the body pose of the hexapod with legs
+## fixed to the spot. Initial stance is the nominal stance
+import rospy
+import sys
+sys.path.insert(0, '/home/wilson/catkin_ws/src/mcorin/mcorin_control/py_script/library')
+# sys.dont_write_bytecode = True
+
+import numpy as np
+import math
+
+import controller_walking as Control_Framework
+import path_generator as Pathgenerator
+from constant import *
+
+class control_interface:
+	def __init__(self):
+		self.x_com = np.array([.0,.0,BODY_HEIGHT])
+		self.w_com = np.array([.0,.0,.0])
+		self.mode  = 1 								# 1: pose, 2: walk 
+		self.reset_flag = False
+
+		self.reset_parameters()
+
+	def reset_variables(self):
+		self.x_com = np.array([.0,.0,BODY_HEIGHT])
+		self.w_com = np.array([.0,.0,.0])
+
+	def reset_parameters(self):
+		rospy.set_param('stop_flag', False)		# emergency stop (working)
+		rospy.set_param('reset',False)			# move to ground position with legs up (working)
+		rospy.set_param('gaitdemo',False)		# to implement gait demo later
+		rospy.set_param('bodypose', False)		# perform the bodypose movement (working)
+		rospy.set_param('walkforward', False)	# walk forward ~0. 4 metres (working)
+		rospy.set_param('walkright', False)		# walk right ~0.4 metres (working)
+		rospy.set_param('walkback', False)		# Walk backwards ~0.4 metres (Working)
+		rospy.set_param('walkleft', False)		# walk left ~0.4 metres (working)
+
+	#corin performs bodypose
+	def Bodypose(self):
+		self.reset_variables()
+		self.mode = 1
+
+		## Stack via points to array
+		self.x_com = np.vstack((self.x_com,np.array([0.03, -0.04, BODY_HEIGHT])))
+		self.w_com = np.vstack((self.w_com,np.array([-0.22, -0.075, 0.])))
+		self.x_com = np.vstack((self.x_com,np.array([0.03,  0.04, BODY_HEIGHT])))
+		self.w_com = np.vstack((self.w_com,np.array([0.22, -0.075, 0.])))
+		# x_com = np.vstack((x_com,np.array([-0.03, 0.04, BODY_HEIGHT])))
+		# w_com = np.vstack((w_com,np.array([0.22,  0.075, 0.])))
+		# x_com = np.vstack((x_com,np.array([-0.03, -0.04, BODY_HEIGHT])))
+		# w_com = np.vstack((w_com,np.array([-0.22,  0.075, 0.])))
+		# x_com = np.vstack((x_com,np.array([0.00, 0.00, BODY_HEIGHT])))
+		# w_com = np.vstack((w_com,np.array([0.00, 0.00, -0.2])))
+		# x_com = np.vstack((x_com,np.array([0.00, 0.00, 0.16])))
+		# w_com = np.vstack((w_com,np.array([0.,0.,0.12])))
+		self.x_com = np.vstack((self.x_com,np.array([0.,  0.0, BODY_HEIGHT])))
+		self.w_com = np.vstack((self.w_com,np.array([0.,  0.0, 0.])))
+
+	def WalkForward(self):
+		self.reset_variables()
+		self.mode = 2
+
+		# self.x_com = np.vstack((self.x_com,np.array([0.2, 0.0, BODY_HEIGHT])))
+		# self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
+		self.x_com = np.vstack((self.x_com,np.array([0.2, 0.0, BODY_HEIGHT])))
+		self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
+
+	def WalkBack(self):
+		self.reset_variables()
+		self.mode = 2
+
+		self.x_com = np.vstack((self.x_com,np.array([-0.2, 0.0, BODY_HEIGHT])))
+		self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
+		
+	def WalkRight(self):
+		self.reset_variables()
+		self.mode = 2
+
+		self.x_com = np.vstack((self.x_com,np.array([0.0, -0.2, BODY_HEIGHT])))
+		self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
+		# self.x_com = np.vstack((self.x_com,np.array([0.0, 0., BODY_HEIGHT])))
+		# self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
+
+	def WalkLeft(self):
+		self.reset_variables()
+		self.mode = 2
+		# x_com = np.vstack((x_com,np.array([0.0, -0.2, BODY_HEIGHT])))
+		# w_com = np.vstack((w_com,np.array([0.,0.,0.])))
+		self.x_com = np.vstack((self.x_com,np.array([0.0, 0.2, BODY_HEIGHT])))
+		self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))	
+
+	def Reset(self):
+		self.reset_variables()
+		self.mode = 3
+
+		# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, -0.03])))
+		# self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))	
+		self.reset_flag = True
+
+	def action_to_take(self):
+		if (rospy.get_param('bodypose')==True):
+			rospy.set_param('bodypose',False)
+			self.Bodypose()
+			return (self.x_com, self.w_com, self.mode)
+
+		elif (rospy.get_param('walkforward')==True):
+			rospy.set_param('walkforward',False)
+			self.WalkForward()
+			return (self.x_com, self.w_com, self.mode)
+
+		elif (rospy.get_param('walkback')==True):	#command prompt: rosparam set walkback True
+			rospy.set_param('walkback',False)
+			self.WalkBack()
+			return (self.x_com, self.w_com, self.mode)
+
+		elif (rospy.get_param('walkleft')==True): 	#command: set rosparam walkleft True
+			rospy.set_param('walkleft',False)
+			self.WalkLeft()
+			return (self.x_com, self.w_com, self.mode)
+
+		elif (rospy.get_param('walkright')==True):
+			rospy.set_param('walkright',False)
+			self.WalkRight()
+			return (self.x_com, self.w_com, self.mode)
+
+		elif (rospy.get_param('reset')==True):	# Command Prompt: rosparam set reset True
+			rospy.set_param('reset',False)
+			self.Reset()
+			return (self.x_com, self.w_com, self.mode)
+		else:
+			return None
