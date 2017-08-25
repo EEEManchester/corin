@@ -1,0 +1,4 @@
+int64 req
+---
+sensor_msgs/Imu ImuData
+sensor_msgs/MagneticField MagField
