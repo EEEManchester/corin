@@ -147,3 +147,4 @@ a = np.array([1,2,3])
 b = np.array([5,5,5])
 
 c = np.dot(a,b)
+

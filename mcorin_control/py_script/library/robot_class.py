@@ -44,7 +44,7 @@ class RobotState:
 		self.x_spline = JointTrajectoryPoint() 		# CoM trajectory
 		self.w_spline = JointTrajectoryPoint() 		# Base angular trajectory
 
-		self.world_X_base = FrameClass() 			# FrameClass for world to base transformation
+		self.world_X_base = FrameClass('twist') 			# FrameClass for world to base transformation
 		self.bspline = Bspline.SplineGenerator() 	# bSplineClass for spline generation
 
 		self.pose = np.zeros((3,1))								# euler angle rotation x,y,z
@@ -60,6 +60,9 @@ class RobotState:
 		self.reset_state  = True 			# robot state: reset whole of robot state
 
 		self.support_mode = False 			# puts robot into support mode
+
+		self.cstate = [None]*6 			# foot contact state
+		self.cforce = [None]*18			# foot contact forces
 
 		self._initialise()
 
@@ -81,7 +84,7 @@ class RobotState:
 		# update leg states and check if boundary exceeded
 		for i in range(0,self.active_legs):
 
-			bstate = self.Leg[i].updateState(self.qc.position[offset+i*3:offset+(i*3)+3], self.reset_state)
+			bstate = self.Leg[i].updateState(self.qc.position[offset+i*3:offset+(i*3)+3], self.cstate[i], self.cforce[i*3:(i*3)+3], self.reset_state)
 			if (bstate==True and self.gaitgen.cs[i]==0 and self.support_mode==False):
 				self.suspend = True
 				print 'suspended'
@@ -141,11 +144,17 @@ class TwistClass:
 		self.wv = np.zeros((3,1))
 		self.wa = np.zeros((3,1))
 
+
 class FrameClass:
-	def __init__(self):
-		self.cs = TwistClass()
-		self.ds = TwistClass()
-		self.es = TwistClass()
+	def __init__(self, stype):
+		if (stype == 'twist'):
+			self.cs = TwistClass()
+			self.ds = TwistClass()
+			self.es = TwistClass()
+		elif (stype == 'force'):
+			self.cs = np.zeros((3,1))
+			self.ds = np.zeros((3,1))
+			self.es = np.zeros((3,1))
 
 class LegClass:
 	#common base class for Leg
@@ -165,10 +174,15 @@ class LegClass:
 
 		self.feedback_state	= 0 				# 0 = idle, 1 = command received (executing), 2 = command completed 
 		
+		self.cstate = 0 	# foot contact state: 1 or 0
+
 		# transformation frames
-		self.hip_X_ee 	= FrameClass()
-		self.base_X_ee 	= FrameClass()
+		self.hip_X_ee 	= FrameClass('twist')
+		self.base_X_ee 	= FrameClass('twist')
 		
+		self.hip_XF_ee 	= FrameClass('force')
+		self.base_XF_ee	= FrameClass('force')
+
 		self.tf_base_X_hip 	= tf.rotation_matrix(TF_base_X_hip[self.number],Z_AXIS)[:3, :3]
 
 		self.AEP = np.zeros((3,1)) 		# Anterior Extreme Position for leg wrt base frame
@@ -202,18 +216,24 @@ class LegClass:
 		return base_X_ee_xp
 
 	## Update functions
-	def updateState(self, jointState, resetState):
+	def updateState(self, jointState, cState, cForce, resetState):
 
+		## ********************************	Joint Angle  ******************************** ##
 		## Error Compensation
 		q_compensated = (jointState[0], jointState[1]+QCOMPENSATION, jointState[2]) 		# offset q2 by 0.01 - gravity
 
 		## current
 		self.hip_X_ee.cs.xp  = self.KL.FK(q_compensated)
-		self.base_X_ee.cs.xp = self.hip_X_base_ee(self.hip_X_ee.cs.xp)
+		self.base_X_ee.cs.xp = self.hip_X_base_ee(self.hip_X_ee.cs.xp)		
 
 		## error
 		self.hip_X_ee.es.xp  = self.hip_X_ee.ds.xp  - self.hip_X_ee.cs.xp 
 		self.base_X_ee.es.xp = self.base_X_ee.ds.xp - self.base_X_ee.cs.xp
+
+		## ********************************	Contact Force  ******************************** ##
+		## Foot state & force
+		self.cstate = cState
+		self.hip_XF_ee.cs = np.reshape(np.array(cForce),(3,1))
 
 		## check work envelope
 		bound_exceed = self.boundary_limit()

@@ -28,6 +28,8 @@ from std_msgs.msg import Float64
 from sensor_msgs.msg import Joy
 from sensor_msgs.msg import Imu
 from sensor_msgs.msg import JointState
+from std_msgs.msg import ByteMultiArray 	# foot contact state
+from std_msgs.msg import Float32MultiArray	# foot contact force
 
 import transformations as tf
 import pspline_generator as Pspline
@@ -95,12 +97,18 @@ class CorinManager:
 	def imu_callback(self, msg):
 		self.Robot.imu = msg
 
+	def contact_state_callback(self, msg):
+		self.Robot.cstate = msg.data
+
+	def contact_force_callback(self, msg):
+		self.Robot.cforce = msg.data
+
 	def _start(self):
 		#######################################
 		## initialise publishers/subscribers ##
 		#######################################
 
-		## Initialise publishers
+		##***************** PUBLISHERS ***************##
 		self.trajectory_pub = rospy.Publisher(self.robot_ns + '/setpoint', JointTrajectoryPoint, queue_size=1)
 		self.phase_pub 		= rospy.Publisher(self.robot_ns + '/phase', JointTrajectoryPoint, queue_size=1)
 		self.qpub = {}
@@ -119,12 +127,14 @@ class CorinManager:
 				
 		else:
 			# shutdown if wrong hardware selected
-			rospy.logerr("Wrong Hardware Selected!")
-			rospy.signal_shutdown("Wrong Hardware Selected - shutting down")
+			rospy.logerr("Invalid Hardware Interface Selected!")
+			rospy.signal_shutdown("Invalid Hardware Interface Selected - shutting down")
 
-		## Initialise subscribers
-		self.joint_sub_ = rospy.Subscriber(self.robot_ns + '/joint_states', JointState, self.joint_state_callback, queue_size=5)
-		# self.imu_sub_	= rospy.Subscriber(self.robot_ns + '/imu/trunk/data', Imu, self.imu_callback, queue_size=1)
+		##***************** SUBSCRIBERS ***************##
+		self.joint_sub_  = rospy.Subscriber(self.robot_ns + '/joint_states', JointState, self.joint_state_callback, queue_size=5)
+		# self.imu_sub_	 = rospy.Subscriber(self.robot_ns + '/imu/trunk/data', Imu, self.imu_callback, queue_size=1)
+		self.cstate_sub_ = rospy.Subscriber(self.robot_ns + '/contact_state', ByteMultiArray, self.contact_state_callback, queue_size=1)
+		self.cforce_sub_ = rospy.Subscriber(self.robot_ns + '/contact_force', Float32MultiArray, self.contact_force_callback, queue_size=1) 
 
 		if (self.control_mode == 0): 	# manual control mode
 			self.connex_sub = rospy.Subscriber('/spacenav/joy', Joy, self.connex_callback, queue_size=1 )
@@ -554,6 +564,7 @@ class CorinManager:
 
 		else:
 			print 'standy'
-
+			# print self.Robot.cforce[0], self.Robot.cforce[1], self.Robot.cforce[2]
+			# print self.Robot.Leg[0].hip_XF_ee.cs
 		rospy.sleep(0.5)
 		
