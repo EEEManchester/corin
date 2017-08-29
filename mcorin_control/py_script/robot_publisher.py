@@ -17,11 +17,11 @@ class Node_class:
 		self.freq = 80
 		self.rate = rospy.Rate(self.freq)							# Sets transmit frequency
 		self.broadcaster = tf.TransformBroadcaster()
-		self.jointState = JointState()
+		self.jointState  = JointState()
 
 	def start(self):
-		self.imu_sub = rospy.Subscriber("/imu/data", Imu, self.imu_callback)
-		self.joint_pub = rospy.Publisher("joint_states", JointState, queue_size=1)
+		self.imu_sub 	= rospy.Subscriber("/imu/data", Imu, self.imu_callback)
+		self.joint_sub 	= rospy.Subscriber("/corin/joint_states", JointState, self.joint_state_callback)
 
 		## Synchronize topics
 		# imu_sub = message_filters.Subscriber('/imu_data', Imu)
@@ -30,20 +30,22 @@ class Node_class:
 		# ts = message_filters.TimeSynchronizer([imu_sub, joint_sub], 10)
 		# ts.registerCallback(n.sync_callback)
 
+	def joint_state_callback(self,joint_state):
+		self.jointState = joint_state
+
 	def imu_callback(self, imu):
 	    print imu.orientation.x, imu.orientation.y, imu.orientation.z 
 	    self.broadcaster.sendTransform( (0.0,0.0,0.5), tf.transformations.quaternion_from_euler(imu.orientation.x, imu.orientation.y, imu.orientation.z),
 	    							rospy.Time.now(), "trunk", "base_link") ;
-	    # self.broadcaster.sendTransform( (0.0,0.0,0.5), tf.transformations.quaternion_from_euler(imu.orientation.x, imu.orientation.y, imu.orientation.z),
-	    # 							rospy.Time.now(), "body", "body_dummy") ;
+	    
 
-	def sync_callback(self, imu, joint_state):
-		# broadcast odometry transform (XYZ, RPY)
-		broadcaster.sendTransform( (0.0,0.0,0.5), tf.transformations.quaternion_from_euler(imu.orientation.x, imu.orientation.y, imu.orientation.z),
-	    							rospy.Time.now(), "body", "body_dummy") ;
-		# broadcast joint transformation
-		self.jointState = joint_state
-		self.joint_pub.publish(self.jointState)
+	# def sync_callback(self, imu, joint_state):
+	# 	# broadcast odometry transform (XYZ, RPY)
+	# 	broadcaster.sendTransform( (0.0,0.0,0.5), tf.transformations.quaternion_from_euler(imu.orientation.x, imu.orientation.y, imu.orientation.z),
+	#     							rospy.Time.now(), "body", "body_dummy") ;
+	# 	# broadcast joint transformation
+	# 	self.jointState = joint_state
+	# 	self.joint_pub.publish(self.jointState)
 
 if __name__ == "__main__":
 	n = Node_class()

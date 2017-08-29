@@ -4,34 +4,31 @@
 ## Transformation with respect to SCS (origin is joint 1 frame)
 import sys; sys.dont_write_bytecode = True
 import numpy as np
-from constant import *
 from scipy import linalg
 
-l1 = LL_LENG_1
-l2 = LL_LENG_2
-l3 = LL_LENG_3
-ld = LL_LENG_d
+import transformations as tf
+from constant import *
 
 class corin_kinematics():
 	
-	def __init__(self, limb):
-		self.link	= [l1, l2, l3]
+	def __init__(self):
+		self.link	= [L1, L2, L3]
 
 	def jacobian(self, q=None):
 
 		try:
 			q1 = q.item(0); q2 = q.item(1); q3 = q.item(2)
+			# print 'q: ', q1, q2, q3
+			Jv = np.matrix([	[-np.sin(q1)*(L3*np.cos(q2+q3)+np.cos(q2)*L2+L1),     -np.cos(q1)*(L3*np.sin(q2+q3)+np.sin(q2)*L2),     -np.sin(q2+q3)*np.cos(q1)*L3 ],
+								[ np.cos(q1)*(L3*np.cos(q2+q3)+np.cos(q2)*L2+L1),     -np.sin(q1)*(L3*np.sin(q2+q3)+np.sin(q2)*L2),     -np.sin(q2+q3)*np.sin(q1)*L3 ],
+								[ 0,                                          		   L3*np.cos(q2+q3)+np.cos(q2)*L2,                	 L3*np.cos(q2+q3)]			])
 			
-			Jv = np.matrix([ [-np.sin(q1)*(l3*np.cos(q2 + q3) - ld*np.sin(q2 + q3) + l2*np.cos(q2)), -np.cos(q1)*(ld*np.cos(q2 + q3) + l3*np.sin(q2 + q3) + l2*np.sin(q2)), -np.cos(q1)*(ld*np.cos(q2 + q3) + l3*np.sin(q2 + q3))],
-							 [ np.cos(q1)*(l3*np.cos(q2 + q3) - ld*np.sin(q2 + q3) + l2*np.cos(q2)), -np.sin(q1)*(ld*np.cos(q2 + q3) + l3*np.sin(q2 + q3) + l2*np.sin(q2)), -np.sin(q1)*(ld*np.cos(q2 + q3) + l3*np.sin(q2 + q3))],
-							 [																	 0, 	          l3*np.cos(q2 + q3) - ld*np.sin(q2 + q3) + l2*np.cos(q2),            	l3*np.cos(q2 + q3) - ld*np.sin(q2 + q3)] ])
-
-			# print 'Jv completed'
 			# print Jv
 			return Jv 
 		except:
 			return None
 		
+
 	def jacobian_transpose(self, q=None):
 		return self.jacobian(q).transpose()
 
@@ -40,9 +37,9 @@ class corin_kinematics():
 		try:
 			q1 = q[0]; q2 = q[1]; q3 = q[2]
 
-			x = np.cos(q1)*(l3*np.cos(q2 + q3) - ld*np.sin(q2 + q3) + l2*np.cos(q2))
-			y = np.sin(q1)*(l3*np.cos(q2 + q3) - ld*np.sin(q2 + q3) + l2*np.cos(q2))	
-			z = l1 + ld*np.cos(q2 + q3) + l3*np.sin(q2 + q3) + l2*np.sin(q2)
+			x = np.cos(q1) * (L3*np.cos(q2+q3) + np.cos(q2) * L2 + L1)
+			y = np.sin(q1) * (L3*np.cos(q2+q3) + np.cos(q2) * L2 + L1)
+			z = L3*np.sin(q2+q3) + np.sin(q2) * L2
 
 			return np.array([[x],[y],[z]])
 		except Exception, e:
@@ -50,33 +47,40 @@ class corin_kinematics():
 			pass
 
 	def IK(self, p=None):
-		p = p.flatten()
 
 		try:
 			x = p[0];	y = p[1];	z = p[2];
-			
+
 			q1 = np.arctan2(y,x)
 
-			l3p = np.sqrt(l3**2 + ld**2)    	#projected hypoteneus from link 3-temp. removes offset
-			c = np.arctan2(l3,ld)
-			a = np.sqrt(x**2 + y**2)   		#actual distance of joint 2 to EE
-			h = np.sqrt(a**2 + (l1-z)**2)     #hypoteneus from origin to EE
-			
-			alpha = np.real(np.arccos( np.complex((l2**2 + l3p**2 - h**2)/(2*l2*l3p) )))
-			q3 = c + alpha - 3*np.pi/2
+			# Adding the square of element (1,4) & (2,4) in inv(H01)*Psym = T12*T23
+			c3  = ( (x*np.cos(q1) + y*np.sin(q1) - L1)**2 + z**2 -L3**2-L2**2 )/(2*L2*L3);
+			s3  = np.sqrt(1.0-c3**2);
+			q3t = [np.arctan2(s3,c3), np.arctan2(-s3,c3)];
 
-			omega = np.arctan2(z-l1,a)
-			beta = np.real(np.arccos(np.complex((h**2 + l2**2 - l3p**2)/(2*h*l2))))
-			q2 = beta + omega
+			if (q3t[0] < 0):
+				q3 = q3t[0];
+			else:
+				q3 = q3t[1];
 
+			# Dividing the element (1,4) & (2,4) in inv(H01)*Psym = T12*T23
+			xp = x*np.cos(q1) + np.sin(q1)*y - L1; 
+			yp = z;
+			q2t = [np.arctan2(yp,xp) - np.arctan2(L3*np.sin(q3), L2+L3*np.cos(q3)), np.arctan2(yp,xp) - np.arctan2(L3*np.sin(q3), L2+L3*np.cos(q3))];
+
+			if (q2t[0] < 0):
+				q2 = q2t[0];
+			else:
+				q2 = q2t[1];
+			#return q2
 			return np.array([q1, q2, q3])
 		except Exception, e:
 			print 'IK: ', e
 			pass
 
 	def singularity_check(self, q=None):
-		rank = np.linalg.matrix_rank(self.jacobian(q))
 		
+		rank = np.linalg.matrix_rank(self.jacobian(q))
 		if (rank < 3):
 			return 1
 		else:
@@ -96,21 +100,21 @@ class corin_kinematics():
 			
 			qd1 = qd.item(0); qd2 = qd.item(1); qd3 = qd.item(2);
 
-			Ja11 = -np.cos(q2)*np.cos(q1)*l2*qd1+np.sin(q2)*np.sin(q1)*l2*qd2-np.cos(q2+q3)*np.cos(q1)*l3*qd1+np.sin(q2+q3)*np.sin(q1)*l3*qd2+qd3*np.sin(q2+q3)*np.sin(q1)*l3-np.cos(q1)*l1*qd1;
-			Ja12 = -np.cos(q2)*np.cos(q1)*l2*qd2+np.sin(q2)*np.sin(q1)*l2*qd1-qd2*np.cos(q1)*l3*np.cos(q2+q3)-qd3*np.cos(q1)*l3*np.cos(q2+q3)+qd1*np.sin(q2+q3)*np.sin(q1)*l3;
-			Ja13 = -l3*(np.cos(q2+q3)*np.cos(q1)*qd2+np.cos(q2+q3)*np.cos(q1)*qd3-np.sin(q2+q3)*np.sin(q1)*qd1);
-			Ja21 = -np.cos(q2)*np.sin(q1)*l2*qd1-np.sin(q2)*np.cos(q1)*l2*qd2-np.cos(q2+q3)*np.sin(q1)*l3*qd1-np.sin(q2+q3)*np.cos(q1)*l3*qd2-qd3*np.sin(q2+q3)*np.cos(q1)*l3-np.sin(q1)*l1*qd1;
-			Ja22 = -np.cos(q2)*np.sin(q1)*l2*qd2-np.sin(q2)*np.cos(q1)*l2*qd1-qd2*np.sin(q1)*l3*np.cos(q2+q3)-qd3*np.sin(q1)*l3*np.cos(q2+q3)-qd1*np.sin(q2+q3)*np.cos(q1)*l3;
-			Ja23 = -l3*(np.cos(q2+q3)*np.sin(q1)*qd2+np.cos(q2+q3)*np.sin(q1)*qd3+np.sin(q2+q3)*np.cos(q1)*qd1);
+			Ja11 = -np.cos(q2)*np.cos(q1)*L2*qd1+np.sin(q2)*np.sin(q1)*L2*qd2-np.cos(q2+q3)*np.cos(q1)*L3*qd1+np.sin(q2+q3)*np.sin(q1)*L3*qd2+qd3*np.sin(q2+q3)*np.sin(q1)*L3-np.cos(q1)*L1*qd1;
+			Ja12 = -np.cos(q2)*np.cos(q1)*L2*qd2+np.sin(q2)*np.sin(q1)*L2*qd1-qd2*np.cos(q1)*L3*np.cos(q2+q3)-qd3*np.cos(q1)*L3*np.cos(q2+q3)+qd1*np.sin(q2+q3)*np.sin(q1)*L3;
+			Ja13 = -L3*(np.cos(q2+q3)*np.cos(q1)*qd2+np.cos(q2+q3)*np.cos(q1)*qd3-np.sin(q2+q3)*np.sin(q1)*qd1);
+			Ja21 = -np.cos(q2)*np.sin(q1)*L2*qd1-np.sin(q2)*np.cos(q1)*L2*qd2-np.cos(q2+q3)*np.sin(q1)*L3*qd1-np.sin(q2+q3)*np.cos(q1)*L3*qd2-qd3*np.sin(q2+q3)*np.cos(q1)*L3-np.sin(q1)*L1*qd1;
+			Ja22 = -np.cos(q2)*np.sin(q1)*L2*qd2-np.sin(q2)*np.cos(q1)*L2*qd1-qd2*np.sin(q1)*L3*np.cos(q2+q3)-qd3*np.sin(q1)*L3*np.cos(q2+q3)-qd1*np.sin(q2+q3)*np.cos(q1)*L3;
+			Ja23 = -L3*(np.cos(q2+q3)*np.sin(q1)*qd2+np.cos(q2+q3)*np.sin(q1)*qd3+np.sin(q2+q3)*np.cos(q1)*qd1);
 			Ja31 = 0;
-			Ja32 = -np.sin(q2)*l2*qd2-qd2*l3*np.sin(q2+q3)-qd3*l3*np.sin(q2+q3);
-			Ja33 = -np.sin(q2+q3)*l3*(qd2+qd3);    
+			Ja32 = -np.sin(q2)*L2*qd2-qd2*L3*np.sin(q2+q3)-qd3*L3*np.sin(q2+q3);
+			Ja33 = -np.sin(q2+q3)*L3*(qd2+qd3);    
 
 			Ja = np.matrix([ [Ja11, Ja12, Ja13], [Ja21, Ja22, Ja23], [Ja31, Ja32, Ja33] ])  
 			
 			qdd = linalg.solve(Jv,(acc - Ja*qd))
 
-			return qd.flatten(), qdd.flatten()
+			return np.insert(np.array(qd), 0, 0), np.insert(np.array(qdd), 0, 0)
 
 		except Exception, e:
 			print 'Error in Jv: ', e
@@ -169,19 +173,33 @@ class corin_kinematics():
 		# return base_X_nom
 		return base_hip_X_nom
 
-# cp  = np.array([ 0.214,-0.05,-0.0851 ])
-# cp  = np.array([ 0.214,0.0,-0.0771 ])
-# CK = corin_kinematics(1)
-# cd = CK.IK(cp)
-# qp = cd.transpose()
-# print qp
-# print CK.FK(qp).transpose()
-# print CK.singularity_check(qp)
 
+## Test values
 
+CK = corin_kinematics()
 
-# cpost = np.matrix([0.214,-0.05,-0.0851])
-# # STANCE_WIDTH, 0.+STEP_STROKE/2., 
-# jta = joint_angle(cpost)
-# print jta #*180/np.pi
-# print forwardkinematics(jta)
+qsurface = np.array([0.,-np.pi/2,0.])
+base_X_surface = 0.29
+bodypose = np.array([0.,0.,BODY_HEIGHT, 0.,0.,0.])
+
+CK.nominal_stance(bodypose, base_X_surface, qsurface)
+
+# print bodypose[3:7]
+qs = [0, 0, 0.013, -1.695]
+# v  = np.array([ 0, -0.05, 0.07318 ])
+# a  = np.array([ 0, 0, 0 ])
+
+# cd = CK.FK(qs)
+# print cd
+# qp = CK.IK(cd)
+# print cd
+# if (not CK.singularity_check(qp)):
+# 	qd,qdd = CK.joint_speed(qp, v, a)
+	
+
+#[1, 2, 4, 2, 3, 4]
+	#print qd, qdd
+# c_data = forwardkinematics(qs)
+# ang = inversekinematic(c_data)
+
+# task_to_joint_space(c_data)

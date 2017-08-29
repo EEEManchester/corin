@@ -125,7 +125,7 @@ class control_interface:
 			self.WalkRight()
 			return (self.x_com, self.w_com, self.mode)
 
-		elif (rospy.get_param('reset')==True):	# Command Prompt: rosparam set reset True
+		elif (rospy.get_param('reset')==True):		# Command Prompt: rosparam set reset True
 			rospy.set_param('reset',False)
 			self.Reset()
 			return (self.x_com, self.w_com, self.mode)
