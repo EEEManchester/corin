@@ -19,6 +19,4 @@
     <remap from="/joint_states" to="/mcorin/joint_states" />
   </node> -->
 
-  <node name="joint_state_service" pkg="mcorin_control" type="jointStateServer" output="screen" />
-
 </launch>

@@ -154,8 +154,8 @@ class LegClass:
 		self.Joint 	= Joint_class(self.number)
 
 		# kinematic library functions
-		self.KL 	= kdl.corin_kinematics(self.number)
-		# self.DL 	= kdl.corin_dynamics(self.number)
+		self.KL 	= kdl.corin_kinematics()
+		# self.DL 	= kdl.corin_dynamics()
 
 		# transfer phase variables
 		self.goal 	= FollowJointTrajectoryGoal()

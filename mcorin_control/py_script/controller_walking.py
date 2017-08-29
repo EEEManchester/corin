@@ -74,7 +74,7 @@ class CorinManager:
 		self.planner  = Pathgenerator.PathGenerator() 	# trajectory following
 
 		self.control_mode = 1 				# control mode: 1-autonomous, 0-manual control
-		self.hardware = 'real' 				# options: 'simulation' or 'real'
+		self.hardware = 'simulation'		# options: 'simulation' or 'real'
 
 		self.point = JointTrajectoryPoint()
 		self.point.time_from_start = rospy.Duration(TRAC_INTERVAL)
@@ -122,7 +122,7 @@ class CorinManager:
 			rospy.logerr("Wrong Hardware Selected!")
 			rospy.signal_shutdown("Wrong Hardware Selected - shutting down")
 
-		## initialise subscribers
+		## Initialise subscribers
 		self.joint_sub_ = rospy.Subscriber(self.robot_ns + '/joint_states', JointState, self.joint_state_callback, queue_size=5)
 		# self.imu_sub_	= rospy.Subscriber(self.robot_ns + '/imu/trunk/data', Imu, self.imu_callback, queue_size=1)
 
@@ -158,11 +158,12 @@ class CorinManager:
 		if (self.on_start == False):
 			self._air_suspend_legs() 	# moves leg into air
 			self.on_start = True
+
 		rospy.sleep(0.5)
 		# get current state
-		self.Robot.updateState()
-		self.Robot.updateState()
-		self.Robot.updateState()
+		for i in range(0,3):
+			self.Robot.updateState()
+		
 		print 'moving to nominal stance'
 		
 		# generate spline to standup position
@@ -172,7 +173,7 @@ class CorinManager:
 											self.Robot.Leg[j].qsurface, stand_state, False, TRAC_PERIOD)
 
 		## move leg into position
-		# already in stand up position, move in tripod fashion
+		# already in stand up position, shuffle in tripod fashion
 		if (stand_state):
 			for npoint in range(0, int(TRAC_PERIOD/TRAC_INTERVAL)):
 				for j in range(0,self.Robot.active_legs):
@@ -187,7 +188,7 @@ class CorinManager:
 
 				self.publish_topics()
 				self.rate.sleep()
-				# rospy.sleep(TRAC_INTERVAL) 
+
 			self.Robot.updateState()
 			for npoint in range(0, int(TRAC_PERIOD/TRAC_INTERVAL)):
 				for j in range(0,self.Robot.active_legs):
@@ -203,7 +204,7 @@ class CorinManager:
 				self.publish_topics()
 				self.rate.sleep()
 
-		# belly on ground, move all together
+		## belly on ground, move all together
 		else:
 			for npoint in range(0, int(TRAC_PERIOD/TRAC_INTERVAL)):
 				for j in range(0,self.Robot.active_legs):
