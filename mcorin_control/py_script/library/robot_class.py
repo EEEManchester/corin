@@ -84,7 +84,9 @@ class RobotState:
 		# update leg states and check if boundary exceeded
 		for i in range(0,self.active_legs):
 
-			bstate = self.Leg[i].updateState(self.qc.position[offset+i*3:offset+(i*3)+3], self.cstate[i], self.cforce[i*3:(i*3)+3], self.reset_state)
+			bstate = self.Leg[i].updateJointState(self.qc.position[offset+i*3:offset+(i*3)+3], self.reset_state)
+			self.Leg[i].updateForceState(self.cstate[i], self.cforce[i*3:(i*3)+3])
+
 			if (bstate==True and self.gaitgen.cs[i]==0 and self.support_mode==False):
 				self.suspend = True
 				print 'suspended'
@@ -180,6 +182,7 @@ class LegClass:
 		self.hip_X_ee 	= FrameClass('twist')
 		self.base_X_ee 	= FrameClass('twist')
 		
+		self.foot_XF_ee = FrameClass('force')
 		self.hip_XF_ee 	= FrameClass('force')
 		self.base_XF_ee	= FrameClass('force')
 
@@ -216,7 +219,7 @@ class LegClass:
 		return base_X_ee_xp
 
 	## Update functions
-	def updateState(self, jointState, cState, cForce, resetState):
+	def updateJointState(self, jointState, resetState):
 
 		## ********************************	Joint Angle  ******************************** ##
 		## Error Compensation
@@ -229,11 +232,6 @@ class LegClass:
 		## error
 		self.hip_X_ee.es.xp  = self.hip_X_ee.ds.xp  - self.hip_X_ee.cs.xp 
 		self.base_X_ee.es.xp = self.base_X_ee.ds.xp - self.base_X_ee.cs.xp
-
-		## ********************************	Contact Force  ******************************** ##
-		## Foot state & force
-		self.cstate = cState
-		self.hip_XF_ee.cs = np.reshape(np.array(cForce),(3,1))
 
 		## check work envelope
 		bound_exceed = self.boundary_limit()
@@ -250,6 +248,13 @@ class LegClass:
 			# 	print 'hds: ', self.hip_X_ee.ds.xp.transpose()
 
 		return bound_exceed
+
+	def updateForceState(self, cState, cForce):
+		## ********************************	Contact Force  ******************************** ##
+		self.cstate = cState
+		self.foot_XF_ee.cs = np.reshape(np.array(cForce),(3,1))
+
+		## TODO: TRANSFORM FROM FOOT FRAME TO HIP, BASE, WORLD FRAME
 
 	def boundary_limit(self):
 		bound_violate = False
