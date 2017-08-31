@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-import sys
-sys.path.insert(0, '/home/wilson/catkin_ws/src/mcorin/mcorin_control/py_script/library')
 import rospy
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'library'))
 
 import numpy as np
 
@@ -31,13 +32,13 @@ class ContactForce:
 
 		##***************** SUBSCRIBERS ***************##
 		## Foot contact
-		self.contact_lf_sub_ = rospy.Subscriber('/corin/foot_wrench/lf', ContactsState, self.contact_callback)
-		self.contact_lm_sub_ = rospy.Subscriber('/corin/foot_wrench/lm', ContactsState, self.contact_callback)
-		self.contact_lr_sub_ = rospy.Subscriber('/corin/foot_wrench/lr', ContactsState, self.contact_callback)
+		self.contact_lf_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/lf', ContactsState, self.contact_callback)
+		self.contact_lm_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/lm', ContactsState, self.contact_callback)
+		self.contact_lr_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/lr', ContactsState, self.contact_callback)
 
-		self.contact_rf_sub_ = rospy.Subscriber('/corin/foot_wrench/rf', ContactsState, self.contact_callback)
-		self.contact_rm_sub_ = rospy.Subscriber('/corin/foot_wrench/rm', ContactsState, self.contact_callback)
-		self.contact_rr_sub_ = rospy.Subscriber('/corin/foot_wrench/rr', ContactsState, self.contact_callback)
+		self.contact_rf_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/rf', ContactsState, self.contact_callback)
+		self.contact_rm_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/rm', ContactsState, self.contact_callback)
+		self.contact_rr_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/rr', ContactsState, self.contact_callback)
 
 		##***************** PUBLISHERS ***************##
 		self.contact_state_pub_ = rospy.Publisher(ROBOT_NS + '/contact_state', ByteMultiArray, queue_size=1)

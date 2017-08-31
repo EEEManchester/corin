@@ -3,9 +3,10 @@
 ## Function for manipulating the body pose of the hexapod with legs
 ## fixed to the spot. Initial stance is the nominal stance
 import rospy
+import os
 import sys
-sys.path.insert(0, '/home/wilson/catkin_ws/src/mcorin/mcorin_control/py_script/library')
-# sys.dont_write_bytecode = True
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'library'))
+sys.dont_write_bytecode = True
 
 import time
 from fractions import Fraction

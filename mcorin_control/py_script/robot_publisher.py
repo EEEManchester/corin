@@ -2,6 +2,11 @@
 
 ## Publishes state for RVIZ
 import rospy
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'library'))
+sys.dont_write_bytecode = True
+
 import time
 from fractions import Fraction
 import numpy as np
@@ -10,6 +15,8 @@ import tf
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import Imu
+
+from constant import *
 
 class Node_class:
 	def __init__(self):
@@ -21,7 +28,7 @@ class Node_class:
 
 	def start(self):
 		self.imu_sub 	= rospy.Subscriber("/imu/data", Imu, self.imu_callback)
-		self.joint_sub 	= rospy.Subscriber("/corin/joint_states", JointState, self.joint_state_callback)
+		self.joint_sub 	= rospy.Subscriber(ROBOT_NS + "/joint_states", JointState, self.joint_state_callback)
 
 		## Synchronize topics
 		# imu_sub = message_filters.Subscriber('/imu_data', Imu)
