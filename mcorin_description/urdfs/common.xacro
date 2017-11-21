@@ -5,13 +5,13 @@
 	<xacro:property name="PI" value="3.1415926535897931"/>
 
 	<!-- standard distances -->
-	<xacro:property name="trunk_x" value="0.35"/> 		<!-- distance between front & back  joints -->
-	<xacro:property name="trunk_y" value="0.15"/> 		<!-- distance between left  & right joints -->
-	<xacro:property name="trunk_z" value="0.04"/>
+	<xacro:property name="trunk_x" value="0.1"/> 		<!-- distance between front & back  joints -->
+	<xacro:property name="trunk_y" value="0.1"/> 		<!-- distance between left  & right joints -->
+	<xacro:property name="trunk_z" value="0.1"/>
 
 	<!--  Joint parameters -->
 	<xacro:property name="MX64_damping"   value="0.15" /> 					<!-- real: 0.2 		-->
-	<xacro:property name="MX64_effort"    value="2.85" /> 					<!-- real: 2.85 Nm 	-->					
+	<xacro:property name="MX64_effort"    value="2.85" /> 					<!-- real: 2.85 Nm 	-->
 	<xacro:property name="MX64_velocity"  value="5.23" />
 
 	<xacro:property name="cox_joint_lim" value="1.6"  /> 		<!-- 90 deg "0.8726" -->
@@ -48,7 +48,7 @@
 	<xacro:property name="coxa_i_zz"  value="0.00004"  />
 
 	<!-- Femur assembly -->
-	<xacro:property name="femur_l"     value="0.15" />  	
+	<xacro:property name="femur_l"     value="0.15" />
 	<xacro:property name="femur_w"     value="0.04" />
 	<xacro:property name="femur_d"     value="0.04" />
 	<xacro:property name="femur_cl"    value="0.12" />
@@ -61,13 +61,13 @@
 	<xacro:property name="femur_i_xz"  value="0"  />
 	<xacro:property name="femur_i_yy"  value="0.000068"  />
 	<xacro:property name="femur_i_yz"  value="0"  />
-	<xacro:property name="femur_i_zz"  value="0.000079"  /> 
+	<xacro:property name="femur_i_zz"  value="0.000079"  />
 
 	<!--  Tibia assembly -->
-	<xacro:property name="tibia_l" value="0.16" />  	
+	<xacro:property name="tibia_l" value="0.16" />
 	<xacro:property name="tibia_w" value="0.04" />
 	<xacro:property name="tibia_d" value="0.025" />
-	<xacro:property name="tibia_cl" value="0.12" /> 
+	<xacro:property name="tibia_cl" value="0.12" />
 	<xacro:property name="tibia_com_x" value="0.0958"  	/>
 	<xacro:property name="tibia_com_y" value="0"  		/>
 	<xacro:property name="tibia_com_z" value="0"  		/>
@@ -80,7 +80,7 @@
 	<xacro:property name="tibia_i_zz"  value="0.00013"  />
 
 	<!-- Foot -->
-	<xacro:property name="foot_r" value="0.008"   /> 
+	<xacro:property name="foot_r" value="0.008"   />
 	<xacro:property name="foot_m" value="0.005"   />
 	<xacro:property name="foot_I" value="0.00005" />
 	<!-- Rectangular box: m*(a^2 + b^2)/12 -->
