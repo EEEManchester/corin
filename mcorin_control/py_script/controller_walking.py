@@ -59,9 +59,9 @@ class CorinManager:
 		self.robot_ns = ROBOT_NS
 		self.interval = TRAC_INTERVAL
 		self.rate 	  = rospy.Rate(1.0/TRAC_INTERVAL)	# frequency
-		
+
 		self.cp = 0.0						# magnitude of linear translation in horizontal plane
-		
+
 		self.lin_v = np.zeros(3) 			# linear velocity vector
 		self.ang_v = np.zeros(3) 			# angular velocity vector
 		self.ang_p = np.zeros(3) 			# angular position vector
@@ -86,15 +86,15 @@ class CorinManager:
 			self._start()
 			rospy.sleep(0.5)
 			self._default_pose()
-			
-		self.com_tracking = np.zeros(3)	
+
+		self.com_tracking = np.zeros(3)
 
 		self.resting = False 		# Flag indicating robot standing or resting
 		self.ui_control	= control_interface.control_interface()
 
 	def joint_state_callback(self, msg):
 		self.Robot.qc = msg
-		
+
 	def imu_callback(self, msg):
 		self.Robot.imu = msg
 
@@ -116,16 +116,16 @@ class CorinManager:
 
 		if (self.robot_ns == 'corin' and (self.hardware == 'simulation' or self.hardware == 'real')):
 			print 'initializing topics'
-			
+
 			for i in range(0,18):
 				if (self.hardware == 'simulation'):
 					## Publish to Gazebo
-					self.qpub[i] = rospy.Publisher(self.robot_ns + JOINT_TOPICS[i] + '/command', Float64, queue_size=1)
+					self.qpub[i] = rospy.Publisher(self.robot_ns + '/' + JOINT_TOPICS[i] + '/command', Float64, queue_size=1)
 
 				elif (self.hardware == 'real'):
 					## Publish to Dynamixel motors
-					self.qpub[i] = rospy.Publisher(self.robot_ns + JOINT_TOPICS[i] + '/command_pv', PositionVelocity, queue_size=1)
-				
+					self.qpub[i] = rospy.Publisher(self.robot_ns + '/' + JOINT_TOPICS[i] + '/command_pv', PositionVelocity, queue_size=1)
+
 		else:
 			# shutdown if wrong hardware selected
 			rospy.logerr("Invalid Hardware Interface Selected!")
@@ -135,7 +135,7 @@ class CorinManager:
 		self.joint_sub_  = rospy.Subscriber(self.robot_ns + '/joint_states', JointState, self.joint_state_callback, queue_size=5)
 		# self.imu_sub_	 = rospy.Subscriber(self.robot_ns + '/imu/trunk/data', Imu, self.imu_callback, queue_size=1)
 		self.cstate_sub_ = rospy.Subscriber(self.robot_ns + '/contact_state', ByteMultiArray, self.contact_state_callback, queue_size=1)
-		self.cforce_sub_ = rospy.Subscriber(self.robot_ns + '/contact_force', Float32MultiArray, self.contact_force_callback, queue_size=1) 
+		self.cforce_sub_ = rospy.Subscriber(self.robot_ns + '/contact_force', Float32MultiArray, self.contact_force_callback, queue_size=1)
 
 		if (self.control_mode == 0): 	# manual control mode
 			self.connex_sub = rospy.Subscriber('/spacenav/joy', Joy, self.connex_callback, queue_size=1 )
@@ -149,14 +149,14 @@ class CorinManager:
 		# generate spline to legs up position
 		for j in range(0,self.Robot.active_legs):
 			self.Robot.Leg[j].hip_X_ee.ds.xp = LEG_STANCE[j] + np.array([0.0,0.0,BODY_HEIGHT+0.01]) 	# put leg on final ground position first
-			self.Robot.generateSpline(j, self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp, 
+			self.Robot.generateSpline(j, self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp,
 											self.Robot.Leg[j].qsurface, 1, False, TRAC_PERIOD)
 
 		# move leg into position
 		for npoint in range(0, int(TRAC_PERIOD/TRAC_INTERVAL)):
 			for j in range(0,self.Robot.active_legs):
 				# set cartesian position for joint kinematics
-				self.Robot.Leg[j].pointToArray(); 				
+				self.Robot.Leg[j].pointToArray();
 				self.Robot.Leg[j].spline_counter += 1
 				self.task_X_joint(j)
 
@@ -174,13 +174,13 @@ class CorinManager:
 		# get current state
 		for i in range(0,3):
 			self.Robot.updateState()
-		
+
 		print 'moving to nominal stance'
-		
+
 		# generate spline to standup position
 		for j in range(0,self.Robot.active_legs):
 			self.Robot.Leg[j].hip_X_ee.ds.xp = LEG_STANCE[j]
-			self.Robot.generateSpline(j, self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp, 
+			self.Robot.generateSpline(j, self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp,
 											self.Robot.Leg[j].qsurface, stand_state, False, TRAC_PERIOD)
 
 		## move leg into position
@@ -190,7 +190,7 @@ class CorinManager:
 				for j in range(0,self.Robot.active_legs):
 					# set cartesian position for joint kinematics
 					if (j%2 == 0): 	# even number legs
-						self.Robot.Leg[j].pointToArray(); 				
+						self.Robot.Leg[j].pointToArray();
 						self.Robot.Leg[j].spline_counter += 1
 						self.task_X_joint(j)
 					else: 			# odd number legs
@@ -205,7 +205,7 @@ class CorinManager:
 				for j in range(0,self.Robot.active_legs):
 					# set cartesian position for joint kinematics
 					if (j%2 == 1): 	# even number legs
-						self.Robot.Leg[j].pointToArray(); 				
+						self.Robot.Leg[j].pointToArray();
 						self.Robot.Leg[j].spline_counter += 1
 						self.task_X_joint(j)
 					else: 			# odd number legs
@@ -220,7 +220,7 @@ class CorinManager:
 			for npoint in range(0, int(TRAC_PERIOD/TRAC_INTERVAL)):
 				for j in range(0,self.Robot.active_legs):
 					# set cartesian position for joint kinematics
-					self.Robot.Leg[j].pointToArray(); 				
+					self.Robot.Leg[j].pointToArray();
 					self.Robot.Leg[j].spline_counter += 1
 					self.task_X_joint(j)
 
@@ -271,7 +271,7 @@ class CorinManager:
 
 	def clear_point(self):
 		self.point = JointTrajectoryPoint()
-		self.point.time_from_start = rospy.Duration(TRAC_INTERVAL) 
+		self.point.time_from_start = rospy.Duration(TRAC_INTERVAL)
 
 	def publish_topics(self):
 		if (not self.Robot.invalid):
@@ -289,9 +289,9 @@ class CorinManager:
 					data.position = self.point.positions[n]
 					data.velocity = self.point.velocities[n]
 					self.qpub[n].publish(data)
-				
+
 		self.clear_point()
-	
+
 	def alternate_phase(self):
 		# change gait phase
 		self.Robot.gaitgen.change_phase()
@@ -302,20 +302,20 @@ class CorinManager:
 				self.Robot.Leg[i].phase_change = False
 
 		self.Robot.suspend = False
-	
+
 
 	def execution(self, mag_v, dir_uv, i=0):
 		## update robot state
 		self.Robot.updateState()
 		self.Robot.world_X_base.cs.wp = self.Robot.world_X_base.ds.wp
-		
+
 		## Execute when there is change i.e. instanteneous velocity != 0
 		if (mag_v > 0):
-			
+
 			## clear point list
 			point = JointTrajectoryPoint()
 			point.time_from_start = rospy.Duration(TRAC_INTERVAL)
-			
+
 			## Determine time interval
 			interval = self.interval
 
@@ -323,7 +323,7 @@ class CorinManager:
 			cv = self.lin_v
 			wv = self.ang_v
 			wp = self.ang_p
-			
+
 			## Update robot's desired pose
 			self.Robot.fr_world_X_base 	  = tf.rotation_zyx(wp)
 			self.Robot.world_X_base.ds.wp = wp
@@ -333,7 +333,7 @@ class CorinManager:
 
 				# transfer phase
 				if (self.Robot.gaitgen.cs[j] == 1 and self.Robot.Leg[j].phase_change==False):
-					
+
 					# raw_input('cont')
 					self.Robot.Leg[j].feedback_state = 1 	# leg put into execution mode
 
@@ -341,7 +341,7 @@ class CorinManager:
 					if (self.control_mode == 0):
 						self.Robot.Leg[j].AEP = (self.Robot.Leg[j].REP + dir_uv*STEP_STROKE/2.)
 						self.Robot.Leg[j].base_X_ee.ds.xp = np.dot(tf.rotation_zyx(-1.*self.Robot.world_X_base.cs.wp), self.Robot.Leg[j].AEP)
-					
+
 					## Autonomous mode
 					elif (self.control_mode == 1):
 						# 'Foothold Selection' Algorithm: 1) Update REP 2) Get_to_Stance
@@ -374,29 +374,29 @@ class CorinManager:
 						else:
 							# change in vertical height between next CoM and REP, in R3 representation
 							d_h = np.dot(e_z, nex_com.reshape(3,1) + self.Robot.Leg[j].REP)
-							self.Robot.Leg[j].AEP = (self.Robot.Leg[j].REP + dir_uv*STEP_STROKE/2. - d_h) 
+							self.Robot.Leg[j].AEP = (self.Robot.Leg[j].REP + dir_uv*STEP_STROKE/2. - d_h)
 
 						self.Robot.Leg[j].base_X_ee.ds.xp = np.dot(tf.rotation_zyx(-1.*self.Robot.world_X_base.cs.wp), self.Robot.Leg[j].AEP)
 
-					# Base to hip frame conversion	
+					# Base to hip frame conversion
 					self.Robot.Leg[j].hip_X_ee.ds.xp = self.Robot.Leg[j].base_X_hip_ee(self.Robot.Leg[j].base_X_ee.ds.xp)
 					self.Robot.Leg[j].hip_AEP = self.Robot.Leg[j].hip_X_ee.ds.xp
 
 					## generate spline for transfer phase leg
-					self.Robot.generateSpline(j, self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp, 
+					self.Robot.generateSpline(j, self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp,
 												self.Robot.Leg[j].qsurface, 1, False, TRAC_PERIOD)
 
 					# set flag that phase has changed
 					self.Robot.Leg[j].phase_change = True
-					
-			
+
+
 			## trajectory points for all legs
 			for j in range (0, self.Robot.active_legs):
 				if (self.Robot.support_mode == True):
 					self.Robot.gaitgen.cs[j] = 0
 				# transfer phase
 				if (self.Robot.gaitgen.cs[j] == 1 and self.Robot.Leg[j].feedback_state==1):
-					
+
 					# unstack next point in individual leg spline to be processed
 					try:
 						self.Robot.Leg[j].pointToArray()
@@ -412,7 +412,7 @@ class CorinManager:
 						self.Robot.Leg[j].feedback_state = 2 	# trajectory completed
 						self.Robot.suspend = True 				# stops robot from moving i.e. stops support stance until rest of legs finish
 						pass
-				
+
 				## support phase
 				elif (self.Robot.gaitgen.cs[j] == 0 and self.Robot.suspend == False):
 					## Ideal trajectory: doesn't use current leg states
@@ -422,14 +422,14 @@ class CorinManager:
 					## determine foot velocity using CoM velocity; world_X_base cause rotation
 					self.Robot.Leg[j].base_X_ee.ds.xv = np.dot( tf.rotation_zyx(self.Robot.world_X_base.cs.wp).transpose() , \
 										-( cv-np.cross((np.dot(tf.rotation_zyx(self.Robot.world_X_base.cs.wp), self.Robot.Leg[j].base_X_ee.ds.xp)).transpose(),wv) ).transpose() )
-					
+
 					## base_X_feet position: integrate base_X_feet velocity
 					self.Robot.Leg[j].base_X_ee.ds.xp = self.Robot.Leg[j].base_X_ee.ds.xv*interval + self.Robot.Leg[j].base_X_ee.ds.xp #+ self.Robot.Leg[j].base_X_ee.es.xp
-					
+
 					## base to hip transform
 					self.Robot.Leg[j].hip_X_ee.ds.xp = self.Robot.Leg[j].base_X_hip_ee(self.Robot.Leg[j].base_X_ee.ds.xp)
 					self.Robot.Leg[j].hip_X_ee.ds.xv = np.dot(self.Robot.Leg[j].tf_base_X_hip, self.Robot.Leg[j].base_X_ee.ds.xv)
-					
+
 				## Task to joint space
 				self.task_X_joint(j)
 
@@ -459,7 +459,7 @@ class CorinManager:
 
 		self.planner.heading = (1,0,0)
 		xn_com, wn_com, tn_com, twn_com, xlen, wlen = self.planner.generate_path(x_com, w_com)
-		
+
 		self.planner.get_path_details() 	# for information about trajectory
 
 		## This segment to check output only
@@ -470,13 +470,13 @@ class CorinManager:
 		# Plot.plot_2d(nx[:,0],nx[:,2])
 		# Plot.plot_2d(nt, nx)
 		# Plot.plot_2d(wt, wx)
-		
+
 		self.planner.count = 1 	# counter for CoM point
 
 		## create spline from CoM via points
 		self.Robot.x_spline = self.p_spline.generate_body_spline(xn_com, tn_com, 0)
 		self.Robot.w_spline = self.p_spline.generate_body_spline(wn_com, twn_com, 0)
-		
+
 		i = 1 	# counter for number of points in robot's trajectory
 
 		# cycle until trajectory complete
@@ -490,7 +490,7 @@ class CorinManager:
 
 			## Extract linear task space position, velocity, acceleration
 			cp, self.lin_v, ca, ct = point_to_array(self.Robot.x_spline, i)
-			
+
 			self.ang_p, self.ang_v, wa, wt = point_to_array(self.Robot.w_spline, i)
 
 			# horizontal plane instantenous velocity magnitude
@@ -498,13 +498,13 @@ class CorinManager:
 
 			# horizontal plane: unit vector
 			dir_uv = np.nan_to_num(np.array([ [self.lin_v.item(0)/mag_v], [self.lin_v.item(1)/mag_v], [0.0] ]))
-			
+
 			# tracking translations
 			self.com_tracking = np.array([ self.lin_v.item(0), self.lin_v.item(1), self.lin_v.item(2) ])*self.interval + self.com_tracking
-			
+
 			# Next CoM point
 			if (self.Robot.x_spline.time_from_start[0][i] == self.planner.t_com[self.planner.count]):
-				self.planner.count += 1	
+				self.planner.count += 1
 
 			# send command to robot
 			self.execution(mag_v, dir_uv, i)
@@ -513,7 +513,7 @@ class CorinManager:
 			i += 1
 
 		print 'Trajectory executed'
-		print 'Desired Goal: ', point_to_array(self.Robot.x_spline, xlen-1, 1) 
+		print 'Desired Goal: ', point_to_array(self.Robot.x_spline, xlen-1, 1)
 		print 'Tracked Goal: ', self.com_tracking
 		self._Get_to_Stance() 				# put transfer legs onto ground
 
@@ -543,7 +543,7 @@ class CorinManager:
 				self.trajectory_tracking(x_com, w_com)
 				self._default_pose()
 				self._default_pose(1) 	# required for resetting stance for walking
-				
+
 			elif (mode == 2):
 				print 'walk mode'
 				self.planner  = Pathgenerator.PathGenerator()
@@ -553,7 +553,7 @@ class CorinManager:
 				self.alternate_phase()
 				self.trajectory_tracking(x_com, w_com)
 
-			elif (mode == 3): 			
+			elif (mode == 3):
 				if (self.resting == False): 	# rest robot
 					print 'Rest'
 					self._air_suspend_legs()
@@ -567,5 +567,4 @@ class CorinManager:
 			print 'standy'
 			# print self.Robot.cforce[0], self.Robot.cforce[1], self.Robot.cforce[2]
 			# print self.Robot.Leg[0].hip_XF_ee.cs
-		rospy.sleep(0.5)
-		
+		# rospy.sleep(0.5)

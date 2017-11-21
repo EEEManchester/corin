@@ -23,6 +23,5 @@
                 lf_q1_controller lf_q2_controller"
           output="screen"/>
 
-    <node name="dxl_joint_state_server" pkg="corin_dxl" type="dxl_joint_state_server.py" output="screen" />
-  
+
 </launch>

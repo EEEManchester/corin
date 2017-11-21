@@ -2,11 +2,11 @@
 <launch>
 
 	<arg name="sensors" default="true"/>
-	<arg name="gui" default="false"/>
+	<arg name="gui" default="false"/> 		<!-- True: manual control   False: real sensor -->
 	<!-- <arg name="rviz_conf" default="$(find hyq_description)/rviz/hyq_model_tf.rviz"/> -->
 
 	<!-- load robot -->
-	<param name="robot_description" textfile="$(find mcorin_description)/robots/mcorin.urdf" /> 
+	<param name="robot_description" textfile="$(find mcorin_description)/robots/mcorin.urdf" />
 	<param name="publish_frequency" value="50" /> <!-- Hz -->
 
 	<!-- publish the joint and robot states -->
@@ -21,12 +21,11 @@
 		type="state_publisher" respawn="true">
 		<param name="publish_frequency" value="200" />
 		<param name="rate" value="200" />
-		<remap from="/joint_states" to="/mcorin/joint_states" />
+		<remap from="/joint_states" to="/corin/joint_states_new" />
 	</node>
 
 	<!-- load displays -->
-	<param name="use_gui" value="true"/> 
+	<param name="use_gui" value="true"/>
 	<node name="rviz" pkg="rviz" type="rviz" required="true" />
-	
-</launch>
 
+</launch>

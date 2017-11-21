@@ -2,13 +2,12 @@
 
 ## Publishes state for RVIZ
 import rospy
+import roslib
 import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'library'))
-sys.dont_write_bytecode = True
+# sys.dont_write_bytecode = True
 
-import time
-from fractions import Fraction
 import numpy as np
 
 import tf
@@ -27,32 +26,30 @@ class Node_class:
 		self.jointState  = JointState()
 
 	def start(self):
-		self.imu_sub 	= rospy.Subscriber("/imu/data", Imu, self.imu_callback)
-		self.joint_sub 	= rospy.Subscriber(ROBOT_NS + "/joint_states", JointState, self.joint_state_callback)
+		self.imu_sub 	= rospy.Subscriber("/imu_data", Imu, self.imu_callback)
+		self.joint_sub 	= rospy.Subscriber(ROBOT_NS + "/joint_states", JointState, self.joint_state_callback) 	# temp not needed
 
-		## Synchronize topics
-		# imu_sub = message_filters.Subscriber('/imu_data', Imu)
-		# joint_sub = message_filters.Subscriber('/robot_joint_states', JointState)
-
-		# ts = message_filters.TimeSynchronizer([imu_sub, joint_sub], 10)
-		# ts.registerCallback(n.sync_callback)
+		self.joint_pub  = rospy.Publisher(ROBOT_NS + "/joint_states_new", JointState, queue_size=1)
 
 	def joint_state_callback(self,joint_state):
 		self.jointState = joint_state
+		qname = [None] * 18
+		for i in range(0,18):
+			qname[i] = JOINT_TOPICS[int(self.jointState.name[i])-1]
+
+		new_msg = JointState()
+		new_msg.name = qname
+		new_msg.position = joint_state.position
+		new_msg.velocity = joint_state.velocity
+		new_msg.effort = joint_state.effort
+
+		self.joint_pub.publish(new_msg)
 
 	def imu_callback(self, imu):
-	    print imu.orientation.x, imu.orientation.y, imu.orientation.z 
+	    print imu.orientation.x, imu.orientation.y, imu.orientation.z
 	    self.broadcaster.sendTransform( (0.0,0.0,0.5), tf.transformations.quaternion_from_euler(imu.orientation.x, imu.orientation.y, imu.orientation.z),
 	    							rospy.Time.now(), "trunk", "base_link") ;
-	    
 
-	# def sync_callback(self, imu, joint_state):
-	# 	# broadcast odometry transform (XYZ, RPY)
-	# 	broadcaster.sendTransform( (0.0,0.0,0.5), tf.transformations.quaternion_from_euler(imu.orientation.x, imu.orientation.y, imu.orientation.z),
-	#     							rospy.Time.now(), "body", "body_dummy") ;
-	# 	# broadcast joint transformation
-	# 	self.jointState = joint_state
-	# 	self.joint_pub.publish(self.jointState)
 
 if __name__ == "__main__":
 	n = Node_class()
@@ -62,4 +59,3 @@ if __name__ == "__main__":
 	n.start()
 
 	rospy.spin()
-	
