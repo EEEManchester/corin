@@ -2,7 +2,7 @@
 <launch>
 
 	<arg name="sensors" default="true"/>
-	<arg name="gui" default="false"/> 		<!-- True: manual control   False: real sensor -->
+	<arg name="gui" default="true"/> 		<!-- True: manual control   False: real sensor -->
 	<!-- <arg name="rviz_conf" default="$(find hyq_description)/rviz/hyq_model_tf.rviz"/> -->
 
 	<!-- load robot -->
@@ -21,7 +21,8 @@
 		type="state_publisher" respawn="true">
 		<param name="publish_frequency" value="200" />
 		<param name="rate" value="200" />
-		<remap from="/joint_states" to="/corin/joint_states_new" />
+		<!-- <remap from="/joint_states" to="/corin/joint_states_new" /> -->
+		<remap from="/joint_states" to="/joint_states" />
 	</node>
 
 	<!-- load displays -->

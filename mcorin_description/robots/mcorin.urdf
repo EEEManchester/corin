@@ -94,17 +94,19 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <inertial>
       <origin xyz="0.0 0.0 0.0"/>
       <mass value="1.5"/>
-      <inertia ixx="0.0030125" ixy="0.0" ixz="0.0" iyy="0.0155125" iyz="0.0" izz="0.018125"/>
+      <inertia ixx="0.0046625" ixy="0.0" ixz="0.0" iyy="0.007225" iyz="0.0" izz="0.0106625"/>
     </inertial>
     <visual>
       <geometry>
-        <box size="0.35 0.15 0.04"/>
+        <mesh filename="package://mcorin_description/meshes/Body.STL" scale="1 1 1"/>
+        <!-- <box size= "${trunk_x} ${trunk_y} ${trunk_z}"/> -->
       </geometry>
       <material name="orange"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.35 0.15 0.04"/>
+        <mesh filename="package://mcorin_description/meshes/Body_collision.STL" scale="1 1 1"/>
+        <!-- <box size= "${trunk_x-0.02} ${3.8/5*trunk_y} ${trunk_z}"/> -->
       </geometry>
       <material name="colli"/>
     </collision>
@@ -117,7 +119,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   <!-- Joints -->
   <!-- Coxa joint -->
   <joint name="lf_q1_joint" type="revolute">
-    <origin rpy="0 0 1.57079632679" xyz="0.175 0.075 0"/>
+    <origin rpy="0 0 0.872664625997" xyz="0.115 0.09 0"/>
     <parent link="trunk"/>
     <child link="lf_hipassembly"/>
     <axis xyz="0 0 1"/>
@@ -128,7 +130,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   </joint>
   <!-- Upper leg joint -->
   <joint name="lf_q2_joint" type="revolute">
-    <origin rpy="1.57079632679 0 0" xyz="0.077 0 0"/>
+    <origin rpy="1.57079632679 0 0" xyz="0.06 0 0"/>
     <parent link="lf_hipassembly"/>
     <child link="lf_upperleg"/>
     <axis xyz="0 0 1"/>
@@ -152,7 +154,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   </joint>
   <!-- Foot joint -->
   <joint name="lf_foot_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0.16 0 0"/>
+    <origin rpy="0 0 0" xyz="0.134 0 0"/>
     <parent link="lf_lowerleg"/>
     <child link="lf_foot"/>
   </joint>
@@ -167,10 +169,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
       <material name="green"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0.05945 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <box size="0.0611 0.046 0.0528"/>
+        <mesh filename="package://mcorin_description/meshes/Coxa_collision.STL" scale="1 1 1"/>
       </geometry>
+      <!-- <origin rpy="0 0 0" xyz="0.03 0 0"/>
+		      	<geometry>
+		        	<box size= "${coxa_cl} ${coxa_w} ${coxa_d}"/>
+		      	</geometry> -->
       <material name="orange"/>
     </collision>
     <inertial>
@@ -185,14 +191,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
       <geometry>
         <mesh filename="package://mcorin_description/meshes/Femur.STL" scale="1 1 1"/>
       </geometry>
-      <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="blue"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.12 0.04 0.04"/>
+        <box size="0.15 0.04 0.04"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0.1 0 0"/>
+      <origin rpy="0 0 0" xyz="0.075 0 0"/>
       <material name="colli"/>
     </collision>
     <inertial>
@@ -212,9 +218,10 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     </visual>
     <collision>
       <geometry>
-        <box size="0.12 0.025 0.04"/>
+        <mesh filename="package://mcorin_description/meshes/Tibia_collision.STL" scale="1 1 1"/>
+        <!-- <box size= "${tibia_cl} ${tibia_d} ${tibia_w}"/> -->
       </geometry>
-      <origin rpy="0 0 0" xyz="0.085 0 0"/>
+      <origin rpy="1.57079632679 0 0" xyz="0.0 0 0"/>
       <material name="colli"/>
     </collision>
     <inertial>
@@ -227,14 +234,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   <link name="lf_foot">
     <visual>
       <geometry>
-        <sphere radius="0.008"/>
+        <sphere radius="0.016"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="blue"/>
     </visual>
     <collision>
       <geometry>
-        <sphere radius="0.008"/>
+        <sphere radius="0.016"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="colli"/>
@@ -369,7 +376,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   <!-- Joints -->
   <!-- Coxa joint -->
   <joint name="lm_q1_joint" type="revolute">
-    <origin rpy="0 0 1.57079632679" xyz="0 0.075 0"/>
+    <origin rpy="0 0 1.57079632679" xyz="0 0.09 0"/>
     <parent link="trunk"/>
     <child link="lm_hipassembly"/>
     <axis xyz="0 0 1"/>
@@ -380,7 +387,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   </joint>
   <!-- Upper leg joint -->
   <joint name="lm_q2_joint" type="revolute">
-    <origin rpy="1.57079632679 0 0" xyz="0.077 0 0"/>
+    <origin rpy="1.57079632679 0 0" xyz="0.06 0 0"/>
     <parent link="lm_hipassembly"/>
     <child link="lm_upperleg"/>
     <axis xyz="0 0 1"/>
@@ -404,7 +411,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   </joint>
   <!-- Foot joint -->
   <joint name="lm_foot_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0.16 0 0"/>
+    <origin rpy="0 0 0" xyz="0.134 0 0"/>
     <parent link="lm_lowerleg"/>
     <child link="lm_foot"/>
   </joint>
@@ -419,10 +426,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
       <material name="green"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0.05945 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <box size="0.0611 0.046 0.0528"/>
+        <mesh filename="package://mcorin_description/meshes/Coxa_collision.STL" scale="1 1 1"/>
       </geometry>
+      <!-- <origin rpy="0 0 0" xyz="0.03 0 0"/>
+		      	<geometry>
+		        	<box size= "${coxa_cl} ${coxa_w} ${coxa_d}"/>
+		      	</geometry> -->
       <material name="orange"/>
     </collision>
     <inertial>
@@ -437,14 +448,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
       <geometry>
         <mesh filename="package://mcorin_description/meshes/Femur.STL" scale="1 1 1"/>
       </geometry>
-      <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="blue"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.12 0.04 0.04"/>
+        <box size="0.15 0.04 0.04"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0.1 0 0"/>
+      <origin rpy="0 0 0" xyz="0.075 0 0"/>
       <material name="colli"/>
     </collision>
     <inertial>
@@ -464,9 +475,10 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     </visual>
     <collision>
       <geometry>
-        <box size="0.12 0.025 0.04"/>
+        <mesh filename="package://mcorin_description/meshes/Tibia_collision.STL" scale="1 1 1"/>
+        <!-- <box size= "${tibia_cl} ${tibia_d} ${tibia_w}"/> -->
       </geometry>
-      <origin rpy="0 0 0" xyz="0.085 0 0"/>
+      <origin rpy="1.57079632679 0 0" xyz="0.0 0 0"/>
       <material name="colli"/>
     </collision>
     <inertial>
@@ -479,14 +491,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   <link name="lm_foot">
     <visual>
       <geometry>
-        <sphere radius="0.008"/>
+        <sphere radius="0.016"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="blue"/>
     </visual>
     <collision>
       <geometry>
-        <sphere radius="0.008"/>
+        <sphere radius="0.016"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="colli"/>
@@ -597,7 +609,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   <!-- Joints -->
   <!-- Coxa joint -->
   <joint name="lr_q1_joint" type="revolute">
-    <origin rpy="0 0 1.57079632679" xyz="-0.175 0.075 0"/>
+    <origin rpy="0 0 2.26892802759" xyz="-0.115 0.09 0"/>
     <parent link="trunk"/>
     <child link="lr_hipassembly"/>
     <axis xyz="0 0 1"/>
@@ -608,7 +620,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   </joint>
   <!-- Upper leg joint -->
   <joint name="lr_q2_joint" type="revolute">
-    <origin rpy="1.57079632679 0 0" xyz="0.077 0 0"/>
+    <origin rpy="1.57079632679 0 0" xyz="0.06 0 0"/>
     <parent link="lr_hipassembly"/>
     <child link="lr_upperleg"/>
     <axis xyz="0 0 1"/>
@@ -632,7 +644,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   </joint>
   <!-- Foot joint -->
   <joint name="lr_foot_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0.16 0 0"/>
+    <origin rpy="0 0 0" xyz="0.134 0 0"/>
     <parent link="lr_lowerleg"/>
     <child link="lr_foot"/>
   </joint>
@@ -647,10 +659,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
       <material name="green"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0.05945 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <box size="0.0611 0.046 0.0528"/>
+        <mesh filename="package://mcorin_description/meshes/Coxa_collision.STL" scale="1 1 1"/>
       </geometry>
+      <!-- <origin rpy="0 0 0" xyz="0.03 0 0"/>
+		      	<geometry>
+		        	<box size= "${coxa_cl} ${coxa_w} ${coxa_d}"/>
+		      	</geometry> -->
       <material name="orange"/>
     </collision>
     <inertial>
@@ -665,14 +681,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
       <geometry>
         <mesh filename="package://mcorin_description/meshes/Femur.STL" scale="1 1 1"/>
       </geometry>
-      <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="blue"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.12 0.04 0.04"/>
+        <box size="0.15 0.04 0.04"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0.1 0 0"/>
+      <origin rpy="0 0 0" xyz="0.075 0 0"/>
       <material name="colli"/>
     </collision>
     <inertial>
@@ -692,9 +708,10 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     </visual>
     <collision>
       <geometry>
-        <box size="0.12 0.025 0.04"/>
+        <mesh filename="package://mcorin_description/meshes/Tibia_collision.STL" scale="1 1 1"/>
+        <!-- <box size= "${tibia_cl} ${tibia_d} ${tibia_w}"/> -->
       </geometry>
-      <origin rpy="0 0 0" xyz="0.085 0 0"/>
+      <origin rpy="1.57079632679 0 0" xyz="0.0 0 0"/>
       <material name="colli"/>
     </collision>
     <inertial>
@@ -707,14 +724,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   <link name="lr_foot">
     <visual>
       <geometry>
-        <sphere radius="0.008"/>
+        <sphere radius="0.016"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="blue"/>
     </visual>
     <collision>
       <geometry>
-        <sphere radius="0.008"/>
+        <sphere radius="0.016"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="colli"/>
@@ -825,7 +842,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   <!-- Joints -->
   <!-- Coxa joint -->
   <joint name="rf_q1_joint" type="revolute">
-    <origin rpy="0 0 -1.57079632679" xyz="0.175 -0.075 0"/>
+    <origin rpy="0 0 -0.872664625997" xyz="0.115 -0.09 0"/>
     <parent link="trunk"/>
     <child link="rf_hipassembly"/>
     <axis xyz="0 0 1"/>
@@ -836,7 +853,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   </joint>
   <!-- Upper leg joint -->
   <joint name="rf_q2_joint" type="revolute">
-    <origin rpy="1.57079632679 0 0" xyz="0.077 0 0"/>
+    <origin rpy="1.57079632679 0 0" xyz="0.06 0 0"/>
     <parent link="rf_hipassembly"/>
     <child link="rf_upperleg"/>
     <axis xyz="0 0 1"/>
@@ -860,7 +877,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   </joint>
   <!-- Foot joint -->
   <joint name="rf_foot_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0.16 0 0"/>
+    <origin rpy="0 0 0" xyz="0.134 0 0"/>
     <parent link="rf_lowerleg"/>
     <child link="rf_foot"/>
   </joint>
@@ -875,10 +892,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
       <material name="green"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0.05945 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <box size="0.0611 0.046 0.0528"/>
+        <mesh filename="package://mcorin_description/meshes/Coxa_collision.STL" scale="1 1 1"/>
       </geometry>
+      <!-- <origin rpy="0 0 0" xyz="0.03 0 0"/>
+		      	<geometry>
+		        	<box size= "${coxa_cl} ${coxa_w} ${coxa_d}"/>
+		      	</geometry> -->
       <material name="orange"/>
     </collision>
     <inertial>
@@ -893,14 +914,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
       <geometry>
         <mesh filename="package://mcorin_description/meshes/Femur.STL" scale="1 1 1"/>
       </geometry>
-      <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="blue"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.12 0.04 0.04"/>
+        <box size="0.15 0.04 0.04"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0.1 0 0"/>
+      <origin rpy="0 0 0" xyz="0.075 0 0"/>
       <material name="colli"/>
     </collision>
     <inertial>
@@ -920,9 +941,10 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     </visual>
     <collision>
       <geometry>
-        <box size="0.12 0.025 0.04"/>
+        <mesh filename="package://mcorin_description/meshes/Tibia_collision.STL" scale="1 1 1"/>
+        <!-- <box size= "${tibia_cl} ${tibia_d} ${tibia_w}"/> -->
       </geometry>
-      <origin rpy="0 0 0" xyz="0.085 0 0"/>
+      <origin rpy="1.57079632679 0 0" xyz="0.0 0 0"/>
       <material name="colli"/>
     </collision>
     <inertial>
@@ -935,14 +957,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   <link name="rf_foot">
     <visual>
       <geometry>
-        <sphere radius="0.008"/>
+        <sphere radius="0.016"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="blue"/>
     </visual>
     <collision>
       <geometry>
-        <sphere radius="0.008"/>
+        <sphere radius="0.016"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="colli"/>
@@ -1077,7 +1099,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   <!-- Joints -->
   <!-- Coxa joint -->
   <joint name="rm_q1_joint" type="revolute">
-    <origin rpy="0 0 -1.57079632679" xyz="0 -0.075 0"/>
+    <origin rpy="0 0 -1.57079632679" xyz="0 -0.09 0"/>
     <parent link="trunk"/>
     <child link="rm_hipassembly"/>
     <axis xyz="0 0 1"/>
@@ -1088,7 +1110,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   </joint>
   <!-- Upper leg joint -->
   <joint name="rm_q2_joint" type="revolute">
-    <origin rpy="1.57079632679 0 0" xyz="0.077 0 0"/>
+    <origin rpy="1.57079632679 0 0" xyz="0.06 0 0"/>
     <parent link="rm_hipassembly"/>
     <child link="rm_upperleg"/>
     <axis xyz="0 0 1"/>
@@ -1112,7 +1134,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   </joint>
   <!-- Foot joint -->
   <joint name="rm_foot_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0.16 0 0"/>
+    <origin rpy="0 0 0" xyz="0.134 0 0"/>
     <parent link="rm_lowerleg"/>
     <child link="rm_foot"/>
   </joint>
@@ -1127,10 +1149,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
       <material name="green"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0.05945 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <box size="0.0611 0.046 0.0528"/>
+        <mesh filename="package://mcorin_description/meshes/Coxa_collision.STL" scale="1 1 1"/>
       </geometry>
+      <!-- <origin rpy="0 0 0" xyz="0.03 0 0"/>
+		      	<geometry>
+		        	<box size= "${coxa_cl} ${coxa_w} ${coxa_d}"/>
+		      	</geometry> -->
       <material name="orange"/>
     </collision>
     <inertial>
@@ -1145,14 +1171,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
       <geometry>
         <mesh filename="package://mcorin_description/meshes/Femur.STL" scale="1 1 1"/>
       </geometry>
-      <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="blue"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.12 0.04 0.04"/>
+        <box size="0.15 0.04 0.04"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0.1 0 0"/>
+      <origin rpy="0 0 0" xyz="0.075 0 0"/>
       <material name="colli"/>
     </collision>
     <inertial>
@@ -1172,9 +1198,10 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     </visual>
     <collision>
       <geometry>
-        <box size="0.12 0.025 0.04"/>
+        <mesh filename="package://mcorin_description/meshes/Tibia_collision.STL" scale="1 1 1"/>
+        <!-- <box size= "${tibia_cl} ${tibia_d} ${tibia_w}"/> -->
       </geometry>
-      <origin rpy="0 0 0" xyz="0.085 0 0"/>
+      <origin rpy="1.57079632679 0 0" xyz="0.0 0 0"/>
       <material name="colli"/>
     </collision>
     <inertial>
@@ -1187,14 +1214,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   <link name="rm_foot">
     <visual>
       <geometry>
-        <sphere radius="0.008"/>
+        <sphere radius="0.016"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="blue"/>
     </visual>
     <collision>
       <geometry>
-        <sphere radius="0.008"/>
+        <sphere radius="0.016"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="colli"/>
@@ -1305,7 +1332,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   <!-- Joints -->
   <!-- Coxa joint -->
   <joint name="rr_q1_joint" type="revolute">
-    <origin rpy="0 0 -1.57079632679" xyz="-0.175 -0.075 0"/>
+    <origin rpy="0 0 -2.26892802759" xyz="-0.115 -0.09 0"/>
     <parent link="trunk"/>
     <child link="rr_hipassembly"/>
     <axis xyz="0 0 1"/>
@@ -1316,7 +1343,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   </joint>
   <!-- Upper leg joint -->
   <joint name="rr_q2_joint" type="revolute">
-    <origin rpy="1.57079632679 0 0" xyz="0.077 0 0"/>
+    <origin rpy="1.57079632679 0 0" xyz="0.06 0 0"/>
     <parent link="rr_hipassembly"/>
     <child link="rr_upperleg"/>
     <axis xyz="0 0 1"/>
@@ -1340,7 +1367,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   </joint>
   <!-- Foot joint -->
   <joint name="rr_foot_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0.16 0 0"/>
+    <origin rpy="0 0 0" xyz="0.134 0 0"/>
     <parent link="rr_lowerleg"/>
     <child link="rr_foot"/>
   </joint>
@@ -1355,10 +1382,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
       <material name="green"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0.05945 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <box size="0.0611 0.046 0.0528"/>
+        <mesh filename="package://mcorin_description/meshes/Coxa_collision.STL" scale="1 1 1"/>
       </geometry>
+      <!-- <origin rpy="0 0 0" xyz="0.03 0 0"/>
+		      	<geometry>
+		        	<box size= "${coxa_cl} ${coxa_w} ${coxa_d}"/>
+		      	</geometry> -->
       <material name="orange"/>
     </collision>
     <inertial>
@@ -1373,14 +1404,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
       <geometry>
         <mesh filename="package://mcorin_description/meshes/Femur.STL" scale="1 1 1"/>
       </geometry>
-      <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="blue"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.12 0.04 0.04"/>
+        <box size="0.15 0.04 0.04"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0.1 0 0"/>
+      <origin rpy="0 0 0" xyz="0.075 0 0"/>
       <material name="colli"/>
     </collision>
     <inertial>
@@ -1400,9 +1431,10 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     </visual>
     <collision>
       <geometry>
-        <box size="0.12 0.025 0.04"/>
+        <mesh filename="package://mcorin_description/meshes/Tibia_collision.STL" scale="1 1 1"/>
+        <!-- <box size= "${tibia_cl} ${tibia_d} ${tibia_w}"/> -->
       </geometry>
-      <origin rpy="0 0 0" xyz="0.085 0 0"/>
+      <origin rpy="1.57079632679 0 0" xyz="0.0 0 0"/>
       <material name="colli"/>
     </collision>
     <inertial>
@@ -1415,14 +1447,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   <link name="rr_foot">
     <visual>
       <geometry>
-        <sphere radius="0.008"/>
+        <sphere radius="0.016"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="blue"/>
     </visual>
     <collision>
       <geometry>
-        <sphere radius="0.008"/>
+        <sphere radius="0.016"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="colli"/>
@@ -1568,7 +1600,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
   </gazebo>
   <!-- Joint -->
   <joint name="trunk_lidar_joint" type="fixed">
-    <origin rpy="0 0 1.57079632679" xyz="0.06 0.0 0.03"/>
+    <origin rpy="0 0 1.57079632679" xyz="0.06 0.0 0.04"/>
     <parent link="trunk"/>
     <child link="trunk_lidar"/>
   </joint>

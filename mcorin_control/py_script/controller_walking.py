@@ -17,27 +17,34 @@ from mpl_toolkits.mplot3d import Axes3D
 import copy
 import warnings
 
+## personal libraries
+from constant import *
 import robot_class
 import gait_class as Gaitgenerator
 import param_gait
 import path_generator as Pathgenerator
-from constant import *
 import plotgraph as Plot
-
-from trajectory_msgs.msg import JointTrajectoryPoint
-from std_msgs.msg import Float64
-from sensor_msgs.msg import Joy
-from sensor_msgs.msg import Imu
-from sensor_msgs.msg import JointState
-from std_msgs.msg import ByteMultiArray 	# foot contact state
-from std_msgs.msg import Float32MultiArray	# foot contact force
-
 import transformations as tf
 import pspline_generator as Pspline
 import bspline_generator as Bspline
 
+from trajectory_msgs.msg import JointTrajectoryPoint
+from std_msgs.msg import Float64
+from sensor_msgs.msg import Imu
+from std_msgs.msg import ByteMultiArray 	# foot contact state
+from std_msgs.msg import Float32MultiArray	# foot contact force
+
+## arebgun ROS msgs
 from dynamixel_msgs.msg import PositionVelocity
 
+## Robotis ROS msgs for joint control
+from sensor_msgs.msg import JointState
+from std_msgs.msg import String
+from robotis_controller_msgs.msg import SyncWriteItem
+from robotis_controller_msgs.msg import SyncWriteMulti
+
+## User control files
+from sensor_msgs.msg import Joy
 import connex
 import control_interface
 
@@ -52,6 +59,39 @@ def point_to_array(cpoints, i, select=0):
 		return cp
 	else:
 		return cp, cv, ca, ct
+
+def rad2raw(radian):
+
+	value_of_0_radian_position_      = 2048
+	value_of_min_radian_position_    = 0
+	value_of_max_radian_position_    = 4095
+	min_radian_                      = -3.14159265
+	max_radian_                      =  3.14159265
+
+	if (radian > 0):
+		value = (radian * (value_of_max_radian_position_ - value_of_0_radian_position_) / max_radian_) + value_of_0_radian_position_;
+
+	elif (radian < 0):
+		value = (radian * (value_of_min_radian_position_ - value_of_0_radian_position_) / min_radian_) + value_of_0_radian_position_;
+	else:
+		value = 2048;
+
+	return int(value)
+
+def rads2raw(rads):
+	velocity_to_value_ratio_ = 1.0/(0.229*2*3.14159265/60.0)
+
+	value = int(round(abs(rads) * velocity_to_value_ratio_))
+	if (value == 0):
+		value = 1
+		print 'value corrected'
+	return value
+	# return int(math.ceil(abs(rads) * velocity_to_value_ratio_))
+
+def raw2rads(raw):
+	velocity_to_value_ratio_ = 1.0/(0.229*2*3.14159265/60.0)
+
+	return (rads / velocity_to_value_ratio_)
 
 class CorinManager:
 	def __init__(self, initialise):
@@ -77,7 +117,7 @@ class CorinManager:
 		self.planner  = Pathgenerator.PathGenerator() 	# trajectory following
 
 		self.control_mode = 1 				# control mode: 1-autonomous, 0-manual control
-		self.hardware = 'simulation'		# options: 'simulation' or 'real'
+		self.hardware = 'simulation'		# options: 'simulation', 'real', 'robotis'
 
 		self.point = JointTrajectoryPoint()
 		self.point.time_from_start = rospy.Duration(TRAC_INTERVAL)
@@ -112,9 +152,12 @@ class CorinManager:
 		##***************** PUBLISHERS ***************##
 		self.trajectory_pub = rospy.Publisher(self.robot_ns + '/setpoint', JointTrajectoryPoint, queue_size=1)
 		self.phase_pub 		= rospy.Publisher(self.robot_ns + '/phase', JointTrajectoryPoint, queue_size=1)
+		self.control_mode_	= rospy.Publisher('/robotis/set_control_mode', String, queue_size=1)
+		self.sync_qpub_  	= rospy.Publisher('/robotis/sync_write_multi', SyncWriteMulti, queue_size=1)
+
 		self.qpub = {}
 
-		if (self.robot_ns == 'corin' and (self.hardware == 'simulation' or self.hardware == 'real')):
+		if (self.robot_ns == 'corin' and (self.hardware == 'simulation' or self.hardware == 'real' or self.hardware == 'robotis')):
 			print 'initializing topics'
 
 			for i in range(0,18):
@@ -132,7 +175,10 @@ class CorinManager:
 			rospy.signal_shutdown("Invalid Hardware Interface Selected - shutting down")
 
 		##***************** SUBSCRIBERS ***************##
-		self.joint_sub_  = rospy.Subscriber(self.robot_ns + '/joint_states', JointState, self.joint_state_callback, queue_size=5)
+		if (self.hardware == 'simulation'):
+			self.joint_sub_  = rospy.Subscriber(self.robot_ns + '/joint_states', JointState, self.joint_state_callback, queue_size=5)
+		elif (self.hardware == 'robotis'):
+			self.joint_sub_  = rospy.Subscriber('robotis/present_joint_states', JointState, self.joint_state_callback, queue_size=5)
 		# self.imu_sub_	 = rospy.Subscriber(self.robot_ns + '/imu/trunk/data', Imu, self.imu_callback, queue_size=1)
 		self.cstate_sub_ = rospy.Subscriber(self.robot_ns + '/contact_state', ByteMultiArray, self.contact_state_callback, queue_size=1)
 		self.cforce_sub_ = rospy.Subscriber(self.robot_ns + '/contact_force', Float32MultiArray, self.contact_force_callback, queue_size=1)
@@ -276,19 +322,50 @@ class CorinManager:
 	def publish_topics(self):
 		if (not self.Robot.invalid):
 			self.Robot.active_legs = 6
-			for n in range(0,self.Robot.active_legs*3):
-				## Gazebo
-				if (self.hardware == 'simulation'):
-					qp = Float64()
-					qp.data = self.point.positions[n]
-					self.qpub[n].publish(qp)
 
-				## Dynamixel
-				elif (self.hardware == 'real'):
-					data = PositionVelocity()
-					data.position = self.point.positions[n]
-					data.velocity = self.point.velocities[n]
-					self.qpub[n].publish(data)
+			if (self.hardware == 'simulation' or self.hardware == 'real'):
+				## TEMP
+				dqp = SyncWriteMulti()
+				dqp.item_name = str("profile_velocity") 	# goal_position
+				dqp.data_length = 8
+
+				for n in range(0,self.Robot.active_legs*3):
+					## Gazebo
+					if (self.hardware == 'simulation'):
+						qp = Float64()
+						qp.data = self.point.positions[n]
+						self.qpub[n].publish(qp)
+
+						## TEMP
+						# if (n<9 and n>5):
+						dqp.joint_name.append(str(JOINT_NAME[n])) 				# joint name
+						dqp.value.append(rads2raw(self.point.velocities[n]))	# velocity
+						dqp.value.append(rad2raw(self.point.positions[n]))		# position
+
+					## Dynamixel - arebgun library
+					elif (self.hardware == 'real'):
+						data = PositionVelocity()
+						data.position = self.point.positions[n]
+						data.velocity = self.point.velocities[n]
+						self.qpub[n].publish(data)
+
+				self.sync_qpub_.publish(dqp) ## TEMP
+
+			elif (self.hardware == 'robotis'):
+				dqp = SyncWriteMulti()
+				dqp.item_name = str("profile_velocity") 	# goal_position
+				dqp.data_length = 8
+
+				for n in range(0,self.Robot.active_legs*3): 	# loop for each joint
+					dqp.joint_name.append(str(JOINT_NAME[n])) 				# joint name
+					dqp.value.append(rads2raw(self.point.velocities[n]))	# velocity
+					dqp.value.append(rad2raw(self.point.positions[n]))		# position
+
+				self.sync_qpub_.publish(dqp)
+
+			# print 'p: ', self.point.positions[3]
+			print 'v: ', self.point.velocities[6], rads2raw(self.point.velocities[6])
+			# print '==================================='
 
 		self.clear_point()
 
@@ -389,7 +466,6 @@ class CorinManager:
 					# set flag that phase has changed
 					self.Robot.Leg[j].phase_change = True
 
-
 			## trajectory points for all legs
 			for j in range (0, self.Robot.active_legs):
 				if (self.Robot.support_mode == True):
@@ -435,7 +511,7 @@ class CorinManager:
 
 			if (self.Robot.invalid == True):
 				print 'Error Occured'
-				raw_input('Error occured')
+				# raw_input('Error occured')
 
 			# ends gait phase early if transfer phase completes
 			transfer_total = 0; 	leg_complete   = 0;

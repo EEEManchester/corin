@@ -26,7 +26,7 @@ that equals "base", and uses it to generate names for its component links and jo
 the origin block defines where the component is w.r.t its parent (in this case the parent
 is the world frame). For more, see http://www.ros.org/wiki/xacro -->
 
-	
+
 	<!-- body -->
 	<!-- trunk -->
 	<xacro:mCorin_trunk name="base">
@@ -37,7 +37,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
 		name="lf"
 		parent="trunk"
 		load_force_sensors="true">
-		<origin xyz="${trunk_x/2} ${trunk_y/2} 0" rpy="0 0 ${PI/2}"/>
+		<origin xyz="${trunk_x/2} ${trunk_y/2} 0" rpy="0 0 ${50*PI/180}"/>
 	</xacro:mCorin_leg>
 
 	<xacro:mCorin_leg
@@ -51,14 +51,14 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
 		name="lr"
 		parent="trunk"
 		load_force_sensors="false">
-		<origin xyz="${-trunk_x/2} ${trunk_y/2} 0" rpy="0 0 ${PI/2}"/>
+		<origin xyz="${-trunk_x/2} ${trunk_y/2} 0" rpy="0 0 ${PI/2+40*PI/180}"/>
 	</xacro:mCorin_leg>
 
 	<xacro:mCorin_leg
 		name="rf"
 		parent="trunk"
 		load_force_sensors="true">
-		<origin xyz="${trunk_x/2} ${-trunk_y/2} 0" rpy="0 0 ${-PI/2}"/>
+		<origin xyz="${trunk_x/2} ${-trunk_y/2} 0" rpy="0 0 ${-50*PI/180}"/>
 	</xacro:mCorin_leg>
 
 	<xacro:mCorin_leg
@@ -72,7 +72,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
 		name="rr"
 		parent="trunk"
 		load_force_sensors="false">
-		<origin xyz="${-trunk_x/2} ${-trunk_y/2} 0" rpy="0 0 ${-PI/2}"/>
+		<origin xyz="${-trunk_x/2} ${-trunk_y/2} 0" rpy="0 0 ${-PI/2-40*PI/180}"/>
 	</xacro:mCorin_leg>
 
 	<!-- Sensors -->

@@ -4,10 +4,6 @@
 import sys; sys.dont_write_bytecode = True
 
 import numpy as np
-# from numpy.linalg import inv
-# from fractions import Fraction
-# import copy
-# import transformations as tf
 
 # Main name
 ROBOT_NS = "corin"
@@ -16,13 +12,13 @@ ROBOT_NS = "corin"
 ##                       Robot parameters 	 						##
 ## ================================================================ ##
 #Link Length, Mass
-L1 = 0.077;	LL_LENG_1 = 0.077; 	LL_MASS_1 = 0.175
-L2 = 0.150;	LL_LENG_2 = 0.150;	LL_MASS_2 = 0.156
-L3 = 0.170;	LL_LENG_3 = 0.170;	LL_MASS_3 = 0.054
+L1 = 0.060;	LL_LENG_1 = L1; LL_MASS_1 = 0.040
+L2 = 0.150;	LL_LENG_2 = L2;	LL_MASS_2 = 0.350
+L3 = 0.150;	LL_LENG_3 = L3;	LL_MASS_3 = 0.116
 
 #Offset from CoB to Leg using Body Frame
-COXA_X = 0.125
-COXA_Y = 0.075
+COXA_X = 0.115
+COXA_Y = 0.09
 COXA_Z = 0.0
 
 g 	 = 9.81 	# Gravity
@@ -40,7 +36,7 @@ STEP_STROKE 		= 0.08 			# step size, x, 	default 0.07
 STEP_HEIGHT 		= 0.1 			# step height, z 	default 0.05
 WALKING_SPEED 		= 0.035 		# walking speed in m/s
 TRAC_PERIOD			= 1.5			# cycle time for movement
-TRAC_INTERVAL 		= 0.05 			# intervals for trajectory
+TRAC_INTERVAL 		= 0.02 			# intervals for trajectory
 
 ## ================================================================ ##
 ##                  Compensation parameters 	 					##
@@ -57,8 +53,8 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 ## ================================================================ ##
 
 ### Leg default position, SCS
-TETA_F = -30
-TETA_R = 30
+TETA_F = 0
+TETA_R = 0
 
 LEG_STANCE = {}
 
@@ -100,8 +96,8 @@ FR_base_X_hip[4] = np.array([ [0.0]	  ,  [-COXA_Y], [COXA_Z] ])
 FR_base_X_hip[5] = np.array([ [-COXA_X], [-COXA_Y], [COXA_Z] ])
 
 # transform from base to hip is reversed h_A_e = R(-90)*b_A_e
-TF_base_X_hip = np.array([-np.pi/2.,-np.pi/2.,-np.pi/2.,np.pi/2.,np.pi/2.,np.pi/2.])
-TF_hip_X_base = np.array([np.pi/2.,np.pi/2.,np.pi/2.,-np.pi/2.,-np.pi/2.,-np.pi/2.])
+TF_BASE_X_HIP = np.array([-(2./9.)*np.pi,-np.pi/2.,-(13./18.)*np.pi, (2./9.)*np.pi, np.pi/2., (13./18.)*np.pi])
+TF_HIP_X_BASE = np.array([ (2./9.)*np.pi, np.pi/2., (13./18.)*np.pi,-(2./9.)*np.pi,-np.pi/2.,-(13./18.)*np.pi])
 
 # Direction tuple - for use with tf class
 ORIGIN = (0,0,0)
@@ -132,18 +128,22 @@ JOINT_TOPICS[15] = 'rr_q1_controller'
 JOINT_TOPICS[16] = 'rr_q2_controller'
 JOINT_TOPICS[17] = 'rr_q3_controller'
 
-##########################################################################################################################################
-#### test scripts ###
-e_z = np.zeros((3,3)); e_z[2,2] = 1;
-
-rot = np.array([ [0.64],[0.0],[0.] ]) 	# base to world rotation
-
-p_nom = np.array([ [0.0],[2.0],[-3.0] ])
-x_com = np.array([ [0.0],[0.0],[ 6.0] ])
-p_nom = 1
-i = 0
-
-a = np.array([1,2,3])
-b = np.array([5,5,5])
-
-c = np.dot(a,b)
+JOINT_NAME = {}
+JOINT_NAME[0] = 'lf_q1'
+JOINT_NAME[1] = 'lf_q2'
+JOINT_NAME[2] = 'lf_q3'
+JOINT_NAME[3] = 'lm_q1'
+JOINT_NAME[4] = 'lm_q2'
+JOINT_NAME[5] = 'lm_q3'
+JOINT_NAME[6] = 'lr_q1'
+JOINT_NAME[7] = 'lr_q2'
+JOINT_NAME[8] = 'lr_q3'
+JOINT_NAME[9] = 'rf_q1'
+JOINT_NAME[10] = 'rf_q2'
+JOINT_NAME[11] = 'rf_q3'
+JOINT_NAME[12] = 'rm_q1'
+JOINT_NAME[13] = 'rm_q2'
+JOINT_NAME[14] = 'rm_q3'
+JOINT_NAME[15] = 'rr_q1'
+JOINT_NAME[16] = 'rr_q2'
+JOINT_NAME[17] = 'rr_q3'

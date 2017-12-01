@@ -22,7 +22,7 @@
 		</joint>
 		<!-- Upper leg joint -->
 		<joint name="${name}_q2_joint" type="revolute">
-			<origin xyz="${coxa_l} 0 0" rpy="${pi/2} 0 0"/> 
+			<origin xyz="${coxa_l} 0 0" rpy="${pi/2} 0 0"/>
 			<parent link="${name}_hipassembly"/>
 			<child  link="${name}_upperleg"/>
 			<axis xyz="0 0 1"/>
@@ -43,11 +43,11 @@
 			<!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-(1+reflect_front)*7*PI/18+(1-reflect_front)*PI/18}"
 							   soft_upper_limit="${(1-reflect_front)*7*PI/18-(1+reflect_front)*PI/18}" /> -->
-		 
+
 		</joint>
 		<!-- Foot joint -->
 		<joint name="${name}_foot_joint" type="fixed">
-			<origin xyz="${tibia_l} 0 0" rpy="0 0 0"/> 
+			<origin xyz="${tibia_l} 0 0" rpy="0 0 0"/>
 			<parent link="${name}_lowerleg"/>
 			<child  link="${name}_foot"/>
 		</joint>
@@ -56,105 +56,108 @@
 		<!-- Links -->
 		<!-- Hip assembly link -->
 		<link name="${name}_hipassembly">
-			<visual> 
-				<origin rpy="0 0 0" xyz="0 0 0"/> 
-			      <geometry> 
+			<visual>
+				<origin rpy="0 0 0" xyz="0 0 0"/>
+			      <geometry>
 			        <mesh filename="package://mcorin_description/meshes/Coxa.STL" scale="1 1 1"/>
-			      </geometry> 
+			      </geometry>
 		      	<material name="green"/>
-		    </visual> 
+		    </visual>
 
-		    <collision> 
-		    	<origin rpy="0 0 0" xyz="0.05945 0 0"/> 
-		      	<geometry> 
-		        	<box size= "${coxa_cl} ${coxa_w} ${coxa_d}"/>  
-		      	</geometry> 
-		      	<material name="orange"/>
-		    </collision> 
+		    <collision>
+		    	<origin rpy="0 0 0" xyz="0 0 0"/>
+			    <geometry>
+			      <mesh filename="package://mcorin_description/meshes/Coxa_collision.STL" scale="1 1 1"/>
+			    </geometry>
+		      <material name="orange"/>
+		    </collision>
 
 		    <inertial>
-		    	<origin xyz="${coxa_com_x} ${coxa_com_y} ${coxa_com_z}"/> 
-		      	<mass value="${coxa_m}"/> 
+		    	<origin xyz="${coxa_com_x} ${coxa_com_y} ${coxa_com_z}"/>
+		      	<mass value="${coxa_m}"/>
 		      	<inertia ixx="${coxa_i_xx}" ixy="${coxa_i_xy}" ixz="${coxa_i_xz}" iyy="${coxa_i_yy}" iyz="${coxa_i_yz}" izz="${coxa_i_zz}"/>
-		    </inertial> 
-		  </link> 
+		    </inertial>
+		  </link>
 
 		<!-- Upper leg link -->
 		<link name="${name}_upperleg">
-			<visual> 
-		      	<geometry> 
+			<visual>
+		      	<geometry>
 		        	<mesh filename="package://mcorin_description/meshes/Femur.STL" scale="1 1 1"/>
-		      	</geometry> 
-		      	<origin xyz="0 0 0" rpy="${pi/2} 0 0"/> 
+		      	</geometry>
+		      	<origin xyz="0 0 0" rpy="0 0 0"/>
 		      	<material name="blue"/>
-		    </visual> 
+		    </visual>
 
-		    <collision> 
-		      	<geometry> 
-		        	<box size= "${femur_cl} ${femur_w} ${femur_d}"/>  
-		      	</geometry> 
-		      	<origin xyz="0.1 0 0" rpy="0 0 0"/> 
+		    <collision>
+		      	<geometry>
+		        	<box size= "${femur_cl} ${femur_w} ${femur_d}"/>
+		      	</geometry>
+		      	<origin xyz="0.075 0 0" rpy="0 0 0"/>
 		      	<material name="colli"/>
-		    </collision> 
+		    </collision>
 
 		    <inertial>
-		      	<mass value="${femur_m}"/> 
+		      	<mass value="${femur_m}"/>
 		      	<inertia ixx="${femur_i_xx}" ixy="${femur_i_xy}" ixz="${femur_i_xz}" iyy="${femur_i_yy}" iyz="${femur_i_yz}" izz="${femur_i_zz}"/>
-		      	<origin xyz="${femur_com_x} ${femur_com_y} ${femur_com_z}"/>   
-		    </inertial> 
+		      	<origin xyz="${femur_com_x} ${femur_com_y} ${femur_com_z}"/>
+		    </inertial>
 		</link>
+
 		<!-- Lower leg link -->
 		<link name="${name}_lowerleg">
-			<visual> 
-		      	<geometry> 
+			<visual>
+		      	<geometry>
 		      		<mesh filename="package://mcorin_description/meshes/Tibia.STL" scale="1 1 1"/>
-		      	</geometry> 
-		      	<origin xyz="0 0 0" rpy="${pi/2} 0 0"/> 
+		      	</geometry>
+		      	<origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
 		      	<material name="yellow"/>
-		    </visual> 
+		    </visual>
 
-		    <collision> 
-		      	<geometry> 
-		        	<box size= "${tibia_cl} ${tibia_d} ${tibia_w}"/>  
-		      	</geometry> 
-		      	<origin xyz="0.085 0 0" rpy="0 0 0"/>  
+		    <collision>
+		      	<geometry>
+							<mesh filename="package://mcorin_description/meshes/Tibia_collision.STL" scale="1 1 1"/>
+		        	<!-- <box size= "${tibia_cl} ${tibia_d} ${tibia_w}"/> -->
+		      	</geometry>
+		      	<origin xyz="0.0 0 0" rpy="${pi/2} 0 0"/>
 		      	<material name="colli"/>
-		    </collision> 
+		    </collision>
 
 		    <inertial>
-		      	<mass value="${tibia_m}"/> 
+		      	<mass value="${tibia_m}"/>
 		      	<inertia ixx="${tibia_i_xx}" ixy="${tibia_i_xy}" ixz="${tibia_i_xz}" iyy="${tibia_i_yy}" iyz="${tibia_i_yz}" izz="${tibia_i_zz}"/>
-		      	<origin xyz="${tibia_com_x} ${tibia_com_y} ${tibia_com_z}"/>   
-		    </inertial> 
+		      	<origin xyz="${tibia_com_x} ${tibia_com_y} ${tibia_com_z}"/>
+		    </inertial>
 		</link>
+
 		<!-- Foot link -->
 		<link name="${name}_foot">
-			<visual> 
+			<visual>
 		      	<geometry>
 		        	<sphere radius="${foot_r}"/>
-		      	</geometry> 
-		      	<origin xyz="0 0 0" rpy="0 0 0"/> 
+		      	</geometry>
+		      	<origin xyz="0 0 0" rpy="0 0 0"/>
 		      	<material name="blue"/>
-		    </visual> 
+		    </visual>
 
-		    <collision> 
+		    <collision>
 		      	<geometry>
 		        	<sphere radius="${foot_r}"/>
-		      	</geometry> 
-		      	<origin xyz="0 0 0" rpy="0 0 0"/>   
+		      	</geometry>
+		      	<origin xyz="0 0 0" rpy="0 0 0"/>
 		      	<material name="colli"/>
-		    </collision> 
+		    </collision>
 
 		    <inertial>
-		      	<mass value="${foot_m}"/> 
+		      	<mass value="${foot_m}"/>
 		      	<inertia ixx="${foot_I}" ixy="0" ixz="0" iyy="${foot_I}" iyz="0" izz="${foot_I}" />
 		      	<origin xyz="0 0 0"/>
-		    </inertial> 
+		    </inertial>
 		</link>
-		
+
 		<!-- Extensions -->
 		<xacro:leg_transmission name="${name}"/>
-		<xacro:leg_gazebo name="${name}" load_force_sensors="${load_force_sensors}"/> 
+		<xacro:leg_gazebo name="${name}" load_force_sensors="${load_force_sensors}"/>
 	</xacro:macro>
 
 </robot>

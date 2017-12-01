@@ -55,7 +55,7 @@ class RobotState:
 
 		self.gaitgen = Gaitgenerator.GaitClass(3) 		# gait class
 
-		self.active_legs  = 6 				# robot state: number of legs selected to be active		
+		self.active_legs  = 6 				# robot state: number of legs selected to be active
 		self.phase_change = False 			# robot state: phase changed, enables transfer trajectory to be generated
 		self.reset_state  = True 			# robot state: reset whole of robot state
 
@@ -76,6 +76,7 @@ class RobotState:
 		# self.update_ImuState()
 
 	def update_LegState(self):
+
 		# offset to deal with extra joints
 		if (len(self.qc.name)==18):
 			offset = 0
@@ -85,6 +86,7 @@ class RobotState:
 		for i in range(0,self.active_legs):
 
 			bstate = self.Leg[i].updateJointState(self.qc.position[offset+i*3:offset+(i*3)+3], self.reset_state)
+
 			self.Leg[i].updateForceState(self.cstate[i], self.cforce[i*3:(i*3)+3])
 
 			if (bstate==True and self.gaitgen.cs[i]==0 and self.support_mode==False):
@@ -99,7 +101,7 @@ class RobotState:
 		neuler = RTF.transformations.euler_from_quaternion([self.imu.orientation.x, self.imu.orientation.y, self.imu.orientation.z, self.imu.orientation.w])
 
 		## update variables
-		self.world_X_base.es.wp = self.world_X_base.ds.wp - self.world_X_base.cs.wp 
+		self.world_X_base.es.wp = self.world_X_base.ds.wp - self.world_X_base.cs.wp
 
 	def generateSpline(self, leg_no, start, end, qsurface, phase, reflex=False, ctime=2.0):
 		j = leg_no
@@ -174,24 +176,24 @@ class LegClass:
 		self.spline_counter = 1
 		self.spline_length  = 0
 
-		self.feedback_state	= 0 				# 0 = idle, 1 = command received (executing), 2 = command completed 
-		
+		self.feedback_state	= 0 				# 0 = idle, 1 = command received (executing), 2 = command completed
+
 		self.cstate = 0 	# foot contact state: 1 or 0
 
 		# transformation frames
 		self.hip_X_ee 	= FrameClass('twist')
 		self.base_X_ee 	= FrameClass('twist')
-		
+
 		self.foot_XF_ee = FrameClass('force')
 		self.hip_XF_ee 	= FrameClass('force')
 		self.base_XF_ee	= FrameClass('force')
 
-		self.tf_base_X_hip 	= tf.rotation_matrix(TF_base_X_hip[self.number],Z_AXIS)[:3, :3]
+		self.tf_base_X_hip 	= tf.rotation_matrix(TF_BASE_X_HIP[self.number],Z_AXIS)[:3, :3]
 
 		self.AEP = np.zeros((3,1)) 		# Anterior Extreme Position for leg wrt base frame
 		self.PEP = np.zeros((3,1))		# Posterior Extreme Position for leg wrt base frame
 		self.REP = np.zeros((3,1)) 		# nominal stance for leg wrt base frame
-		
+
 		self.hip_AEP = np.zeros((3,1)) 	# for storing transfer AEP
 
 		self.leg_positions() 			# set rest position of legs
@@ -200,23 +202,15 @@ class LegClass:
 		self.qsnorm   = np.array([[0.],[0.],[1.]]) 	# surface normal
 
 		self.phase_change = False 		# Flag for enabling trajectory to be generated at transfer
-		
+
 		print 'Leg ', self.number , ' initialised'
 
 	## Transformation functions
 	def base_X_hip_ee(self, base_X_ee_xp):
-		if (self.number < 3):
-			hip_X_ee_xp = np.dot( tf.rotation_matrix(-np.pi/2.0,Z_AXIS)[:3, :3], (-FR_base_X_hip[self.number] + base_X_ee_xp))
-		elif (self.number >=3):
-			hip_X_ee_xp = np.dot( tf.rotation_matrix(np.pi/2.0,Z_AXIS)[:3, :3], (-FR_base_X_hip[self.number] + base_X_ee_xp))
-		return hip_X_ee_xp
+		return np.dot( tf.rotation_matrix(TF_BASE_X_HIP[self.number],Z_AXIS)[:3, :3], (-FR_base_X_hip[self.number] + base_X_ee_xp))
 
 	def hip_X_base_ee(self, hip_X_ee_xp):
-		if (self.number < 3):
-			base_X_ee_xp = FR_base_X_hip[self.number] + np.dot( tf.rotation_matrix(np.pi/2.0,Z_AXIS)[:3, :3], hip_X_ee_xp)
-		elif (self.number >=3):
-			base_X_ee_xp = FR_base_X_hip[self.number] + np.dot( tf.rotation_matrix(-np.pi/2.0,Z_AXIS)[:3, :3], hip_X_ee_xp)
-		return base_X_ee_xp
+		return (FR_base_X_hip[self.number] + np.dot( tf.rotation_matrix(TF_HIP_X_BASE[self.number],Z_AXIS)[:3, :3], hip_X_ee_xp))
 
 	## Update functions
 	def updateJointState(self, jointState, resetState):
@@ -227,10 +221,10 @@ class LegClass:
 
 		## current
 		self.hip_X_ee.cs.xp  = self.KL.FK(q_compensated)
-		self.base_X_ee.cs.xp = self.hip_X_base_ee(self.hip_X_ee.cs.xp)		
+		self.base_X_ee.cs.xp = self.hip_X_base_ee(self.hip_X_ee.cs.xp)
 
 		## error
-		self.hip_X_ee.es.xp  = self.hip_X_ee.ds.xp  - self.hip_X_ee.cs.xp 
+		self.hip_X_ee.es.xp  = self.hip_X_ee.ds.xp  - self.hip_X_ee.cs.xp
 		self.base_X_ee.es.xp = self.base_X_ee.ds.xp - self.base_X_ee.cs.xp
 
 		## check work envelope
@@ -240,7 +234,7 @@ class LegClass:
 		if (resetState):
 			self.hip_X_ee.ds.xp  = self.hip_X_ee.cs.xp
 			self.base_X_ee.ds.xp = self.base_X_ee.cs.xp
-			# if (self.number==0): 
+			# if (self.number==0):
 			# 	print 'state reset'
 			# 	print 'bcs: ', self.base_X_ee.cs.xp.transpose()
 			# 	print 'bds: ', self.base_X_ee.ds.xp.transpose()
@@ -263,10 +257,10 @@ class LegClass:
 		# vector to aep and current position wrt nominal point
 		vec_nom_X_aep = self.hip_AEP - np.reshape(LEG_STANCE[self.number],(3,1))
 		vec_nom_X_ee  = self.hip_X_ee.cs.xp - np.reshape(LEG_STANCE[self.number],(3,1))
-		
+
 		# magnitude of current point
 		mag_nom_X_ee  = np.dot(vec_nom_X_aep.flatten(), vec_nom_X_ee.flatten())
-		
+
 		# angle between hip frame and AEP
 		vec_ang = np.arctan2(vec_nom_X_aep.item(1), vec_nom_X_aep.item(0))
 
@@ -281,7 +275,7 @@ class LegClass:
 				y  = vec_nom_X_ee.item(1)
 
 				r_state = ((x*np.cos(qr)+y*np.sin(qr))**2)/(a**2) + ((x*np.sin(qr)-y*np.cos(qr))**2)/(b**2)
-				
+
 				if (BOUND_FACTOR < r_state):
 					bound_violate = True
 					# print self.number, ' ellipse boundary violated ', r_state
@@ -291,17 +285,17 @@ class LegClass:
 		# circle boundary
 		else:
 			r_state = (vec_nom_X_ee.item(0)**2 + vec_nom_X_ee.item(1)**2)/(STEP_STROKE/2.)**2
-			
+
 			if (BOUND_FACTOR < r_state):
 				bound_violate = True
 				# print self.number, ' circle boundary violated ', r_state
-		
+
 		return bound_violate
 
 	## Kinematic functions
 	def getJointKinematic(self,velocity):
 		self.Joint.qpd = self.KL.IK(self.hip_X_ee.ds.xp)
-		
+
 		# checks if there's need to compute joint velocity
 		if (not self.KL.singularity_check(self.Joint.qpd)):
 			if (velocity==True):
@@ -309,7 +303,7 @@ class LegClass:
 			return True
 		else:
 			print 'Singularity detected'
-			return False
+			return True
 
 	## Convenience functions
 	def pointToArray(self):
@@ -321,17 +315,12 @@ class LegClass:
 
 	## Configure leg positions
 	def leg_positions(self):
-		if (self.number < 3):
-			self.REP = FR_base_X_hip[self.number] + np.dot( tf.rotation_matrix(np.pi/2.0,Z_AXIS)[:3, :3], np.reshape(LEG_STANCE[self.number],(3,1)) )
-
-		elif (self.number >=3):
-			self.REP = FR_base_X_hip[self.number] + np.dot( tf.rotation_matrix(-np.pi/2.0,Z_AXIS)[:3, :3], np.reshape(LEG_STANCE[self.number],(3,1)) )
+		self.REP = FR_base_X_hip[self.number] + np.dot( tf.rotation_matrix(TF_HIP_X_BASE[self.number],Z_AXIS)[:3, :3], np.reshape(LEG_STANCE[self.number],(3,1)) )
 
 	def update_REP(self, bodypose, base_X_surface):
-		
+
 		# update only if surface orientation above deadzone
 		if (abs(self.qsurface.item(0)) > QDEADZONE or abs(self.qsurface.item(1)) > QDEADZONE):
 			self.REP = FR_base_X_hip[self.number] + self.KL.nominal_stance(bodypose, base_X_surface, self.qsurface)
 			# print 'updating REP for leg ', self.number
 			# if (self.number == 0):
-			

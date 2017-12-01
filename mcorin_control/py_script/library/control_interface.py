@@ -10,7 +10,7 @@ class control_interface:
 	def __init__(self):
 		self.x_com = np.array([.0,.0,BODY_HEIGHT])
 		self.w_com = np.array([.0,.0,.0])
-		self.mode  = 1 								# 1: pose, 2: walk 
+		self.mode  = 1 								# 1: pose, 2: walk
 		self.reset_flag = False
 
 		self.reset_parameters()
@@ -39,14 +39,16 @@ class control_interface:
 		self.w_com = np.vstack((self.w_com,np.array([-0.22, -0.075, 0.])))
 		self.x_com = np.vstack((self.x_com,np.array([0.03,  0.04, BODY_HEIGHT])))
 		self.w_com = np.vstack((self.w_com,np.array([0.22, -0.075, 0.])))
-		# x_com = np.vstack((x_com,np.array([-0.03, 0.04, BODY_HEIGHT])))
-		# w_com = np.vstack((w_com,np.array([0.22,  0.075, 0.])))
-		# x_com = np.vstack((x_com,np.array([-0.03, -0.04, BODY_HEIGHT])))
-		# w_com = np.vstack((w_com,np.array([-0.22,  0.075, 0.])))
-		# x_com = np.vstack((x_com,np.array([0.00, 0.00, BODY_HEIGHT])))
-		# w_com = np.vstack((w_com,np.array([0.00, 0.00, -0.2])))
-		# x_com = np.vstack((x_com,np.array([0.00, 0.00, 0.16])))
-		# w_com = np.vstack((w_com,np.array([0.,0.,0.12])))
+
+		self.x_com = np.vstack((self.x_com,np.array([-0.03, 0.04, BODY_HEIGHT])))
+		self.w_com = np.vstack((self.w_com,np.array([0.22,  0.075, 0.])))
+		self.x_com = np.vstack((self.x_com,np.array([-0.03, -0.04, BODY_HEIGHT])))
+		self.w_com = np.vstack((self.w_com,np.array([-0.22,  0.075, 0.])))
+		self.x_com = np.vstack((self.x_com,np.array([0.00, 0.00, BODY_HEIGHT])))
+		self.w_com = np.vstack((self.w_com,np.array([0.00, 0.00, -0.2])))
+		self.x_com = np.vstack((self.x_com,np.array([0.00, 0.00, 0.16])))
+		self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.12])))
+
 		self.x_com = np.vstack((self.x_com,np.array([0.,  0.0, BODY_HEIGHT])))
 		self.w_com = np.vstack((self.w_com,np.array([0.,  0.0, 0.])))
 
@@ -65,7 +67,7 @@ class control_interface:
 
 		self.x_com = np.vstack((self.x_com,np.array([-0.2, 0.0, BODY_HEIGHT])))
 		self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
-		
+
 	def WalkRight(self):
 		self.reset_variables()
 		self.mode = 2
@@ -81,14 +83,14 @@ class control_interface:
 		# x_com = np.vstack((x_com,np.array([0.0, -0.2, BODY_HEIGHT])))
 		# w_com = np.vstack((w_com,np.array([0.,0.,0.])))
 		self.x_com = np.vstack((self.x_com,np.array([0.0, 0.2, BODY_HEIGHT])))
-		self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))	
+		self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
 
 	def Reset(self):
 		self.reset_variables()
 		self.mode = 3
 
 		# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, -0.03])))
-		# self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))	
+		# self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
 		self.reset_flag = True
 
 	def action_to_take(self):
