@@ -35,22 +35,28 @@ class control_interface:
 		self.mode = 1
 
 		## Stack via points to array
-		self.x_com = np.vstack((self.x_com,np.array([0.03, -0.04, BODY_HEIGHT])))
-		self.w_com = np.vstack((self.w_com,np.array([-0.22, -0.075, 0.])))
-		self.x_com = np.vstack((self.x_com,np.array([0.03,  0.04, BODY_HEIGHT])))
-		self.w_com = np.vstack((self.w_com,np.array([0.22, -0.075, 0.])))
+		self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.175])))
+		self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.025])))
+		self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
 
-		self.x_com = np.vstack((self.x_com,np.array([-0.03, 0.04, BODY_HEIGHT])))
-		self.w_com = np.vstack((self.w_com,np.array([0.22,  0.075, 0.])))
-		self.x_com = np.vstack((self.x_com,np.array([-0.03, -0.04, BODY_HEIGHT])))
-		self.w_com = np.vstack((self.w_com,np.array([-0.22,  0.075, 0.])))
-		self.x_com = np.vstack((self.x_com,np.array([0.00, 0.00, BODY_HEIGHT])))
-		self.w_com = np.vstack((self.w_com,np.array([0.00, 0.00, -0.2])))
-		self.x_com = np.vstack((self.x_com,np.array([0.00, 0.00, 0.16])))
-		self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.12])))
-
-		self.x_com = np.vstack((self.x_com,np.array([0.,  0.0, BODY_HEIGHT])))
-		self.w_com = np.vstack((self.w_com,np.array([0.,  0.0, 0.])))
+		self.w_com = np.vstack((self.w_com,np.array([0., 0., 0.])))
+		self.w_com = np.vstack((self.w_com,np.array([0., 0., 0.])))
+		self.w_com = np.vstack((self.w_com,np.array([0., 0., 0.])))
+		# self.x_com = np.vstack((self.x_com,np.array([0.03, -0.04, BODY_HEIGHT])))
+		# self.w_com = np.vstack((self.w_com,np.array([-0.22, -0.075, 0.])))
+		# self.x_com = np.vstack((self.x_com,np.array([0.03,  0.04, BODY_HEIGHT])))
+		# self.w_com = np.vstack((self.w_com,np.array([0.22, -0.075, 0.])))
+		# self.x_com = np.vstack((self.x_com,np.array([-0.03, 0.04, BODY_HEIGHT])))
+		# self.w_com = np.vstack((self.w_com,np.array([0.22,  0.075, 0.])))
+		# self.x_com = np.vstack((self.x_com,np.array([-0.03, -0.04, BODY_HEIGHT])))
+		# self.w_com = np.vstack((self.w_com,np.array([-0.22,  0.075, 0.])))
+		# self.x_com = np.vstack((self.x_com,np.array([0.00, 0.00, BODY_HEIGHT])))
+		# self.w_com = np.vstack((self.w_com,np.array([0.00, 0.00, -0.2])))
+		#
+		# self.x_com = np.vstack((self.x_com,np.array([0.00, 0.00, 0.13])))
+		# self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.12])))
+		# self.x_com = np.vstack((self.x_com,np.array([0.,  0.0, BODY_HEIGHT])))
+		# self.w_com = np.vstack((self.w_com,np.array([0.,  0.0, 0.])))
 
 	def WalkForward(self):
 		self.reset_variables()

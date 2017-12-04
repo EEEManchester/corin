@@ -4,6 +4,7 @@
 import sys; sys.dont_write_bytecode = True
 
 import numpy as np
+import stance_selection
 
 # Main name
 ROBOT_NS = "corin"
@@ -29,8 +30,8 @@ M_KC = 16.06 	# MX64 motor torque constant
 ## ================================================================ ##
 DUTY_FACTOR = {'tripod':0.5, 'tetrapod':2./3., 'ripple':3./4., 'wave':5./6. }
 
-BODY_HEIGHT  		= 0.1 #0.0851
-STANCE_WIDTH 		= 0.21 #0.202
+BODY_HEIGHT  		= 0.10          # ori: 0.10, chimney: 0.0
+STANCE_WIDTH 		= 0.21          # ori: 0.21, chimney: 0.27
 GAIT_TYPE 			= 4 			# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 STEP_STROKE 		= 0.08 			# step size, x, 	default 0.07
 STEP_HEIGHT 		= 0.1 			# step height, z 	default 0.05
@@ -54,33 +55,9 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 
 ### Leg default position, SCS
 TETA_F = 0
-TETA_R = 0
+TETA_R = -0
 
-LEG_STANCE = {}
-
-# Flat ground stance - original
-LEG_STANCE[0] = np.array([ STANCE_WIDTH*np.cos(TETA_F*np.pi/180), STANCE_WIDTH*np.sin(TETA_F*np.pi/180), -BODY_HEIGHT ])
-LEG_STANCE[1] = np.array([ STANCE_WIDTH, 0, -BODY_HEIGHT])
-LEG_STANCE[2] = np.array([ STANCE_WIDTH*np.cos(TETA_R*np.pi/180), STANCE_WIDTH*np.sin(TETA_R*np.pi/180), -BODY_HEIGHT ])
-
-LEG_STANCE[3] = np.array([ STANCE_WIDTH*np.cos(TETA_F*np.pi/180), STANCE_WIDTH*np.sin(-TETA_F*np.pi/180), -BODY_HEIGHT ])
-LEG_STANCE[4] = np.array([STANCE_WIDTH, 0, -BODY_HEIGHT])
-LEG_STANCE[5] = np.array([ STANCE_WIDTH*np.cos(TETA_R*np.pi/180), STANCE_WIDTH*np.sin(-TETA_R*np.pi/180), -BODY_HEIGHT ])
-
-# Vertical stance
-# V_LS_WIDTH = 0.338#0.3642
-# V_LS_HEIGH = 0.0872#0.07
-
-# V_RS_WIDTH = 0.14
-# V_RS_HEIGH = -0.0115
-
-# LEG_STANCE.append( np.array([ V_LS_WIDTH*np.cos(TETA_F*np.pi/180), V_LS_WIDTH*np.sin(TETA_F*np.pi/180), V_LS_HEIGH ]) )
-# LEG_STANCE.append( np.array([ V_LS_WIDTH, 0, V_LS_HEIGH ]) )
-# LEG_STANCE.append( np.array([ V_LS_WIDTH*np.cos(TETA_R*np.pi/180), V_LS_WIDTH*np.sin(TETA_R*np.pi/180), V_LS_HEIGH ]) )
-
-# LEG_STANCE.append( np.array([ V_RS_WIDTH*np.cos(TETA_F*np.pi/180), V_RS_WIDTH*np.sin(-TETA_F*np.pi/180), V_RS_HEIGH ]) )
-# LEG_STANCE.append( np.array([ V_RS_WIDTH, 0, V_RS_HEIGH]) )
-# LEG_STANCE.append( np.array([ V_RS_WIDTH*np.cos(TETA_R*np.pi/180), V_RS_WIDTH*np.sin(-TETA_R*np.pi/180), V_RS_HEIGH ]) )
+LEG_STANCE = stance_selection.initial_stance(STANCE_WIDTH,BODY_HEIGHT, "flat", TETA_F, TETA_R)  # "flat", "align", "sideways"
 
 ##########################################################################################################################################
 

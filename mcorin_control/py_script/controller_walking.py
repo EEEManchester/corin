@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-## Function for manipulating the body pose of the hexapod with legs
-## fixed to the spot. Initial stance is the nominal stance
+## Main controller for the robot
 import rospy
 import os
 import sys
@@ -84,7 +83,7 @@ def rads2raw(rads):
 	value = int(round(abs(rads) * velocity_to_value_ratio_))
 	if (value == 0):
 		value = 1
-		print 'value corrected'
+		# print 'value corrected'
 	return value
 	# return int(math.ceil(abs(rads) * velocity_to_value_ratio_))
 
@@ -363,8 +362,6 @@ class CorinManager:
 
 				self.sync_qpub_.publish(dqp)
 
-			# print 'p: ', self.point.positions[3]
-			print 'v: ', self.point.velocities[6], rads2raw(self.point.velocities[6])
 			# print '==================================='
 
 		self.clear_point()
@@ -574,7 +571,7 @@ class CorinManager:
 
 			# horizontal plane: unit vector
 			dir_uv = np.nan_to_num(np.array([ [self.lin_v.item(0)/mag_v], [self.lin_v.item(1)/mag_v], [0.0] ]))
-
+			print dir_uv
 			# tracking translations
 			self.com_tracking = np.array([ self.lin_v.item(0), self.lin_v.item(1), self.lin_v.item(2) ])*self.interval + self.com_tracking
 
