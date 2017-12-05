@@ -30,8 +30,8 @@ M_KC = 16.06 	# MX64 motor torque constant
 ## ================================================================ ##
 DUTY_FACTOR = {'tripod':0.5, 'tetrapod':2./3., 'ripple':3./4., 'wave':5./6. }
 
-BODY_HEIGHT  		= 0.10          # ori: 0.10, chimney: 0.0
-STANCE_WIDTH 		= 0.21          # ori: 0.21, chimney: 0.27
+BODY_HEIGHT  		= 0.00          # ori: 0.10, chimney: 0.0
+STANCE_WIDTH 		= 0.27          # ori: 0.21, chimney: 0.27
 GAIT_TYPE 			= 4 			# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 STEP_STROKE 		= 0.08 			# step size, x, 	default 0.07
 STEP_HEIGHT 		= 0.1 			# step height, z 	default 0.05
@@ -54,10 +54,10 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 ## ================================================================ ##
 
 ### Leg default position, SCS
-TETA_F = 0
-TETA_R = -0
+TETA_F = 30;	TETA_R = -TETA_F;
+STANCE_TYPE = "sideways" 	# "flat", "chimney", "sideways"
 
-LEG_STANCE = stance_selection.initial_stance(STANCE_WIDTH,BODY_HEIGHT, "flat", TETA_F, TETA_R)  # "flat", "align", "sideways"
+LEG_STANCE = stance_selection.initial_stance(STANCE_WIDTH,BODY_HEIGHT, STANCE_TYPE, TETA_F, TETA_R)  
 
 ##########################################################################################################################################
 

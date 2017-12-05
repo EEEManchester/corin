@@ -8,7 +8,7 @@ from mpl_toolkits.mplot3d import Axes3D
 def plot_3d(x=0,y=0,z=0):
 	fig = plt.figure()
 	ax = fig.gca(projection='3d')
-	ax.plot(x, y, z, label='parametric curve', marker='x')
+	ax.plot(x, y, z, label='parametric curve')
 	ax.set_xlabel('X axis')
 	ax.set_ylabel('Y axis')
 	ax.set_zlabel('Z axis')

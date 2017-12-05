@@ -69,9 +69,29 @@ class PathGenerator(Pspline.SplineGenerator):
 			t_com[i] = i
 		return t_com
 
+	def auto_generate_points(self, x_com, w_com):
+		xsize = x_com.size 	# no. of items in array
+		wsize = w_com.size
+		
+		## Generate empty array if either not defined by user
+		# w_com not defined by user
+		if (wsize < xsize):
+			w_com = np.array([.0,.0,.0])
+			for i in range(0,xsize/3-1):
+				w_com = np.vstack((w_com,np.array([0., 0., 0.])))
+		
+		# x_com not defined by user
+		elif (xsize < wsize):
+			x_com = np.array([.0,.0,.0])
+			for i in range(0,wsize/3-1):
+				x_com = np.vstack((x_com,np.array([0., 0., 0.])))
+
+		return x_com, w_com
+
 	def generate_path(self, x_com, w_com=0):
+		x_com, w_com = self.auto_generate_points(x_com, w_com)
+		print w_com
 		tx_com = self.compute_path_length(x_com)
-		tw_com = self.compute_path_length(x_com)
 
 		x, y, z, t = self.generate_body_spline( x_com, tx_com , 1)
 		# Plot.plot_3d(x,y,z)
@@ -236,7 +256,7 @@ class PathGenerator(Pspline.SplineGenerator):
 				# print 'point skipped'
 		
 		print '=========================================='
-
+		
 		# clean up
 		self.point_skipped = np.delete(self.point_skipped,0,0)
 
@@ -259,8 +279,10 @@ class PathGenerator(Pspline.SplineGenerator):
 			for i in range(1,len(self.w_com)):
 				self.tw_com[i] = wseg*i
 		except:
+			print "exception raised"
 			pass
-		
+		print self.w_com
+		print self.tw_com
 		## Regenerate linear and angular spline with updated CoM position
 		nx, nv, na, nt = self.generate_body_spline(self.x_com, self.t_com,  1)
 		wx, wv, wa, wt = self.generate_body_spline(self.w_com, self.tw_com, 1)
@@ -268,8 +290,8 @@ class PathGenerator(Pspline.SplineGenerator):
 		# print self.point_skipped
 		self.x_length = len(nt)
 		self.w_length = len(wt)
-		# Plot.plot_3d(nx, nv, na)
-		# Plot.plot_2d(nt,nx)
+		Plot.plot_3d(nx, nv, na)
+		Plot.plot_2d(nt,na)
 		# Plot.plot_2d_multiple(3,wt,wx,wv,wa)
 
 		return self.x_com, self.w_com, self.t_com, self.tw_com, self.x_length, self.w_length
@@ -285,34 +307,36 @@ w_com = np.array([.0,.0,.0])
 # x_com = np.vstack((x_com,np.array([0.0, 0.4, BODY_HEIGHT])))
 # x_com = np.vstack((x_com,np.array([0.0, 0.6, BODY_HEIGHT])))
 # x_com = np.vstack((x_com,np.array([0.0, 1.0, BODY_HEIGHT+0.12])))
-# t_com = np.array([0.0,1.0,2.0,3.0]) 			# time set as unitary gain for each point
 
-# x_com = np.vstack((x_com,np.array([0.2, 0.0, BODY_HEIGHT])))
-# x_com = np.vstack((x_com,np.array([0.4, 0.0, BODY_HEIGHT+0.06])))
+x_com = np.vstack((x_com,np.array([0.0, 0.0, BODY_HEIGHT+0.06])))
+# x_com = np.vstack((x_com,np.array([0.0, 0.0, BODY_HEIGHT-0.06])))
 # x_com = np.vstack((x_com,np.array([0.7, 0.0, BODY_HEIGHT+0.12])))
-# t_com = np.array([0.0,1.0,2.0,3.0]) 	
+
+# w_com = np.vstack((x_com,np.array([0.0, 0.0, 0.0])))
+# w_com = np.vstack((x_com,np.array([0.0, 0.0, 0.0])))
+# w_com = np.vstack((x_com,np.array([0.0, 0.0, 0.0])))
 
 planner = PathGenerator()
 planner.heading = (1,0,0)
 planner.gait = gait
-# planner.generate_path(x_com, t_com)
+# planner.generate_path(x_com, w_com)
 
-# wall transition
-cq = 0.
-t_com = np.array([0.0])
+## wall transition
+# cq = 0.
+# t_com = np.array([0.0])
 
-for q in range(0,91,15):
-	qr = q*np.pi/180
-	xd = np.array([0.0, (1-np.cos(qr))*COXA_Y, (np.sin(qr))*COXA_Y + BODY_HEIGHT])
+# for q in range(0,91,15):
+# 	qr = q*np.pi/180
+# 	xd = np.array([0.0, (1-np.cos(qr))*COXA_Y, (np.sin(qr))*COXA_Y + BODY_HEIGHT])
 
-	x_com = np.vstack(( x_com, xd ))
-	w_com = np.vstack(( w_com, np.array([qr,0.0,0.0]) ))
-	t_com = np.hstack(( t_com, cq ))
-	cq += 1 
-# clean up first row
-x_com = np.delete(x_com, 1, 0) # clean up first row of matrix
-w_com = np.delete(w_com, 1, 0) # clean up first row of matrix
-t_com = np.delete(t_com, 0)
+# 	x_com = np.vstack(( x_com, xd ))
+# 	w_com = np.vstack(( w_com, np.array([qr,0.0,0.0]) ))
+# 	t_com = np.hstack(( t_com, cq ))
+# 	cq += 1 
+# # clean up first row
+# x_com = np.delete(x_com, 1, 0) # clean up first row of matrix
+# w_com = np.delete(w_com, 1, 0) # clean up first row of matrix
+# t_com = np.delete(t_com, 0)
 
 
 # nt,nx,nv,na = planner.generate_path(x_com, w_com)

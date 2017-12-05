@@ -454,7 +454,7 @@ class CorinManager:
 
 					# Base to hip frame conversion
 					self.Robot.Leg[j].hip_X_ee.ds.xp = self.Robot.Leg[j].base_X_hip_ee(self.Robot.Leg[j].base_X_ee.ds.xp)
-					self.Robot.Leg[j].hip_AEP = self.Robot.Leg[j].hip_X_ee.ds.xp
+					self.Robot.Leg[j].hip_AEP = self.Robot.Leg[j].hip_X_ee.ds.xp 											# set only during transfer phase
 
 					## generate spline for transfer phase leg
 					self.Robot.generateSpline(j, self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp,
@@ -527,6 +527,9 @@ class CorinManager:
 			# publish appended joint angles if motion valid
 			self.publish_topics()
 
+		else:
+			print 'mag_v skipped'
+
 		# print '--------------------------------'
 	def trajectory_tracking(self, x_com, w_com=0):
 
@@ -568,10 +571,10 @@ class CorinManager:
 
 			# horizontal plane instantenous velocity magnitude
 			mag_v  = np.sqrt(self.lin_v.item(0)**2 + self.lin_v.item(1)**2)
-
+			
 			# horizontal plane: unit vector
 			dir_uv = np.nan_to_num(np.array([ [self.lin_v.item(0)/mag_v], [self.lin_v.item(1)/mag_v], [0.0] ]))
-			print dir_uv
+			mag_v  = 1 	# forces controller to always execute
 			# tracking translations
 			self.com_tracking = np.array([ self.lin_v.item(0), self.lin_v.item(1), self.lin_v.item(2) ])*self.interval + self.com_tracking
 
@@ -637,7 +640,7 @@ class CorinManager:
 					self.resting = False
 
 		else:
-			print 'standy'
+			# print 'standy'
 			# print self.Robot.cforce[0], self.Robot.cforce[1], self.Robot.cforce[2]
 			# print self.Robot.Leg[0].hip_XF_ee.cs
-		# rospy.sleep(0.5)
+			rospy.sleep(0.5)

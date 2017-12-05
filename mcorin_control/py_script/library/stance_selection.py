@@ -70,8 +70,8 @@ def initial_stance(STANCE_WIDTH, BODY_HEIGHT, type="flat", TETA_F=20, TETA_R=-20
     ## Sideways walking stance
     elif (type=="sideways"):
         print 'Sideways selected'
-        V_LS_WIDTH = 0.338#0.3642
-        V_LS_HEIGH = 0.0872#0.07
+        V_LS_WIDTH = 0.25#0.3642
+        V_LS_HEIGH = 0.04#0.07
 
         V_RS_WIDTH = 0.18
         V_RS_HEIGH = -0.06

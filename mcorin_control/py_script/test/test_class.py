@@ -61,4 +61,26 @@ if __name__ == "__main__":
 	else:
 		value = 2048;
 
-	print int(1.7)
+	BODY_HEIGHT = 1
+	x_com = np.array([.0,.0,BODY_HEIGHT])
+	w_com = np.array([.0,.0,.0])
+	## short V spline
+	# x_com = np.vstack((x_com,np.array([0.0, 0.4, BODY_HEIGHT])))
+	# x_com = np.vstack((x_com,np.array([0.0, 0.6, BODY_HEIGHT])))
+	# x_com = np.vstack((x_com,np.array([0.0, 1.0, BODY_HEIGHT+0.12])))
+
+	x_com = np.vstack((x_com,np.array([0.0, 0.0, BODY_HEIGHT+0.06])))
+	# x_com = np.vstack((x_com,np.array([0.0, 0.0, BODY_HEIGHT-0.06])))
+	# x_com = np.vstack((x_com,np.array([0.7, 0.0, BODY_HEIGHT+0.12])))
+
+	# w_com = np.vstack((x_com,np.array([0.0, 0.0, 0.0])))
+	# w_com = np.vstack((x_com,np.array([0.0, 0.0, 0.0])))
+	# w_com = np.vstack((x_com,np.array([0.0, 0.0, 0.0])))
+
+	
+	# xsize = np.shape(x_com)
+	# wsize = np.shape(w_com)
+	# print xsize[0]
+	# print wsize[0]
+	print (x_com.size)
+	print (w_com.size)

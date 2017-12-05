@@ -34,36 +34,47 @@ class control_interface:
 		self.reset_variables()
 		self.mode = 1
 
-		## Stack via points to array
-		self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.175])))
-		self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.025])))
-		self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
+		## Chimney Demo
+		if (STANCE_TYPE == "chimney"):
+			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.1])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, -0.10])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
 
-		self.w_com = np.vstack((self.w_com,np.array([0., 0., 0.])))
-		self.w_com = np.vstack((self.w_com,np.array([0., 0., 0.])))
-		self.w_com = np.vstack((self.w_com,np.array([0., 0., 0.])))
-		# self.x_com = np.vstack((self.x_com,np.array([0.03, -0.04, BODY_HEIGHT])))
-		# self.w_com = np.vstack((self.w_com,np.array([-0.22, -0.075, 0.])))
-		# self.x_com = np.vstack((self.x_com,np.array([0.03,  0.04, BODY_HEIGHT])))
-		# self.w_com = np.vstack((self.w_com,np.array([0.22, -0.075, 0.])))
-		# self.x_com = np.vstack((self.x_com,np.array([-0.03, 0.04, BODY_HEIGHT])))
-		# self.w_com = np.vstack((self.w_com,np.array([0.22,  0.075, 0.])))
-		# self.x_com = np.vstack((self.x_com,np.array([-0.03, -0.04, BODY_HEIGHT])))
-		# self.w_com = np.vstack((self.w_com,np.array([-0.22,  0.075, 0.])))
-		# self.x_com = np.vstack((self.x_com,np.array([0.00, 0.00, BODY_HEIGHT])))
-		# self.w_com = np.vstack((self.w_com,np.array([0.00, 0.00, -0.2])))
-		#
-		# self.x_com = np.vstack((self.x_com,np.array([0.00, 0.00, 0.13])))
-		# self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.12])))
-		# self.x_com = np.vstack((self.x_com,np.array([0.,  0.0, BODY_HEIGHT])))
-		# self.w_com = np.vstack((self.w_com,np.array([0.,  0.0, 0.])))
+		## Sideways Demo
+		elif (STANCE_TYPE == "sideways"):
+			# left/right & up/down
+			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.05, 0.05])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0,-0.05,-0.05])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.05, 0.05])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0,-0.05,-0.05])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0 , 0.0 ])))
+			# forward/backwards
+			self.x_com = np.vstack((self.x_com,np.array([ 0.05, 0., 0.])))
+			self.x_com = np.vstack((self.x_com,np.array([-0.05, 0., 0.])))
+			self.x_com = np.vstack((self.x_com,np.array([ 0.05, 0., 0.])))
+			self.x_com = np.vstack((self.x_com,np.array([-0.05, 0., 0.])))
+
+		## Full bodypose demo
+		elif (STANCE_TYPE == "flat"):
+			self.x_com = np.vstack((self.x_com,np.array([0.03, -0.04, BODY_HEIGHT])))
+			self.w_com = np.vstack((self.w_com,np.array([-0.22, -0.075, 0.])))
+			self.x_com = np.vstack((self.x_com,np.array([0.03,  0.04, BODY_HEIGHT])))
+			self.w_com = np.vstack((self.w_com,np.array([0.22, -0.075, 0.])))
+			self.x_com = np.vstack((self.x_com,np.array([-0.03, 0.04, BODY_HEIGHT])))
+			self.w_com = np.vstack((self.w_com,np.array([0.22,  0.075, 0.])))
+			self.x_com = np.vstack((self.x_com,np.array([-0.03, -0.04, BODY_HEIGHT])))
+			self.w_com = np.vstack((self.w_com,np.array([-0.22,  0.075, 0.])))
+			self.x_com = np.vstack((self.x_com,np.array([0.00, 0.00, BODY_HEIGHT])))
+			self.w_com = np.vstack((self.w_com,np.array([0.00, 0.00, -0.2])))			
+			self.x_com = np.vstack((self.x_com,np.array([0.00, 0.00, 0.22])))
+			self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.12])))
+			self.x_com = np.vstack((self.x_com,np.array([0.,  0.0, BODY_HEIGHT])))
+			self.w_com = np.vstack((self.w_com,np.array([0.,  0.0, 0.])))
 
 	def WalkForward(self):
 		self.reset_variables()
 		self.mode = 2
 
-		# self.x_com = np.vstack((self.x_com,np.array([0.2, 0.0, BODY_HEIGHT])))
-		# self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
 		self.x_com = np.vstack((self.x_com,np.array([0.2, 0.0, BODY_HEIGHT])))
 		self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
 
@@ -80,23 +91,17 @@ class control_interface:
 
 		self.x_com = np.vstack((self.x_com,np.array([0.0, -0.2, BODY_HEIGHT])))
 		self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
-		# self.x_com = np.vstack((self.x_com,np.array([0.0, 0., BODY_HEIGHT])))
-		# self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
 
 	def WalkLeft(self):
 		self.reset_variables()
 		self.mode = 2
-		# x_com = np.vstack((x_com,np.array([0.0, -0.2, BODY_HEIGHT])))
-		# w_com = np.vstack((w_com,np.array([0.,0.,0.])))
+
 		self.x_com = np.vstack((self.x_com,np.array([0.0, 0.2, BODY_HEIGHT])))
 		self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
 
 	def Reset(self):
 		self.reset_variables()
 		self.mode = 3
-
-		# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, -0.03])))
-		# self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
 		self.reset_flag = True
 
 	def action_to_take(self):

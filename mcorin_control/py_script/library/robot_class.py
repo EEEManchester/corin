@@ -252,7 +252,7 @@ class LegClass:
 
 	def boundary_limit(self):
 		bound_violate = False
-		BOUND_FACTOR  = 1.8
+		BOUND_FACTOR  = 1.8 	# relaxes the boundary constraint
 
 		# vector to aep and current position wrt nominal point
 		vec_nom_X_aep = self.hip_AEP - np.reshape(LEG_STANCE[self.number],(3,1))
@@ -264,8 +264,9 @@ class LegClass:
 		# angle between hip frame and AEP
 		vec_ang = np.arctan2(vec_nom_X_aep.item(1), vec_nom_X_aep.item(0))
 
-		# ellipse boundary
+		# ellipse boundary - for the front half: p_nom to AEP 
 		if (mag_nom_X_ee > 0.):
+			# print self.number, ' ellipse boundary'
 			try:
 				# ellipse major, minor radius, rotation
 				a  = np.sqrt(vec_nom_X_aep.item(0)**2 + vec_nom_X_aep.item(1)**2)
@@ -282,8 +283,9 @@ class LegClass:
 			except:
 				pass
 
-		# circle boundary
+		# circle boundary - for the back half: p_nom to PEP
 		else:
+			# print self.number, ' circle boundary'
 			r_state = (vec_nom_X_ee.item(0)**2 + vec_nom_X_ee.item(1)**2)/(STEP_STROKE/2.)**2
 
 			if (BOUND_FACTOR < r_state):
