@@ -290,8 +290,8 @@ class PathGenerator(Pspline.SplineGenerator):
 		# print self.point_skipped
 		self.x_length = len(nt)
 		self.w_length = len(wt)
-		Plot.plot_3d(nx, nv, na)
-		Plot.plot_2d(nt,na)
+		# Plot.plot_3d(nx, nv, na)
+		# Plot.plot_2d(nt,na)
 		# Plot.plot_2d_multiple(3,wt,wx,wv,wa)
 
 		return self.x_com, self.w_com, self.t_com, self.tw_com, self.x_length, self.w_length

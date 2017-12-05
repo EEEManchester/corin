@@ -11,6 +11,10 @@ find_package(catkin REQUIRED COMPONENTS
   robot_state_publisher
   urdf
   xacro
+  gazebo_msgs
+  geometry_msgs
+  tf
+  angles
 )
 
 ## System dependencies are found with CMake's conventions
