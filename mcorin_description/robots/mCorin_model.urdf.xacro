@@ -36,6 +36,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
 	<xacro:mCorin_leg
 		name="lf"
 		parent="trunk"
+		middle_leg="false"
 		load_force_sensors="true">
 		<origin xyz="${trunk_x/2} ${trunk_y/2} 0" rpy="0 0 ${50*PI/180}"/>
 	</xacro:mCorin_leg>
@@ -43,6 +44,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
 	<xacro:mCorin_leg
 		name="lm"
 		parent="trunk"
+		middle_leg="true"
 		load_force_sensors="false">
 		<origin xyz="0 ${trunk_y/2} 0" rpy="0 0 ${PI/2}"/>
 	</xacro:mCorin_leg>
@@ -50,6 +52,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
 	<xacro:mCorin_leg
 		name="lr"
 		parent="trunk"
+		middle_leg="false"
 		load_force_sensors="false">
 		<origin xyz="${-trunk_x/2} ${trunk_y/2} 0" rpy="0 0 ${PI/2+40*PI/180}"/>
 	</xacro:mCorin_leg>
@@ -57,6 +60,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
 	<xacro:mCorin_leg
 		name="rf"
 		parent="trunk"
+		middle_leg="false"
 		load_force_sensors="true">
 		<origin xyz="${trunk_x/2} ${-trunk_y/2} 0" rpy="0 0 ${-50*PI/180}"/>
 	</xacro:mCorin_leg>
@@ -64,6 +68,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
 	<xacro:mCorin_leg
 		name="rm"
 		parent="trunk"
+		middle_leg="true"
 		load_force_sensors="false">
 		<origin xyz="0 ${-trunk_y/2} 0" rpy="0 0 ${-PI/2}"/>
 	</xacro:mCorin_leg>
@@ -71,6 +76,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
 	<xacro:mCorin_leg
 		name="rr"
 		parent="trunk"
+		middle_leg="false"
 		load_force_sensors="false">
 		<origin xyz="${-trunk_x/2} ${-trunk_y/2} 0" rpy="0 0 ${-PI/2-40*PI/180}"/>
 	</xacro:mCorin_leg>

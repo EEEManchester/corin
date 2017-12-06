@@ -7,7 +7,7 @@
 
 	<!-- ================================== Leg ================================== -->
 	<!-- The xacro macro xacro:mcorin_leg contains: hip assembly, upper and lower leg -->
-	<xacro:macro name="mCorin_leg" params="name parent *origin load_force_sensors">
+	<xacro:macro name="mCorin_leg" params="name parent middle_leg *origin load_force_sensors">
 		<!-- Joints -->
 		<!-- Coxa joint -->
 		<joint name="${name}_q1_joint" type="revolute">
@@ -15,7 +15,13 @@
 			<parent link="${parent}"/>
 			<child  link="${name}_hipassembly"/>
 			<axis xyz="0 0 1"/>
-			<limit effort="${MX64_effort}" velocity="${MX64_velocity}" lower="${-cox_joint_lim}" upper="${cox_joint_lim}"/>
+			
+			<xacro:if value="${middle_leg}"> 	<!-- overwrite joint limits for middle legs-->
+				<limit effort="${MX64_effort}" velocity="${MX64_velocity}" lower="${-cxm_joint_lim}" upper="${cxm_joint_lim}"/>
+			</xacro:if>
+			<xacro:unless value="${middle_leg}"> 	<!-- overwrite joint limits for middle legs-->
+				<limit effort="${MX64_effort}" velocity="${MX64_velocity}" lower="${-cox_joint_lim}" upper="${cox_joint_lim}"/>
+			</xacro:unless>
 			<dynamics damping="${MX64_damping}" friction="0" />
 			<!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-7*PI/18}" soft_upper_limit="${5*PI/36}" /> -->

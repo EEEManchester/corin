@@ -194,7 +194,8 @@ class CorinManager:
 			self.Robot.Leg[j].hip_X_ee.ds.xp = LEG_STANCE[j] + np.array([0.0,0.0,BODY_HEIGHT+0.01]) 	# put leg on final ground position first
 			self.Robot.generateSpline(j, self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp,
 											self.Robot.Leg[j].qsurface, 1, False, TRAC_PERIOD)
-
+			if (j==3):
+				print self.Robot.Leg[j].hip_X_ee.ds.xp
 		# move leg into position
 		for npoint in range(0, int(TRAC_PERIOD/TRAC_INTERVAL)):
 			for j in range(0,self.Robot.active_legs):

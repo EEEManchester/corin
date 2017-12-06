@@ -306,7 +306,7 @@ class LegClass:
 			return True
 		else:
 			print 'Singularity detected'
-			return True
+			return False
 
 	## Convenience functions
 	def pointToArray(self):

@@ -36,8 +36,14 @@ class control_interface:
 
 		## Chimney Demo
 		if (STANCE_TYPE == "chimney"):
+			# up/down
 			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.1])))
 			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, -0.10])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
+
+			# front/back
+			self.x_com = np.vstack((self.x_com,np.array([0.1, 0.0, 0.0])))
+			self.x_com = np.vstack((self.x_com,np.array([-0.1, 0.0, 0.0])))
 			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
 
 		## Sideways Demo

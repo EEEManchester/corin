@@ -47,7 +47,7 @@ class corin_kinematics():
 			pass
 
 	def IK(self, p=None):
-
+		
 		try:
 			x = p[0];	y = p[1];	z = p[2];
 
@@ -190,9 +190,11 @@ qs = [0., 0.466, -1.894]	# right side
 # v  = np.array([ 0, -0.05, 0.07318 ])
 # a  = np.array([ 0, 0, 0 ])
 
-cd = CK.FK(qs)
+# cd = CK.FK(qs)
 # print cd
+# cd = [ 0.2543, -0.1468,  0.1924]
 # qp = CK.IK(cd)
+# print 'q: ', qp
 # print qp
 # if (not CK.singularity_check(qp)):
 # 	qd,qdd = CK.joint_speed(qp, v, a)
