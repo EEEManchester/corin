@@ -33,7 +33,7 @@ class PathGenerator(Pspline.SplineGenerator):
 		self.x_length = 0 	# output linear spline length
 		self.w_length = 0	# output angular spline length
 
-		self.com_w_qc = np.array([ [0.0, 0.0, 0.0] ]) 		# base angular: current state 
+		self.com_w_qc = np.array([ [0.0, 0.0, 0.0] ]) 		# base angular: current state
 		self.com_w_iq = np.array([ [0.0, 0.0, 0.0] ]) 		# base angular: instantenous rotation (within instance i to i+1)
 
 		# foot placements - can be removed
@@ -60,7 +60,7 @@ class PathGenerator(Pspline.SplineGenerator):
 		print 'No. phases: ', gait_phases
 		print 'No. cycles: ', gait_cycles
 		print 'Total time: ', total_time
-		
+
 	def compute_path_length(self, via_points):
 		point_size = len(via_points) 	# determine number of via points
 		t_com = np.zeros(point_size) 	# create an array of via points size
@@ -72,14 +72,14 @@ class PathGenerator(Pspline.SplineGenerator):
 	def auto_generate_points(self, x_com, w_com):
 		xsize = x_com.size 	# no. of items in array
 		wsize = w_com.size
-		
+
 		## Generate empty array if either not defined by user
 		# w_com not defined by user
 		if (wsize < xsize):
 			w_com = np.array([.0,.0,.0])
 			for i in range(0,xsize/3-1):
 				w_com = np.vstack((w_com,np.array([0., 0., 0.])))
-		
+
 		# x_com not defined by user
 		elif (xsize < wsize):
 			x_com = np.array([.0,.0,.0])
@@ -90,7 +90,7 @@ class PathGenerator(Pspline.SplineGenerator):
 
 	def generate_path(self, x_com, w_com=0):
 		x_com, w_com = self.auto_generate_points(x_com, w_com)
-		print w_com
+
 		tx_com = self.compute_path_length(x_com)
 
 		x, y, z, t = self.generate_body_spline( x_com, tx_com , 1)
@@ -98,7 +98,7 @@ class PathGenerator(Pspline.SplineGenerator):
 		# Plot.plot_2d(t,x)
 		# travel distance per phase in a gait cycle
 		d_lambda = STEP_STROKE*self.gait['dphase']; 	print 'lambda: ', d_lambda
-		
+
 		# counter for new stacked array
 		nc = 0
 
@@ -115,11 +115,11 @@ class PathGenerator(Pspline.SplineGenerator):
 
 		# Generate linear trajectory for each segment
 		for io in range(1,len(tx_com)):
-			# print '== ', io, ' ====================' 
+			# print '== ', io, ' ===================='
 			# compute magnitude difference between start and end point of this segment
 			vd = x_com[io] - x_prv
-			si = np.sqrt( vd.dot(vd) ) 
-			
+			si = np.sqrt( vd.dot(vd) )
+
 			# determine number of points to sample within segment
 			nk = int(np.round(si/d_lambda))
 			# print 'nk  : ', nk
@@ -127,7 +127,7 @@ class PathGenerator(Pspline.SplineGenerator):
 			if (nk > 0):
 				td = tx_com[io] - t_prv 	# time difference between each segment
 				ts = td/nk 					# sampling time
-				
+
 				# if valid point exist
 				if (ts > 0):
 					# normalize time
@@ -135,24 +135,24 @@ class PathGenerator(Pspline.SplineGenerator):
 					td = td/td
 					# set t counter
 					t = ts
-										
+
 					# generate spline coefficient
 					xp, yp, zp, tp = self.generate_body_spline( np.array([ x_prv, x_com[io] ]), np.array([0.0,1.0]) , 1)
 
 					# print 't ', t, ' td: ', td, ' ts  : ', ts
 					# print 'xcom ', np.round(x_prv,3), np.round(x_com[io],3)
 					# print 'xnc  ', np.round(self.x_com[nc],3)
-					
+
 					## loop for each increment
 					# while (np.round(t,3) < td):
 					tinterval = True
 					while (tinterval == True):
-						
+
 						# CoM selection -----------------------------------------------------
-						# loop until difference threshold met within certain iteration 
+						# loop until difference threshold met within certain iteration
 						for i in range(0,40):
 							# get point at t
-							x_cur = self.get_point(t) 
+							x_cur = self.get_point(t)
 							# print 'x_cur', x_cur
 							# vector and its magnitude between current and previous point
 							m_dif = x_cur - self.x_com[nc]
@@ -167,7 +167,7 @@ class PathGenerator(Pspline.SplineGenerator):
 
 							# check if within end goal range
 							if (abs(g_mag) > 0.01):
-								
+
 								# threshold not met, increase/decrease size
 								if (abs(x_dif) > 0.001):
 									if (x_dif < 0.0):
@@ -185,28 +185,28 @@ class PathGenerator(Pspline.SplineGenerator):
 								print 'target reached'
 								break
 							# print '-------------------------------'
-						
+
 						## Stack to linear CoM array
 						self.x_com = np.vstack(( self.x_com, x_cur ))
 
 						# Body angular movement ---------------------------------------------------
 
 						## change in vector
-						inst_linear = m_dif 
-						
+						inst_linear = m_dif
+
 						## direction
 						uvec = inst_linear/(np.linalg.norm(inst_linear)) 	# normalised direction vector
-						
+
 						# axis angle: rotation
-						th = -np.arccos(np.dot(uvec,self.vorig)); 	
-						
+						th = -np.arccos(np.dot(uvec,self.vorig));
+
 						# axis angle: unit axis of rotation
 						qt = np.cross(uvec,self.vorig);
 						if (np.linalg.norm(qt) == 0.0):
 							qc = np.array([.0, .0, 1.])
 						else:
 							try:
-								qc = qt/np.linalg.norm(qt) 			
+								qc = qt/np.linalg.norm(qt)
 							except:
 								qc = np.array([.0, .0, 1.])
 
@@ -215,7 +215,7 @@ class PathGenerator(Pspline.SplineGenerator):
 						euler_R  = tf.euler_from_matrix(sorth_R, 'sxyz')	# euler from SO(3)
 
 						# vector projected onto xy-plane
-						a = np.sqrt(uvec.item(0)**2+uvec.item(1)**2) 	
+						a = np.sqrt(uvec.item(0)**2+uvec.item(1)**2)
 
 						# Rotation about z dependant on heading direction
 						if (self.heading == (1,0,0)):
@@ -226,12 +226,12 @@ class PathGenerator(Pspline.SplineGenerator):
 							rx = np.arctan2( uvec.item(2),uvec.item(1))
 							rz = np.arctan2(-uvec.item(0),uvec.item(1))
 							euler_R = (rx, 0.0, rz)
-						
+
 						## change in rotation between instance n to n+1
-						self.com_w_iq = np.vstack(( self.com_w_iq, euler_R - self.com_w_qc ))							
+						self.com_w_iq = np.vstack(( self.com_w_iq, euler_R - self.com_w_qc ))
 
 						## Stack to angular base array - if no angular movement specified
-						self.w_com = np.vstack((self.w_com, euler_R)) 
+						self.w_com = np.vstack((self.w_com, euler_R))
 
 						# Foothold selection ---------------------------------------------------
 						## Compute foothold & stack to foothold array
@@ -242,7 +242,7 @@ class PathGenerator(Pspline.SplineGenerator):
 						t += ts
 						nc += 1
 						self.com_w_qc = self.w_com[nc]
-						
+
 						# check if loop should run
 						if (np.round(t,3) > td):
 							tinterval = False
@@ -254,15 +254,15 @@ class PathGenerator(Pspline.SplineGenerator):
 			else:
 				self.point_skipped = np.vstack(( self.point_skipped, x_com[io] ))
 				# print 'point skipped'
-		
+
 		print '=========================================='
-		
+
 		# clean up
 		self.point_skipped = np.delete(self.point_skipped,0,0)
 
 		# determine linear spline timing
 		self.t_com  = np.zeros(len(self.x_com))
-		self.tw_com = np.zeros(len(self.x_com)) 
+		self.tw_com = np.zeros(len(self.x_com))
 		for i in range(1,len(self.x_com)):
 			self.t_com[i]  = i*TRAC_PERIOD 	#*self.gait['dphase'].denominator
 			self.tw_com[i] = i*TRAC_PERIOD	#*self.gait['dphase'].denominator
@@ -271,7 +271,7 @@ class PathGenerator(Pspline.SplineGenerator):
 		try:
 			ssize = w_com.size
 			self.w_com = w_com
-			
+
 			# interpolate angular spline timing according to linear timing
 			wseg = self.t_com[-1]/(len(self.w_com)-1) 		# time interval for each angular segment
 			self.tw_com = np.zeros(len(self.w_com))  		# angular timing size
@@ -281,8 +281,7 @@ class PathGenerator(Pspline.SplineGenerator):
 		except:
 			print "exception raised"
 			pass
-		print self.w_com
-		print self.tw_com
+		
 		## Regenerate linear and angular spline with updated CoM position
 		nx, nv, na, nt = self.generate_body_spline(self.x_com, self.t_com,  1)
 		wx, wv, wa, wt = self.generate_body_spline(self.w_com, self.tw_com, 1)
@@ -295,7 +294,7 @@ class PathGenerator(Pspline.SplineGenerator):
 		# Plot.plot_2d_multiple(3,wt,wx,wv,wa)
 
 		return self.x_com, self.w_com, self.t_com, self.tw_com, self.x_length, self.w_length
-		
+
 gait = {'name': "wave",
 		'beta': Fraction(5, 6),
 		'dphase': Fraction(1, 5),
@@ -332,7 +331,7 @@ planner.gait = gait
 # 	x_com = np.vstack(( x_com, xd ))
 # 	w_com = np.vstack(( w_com, np.array([qr,0.0,0.0]) ))
 # 	t_com = np.hstack(( t_com, cq ))
-# 	cq += 1 
+# 	cq += 1
 # # clean up first row
 # x_com = np.delete(x_com, 1, 0) # clean up first row of matrix
 # w_com = np.delete(w_com, 1, 0) # clean up first row of matrix

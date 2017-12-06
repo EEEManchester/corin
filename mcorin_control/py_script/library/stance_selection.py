@@ -70,11 +70,12 @@ def initial_stance(STANCE_WIDTH, BODY_HEIGHT, type="flat", TETA_F=20, TETA_R=-20
     ## Sideways walking stance
     elif (type=="sideways"):
         print 'Sideways selected'
-        V_LS_WIDTH = 0.25#0.3642
-        V_LS_HEIGH = 0.04#0.07
+        ## robot at 45deg according to matlab sim
+        V_RS_WIDTH = 0.2407
+        V_RS_HEIGH = 0.0576
 
-        V_RS_WIDTH = 0.18
-        V_RS_HEIGH = -0.06
+        V_LS_WIDTH = 0.215
+        V_LS_HEIGH = -0.081
 
         LEG_STANCE[0] = np.array([ V_LS_WIDTH*np.cos(TETA_F*np.pi/180), V_LS_WIDTH*np.sin(TETA_F*np.pi/180), V_LS_HEIGH ])
         LEG_STANCE[1] = np.array([ V_LS_WIDTH*np.cos((40-TETA_F)*np.pi/180), 0, V_LS_HEIGH ])

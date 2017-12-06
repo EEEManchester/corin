@@ -83,9 +83,7 @@ def rads2raw(rads):
 	value = int(round(abs(rads) * velocity_to_value_ratio_))
 	if (value == 0):
 		value = 1
-		# print 'value corrected'
-	return value
-	# return int(math.ceil(abs(rads) * velocity_to_value_ratio_))
+	return value # int(math.ceil(abs(rads) * velocity_to_value_ratio_))
 
 def raw2rads(raw):
 	velocity_to_value_ratio_ = 1.0/(0.229*2*3.14159265/60.0)
@@ -277,6 +275,7 @@ class CorinManager:
 		self.Robot.reset_state = True
 		self.Robot.suspend = False
 		self.Robot.updateState()
+
 		for j in range(0,self.Robot.active_legs):
 			self.Robot.Leg[j].feedback_state = 2 	# trajectory completed
 
@@ -401,14 +400,12 @@ class CorinManager:
 			## Update robot's desired pose
 			self.Robot.fr_world_X_base 	  = tf.rotation_zyx(wp)
 			self.Robot.world_X_base.ds.wp = wp
-
 			## generate trajectory for leg in transfer phase
 			for j in range (0, self.Robot.active_legs):
 
 				# transfer phase
 				if (self.Robot.gaitgen.cs[j] == 1 and self.Robot.Leg[j].phase_change==False):
 
-					# raw_input('cont')
 					self.Robot.Leg[j].feedback_state = 1 	# leg put into execution mode
 
 					## Operator mode: determine next foothold location base on forward/backwards direction of motion
@@ -463,10 +460,10 @@ class CorinManager:
 					# set flag that phase has changed
 					self.Robot.Leg[j].phase_change = True
 
+
 			## trajectory points for all legs
 			for j in range (0, self.Robot.active_legs):
-				if (self.Robot.support_mode == True):
-					self.Robot.gaitgen.cs[j] = 0
+
 				# transfer phase
 				if (self.Robot.gaitgen.cs[j] == 1 and self.Robot.Leg[j].feedback_state==1):
 
@@ -503,6 +500,11 @@ class CorinManager:
 					self.Robot.Leg[j].hip_X_ee.ds.xp = self.Robot.Leg[j].base_X_hip_ee(self.Robot.Leg[j].base_X_ee.ds.xp)
 					self.Robot.Leg[j].hip_X_ee.ds.xv = np.dot(self.Robot.Leg[j].tf_base_X_hip, self.Robot.Leg[j].base_X_ee.ds.xv)
 
+					# if (j==0):
+					# 	print 'bds: ', np.round(self.Robot.Leg[j].base_X_ee.ds.xp.flatten(),4)
+					# 	print 'bcs: ', np.round(self.Robot.Leg[j].base_X_ee.cs.xp.flatten(),4)
+					# 	print 'hds: ', np.round(self.Robot.Leg[j].hip_X_ee.ds.xp.flatten(),4)
+					# 	print 'hcs: ', np.round(self.Robot.Leg[j].hip_X_ee.cs.xp.flatten(),4)
 				## Task to joint space
 				self.task_X_joint(j)
 
@@ -555,6 +557,11 @@ class CorinManager:
 
 		i = 1 	# counter for number of points in robot's trajectory
 
+		# Set all legs to support mode for bodyposing, prevent AEP from being set
+		if (self.Robot.support_mode == True):
+			for j in range(0,6):
+				self.Robot.gaitgen.cs[j] = 0
+
 		# cycle until trajectory complete
 		while (i != xlen):
 			# suppress trajectory counter as body support suspended
@@ -571,7 +578,7 @@ class CorinManager:
 
 			# horizontal plane instantenous velocity magnitude
 			mag_v  = np.sqrt(self.lin_v.item(0)**2 + self.lin_v.item(1)**2)
-			
+
 			# horizontal plane: unit vector
 			dir_uv = np.nan_to_num(np.array([ [self.lin_v.item(0)/mag_v], [self.lin_v.item(1)/mag_v], [0.0] ]))
 			mag_v  = 1 	# forces controller to always execute

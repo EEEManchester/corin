@@ -57,7 +57,7 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 TETA_F = 30;	TETA_R = -TETA_F;
 STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
 
-LEG_STANCE = stance_selection.initial_stance(STANCE_WIDTH,BODY_HEIGHT, STANCE_TYPE, TETA_F, TETA_R)  
+LEG_STANCE = stance_selection.initial_stance(STANCE_WIDTH,BODY_HEIGHT, STANCE_TYPE, TETA_F, TETA_R)
 
 ##########################################################################################################################################
 

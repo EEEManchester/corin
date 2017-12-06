@@ -234,12 +234,13 @@ class LegClass:
 		if (resetState):
 			self.hip_X_ee.ds.xp  = self.hip_X_ee.cs.xp
 			self.base_X_ee.ds.xp = self.base_X_ee.cs.xp
-			# if (self.number==0):
-			# 	print 'state reset'
-			# 	print 'bcs: ', self.base_X_ee.cs.xp.transpose()
-			# 	print 'bds: ', self.base_X_ee.ds.xp.transpose()
-			# 	print 'hcs: ', self.hip_X_ee.cs.xp.transpose()
-			# 	print 'hds: ', self.hip_X_ee.ds.xp.transpose()
+
+		# if (self.number == 0):
+		# 	print self.number, ' ', jointState
+		# 	print 'Lubds: ', np.round(self.base_X_ee.ds.xp.flatten(),4)
+		# 	print 'Lubcs: ', np.round(self.base_X_ee.cs.xp.flatten(),4)
+		# 	print 'Luhds: ', np.round(self.hip_X_ee.ds.xp.flatten(),4)
+		# 	print 'Luhcs: ', np.round(self.hip_X_ee.cs.xp.flatten(),4)
 
 		return bound_exceed
 
@@ -264,7 +265,7 @@ class LegClass:
 		# angle between hip frame and AEP
 		vec_ang = np.arctan2(vec_nom_X_aep.item(1), vec_nom_X_aep.item(0))
 
-		# ellipse boundary - for the front half: p_nom to AEP 
+		# ellipse boundary - for the front half: p_nom to AEP
 		if (mag_nom_X_ee > 0.):
 			# print self.number, ' ellipse boundary'
 			try:
