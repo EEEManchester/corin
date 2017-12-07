@@ -602,6 +602,9 @@ class CorinManager:
 		self._Get_to_Stance() 				# put transfer legs onto ground
 
 	def action_interface(self):
+		self.Robot.updateState()
+		print 'ds: ', np.round(self.Robot.Leg[0].hip_X_ee.ds.xp.flatten(),3)
+		print 'cs: ', np.round(self.Robot.Leg[0].hip_X_ee.cs.xp.flatten(),3)
 		# initialise variables
 		data = None; x_com = None; w_com = None; mode = None;
 
@@ -619,14 +622,15 @@ class CorinManager:
 			## condition for support (1), walk (2), reset (3)
 			if (mode == 1):
 				print 'support mode'
+				self.Robot.reset_state = True
 				self.Robot.suspend = False 		# clear suspension flag
 				self.planner  = Pathgenerator.PathGenerator()
 				self.planner.gait = self.Robot.gaitgen.gdic
 				self.Robot.support_mode = True
 
 				self.trajectory_tracking(x_com, w_com)
-				self._default_pose()
-				self._default_pose(1) 	# required for resetting stance for walking
+				# self._default_pose()
+				# self._default_pose(1) 	# required for resetting stance for walking
 
 			elif (mode == 2):
 				print 'walk mode'

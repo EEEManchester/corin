@@ -184,7 +184,7 @@ class CorinManager:
 		self.point = JointTrajectoryPoint()
 		self.point.time_from_start = rospy.Duration(TRAC_INTERVAL)
 
-	def publish_topics(self):
+	def publish_topics(self, leg):
 		if (not self.Robot.invalid):
 			self.Robot.active_legs = 6
 
@@ -194,12 +194,12 @@ class CorinManager:
 				dqp.item_name = str("profile_velocity") 	# goal_position
 				dqp.data_length = 8
 
-				for n in range(0,self.Robot.active_legs*3):
+				for n in range(0,3):
 					## Gazebo
 					if (self.hardware == 'simulation'):
 						qp = Float64()
 						qp.data = self.point.positions[n]
-						self.qpub[n].publish(qp)
+						self.qpub[(leg*3)+n].publish(qp)
 
 						## TEMP
 						# if (n<9 and n>5):
@@ -232,21 +232,47 @@ class CorinManager:
 
 		self.clear_point()
 
-	def move_leg(self, leg_no):
-		print 'Moving leg ', leg_no
+	def move_leg(self, j):
+		print 'Moving leg ', j
 		# update and reset states
 		self.Robot.reset_state = True
 		self.Robot.suspend = False
 		self.Robot.updateState()
 
+		if (STANCE_TYPE=="chimney"):
+			move_by_distance = np.array([ [0.1], [0.], [0.]])
+
+		elif (STANCE_TYPE=="sideways"):
+			if (j<3):
+				move_by_distance = np.array([ [0.05], [0.], [-0.1]])
+			else:
+				move_by_distance = np.array([ [0.1], [0.], [0.]])
+
+		self.Robot.Leg[j].hip_X_ee.ds.xp = self.Robot.Leg[j].hip_X_ee.cs.xp - move_by_distance
+		self.Robot.generateSpline(j, self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp,
+										self.Robot.Leg[j].qsurface, False, False, TRAC_PERIOD)
+
+		print 'ds: ', np.round(self.Robot.Leg[0].hip_X_ee.ds.xp.flatten(),3)
+		print 'cs: ', np.round(self.Robot.Leg[0].hip_X_ee.cs.xp.flatten(),3)
+
+		for npoint in range(0, int(TRAC_PERIOD/TRAC_INTERVAL)):
+			# set cartesian position for joint kinematics
+			self.Robot.Leg[j].pointToArray();
+			self.Robot.Leg[j].spline_counter += 1
+			self.task_X_joint(j)
+
+			self.publish_topics(j)
+			self.rate.sleep()
+
 if __name__ == "__main__":
 
 	manager = CorinManager()
+	manager.Robot.updateState()
+	
+	# raw_input('Start leg control')
 
-	raw_input('Start leg control')
+	leg_to_move = 0
 
-	leg_2_move = 0
-
-	manager.move_leg(leg_2_move)
+	manager.move_leg(leg_to_move)
 
 	
