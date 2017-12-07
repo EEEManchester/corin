@@ -141,7 +141,6 @@ class CorinManager:
 		self.qpub = {}
 
 		if (self.robot_ns == 'corin' and (self.hardware == 'simulation' or self.hardware == 'real' or self.hardware == 'robotis')):
-			print 'initializing topics'
 
 			for i in range(0,18):
 				if (self.hardware == 'simulation'):
@@ -265,13 +264,18 @@ class CorinManager:
 			self.rate.sleep()
 
 if __name__ == "__main__":
+	if len(sys.argv) < 2:
+		print 'No leg selected'
+	else:
+		print 'Leg ', sys.argv[1], ' selected'
+		sleep_time = float(sys.argv[1])
 
 	manager = CorinManager()
 	manager.Robot.updateState()
-	
+	print 'Robot Initiated'
 	# raw_input('Start leg control')
 
-	leg_to_move = 0
+	leg_to_move = int(sys.argv[1])
 
 	manager.move_leg(leg_to_move)
 
