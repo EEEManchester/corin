@@ -125,7 +125,7 @@ class CorinManager:
 		self.com_tracking = np.zeros(3)
 
 		self.resting = False 		# Flag indicating robot standing or resting
-		
+
 
 	def joint_state_callback(self, msg):
 		self.Robot.qc = msg
@@ -161,7 +161,7 @@ class CorinManager:
 			self.joint_sub_  = rospy.Subscriber(self.robot_ns + '/joint_states', JointState, self.joint_state_callback, queue_size=5)
 		elif (self.hardware == 'robotis'):
 			self.joint_sub_  = rospy.Subscriber('robotis/present_joint_states', JointState, self.joint_state_callback, queue_size=5)
-		
+
 		self.on_start = False
 
 	def task_X_joint(self, j):
@@ -245,7 +245,7 @@ class CorinManager:
 			if (j<3):
 				move_by_distance = np.array([ [0.05], [0.], [-0.1]])
 			else:
-				move_by_distance = np.array([ [0.1], [0.], [0.]])
+				move_by_distance = np.array([ [0.], [0.], [0.1]])
 
 		self.Robot.Leg[j].hip_X_ee.ds.xp = self.Robot.Leg[j].hip_X_ee.cs.xp - move_by_distance
 		self.Robot.generateSpline(j, self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp,
@@ -264,19 +264,17 @@ class CorinManager:
 			self.rate.sleep()
 
 if __name__ == "__main__":
-	if len(sys.argv) < 2:
-		print 'No leg selected'
-	else:
+	if len(sys.argv) >= 2:
 		print 'Leg ', sys.argv[1], ' selected'
 		sleep_time = float(sys.argv[1])
 
-	manager = CorinManager()
-	manager.Robot.updateState()
-	print 'Robot Initiated'
-	# raw_input('Start leg control')
+		manager = CorinManager()
+		manager.Robot.updateState()
+		print 'Robot Initiated'
+		# raw_input('Start leg control')
 
-	leg_to_move = int(sys.argv[1])
+		leg_to_move = int(sys.argv[1])
 
-	manager.move_leg(leg_to_move)
-
-	
+		manager.move_leg(leg_to_move)
+	else:
+		print 'No leg selected'

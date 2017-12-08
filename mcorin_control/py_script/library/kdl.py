@@ -47,7 +47,7 @@ class corin_kinematics():
 			pass
 
 	def IK(self, p=None):
-		
+
 		try:
 			x = p[0];	y = p[1];	z = p[2];
 
@@ -187,11 +187,9 @@ CK.nominal_stance(bodypose, base_X_surface, qsurface)
 # print bodypose[3:7]
 qs = [0., 1.195, -1.773] 	# left side
 qs = [0., 0.466, -1.894]	# right side
-# v  = np.array([ 0, -0.05, 0.07318 ])
-# a  = np.array([ 0, 0, 0 ])
 
-# cd = CK.FK(qs)
-# print cd
+cd = CK.FK(qs)
+print cd
 # cd = [ 0.2543, -0.1468,  0.1924]
 # qp = CK.IK(cd)
 # print 'q: ', qp

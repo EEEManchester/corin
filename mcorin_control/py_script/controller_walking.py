@@ -119,6 +119,8 @@ class CorinManager:
 		self.point = JointTrajectoryPoint()
 		self.point.time_from_start = rospy.Duration(TRAC_INTERVAL)
 
+		self.sp_state = JointState() 		# LOGGING
+
 		if (initialise):
 			self._start()
 			rospy.sleep(0.5)
@@ -147,10 +149,8 @@ class CorinManager:
 		#######################################
 
 		##***************** PUBLISHERS ***************##
-		self.trajectory_pub = rospy.Publisher(self.robot_ns + '/setpoint', JointTrajectoryPoint, queue_size=1)
-		self.phase_pub 		= rospy.Publisher(self.robot_ns + '/phase', JointTrajectoryPoint, queue_size=1)
-		self.control_mode_	= rospy.Publisher('/robotis/set_control_mode', String, queue_size=1)
-		self.sync_qpub_  	= rospy.Publisher('/robotis/sync_write_multi', SyncWriteMulti, queue_size=1)
+		self.sp_state_pub_ 	= rospy.Publisher('/corin/setpoint_states', JointState, queue_size=1) 			# LOGGING publisher
+		self.sync_qpub_  	= rospy.Publisher('/robotis/sync_write_multi', SyncWriteMulti, queue_size=1) 	# Dynamixel motor
 
 		self.qpub = {}
 
@@ -341,6 +341,9 @@ class CorinManager:
 						dqp.value.append(rads2raw(self.point.velocities[n]))	# velocity
 						dqp.value.append(rad2raw(self.point.positions[n]))		# position
 
+						self.sp_state.position.append(self.point.positions[n]) 	# LOGGING
+						self.sp_state.velocity.append(self.point.velocities[n])	# LOGGING
+
 					## Dynamixel - arebgun library
 					elif (self.hardware == 'real'):
 						data = PositionVelocity()
@@ -363,7 +366,7 @@ class CorinManager:
 				self.sync_qpub_.publish(dqp)
 
 			# print '==================================='
-
+		self.sp_state_pub_.publish(self.sp_state)
 		self.clear_point()
 
 	def alternate_phase(self):
@@ -577,6 +580,17 @@ class CorinManager:
 
 			self.ang_p, self.ang_v, wa, wt = point_to_array(self.Robot.w_spline, i)
 
+			## LOGGING: initialise variable and set bodypose
+			self.sp_state = JointState()
+			for j in range(6):
+				self.sp_state.name.append(ROBOT_STATE[j])
+				if (j<3):
+					self.sp_state.position.append(cp.item(j))
+				else:
+					self.sp_state.position.append(self.ang_p.item(j-3))
+			for j in range(0,18):
+				self.sp_state.name.append(JOINT_NAME[j])
+
 			# horizontal plane instantenous velocity magnitude
 			mag_v  = np.sqrt(self.lin_v.item(0)**2 + self.lin_v.item(1)**2)
 
@@ -603,8 +617,8 @@ class CorinManager:
 
 	def action_interface(self):
 		self.Robot.updateState()
-		print 'ds: ', np.round(self.Robot.Leg[0].hip_X_ee.ds.xp.flatten(),3)
-		print 'cs: ', np.round(self.Robot.Leg[0].hip_X_ee.cs.xp.flatten(),3)
+		# print 'ds: ', np.round(self.Robot.Leg[0].hip_X_ee.ds.xp.flatten(),3)
+		# print 'cs: ', np.round(self.Robot.Leg[0].hip_X_ee.cs.xp.flatten(),3)
 		# initialise variables
 		data = None; x_com = None; w_com = None; mode = None;
 
