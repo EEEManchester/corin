@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
-# import sys
-# sys.path.insert(0, '/home/wilson/catkin_ws/src/mcorin/mcorin_control/py_script/library')
-# sys.dont_write_bytecode = True
+import sys
+sys.path.insert(0, '/home/wilson/catkin_ws/src/mcorin/mcorin_control/py_script/library')
+sys.dont_write_bytecode = True
 
 import numpy as np
+import transformations as tf
 # import connex
 
 dglobe = 2
@@ -61,26 +62,6 @@ if __name__ == "__main__":
 	else:
 		value = 2048;
 
-	BODY_HEIGHT = 1
-	x_com = np.array([.0,.0,BODY_HEIGHT])
-	w_com = np.array([.0,.0,.0])
-	## short V spline
-	# x_com = np.vstack((x_com,np.array([0.0, 0.4, BODY_HEIGHT])))
-	# x_com = np.vstack((x_com,np.array([0.0, 0.6, BODY_HEIGHT])))
-	# x_com = np.vstack((x_com,np.array([0.0, 1.0, BODY_HEIGHT+0.12])))
-
-	x_com = np.vstack((x_com,np.array([0.0, 0.0, BODY_HEIGHT+0.06])))
-	# x_com = np.vstack((x_com,np.array([0.0, 0.0, BODY_HEIGHT-0.06])))
-	# x_com = np.vstack((x_com,np.array([0.7, 0.0, BODY_HEIGHT+0.12])))
-
-	# w_com = np.vstack((x_com,np.array([0.0, 0.0, 0.0])))
-	# w_com = np.vstack((x_com,np.array([0.0, 0.0, 0.0])))
-	# w_com = np.vstack((x_com,np.array([0.0, 0.0, 0.0])))
-
-	
-	# xsize = np.shape(x_com)
-	# wsize = np.shape(w_com)
-	# print xsize[0]
-	# print wsize[0]
-	print (x_com.size)
-	print (w_com.size)
+	quat = [0.258819153480218,    0.0,    0.0,    0.965925797249345]
+	angles = tf.euler_from_quaternion(quat)
+	print (angles)

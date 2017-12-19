@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   control_msgs
   dynamixel_msgs
+  gazebo_msgs
   geometry_msgs
   message_filters
   message_generation
@@ -55,7 +56,7 @@ find_package(catkin REQUIRED COMPONENTS
    sensor_msgs
    std_msgs
    dynamixel_msgs
-   # nano_driver  
+   # nano_driver
  )
 
 ################################################
@@ -81,7 +82,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## catkin specific configuration ##
 ###################################
 catkin_package(
-  CATKIN_DEPENDS 
+  CATKIN_DEPENDS
   message_runtime
   actionlib
   DEPENDS Boost

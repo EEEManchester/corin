@@ -12,12 +12,12 @@ ROBOT_NS = "corin"
 ## ================================================================ ##
 ##                       Robot parameters 	 						##
 ## ================================================================ ##
-#Link Length, Mass
+# Link Length, Mass
 L1 = 0.060;	LL_LENG_1 = L1; LL_MASS_1 = 0.040
 L2 = 0.150;	LL_LENG_2 = L2;	LL_MASS_2 = 0.350
 L3 = 0.150;	LL_LENG_3 = L3;	LL_MASS_3 = 0.116
 
-#Offset from CoB to Leg using Body Frame
+# Offset from CoB to Leg using Body Frame
 COXA_X = 0.115
 COXA_Y = 0.09
 COXA_Z = 0.0
@@ -25,13 +25,19 @@ COXA_Z = 0.0
 g 	 = 9.81 	# Gravity
 M_KC = 16.06 	# MX64 motor torque constant
 
+# Joint limit
+Q1_F_LIM = 1.00     # q1 on front and rear legs
+Q1_M_LIM = 0.84     # q1 on middle legs
+Q2_A_LIM = 2.22     # q2 on all legs
+Q3_A_LIM = 2.79     # q3 on all legs
+
 ## ================================================================ ##
 ##                       Gait parameters 	 						##
 ## ================================================================ ##
 DUTY_FACTOR = {'tripod':0.5, 'tetrapod':2./3., 'ripple':3./4., 'wave':5./6. }
 
-BODY_HEIGHT  		= 0.10          # ori: 0.10, chimney: 0.0
-STANCE_WIDTH 		= 0.21          # ori: 0.21, chimney: 0.27
+BODY_HEIGHT  		= 0.0          # ori: 0.10, chimney: 0.0
+STANCE_WIDTH 		= 0.31          # ori: 0.21, chimney: 0.27
 GAIT_TYPE 			= 4 			# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 STEP_STROKE 		= 0.08 			# step size, x, 	default 0.07
 STEP_HEIGHT 		= 0.1 			# step height, z 	default 0.05
@@ -42,7 +48,7 @@ TRAC_INTERVAL 		= 0.02 			# intervals for trajectory
 ## ================================================================ ##
 ##                  Compensation parameters 	 					##
 ## ================================================================ ##
-QCOMPENSATION = 0.01
+QCOMPENSATION = -0.035
 ## ================================================================ ##
 ##                  	Inclination parameters 	 					##
 ## ================================================================ ##
@@ -54,8 +60,8 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 ## ================================================================ ##
 
 ### Leg default position, SCS
-TETA_F = 20;	TETA_R = -TETA_F;
-STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
+TETA_F = 40;	TETA_R = -TETA_F;
+STANCE_TYPE = "chimney" 	# "flat", "chimney", "sideways"
 
 LEG_STANCE = stance_selection.initial_stance(STANCE_WIDTH,BODY_HEIGHT, STANCE_TYPE, TETA_F, TETA_R)
 
@@ -106,24 +112,24 @@ JOINT_TOPICS[16] = 'rr_q2_controller'
 JOINT_TOPICS[17] = 'rr_q3_controller'
 
 JOINT_NAME = {}
-JOINT_NAME[0] = 'lf_q1'
-JOINT_NAME[1] = 'lf_q2'
-JOINT_NAME[2] = 'lf_q3'
-JOINT_NAME[3] = 'lm_q1'
-JOINT_NAME[4] = 'lm_q2'
-JOINT_NAME[5] = 'lm_q3'
-JOINT_NAME[6] = 'lr_q1'
-JOINT_NAME[7] = 'lr_q2'
-JOINT_NAME[8] = 'lr_q3'
-JOINT_NAME[9] = 'rf_q1'
-JOINT_NAME[10] = 'rf_q2'
-JOINT_NAME[11] = 'rf_q3'
-JOINT_NAME[12] = 'rm_q1'
-JOINT_NAME[13] = 'rm_q2'
-JOINT_NAME[14] = 'rm_q3'
-JOINT_NAME[15] = 'rr_q1'
-JOINT_NAME[16] = 'rr_q2'
-JOINT_NAME[17] = 'rr_q3'
+JOINT_NAME[0] = 'lf_q1_joint'
+JOINT_NAME[1] = 'lf_q2_joint'
+JOINT_NAME[2] = 'lf_q3_joint'
+JOINT_NAME[3] = 'lm_q1_joint'
+JOINT_NAME[4] = 'lm_q2_joint'
+JOINT_NAME[5] = 'lm_q3_joint'
+JOINT_NAME[6] = 'lr_q1_joint'
+JOINT_NAME[7] = 'lr_q2_joint'
+JOINT_NAME[8] = 'lr_q3_joint'
+JOINT_NAME[9] = 'rf_q1_joint'
+JOINT_NAME[10] = 'rf_q2_joint'
+JOINT_NAME[11] = 'rf_q3_joint'
+JOINT_NAME[12] = 'rm_q1_joint'
+JOINT_NAME[13] = 'rm_q2_joint'
+JOINT_NAME[14] = 'rm_q3_joint'
+JOINT_NAME[15] = 'rr_q1_joint'
+JOINT_NAME[16] = 'rr_q2_joint'
+JOINT_NAME[17] = 'rr_q3_joint'
 
 ROBOT_STATE = {}
 ROBOT_STATE[0] ='x'

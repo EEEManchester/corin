@@ -79,10 +79,19 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
 	<xacro:IMU
 		parent="trunk"
 		imu_name="trunk_imu"
-		imu_topic="trunk/data"
+		imu_topic="middle/data"
 		imu_service="trunk/service"
 		update_rate="100">
 		<origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+	</xacro:IMU>
+
+	<xacro:IMU
+		parent="trunk"
+		imu_name="trunk_offset_imu"
+		imu_topic="offset/data"
+		imu_service="trunk/service2"
+		update_rate="100">
+		<origin xyz="0.0 0.0 0.022" rpy="0 0 0"/>
 	</xacro:IMU>
 
 	<!-- <xacro:LIDAR

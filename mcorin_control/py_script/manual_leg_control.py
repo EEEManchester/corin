@@ -239,13 +239,13 @@ class CorinManager:
 		self.Robot.updateState()
 
 		if (STANCE_TYPE=="chimney"):
-			move_by_distance = np.array([ [0.1], [0.], [0.]])
+			move_by_distance = np.array([ [0.15], [0.], [0.]])
 
 		elif (STANCE_TYPE=="sideways"):
 			if (j<3):
 				move_by_distance = np.array([ [0.05], [0.], [-0.1]])
 			else:
-				move_by_distance = np.array([ [0.], [0.], [0.1]])
+				move_by_distance = np.array([ [0.], [0.], [-0.1]])
 
 		self.Robot.Leg[j].hip_X_ee.ds.xp = self.Robot.Leg[j].hip_X_ee.cs.xp - move_by_distance
 		self.Robot.generateSpline(j, self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp,

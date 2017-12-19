@@ -61,7 +61,7 @@ class ContactForce:
 			if (len(msg.states) == 0):
 				self.contact_state[0] = 0
 				self.set_to_zero(0)
-			else: 
+			else:
 				self.contact_state[0] = 1
 				self.append_to_list(0, msg.states[0].total_wrench.force)
 
@@ -69,7 +69,7 @@ class ContactForce:
 			if (len(msg.states) == 0):
 				self.contact_state[1] = 0
 				self.set_to_zero(1)
-			else: 
+			else:
 				self.contact_state[1] = 1
 				self.append_to_list(1, msg.states[0].total_wrench.force)
 
@@ -77,7 +77,7 @@ class ContactForce:
 			if (len(msg.states) == 0):
 				self.contact_state[2] = 0
 				self.set_to_zero(2)
-			else: 
+			else:
 				self.contact_state[2] = 1
 				self.append_to_list(2, msg.states[0].total_wrench.force)
 
@@ -85,7 +85,7 @@ class ContactForce:
 			if (len(msg.states) == 0):
 				self.contact_state[3] = 0
 				self.set_to_zero(3)
-			else: 
+			else:
 				self.contact_state[3] = 1
 				self.append_to_list(3, msg.states[0].total_wrench.force)
 
@@ -93,7 +93,7 @@ class ContactForce:
 			if (len(msg.states) == 0):
 				self.contact_state[4] = 0
 				self.set_to_zero(4)
-			else: 
+			else:
 				self.contact_state[4] = 1
 				self.append_to_list(4, msg.states[0].total_wrench.force)
 
@@ -101,7 +101,7 @@ class ContactForce:
 			if (len(msg.states) == 0):
 				self.contact_state[5] = 0
 				self.set_to_zero(5)
-			else: 
+			else:
 				self.contact_state[5] = 1
 				self.append_to_list(5, msg.states[0].total_wrench.force)
 
@@ -114,8 +114,9 @@ class ContactForce:
 
 if __name__ == "__main__":
 
-	contact_manager = ContactForce()	
-
+	contact_manager = ContactForce()
+	print "Contact Force node Initiated"
+	
 	while not rospy.is_shutdown():
 		contact_manager.publish()
 		contact_manager.rate.sleep()
@@ -139,7 +140,7 @@ if __name__ == "__main__":
 # 		qt = q.effort[offset+i*3:offset+(i*3)+3]
 
 # 		if (contact_state[i] == True):
-			
+
 # 			## gazebo GRF sensor
 # 			force_gaz[:,i] = kdl.FK_SO3(qp, contact_force[:,i])
 

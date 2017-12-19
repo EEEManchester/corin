@@ -299,6 +299,9 @@ class LegClass:
 	def getJointKinematic(self,velocity):
 		self.Joint.qpd = self.KL.IK(self.hip_X_ee.ds.xp)
 
+		# checks if joint limit exceeded
+		q_exceeded = self.checkJointLimit()
+
 		# checks if there's need to compute joint velocity
 		if (not self.KL.singularity_check(self.Joint.qpd)):
 			if (velocity==True):
@@ -307,6 +310,26 @@ class LegClass:
 		else:
 			print 'Singularity detected'
 			return False
+
+	def checkJointLimit(self):
+		exceeded = False
+		# take correct q1 limit
+		if (self.number != 1 or self.number != 4):
+			q1_lim = Q1_F_LIM
+		else:
+			q1_lim = Q1_M_LIM
+
+		if (abs(self.Joint.qpd[0])>q1_lim):
+			print 'Leg ', self.number, ' q1 limit exceeded'
+			exceeded = True
+		if (abs(self.Joint.qpd[1])>Q2_A_LIM):
+			print 'Leg ', self.number, ' q2 limit exceeded'
+			exceeded = True
+		if (abs(self.Joint.qpd[2])>Q3_A_LIM):
+			print 'Leg ', self.number, ' q3 limit exceeded'
+			exceeded = True
+
+		return False
 
 	## Convenience functions
 	def pointToArray(self):

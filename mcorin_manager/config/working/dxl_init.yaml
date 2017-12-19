@@ -1,4 +1,4 @@
-lf_q1_joint :   # MX-64
+lf_q1 :   # MX-64
    return_delay_time     : 0    # item name : value
    operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
@@ -17,7 +17,7 @@ lf_q1_joint :   # MX-64
    profile_velocity      : 40
    profile_acceleration  : 0
 
-lf_q2_joint :   # MX-64
+lf_q2 :   # MX-64
    return_delay_time     : 03500
    operating_mode        : 3
    shutdown              : 20
@@ -36,7 +36,7 @@ lf_q2_joint :   # MX-64
    profile_velocity      : 40
    profile_acceleration  : 0
 
-lf_q3_joint :   # MX-64
+lf_q3 :   # MX-64
    return_delay_time     : 0
    operating_mode        : 3
    shutdown              : 20
@@ -55,7 +55,7 @@ lf_q3_joint :   # MX-64
    profile_velocity      : 40
    profile_acceleration  : 0
 
-lm_q1_joint :   # MX-64
+lm_q1 :   # MX-64
    return_delay_time     : 0    # item name : value
    operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
@@ -74,7 +74,7 @@ lm_q1_joint :   # MX-64
    profile_velocity      : 40
    profile_acceleration  : 0
 
-lm_q2_joint :   # MX-64
+lm_q2 :   # MX-64
    return_delay_time     : 03500
    operating_mode        : 3
    shutdown              : 20
@@ -93,7 +93,7 @@ lm_q2_joint :   # MX-64
    profile_velocity      : 40
    profile_acceleration  : 0
 
-lm_q3_joint :   # MX-64
+lm_q3 :   # MX-64
    return_delay_time     : 0
    operating_mode        : 3
    shutdown              : 20
@@ -112,7 +112,7 @@ lm_q3_joint :   # MX-64
    profile_velocity      : 40
    profile_acceleration  : 0
 
-lr_q1_joint :   # MX-64
+lr_q1 :   # MX-64
    return_delay_time     : 0    # item name : value
    operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
@@ -131,7 +131,7 @@ lr_q1_joint :   # MX-64
    profile_velocity      : 40
    profile_acceleration  : 0
 
-lr_q2_joint :   # MX-64
+lr_q2 :   # MX-64
    return_delay_time     : 03500
    operating_mode        : 3
    shutdown              : 20
@@ -150,7 +150,7 @@ lr_q2_joint :   # MX-64
    profile_velocity      : 40
    profile_acceleration  : 0
 
-lr_q3_joint :   # MX-64
+lr_q3 :   # MX-64
    return_delay_time     : 0
    operating_mode        : 3
    shutdown              : 20
@@ -169,7 +169,7 @@ lr_q3_joint :   # MX-64
    profile_velocity      : 40
    profile_acceleration  : 0
 
-rf_q1_joint :   # MX-64
+rf_q1 :   # MX-64
    return_delay_time     : 0    # item name : value
    operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
@@ -188,7 +188,7 @@ rf_q1_joint :   # MX-64
    profile_velocity      : 40
    profile_acceleration  : 0
 
-rf_q2_joint :   # MX-64
+rf_q2 :   # MX-64
    return_delay_time     : 03500
    operating_mode        : 3
    shutdown              : 20
@@ -207,7 +207,7 @@ rf_q2_joint :   # MX-64
    profile_velocity      : 40
    profile_acceleration  : 0
 
-rf_q3_joint :   # MX-64
+rf_q3 :   # MX-64
    return_delay_time     : 0
    operating_mode        : 3
    shutdown              : 20
@@ -226,7 +226,7 @@ rf_q3_joint :   # MX-64
    profile_velocity      : 40
    profile_acceleration  : 0
 
-rm_q1_joint :   # MX-64
+rm_q1 :   # MX-64
    return_delay_time     : 0    # item name : value
    operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
@@ -245,7 +245,7 @@ rm_q1_joint :   # MX-64
    profile_velocity      : 40
    profile_acceleration  : 0
 
-rm_q2_joint :   # MX-64
+rm_q2 :   # MX-64
    return_delay_time     : 03500
    operating_mode        : 3
    shutdown              : 20
@@ -264,7 +264,7 @@ rm_q2_joint :   # MX-64
    profile_velocity      : 40
    profile_acceleration  : 0
 
-rm_q3_joint :   # MX-64
+rm_q3 :   # MX-64
    return_delay_time     : 0
    operating_mode        : 3
    shutdown              : 20
@@ -283,7 +283,7 @@ rm_q3_joint :   # MX-64
    profile_velocity      : 40
    profile_acceleration  : 0
 
-rr_q1_joint :   # MX-64
+rr_q1 :   # MX-64
    return_delay_time     : 0    # item name : value
    operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
@@ -302,7 +302,7 @@ rr_q1_joint :   # MX-64
    profile_velocity      : 40
    profile_acceleration  : 0
 
-rr_q2_joint :   # MX-64
+rr_q2 :   # MX-64
    return_delay_time     : 03500
    operating_mode        : 3
    shutdown              : 20
@@ -321,7 +321,7 @@ rr_q2_joint :   # MX-64
    profile_velocity      : 40
    profile_acceleration  : 0
 
-rr_q3_joint :   # MX-64
+rr_q3 :   # MX-64
    return_delay_time     : 0
    operating_mode        : 3
    shutdown              : 20
