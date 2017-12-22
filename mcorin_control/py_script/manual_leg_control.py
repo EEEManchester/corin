@@ -113,8 +113,7 @@ class CorinManager:
 		self.connex   = connex.Connexion() 				# connex hardware controller
 		self.planner  = Pathgenerator.PathGenerator() 	# trajectory following
 
-		self.control_mode = 1 				# control mode: 1-autonomous, 0-manual control
-		self.hardware = 'simulation'		# options: 'simulation', 'real', 'robotis'
+		self.hardware = self.hardware_selection()		# returns interface to simulation or hardware
 
 		self.point = JointTrajectoryPoint()
 		self.point.time_from_start = rospy.Duration(TRAC_INTERVAL)
@@ -126,6 +125,11 @@ class CorinManager:
 
 		self.resting = False 		# Flag indicating robot standing or resting
 
+	def hardware_selection(self):
+		if rospy.has_param('/gazebo/auto_disable_bodies'):
+			return 'simulation'
+		else:
+			return 'robotis'
 
 	def joint_state_callback(self, msg):
 		self.Robot.qc = msg
@@ -202,9 +206,9 @@ class CorinManager:
 
 						## TEMP
 						# if (n<9 and n>5):
-						dqp.joint_name.append(str(JOINT_NAME[n])) 				# joint name
-						dqp.value.append(rads2raw(self.point.velocities[n]))	# velocity
-						dqp.value.append(rad2raw(self.point.positions[n]))		# position
+						# dqp.joint_name.append(str(JOINT_NAME[n])) 				# joint name
+						# dqp.value.append(rads2raw(self.point.velocities[n]))	# velocity
+						# dqp.value.append(rad2raw(self.point.positions[n]))		# position
 
 					## Dynamixel - arebgun library
 					elif (self.hardware == 'real'):
@@ -220,9 +224,9 @@ class CorinManager:
 				dqp.item_name = str("profile_velocity") 	# goal_position
 				dqp.data_length = 8
 
-				for n in range(0,self.Robot.active_legs*3): 	# loop for each joint
-					dqp.joint_name.append(str(JOINT_NAME[n])) 				# joint name
-					dqp.value.append(rads2raw(self.point.velocities[n]))	# velocity
+				for n in range(0,3): 	# loop for each joint on a leg
+					dqp.joint_name.append(str(JOINT_NAME[(leg*3)+n])) 				# joint name
+					dqp.value.append(0)	# velocity
 					dqp.value.append(rad2raw(self.point.positions[n]))		# position
 
 				self.sync_qpub_.publish(dqp)
@@ -245,7 +249,7 @@ class CorinManager:
 			if (j<3):
 				move_by_distance = np.array([ [0.05], [0.], [-0.1]])
 			else:
-				move_by_distance = np.array([ [0.], [0.], [-0.1]])
+				move_by_distance = np.array([ [0.1], [0.], [-0.1]])
 
 		self.Robot.Leg[j].hip_X_ee.ds.xp = self.Robot.Leg[j].hip_X_ee.cs.xp - move_by_distance
 		self.Robot.generateSpline(j, self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp,

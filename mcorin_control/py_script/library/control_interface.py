@@ -42,7 +42,7 @@ class control_interface:
 			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
 			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.06])))
 			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
-			
+
 			# front/back
 			# self.x_com = np.vstack((self.x_com,np.array([0.03, 0.0, 0.0])))
 			# self.x_com = np.vstack((self.x_com,np.array([-0.03, 0.0, 0.0])))
@@ -57,11 +57,11 @@ class control_interface:
 			self.x_com = np.vstack((self.x_com,np.array([0.0,-0.03, BODY_HEIGHT-0.03])))
 			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0 , BODY_HEIGHT ])))
 			# forward/backwards
-			self.x_com = np.vstack((self.x_com,np.array([ 0.03, 0., BODY_HEIGHT])))
-			self.x_com = np.vstack((self.x_com,np.array([-0.03, 0., BODY_HEIGHT])))
-			self.x_com = np.vstack((self.x_com,np.array([ 0.03, 0., BODY_HEIGHT])))
-			self.x_com = np.vstack((self.x_com,np.array([-0.03, 0., BODY_HEIGHT])))
-			self.x_com = np.vstack((self.x_com,np.array([ 0.0, 0., BODY_HEIGHT])))
+			# self.x_com = np.vstack((self.x_com,np.array([ 0.03, 0., BODY_HEIGHT])))
+			# self.x_com = np.vstack((self.x_com,np.array([-0.03, 0., BODY_HEIGHT])))
+			# self.x_com = np.vstack((self.x_com,np.array([ 0.03, 0., BODY_HEIGHT])))
+			# self.x_com = np.vstack((self.x_com,np.array([-0.03, 0., BODY_HEIGHT])))
+			# self.x_com = np.vstack((self.x_com,np.array([ 0.0, 0., BODY_HEIGHT])))
 
 		## Full bodypose demo
 		elif (STANCE_TYPE == "flat"):

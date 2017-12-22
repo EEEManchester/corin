@@ -60,7 +60,7 @@ def point_to_array(cpoints, i, select=0):
 		return cp, cv, ca, ct
 
 def rad2raw(radian):
-
+	## convert joint position to dxl raw value
 	value_of_0_radian_position_      = 2048
 	value_of_min_radian_position_    = 0
 	value_of_max_radian_position_    = 4095
@@ -78,17 +78,14 @@ def rad2raw(radian):
 	return int(value)
 
 def rads2raw(rads):
+	## convert joint velocity to dxl raw value
 	velocity_to_value_ratio_ = 1.0/(0.229*2*3.14159265/60.0)
 
 	value = int(round(abs(rads) * velocity_to_value_ratio_))
+	# force velocity to move at slowest
 	if (value == 0):
 		value = 1
 	return value # int(math.ceil(abs(rads) * velocity_to_value_ratio_))
-
-def raw2rads(raw):
-	velocity_to_value_ratio_ = 1.0/(0.229*2*3.14159265/60.0)
-
-	return (rads / velocity_to_value_ratio_)
 
 class CorinManager:
 	def __init__(self, initialise):
@@ -113,8 +110,8 @@ class CorinManager:
 		self.connex   = connex.Connexion() 				# connex hardware controller
 		self.planner  = Pathgenerator.PathGenerator() 	# trajectory following
 
-		self.control_mode = 1 				# control mode: 1-autonomous, 0-manual control
-		self.hardware = 'simulation'		# options: 'simulation', 'real', 'robotis'
+		self.control_mode = 1 						# control mode: 1-autonomous, 0-manual control
+		self.hardware = self.hardware_selection()	# returns interface to simulation or hardware
 
 		self.point = JointTrajectoryPoint()
 		self.point.time_from_start = rospy.Duration(TRAC_INTERVAL)
@@ -130,6 +127,12 @@ class CorinManager:
 
 		self.resting = False 		# Flag indicating robot standing or resting
 		self.ui_control	= control_interface.control_interface()
+
+	def hardware_selection(self):
+		if rospy.has_param('/gazebo/auto_disable_bodies'):
+			return 'simulation'
+		else:
+			return 'robotis'
 
 	def joint_state_callback(self, msg):
 		self.Robot.qc = msg
@@ -335,12 +338,6 @@ class CorinManager:
 						qp.data = self.point.positions[n]
 						self.qpub[n].publish(qp)
 
-						## TEMP
-						# if (n<9 and n>5):
-						dqp.joint_name.append(str(JOINT_NAME[n])) 				# joint name
-						dqp.value.append(rads2raw(self.point.velocities[n]))	# velocity
-						dqp.value.append(rad2raw(self.point.positions[n]))		# position
-
 						self.sp_state.position.append(self.point.positions[n]) 	# LOGGING
 						self.sp_state.velocity.append(self.point.velocities[n])	# LOGGING
 
@@ -360,8 +357,11 @@ class CorinManager:
 
 				for n in range(0,self.Robot.active_legs*3): 	# loop for each joint
 					dqp.joint_name.append(str(JOINT_NAME[n])) 				# joint name
-					dqp.value.append(rads2raw(self.point.velocities[n]))	# velocity
+					dqp.value.append(0)	# velocity - rads2raw(self.point.velocities[n])
 					dqp.value.append(rad2raw(self.point.positions[n]))		# position
+
+					self.sp_state.position.append(self.point.positions[n]) 	# LOGGING
+					self.sp_state.velocity.append(self.point.velocities[n])	# LOGGING
 
 				self.sync_qpub_.publish(dqp)
 
