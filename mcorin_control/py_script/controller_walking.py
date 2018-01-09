@@ -192,9 +192,23 @@ class CorinManager:
 	def _air_suspend_legs(self):
 		self.Robot.updateState() 		# get current state
 
+		# Variables
+		fix_stance = 0.21;
+		fix_height = 0.01
+		leg_stance = {}
+		# stance for air suspension
+		leg_stance[0] = np.array([ fix_stance*np.cos(TETA_F*np.pi/180), fix_stance*np.sin(TETA_F*np.pi/180), fix_height ])
+		leg_stance[1] = np.array([ fix_stance, 0, fix_height])
+		leg_stance[2] = np.array([ fix_stance*np.cos(TETA_R*np.pi/180), fix_stance*np.sin(TETA_R*np.pi/180), fix_height ])
+
+		leg_stance[3] = np.array([ fix_stance*np.cos(TETA_F*np.pi/180), fix_stance*np.sin(-TETA_F*np.pi/180), fix_height ])
+		leg_stance[4] = np.array([fix_stance, 0, fix_height])
+		leg_stance[5] = np.array([ fix_stance*np.cos(TETA_R*np.pi/180), fix_stance*np.sin(-TETA_R*np.pi/180), fix_height ])
+
 		# generate spline to legs up position
 		for j in range(0,self.Robot.active_legs):
-			self.Robot.Leg[j].hip_X_ee.ds.xp = LEG_STANCE[j] + np.array([0.0,0.0,BODY_HEIGHT+0.01]) 	# put leg on final ground position first
+			# self.Robot.Leg[j].hip_X_ee.ds.xp = LEG_STANCE[j] + np.array([0.0,0.0,BODY_HEIGHT+fix_height]) 	# put leg on final ground position first
+			self.Robot.Leg[j].hip_X_ee.ds.xp = leg_stance[j] 	# place leg in fixed position in air
 			self.Robot.generateSpline(j, self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp,
 											self.Robot.Leg[j].qsurface, 1, False, TRAC_PERIOD)
 			if (j==3):
@@ -541,7 +555,8 @@ class CorinManager:
 
 		self.planner.heading = (1,0,0)
 		xn_com, wn_com, tn_com, twn_com, xlen, wlen = self.planner.generate_path(x_com, w_com)
-
+		print xlen
+		print wlen
 		self.planner.get_path_details() 	# for information about trajectory
 
 		## This segment to check output only
@@ -558,7 +573,10 @@ class CorinManager:
 		## create spline from CoM via points
 		self.Robot.x_spline = self.p_spline.generate_body_spline(xn_com, tn_com, 0)
 		self.Robot.w_spline = self.p_spline.generate_body_spline(wn_com, twn_com, 0)
-
+		print 'Translation: '
+		print len(self.Robot.x_spline.time_from_start)
+		print 'Rotation: '
+		# print self.Robot.w_spline
 		i = 1 	# counter for number of points in robot's trajectory
 
 		# Set all legs to support mode for bodyposing, prevent AEP from being set
@@ -566,8 +584,16 @@ class CorinManager:
 			for j in range(0,6):
 				self.Robot.gaitgen.cs[j] = 0
 
+		# Check which trajectory to follow
+		if (len(self.Robot.x_spline.time_from_start) > len(self.Robot.w_spline.time_from_start)):
+			tlen  = xlen
+			tinst = self.Robot.x_spline.time_from_start
+		else:
+			tlen = wlen
+			tinst = self.Robot.x_spline.time_from_start
+
 		# cycle until trajectory complete
-		while (i != xlen):
+		while (i != wlen):
 			# suppress trajectory counter as body support suspended
 			if (self.Robot.suspend == True):
 				i -= 1

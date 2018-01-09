@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-import rospy
-from trajectory_msgs.msg import JointTrajectoryPoint
+# import rospy
+# from trajectory_msgs.msg import JointTrajectoryPoint
 
 import numpy as np
 from numpy.linalg import inv

@@ -36,14 +36,14 @@ Q3_A_LIM = 2.79     # q3 on all legs
 ## ================================================================ ##
 DUTY_FACTOR = {'tripod':0.5, 'tetrapod':2./3., 'ripple':3./4., 'wave':5./6. }
 
-BODY_HEIGHT  		= 0.1          # ori: 0.10, chimney: 0.0
-STANCE_WIDTH 		= 0.21          # ori: 0.21, chimney: 0.27, 0.31 for tripod
+BODY_HEIGHT  		= 0.0          # ori: 0.10, chimney: 0.0
+STANCE_WIDTH 		= 0.27          # ori: 0.21, chimney: 0.27, 0.31 for tripod
 GAIT_TYPE 			= 4 			# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 STEP_STROKE 		= 0.08 			# step size, x, 	default 0.07
 STEP_HEIGHT 		= 0.1 			# step height, z 	default 0.05
 WALKING_SPEED 		= 0.035 		# walking speed in m/s
 TRAC_PERIOD			= 1.5			# cycle time for movement
-TRAC_INTERVAL 		= 0.002 			# intervals for trajectory
+TRAC_INTERVAL 		= 0.05 			# intervals for trajectory
 
 ## ================================================================ ##
 ##                  Compensation parameters 	 					##
@@ -60,8 +60,8 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 ## ================================================================ ##
 
 ### Leg default position, SCS
-TETA_F = 20;	TETA_R = -TETA_F;
-STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
+TETA_F = 0;	TETA_R = -TETA_F;
+STANCE_TYPE = "chimney" 	# "flat", "chimney", "sideways"
 
 LEG_STANCE = stance_selection.initial_stance(STANCE_WIDTH,BODY_HEIGHT, STANCE_TYPE, TETA_F, TETA_R)
 

@@ -1,5 +1,5 @@
 [ control info ]
-control_cycle = 2   # milliseconds
+control_cycle = 5   # milliseconds
 
 [ port info ]
 # PORT NAME  | BAUDRATE | DEFAULT JOINT

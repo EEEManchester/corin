@@ -18,7 +18,7 @@ from constant import *
 
 import transformations as tf
 import pspline_generator as Pspline
-import bspline_generator as Bspline
+# import bspline_generator as Bspline
 
 
 class PathGenerator(Pspline.SplineGenerator):
@@ -281,9 +281,14 @@ class PathGenerator(Pspline.SplineGenerator):
 		except:
 			print "exception raised"
 			pass
-		
+
 		## Regenerate linear and angular spline with updated CoM position
 		nx, nv, na, nt = self.generate_body_spline(self.x_com, self.t_com,  1)
+
+		# temporary fix for angular rotation in place
+		if (len(self.tw_com)==2 and self.tw_com.item(1) == 0.):
+			self.tw_com = np.array([0.0,3.0])
+
 		wx, wv, wa, wt = self.generate_body_spline(self.w_com, self.tw_com, 1)
 		# print self.x_com
 		# print self.point_skipped
@@ -301,13 +306,15 @@ gait = {'name': "wave",
 		'phase':np.matrix([ Fraction(6, 6), Fraction(5, 6), Fraction(4, 6), Fraction(3, 6), Fraction(2, 6), Fraction(1, 6) ])}
 
 x_com = np.array([.0,.0,BODY_HEIGHT])
+x_com = np.vstack((x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
 w_com = np.array([.0,.0,.0])
+w_com = np.vstack((w_com,np.array([0.0, 0.0, 1.51])))
 ## short V spline
 # x_com = np.vstack((x_com,np.array([0.0, 0.4, BODY_HEIGHT])))
 # x_com = np.vstack((x_com,np.array([0.0, 0.6, BODY_HEIGHT])))
 # x_com = np.vstack((x_com,np.array([0.0, 1.0, BODY_HEIGHT+0.12])))
 
-x_com = np.vstack((x_com,np.array([0.0, 0.0, BODY_HEIGHT+0.06])))
+# x_com = np.vstack((x_com,np.array([0.0, 0.0, BODY_HEIGHT+0.06])))
 # x_com = np.vstack((x_com,np.array([0.0, 0.0, BODY_HEIGHT-0.06])))
 # x_com = np.vstack((x_com,np.array([0.7, 0.0, BODY_HEIGHT+0.12])))
 
@@ -318,7 +325,7 @@ x_com = np.vstack((x_com,np.array([0.0, 0.0, BODY_HEIGHT+0.06])))
 planner = PathGenerator()
 planner.heading = (1,0,0)
 planner.gait = gait
-# planner.generate_path(x_com, w_com)
+planner.generate_path(x_com, w_com)
 
 ## wall transition
 # cq = 0.
