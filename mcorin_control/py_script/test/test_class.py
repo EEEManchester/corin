@@ -65,3 +65,10 @@ if __name__ == "__main__":
 	quat = [0.258819153480218,    0.0,    0.0,    0.965925797249345]
 	angles = tf.euler_from_quaternion(quat)
 	print (angles)
+
+	xp = np.array([ [1,2,3],[4,5,6],[7,8,9] ])
+	print (xp[1])
+	tlen = np.array([1,2,3,4,54,6])
+	
+	print tlen[6-1]
+	print tlen[-1]

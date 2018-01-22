@@ -174,8 +174,10 @@ class corin_kinematics():
 		return base_hip_X_nom
 
 
-## Test values
 
+## ================================================================================================ ##
+## 												TESTING 											##
+## ================================================================================================ ##
 CK = corin_kinematics()
 
 qsurface = np.array([0.,-np.pi/2,0.])
@@ -189,7 +191,7 @@ CK.nominal_stance(bodypose, base_X_surface, qsurface)
 qs = [0., 0.45, -2.033]	# right side
 
 cd = CK.FK(qs)
-print cd.flatten()
+# print cd.flatten()
 cd = [ 0.288, 0., -0.019]
 qp = CK.IK(cd)
 # print 'q: ', qp

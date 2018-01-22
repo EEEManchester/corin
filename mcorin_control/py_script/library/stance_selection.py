@@ -15,7 +15,7 @@ def initial_stance(STANCE_WIDTH, BODY_HEIGHT, type="flat", TETA_F=20, TETA_R=-20
 
     # Flat ground stance - original
     if (type=="flat"):
-        print 'Flat original selected'
+        print 'Flat selected'
         LEG_STANCE[0] = np.array([ STANCE_WIDTH*np.cos(TETA_F*np.pi/180), STANCE_WIDTH*np.sin(TETA_F*np.pi/180), -BODY_HEIGHT ])
         LEG_STANCE[1] = np.array([ STANCE_WIDTH, 0, -BODY_HEIGHT])
         LEG_STANCE[2] = np.array([ STANCE_WIDTH*np.cos(TETA_R*np.pi/180), STANCE_WIDTH*np.sin(TETA_R*np.pi/180), -BODY_HEIGHT ])

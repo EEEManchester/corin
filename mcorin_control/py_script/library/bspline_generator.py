@@ -1,12 +1,10 @@
 #!/usr/bin/env python
-import rospy
-from trajectory_msgs.msg import JointTrajectoryPoint
-from trajectory_msgs.msg import MultiDOFJointTrajectoryPoint
-from trajectory_msgs.msg import MultiDOFJointTrajectory
-
-from geometry_msgs.msg import *
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'class'))
 
 from constant import *
+from TrajectoryPoints import TrajectoryPoints
 import plotgraph as Plot
 
 import time
@@ -15,10 +13,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from scipy import linalg
 from scipy import arange
-
-from geometry_msgs.msg import Vector3
-from geometry_msgs.msg import Quaternion
-from geometry_msgs.msg import Transform
 
 class SplineGenerator:
 	def __init__(self):
@@ -312,31 +306,23 @@ class SplineGenerator:
 		self.knotFunction() 									# determine U, n_knot
 		P = self.controlPoint() 								# calculate control point P
 
-		x = np.zeros(0); xd = np.zeros(0); xdd = np.zeros(0); t = np.zeros(0)
-		y = np.zeros(0); yd = np.zeros(0); ydd = np.zeros(0); 
-		z = np.zeros(0); zd = np.zeros(0); zdd = np.zeros(0); 
+		x_com = TrajectoryPoints()
 
-		# ## Evaluate spline
+		## Evaluate spline
 		t_inc = TRAC_INTERVAL 	
 		for i in arange(0,self.t0[-1]+t_inc,t_inc):
 			t1, t2, t3 = self.evaluateSpline(i, P, 3)
+			
+			x_com.xp = np.vstack( (x_com.xp,t1) )
+			x_com.xv = np.vstack( (x_com.xv,t2) )
+			x_com.xa = np.vstack( (x_com.xa,t3) )
+			x_com.t  = np.hstack( (x_com.t ,i ) )
 
-			x  	= np.append(x, t1[0]);		y  	= np.append(y, t1[1]);		z  	= np.append(z, t1[2]);
-			xd 	= np.append(xd, t2[0]);		yd 	= np.append(yd, t2[1]);		zd 	= np.append(zd, t2[2]);
-			xdd	= np.append(xdd, t3[0]);	ydd	= np.append(ydd, t3[1]);	zdd	= np.append(zdd, t3[2]);
-			t 	= np.append(t, i)
-
-		# put cartesian points into Joint Trajectory Point
-		point = JointTrajectoryPoint()
-		point.positions 	= [ np.around(x,decimals=4), np.around(y,decimals=4), np.around(z,decimals=4) ]
-		point.velocities 	= [ xd, yd, zd ]
-		point.accelerations	= [ xdd, ydd, zdd ]
-		point.time_from_start = [t]
-
+		# print np.around(qp,decimals=3)
 		if (return_type==0):
-			return point
+			return x_com
 		elif (return_type==1):
-			return x, y, z, t
+			return x_com.xp[:,0], x_com.xp[:,1], x_com.xp[:,2], qt
 
 	def generate_leg_spline(self, sp, ep, qsurface, phase, reflex=False, td=2.0, return_type=0):
 		# print 'td: ', td
@@ -349,16 +335,21 @@ class SplineGenerator:
 		
 		return self.spline_generation(return_type)
 		
-### -------------------------------------------------------------------------------------------###
-sp = np.array([0.50, 0.00, -0.05])
-ep = np.array([0.50, 0.00,  0.05])
+
+## ================================================================================================ ##
+## 												TESTING 											##
+## ================================================================================================ ##
+sp = np.array([0.50, -0.10, -0.05])
+ep = np.array([0.50,  0.10, -0.05])
 qsurface = np.array([0, -1.571/2., 0.])
 phase = 1
 
+qpoints = TrajectoryPoints()
 ### Test scripts
 spliner = SplineGenerator()
-# x, y, z, t = spliner.generate_leg_spline(sp, ep, qsurface, phase, 0, TRAC_PERIOD, 1)
+# qpoints = spliner.generate_leg_spline(sp, ep, qsurface, phase, 0, TRAC_PERIOD, 0)
 
+# print (qpoints.t)
 # Plot.plot_3d(x,y,z)
 # Plot.plot_2d(t,z)
 # fig = plt.figure()

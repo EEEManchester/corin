@@ -1,50 +1,43 @@
-
 #!/usr/bin/env python
 
+## Class for robot and leg
 ## Indexing for leg starts with 0, 1 .... 5
-import sys; sys.dont_write_bytecode = True
+
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'class'))
+sys.dont_write_bytecode = True
 
 import rospy
+from sensor_msgs.msg import JointState
+from sensor_msgs.msg import Imu
+import tf as RTF
+
 import math
 import numpy as np
 from scipy import linalg
-import transformations as tf
 
 from constant import *
+import transformations as tf
+from TrajectoryPoints import TrajectoryPoints
 import gait_class as Gaitgenerator
 import param_gait
 import kdl
 import plotgraph as Plot
-
-from std_msgs.msg import Float64
-from control_msgs.msg import FollowJointTrajectoryGoal
-import actionlib
-import tf as RTF
-
-from control_msgs.msg import JointTrajectoryAction, JointTrajectoryGoal, FollowJointTrajectoryAction, FollowJointTrajectoryGoal, JointTrajectoryControllerState
-
-# from lcorin_control.srv import *
-
-# =======================================#
 import pspline_generator as Pspline
 import bspline_generator as Bspline
 
-from sensor_msgs.msg import JointState
-from sensor_msgs.msg import Imu
-from trajectory_msgs.msg import JointTrajectoryPoint
-
-from mcorin_control.srv import JointState as JointStateSrv
-from mcorin_control.srv import Imu as ImuSrv
 
 class RobotState:
 	def __init__(self):
 		self.qc  = JointState() 					# JointState class for service call joint updates
 		self.imu = Imu()
 		self.Leg = {} 								# leg class
-		self.x_spline = JointTrajectoryPoint() 		# CoM trajectory
-		self.w_spline = JointTrajectoryPoint() 		# Base angular trajectory
 
-		self.world_X_base = FrameClass('twist') 			# FrameClass for world to base transformation
+		self.x_spline = TrajectoryPoints() 			# CoM trajectory
+		self.w_spline = TrajectoryPoints() 			# Base angular trajectory
+
+		self.world_X_base = FrameClass('twist') 	# FrameClass for world to base transformation
 		self.bspline = Bspline.SplineGenerator() 	# bSplineClass for spline generation
 
 		self.pose = np.zeros((3,1))								# euler angle rotation x,y,z
@@ -69,6 +62,7 @@ class RobotState:
 	def _initialise(self):
 		for i in range(6):
 			self.Leg[i] = LegClass(i)
+		print ">> INITIALISED ROBOT CLASS"
 
 	def updateState(self):
 		## update using topics - more elegant as rospy is multi-threaded
@@ -107,8 +101,14 @@ class RobotState:
 		j = leg_no
 		self.Leg[j].spline = self.bspline.generate_leg_spline(start.flatten(), end.flatten(), qsurface, phase, reflex, ctime)
 		self.Leg[j].spline_counter = 1
-		self.Leg[j].spline_length  = len(self.Leg[j].spline.time_from_start[0])
+		self.Leg[j].spline_length  = len(self.Leg[j].spline.t)
 
+
+class TrajectoryPoints():
+	def __init__(self):
+		self.xp = np.zeros((1,3))
+		self.xv = np.zeros((1,3))
+		self.xa = np.zeros((1,3))
 
 class Joint_class:
 	#common base class for Joint
@@ -171,8 +171,7 @@ class LegClass:
 		# self.DL 	= kdl.corin_dynamics()
 
 		# transfer phase variables
-		self.goal 	= FollowJointTrajectoryGoal()
-		self.spline = JointTrajectoryPoint()
+		self.spline = TrajectoryPoints()
 		self.spline_counter = 1
 		self.spline_length  = 0
 
@@ -202,8 +201,6 @@ class LegClass:
 		self.qsnorm   = np.array([[0.],[0.],[1.]]) 	# surface normal
 
 		self.phase_change = False 		# Flag for enabling trajectory to be generated at transfer
-
-		print 'Leg ', self.number , ' initialised'
 
 	## Transformation functions
 	def base_X_hip_ee(self, base_X_ee_xp):
@@ -331,13 +328,14 @@ class LegClass:
 
 		return False
 
-	## Convenience functions
+	## ============ Convenience functions ============ ## 
+	## Unstack next point
 	def pointToArray(self):
 		# if (self.number==0): print 'spline count: ', self.spline_counter, '\t', self.spline_length
 		i = self.spline_counter
-		self.hip_X_ee.ds.xp = np.array([self.spline.positions[0][i],  self.spline.positions[1][i],  self.spline.positions[2][i]])
-		self.hip_X_ee.ds.xv = np.array([self.spline.velocities[0][i], self.spline.velocities[1][i], self.spline.velocities[2][i]])
-		self.hip_X_ee.ds.xa = np.array([self.spline.accelerations[0][i], self.spline.accelerations[1][i], self.spline.accelerations[2][i]])
+		self.hip_X_ee.ds.xp = self.spline.xp[i]
+		self.hip_X_ee.ds.xv = self.spline.xv[i]
+		self.hip_X_ee.ds.xa = self.spline.xa[i]
 
 	## Configure leg positions
 	def leg_positions(self):

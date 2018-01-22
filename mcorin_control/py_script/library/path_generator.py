@@ -1,29 +1,32 @@
 #!/usr/bin/env python
 
-## Class to plan a path for the robot given arbitrary points
+## Class to plan a path for the robot given arbitrary via points
+
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'class'))
 
 # sys.dont_write_bytecode = True
 
 import time
-from fractions import Fraction
+from fractions import Fraction 	# for hardcoding gait selection - consider removing
 import numpy as np
 import math
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
-# import robot_class
-# import param_gait
-import plotgraph as Plot
 from constant import *
-
+from TrajectoryPoints import TrajectoryPoints
 import transformations as tf
 import pspline_generator as Pspline
 # import bspline_generator as Bspline
 
+import plotgraph as Plot
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
-class PathGenerator(Pspline.SplineGenerator):
+class PathGenerator():
 	def __init__(self):
-		Pspline.SplineGenerator.__init__(self)
+
+		self.spline = Pspline.SplineGenerator()
 
 		self.x_com = np.array([ [.0,.0,BODY_HEIGHT] ]) 	# output linear spline points
 		self.w_com = np.array([ [0.0, 0.0, 0.0] ]) 		# output angular spline points
@@ -88,12 +91,12 @@ class PathGenerator(Pspline.SplineGenerator):
 
 		return x_com, w_com
 
-	def generate_path(self, x_com, w_com=0):
+	def generate_path(self, x_com, w_com=0, spline_type="pspline"):
 		x_com, w_com = self.auto_generate_points(x_com, w_com)
 
 		tx_com = self.compute_path_length(x_com)
 
-		x, y, z, t = self.generate_body_spline( x_com, tx_com , 1)
+		x, y, z, t = self.spline.generate_body_spline( x_com, tx_com , 1)
 		# Plot.plot_3d(x,y,z)
 		# Plot.plot_2d(t,x)
 		# travel distance per phase in a gait cycle
@@ -137,8 +140,7 @@ class PathGenerator(Pspline.SplineGenerator):
 					t = ts
 
 					# generate spline coefficient
-					xp, yp, zp, tp = self.generate_body_spline( np.array([ x_prv, x_com[io] ]), np.array([0.0,1.0]) , 1)
-
+					xp, yp, zp, tp = self.spline.generate_body_spline( np.array([ x_prv, x_com[io] ]), np.array([0.0,1.0]) , 1)
 					# print 't ', t, ' td: ', td, ' ts  : ', ts
 					# print 'xcom ', np.round(x_prv,3), np.round(x_com[io],3)
 					# print 'xnc  ', np.round(self.x_com[nc],3)
@@ -152,7 +154,7 @@ class PathGenerator(Pspline.SplineGenerator):
 						# loop until difference threshold met within certain iteration
 						for i in range(0,40):
 							# get point at t
-							x_cur = self.get_point(t)
+							x_cur = self.spline.get_point(t)
 							# print 'x_cur', x_cur
 							# vector and its magnitude between current and previous point
 							m_dif = x_cur - self.x_com[nc]
@@ -282,33 +284,39 @@ class PathGenerator(Pspline.SplineGenerator):
 			print "exception raised"
 			pass
 
-		## Regenerate linear and angular spline with updated CoM position
-		nx, nv, na, nt = self.generate_body_spline(self.x_com, self.t_com,  1)
-
 		# temporary fix for angular rotation in place
 		if (len(self.tw_com)==2 and self.tw_com.item(1) == 0.):
 			self.tw_com = np.array([0.0,3.0])
 
-		wx, wv, wa, wt = self.generate_body_spline(self.w_com, self.tw_com, 1)
+		## Initialize class for linear and angular CoM
+		x_com = TrajectoryPoints()
+		w_com = TrajectoryPoints()
+
+		# Regenerate linear and angular spline with updated CoM position
+		x_com.xp, x_com.xv, x_com.xa, x_com.t = self.spline.generate_body_spline(self.x_com, self.t_com,  0)
+		w_com.xp, w_com.xv, w_com.xa, w_com.t = self.spline.generate_body_spline(self.w_com, self.tw_com, 0)
+
 		# print self.x_com
-		# print self.point_skipped
-		self.x_length = len(nt)
-		self.w_length = len(wt)
 		# Plot.plot_3d(nx, nv, na)
 		# Plot.plot_2d(nt,na)
 		# Plot.plot_2d_multiple(3,wt,wx,wv,wa)
 
-		return self.x_com, self.w_com, self.t_com, self.tw_com, self.x_length, self.w_length
+		return x_com, w_com
 
+
+## ================================================================================================ ##
+## 												TESTING 											##
+## ================================================================================================ ##
 gait = {'name': "wave",
 		'beta': Fraction(5, 6),
 		'dphase': Fraction(1, 5),
 		'phase':np.matrix([ Fraction(6, 6), Fraction(5, 6), Fraction(4, 6), Fraction(3, 6), Fraction(2, 6), Fraction(1, 6) ])}
 
 x_com = np.array([.0,.0,BODY_HEIGHT])
-x_com = np.vstack((x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
+x_com = np.vstack((x_com,np.array([0.5, 0.0, BODY_HEIGHT])))
+x_com = np.vstack((x_com,np.array([0.7, 0.0, BODY_HEIGHT])))
 w_com = np.array([.0,.0,.0])
-w_com = np.vstack((w_com,np.array([0.0, 0.0, 1.51])))
+# w_com = np.vstack((w_com,np.array([0.0, 0.0, 1.51])))
 ## short V spline
 # x_com = np.vstack((x_com,np.array([0.0, 0.4, BODY_HEIGHT])))
 # x_com = np.vstack((x_com,np.array([0.0, 0.6, BODY_HEIGHT])))
@@ -322,10 +330,13 @@ w_com = np.vstack((w_com,np.array([0.0, 0.0, 1.51])))
 # w_com = np.vstack((x_com,np.array([0.0, 0.0, 0.0])))
 # w_com = np.vstack((x_com,np.array([0.0, 0.0, 0.0])))
 
+xn_com = TrajectoryPoints()
+wn_com = TrajectoryPoints()
+
 planner = PathGenerator()
 planner.heading = (1,0,0)
 planner.gait = gait
-planner.generate_path(x_com, w_com)
+# xn_com, wn_com = planner.generate_path(x_com, w_com)
 
 ## wall transition
 # cq = 0.
