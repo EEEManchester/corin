@@ -124,7 +124,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <child link="lf_hipassembly"/>
     <axis xyz="0 0 1"/>
     <!-- overwrite joint limits for middle legs-->
-    <limit effort="5.0" lower="-1.0" upper="1.0" velocity="5.23"/>
+    <limit effort="2.85" lower="-1.0" upper="1.0" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-7*PI/18}" soft_upper_limit="${5*PI/36}" /> -->
@@ -135,7 +135,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <parent link="lf_hipassembly"/>
     <child link="lf_upperleg"/>
     <axis xyz="0 0 1"/>
-    <limit effort="5.0" lower="-2.22" upper="2.22" velocity="5.23"/>
+    <limit effort="2.85" lower="-2.22" upper="2.22" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-(1+reflect_front)*5*PI/36-(1-reflect_front)*7*PI/36}"
@@ -147,7 +147,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <parent link="lf_upperleg"/>
     <child link="lf_lowerleg"/>
     <axis xyz="0 0 1"/>
-    <limit effort="5.0" lower="-2.79" upper="2.79" velocity="5.23"/>
+    <limit effort="2.85" lower="-2.79" upper="2.79" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-(1+reflect_front)*7*PI/18+(1-reflect_front)*PI/18}"
@@ -378,7 +378,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <child link="lm_hipassembly"/>
     <axis xyz="0 0 1"/>
     <!-- overwrite joint limits for middle legs-->
-    <limit effort="5.0" lower="-0.84" upper="0.84" velocity="5.23"/>
+    <limit effort="2.85" lower="-0.84" upper="0.84" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-7*PI/18}" soft_upper_limit="${5*PI/36}" /> -->
@@ -389,7 +389,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <parent link="lm_hipassembly"/>
     <child link="lm_upperleg"/>
     <axis xyz="0 0 1"/>
-    <limit effort="5.0" lower="-2.22" upper="2.22" velocity="5.23"/>
+    <limit effort="2.85" lower="-2.22" upper="2.22" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-(1+reflect_front)*5*PI/36-(1-reflect_front)*7*PI/36}"
@@ -401,7 +401,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <parent link="lm_upperleg"/>
     <child link="lm_lowerleg"/>
     <axis xyz="0 0 1"/>
-    <limit effort="5.0" lower="-2.79" upper="2.79" velocity="5.23"/>
+    <limit effort="2.85" lower="-2.79" upper="2.79" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-(1+reflect_front)*7*PI/18+(1-reflect_front)*PI/18}"
@@ -608,7 +608,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <child link="lr_hipassembly"/>
     <axis xyz="0 0 1"/>
     <!-- overwrite joint limits for middle legs-->
-    <limit effort="5.0" lower="-1.0" upper="1.0" velocity="5.23"/>
+    <limit effort="2.85" lower="-1.0" upper="1.0" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-7*PI/18}" soft_upper_limit="${5*PI/36}" /> -->
@@ -619,7 +619,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <parent link="lr_hipassembly"/>
     <child link="lr_upperleg"/>
     <axis xyz="0 0 1"/>
-    <limit effort="5.0" lower="-2.22" upper="2.22" velocity="5.23"/>
+    <limit effort="2.85" lower="-2.22" upper="2.22" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-(1+reflect_front)*5*PI/36-(1-reflect_front)*7*PI/36}"
@@ -631,7 +631,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <parent link="lr_upperleg"/>
     <child link="lr_lowerleg"/>
     <axis xyz="0 0 1"/>
-    <limit effort="5.0" lower="-2.79" upper="2.79" velocity="5.23"/>
+    <limit effort="2.85" lower="-2.79" upper="2.79" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-(1+reflect_front)*7*PI/18+(1-reflect_front)*PI/18}"
@@ -838,7 +838,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <child link="rf_hipassembly"/>
     <axis xyz="0 0 1"/>
     <!-- overwrite joint limits for middle legs-->
-    <limit effort="5.0" lower="-1.0" upper="1.0" velocity="5.23"/>
+    <limit effort="2.85" lower="-1.0" upper="1.0" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-7*PI/18}" soft_upper_limit="${5*PI/36}" /> -->
@@ -849,7 +849,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <parent link="rf_hipassembly"/>
     <child link="rf_upperleg"/>
     <axis xyz="0 0 1"/>
-    <limit effort="5.0" lower="-2.22" upper="2.22" velocity="5.23"/>
+    <limit effort="2.85" lower="-2.22" upper="2.22" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-(1+reflect_front)*5*PI/36-(1-reflect_front)*7*PI/36}"
@@ -861,7 +861,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <parent link="rf_upperleg"/>
     <child link="rf_lowerleg"/>
     <axis xyz="0 0 1"/>
-    <limit effort="5.0" lower="-2.79" upper="2.79" velocity="5.23"/>
+    <limit effort="2.85" lower="-2.79" upper="2.79" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-(1+reflect_front)*7*PI/18+(1-reflect_front)*PI/18}"
@@ -1092,7 +1092,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <child link="rm_hipassembly"/>
     <axis xyz="0 0 1"/>
     <!-- overwrite joint limits for middle legs-->
-    <limit effort="5.0" lower="-0.84" upper="0.84" velocity="5.23"/>
+    <limit effort="2.85" lower="-0.84" upper="0.84" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-7*PI/18}" soft_upper_limit="${5*PI/36}" /> -->
@@ -1103,7 +1103,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <parent link="rm_hipassembly"/>
     <child link="rm_upperleg"/>
     <axis xyz="0 0 1"/>
-    <limit effort="5.0" lower="-2.22" upper="2.22" velocity="5.23"/>
+    <limit effort="2.85" lower="-2.22" upper="2.22" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-(1+reflect_front)*5*PI/36-(1-reflect_front)*7*PI/36}"
@@ -1115,7 +1115,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <parent link="rm_upperleg"/>
     <child link="rm_lowerleg"/>
     <axis xyz="0 0 1"/>
-    <limit effort="5.0" lower="-2.79" upper="2.79" velocity="5.23"/>
+    <limit effort="2.85" lower="-2.79" upper="2.79" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-(1+reflect_front)*7*PI/18+(1-reflect_front)*PI/18}"
@@ -1322,7 +1322,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <child link="rr_hipassembly"/>
     <axis xyz="0 0 1"/>
     <!-- overwrite joint limits for middle legs-->
-    <limit effort="5.0" lower="-1.0" upper="1.0" velocity="5.23"/>
+    <limit effort="2.85" lower="-1.0" upper="1.0" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-7*PI/18}" soft_upper_limit="${5*PI/36}" /> -->
@@ -1333,7 +1333,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <parent link="rr_hipassembly"/>
     <child link="rr_upperleg"/>
     <axis xyz="0 0 1"/>
-    <limit effort="5.0" lower="-2.22" upper="2.22" velocity="5.23"/>
+    <limit effort="2.85" lower="-2.22" upper="2.22" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-(1+reflect_front)*5*PI/36-(1-reflect_front)*7*PI/36}"
@@ -1345,7 +1345,7 @@ is the world frame). For more, see http://www.ros.org/wiki/xacro -->
     <parent link="rr_upperleg"/>
     <child link="rr_lowerleg"/>
     <axis xyz="0 0 1"/>
-    <limit effort="5.0" lower="-2.79" upper="2.79" velocity="5.23"/>
+    <limit effort="2.85" lower="-2.79" upper="2.79" velocity="5.23"/>
     <dynamics damping="0.15" friction="0"/>
     <!-- <safety_controller k_position="100" k_velocity="100"
 							   soft_lower_limit="${-(1+reflect_front)*7*PI/18+(1-reflect_front)*PI/18}"

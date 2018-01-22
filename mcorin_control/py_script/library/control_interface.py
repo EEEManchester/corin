@@ -39,16 +39,21 @@ class control_interface:
 		## Chimney Demo
 		if (STANCE_TYPE == "chimney"):
 			# up/down
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.06])))
-			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, -0.03])))
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.06])))
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.05])))
+			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
+			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.06])))
+			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
 
 			# front/back
-			# self.x_com = np.vstack((self.x_com,np.array([0.03, 0.0, 0.0])))
-			# self.x_com = np.vstack((self.x_com,np.array([-0.03, 0.0, 0.0])))
-			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
+			self.x_com = np.vstack((self.x_com,np.array([0.025, 0.0, 0.05])))
+			self.x_com = np.vstack((self.x_com,np.array([-0.025, 0.0, 0.05])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.05])))
+
+			# left/right
+			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.025, 0.05])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0, -0.025, 0.05])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.05])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.0])))
 
 		## Sideways Demo
 		elif (STANCE_TYPE == "sideways"):
@@ -60,7 +65,7 @@ class control_interface:
 			## 90 degrees
 			# self.x_com = np.vstack((self.x_com,np.array([0.0,-0.05, BODY_HEIGHT])))
 			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0  , BODY_HEIGHT ])))
-			#
+			
 			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT+0.05])))
 			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
 			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT ])))
@@ -73,7 +78,6 @@ class control_interface:
 			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT+0.025])))
 			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT-0.025])))
 			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT ])))
 
 			# left/right & up/down
 			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.025, BODY_HEIGHT+0.025])))

@@ -21,7 +21,7 @@ def initial_stance(STANCE_WIDTH, BODY_HEIGHT, type="flat", TETA_F=20, TETA_R=-20
         LEG_STANCE[2] = np.array([ STANCE_WIDTH*np.cos(TETA_R*np.pi/180), STANCE_WIDTH*np.sin(TETA_R*np.pi/180), -BODY_HEIGHT ])
 
         LEG_STANCE[3] = np.array([ STANCE_WIDTH*np.cos(TETA_F*np.pi/180), STANCE_WIDTH*np.sin(-TETA_F*np.pi/180), -BODY_HEIGHT ])
-        LEG_STANCE[4] = np.array([STANCE_WIDTH, 0, -BODY_HEIGHT])
+        LEG_STANCE[4] = np.array([ STANCE_WIDTH, 0, -BODY_HEIGHT])
         LEG_STANCE[5] = np.array([ STANCE_WIDTH*np.cos(TETA_R*np.pi/180), STANCE_WIDTH*np.sin(-TETA_R*np.pi/180), -BODY_HEIGHT ])
 
         return LEG_STANCE
@@ -72,20 +72,37 @@ def initial_stance(STANCE_WIDTH, BODY_HEIGHT, type="flat", TETA_F=20, TETA_R=-20
         print 'Sideways selected'
         ## Stance for left & right side
 
-        ## 60 deg
+        ## 30 deg
         V_RS_WIDTH =  0.284;    V_LS_WIDTH = 0.234
-        V_RS_HEIGH = -0.04;    V_LS_HEIGH = 0.061
+        V_RS_HEIGH = -0.04;     V_LS_HEIGH = 0.061
 
-        ## 90 deg
+        ## 60 deg
+        # V_RS_WIDTH =  0.288;    V_LS_WIDTH = 0.274
+        # V_RS_HEIGH = -0.019;    V_LS_HEIGH = 0.044
+
+        # ## 90 deg
         # V_RS_WIDTH = 0.325;     V_LS_WIDTH = 0.18
-        # V_RS_HEIGH = 0.097;     V_LS_HEIGH = -0.06
+        # V_RS_HEIGH = 0.097;     V_LS_HEIGH = -0.1
 
-        LEG_STANCE[0] = np.array([ V_LS_WIDTH*np.cos(TETA_F*np.pi/180), V_LS_WIDTH*np.sin(TETA_F*np.pi/180), V_LS_HEIGH ])
-        LEG_STANCE[1] = np.array([ V_LS_WIDTH*np.cos((40-TETA_F)*np.pi/180), 0, V_LS_HEIGH ])
-        LEG_STANCE[2] = np.array([ V_LS_WIDTH*np.cos(TETA_R*np.pi/180), V_LS_WIDTH*np.sin(TETA_R*np.pi/180), V_LS_HEIGH ])
+        phi = 40. - TETA_F
+        V_RS_H  = V_RS_WIDTH/np.cos(phi*np.pi/180)
+        V_LS_H  = V_LS_WIDTH/np.cos(phi*np.pi/180)
 
-        LEG_STANCE[3] = np.array([ V_RS_WIDTH*np.cos(TETA_F*np.pi/180), V_RS_WIDTH*np.sin(-TETA_F*np.pi/180), V_RS_HEIGH ])
-        LEG_STANCE[4] = np.array([ V_RS_WIDTH*np.cos((40-TETA_F)*np.pi/180), 0, V_RS_HEIGH])
-        LEG_STANCE[5] = np.array([ V_RS_WIDTH*np.cos(TETA_R*np.pi/180), V_RS_WIDTH*np.sin(-TETA_R*np.pi/180), V_RS_HEIGH ])
+        LEG_STANCE[0] = np.array([ V_LS_H*np.cos( TETA_F*np.pi/180), V_LS_H*np.sin( TETA_F*np.pi/180), V_LS_HEIGH ])
+        LEG_STANCE[1] = np.array([ V_LS_WIDTH, 0, V_LS_HEIGH ])
+        LEG_STANCE[2] = np.array([ V_LS_H*np.cos(-TETA_F*np.pi/180), V_LS_H*np.sin(-TETA_F*np.pi/180), V_LS_HEIGH ])
+
+        LEG_STANCE[3] = np.array([ V_RS_H*np.cos(-TETA_F*np.pi/180), V_RS_H*np.sin(-TETA_F*np.pi/180), V_RS_HEIGH ])
+        LEG_STANCE[4] = np.array([ V_RS_WIDTH, 0, V_RS_HEIGH])
+        LEG_STANCE[5] = np.array([ V_RS_H*np.cos( TETA_F*np.pi/180), V_RS_H*np.sin( TETA_F*np.pi/180), V_RS_HEIGH ])
+        
+
+        # LEG_STANCE[0] = np.array([ V_LS_WIDTH*np.cos(TETA_F*np.pi/180), V_LS_WIDTH*np.sin(TETA_F*np.pi/180), V_LS_HEIGH ])
+        # LEG_STANCE[1] = np.array([ V_LS_WIDTH*np.cos((40-TETA_F)*np.pi/180), 0, V_LS_HEIGH ])
+        # LEG_STANCE[2] = np.array([ V_LS_WIDTH*np.cos(TETA_R*np.pi/180), V_LS_WIDTH*np.sin(TETA_R*np.pi/180), V_LS_HEIGH ])
+
+        # LEG_STANCE[3] = np.array([ V_RS_WIDTH*np.cos(TETA_F*np.pi/180), V_RS_WIDTH*np.sin(-TETA_F*np.pi/180), V_RS_HEIGH ])
+        # LEG_STANCE[4] = np.array([ V_RS_WIDTH*np.cos((40-TETA_F)*np.pi/180), 0, V_RS_HEIGH])
+        # LEG_STANCE[5] = np.array([ V_RS_WIDTH*np.cos(TETA_R*np.pi/180), V_RS_WIDTH*np.sin(-TETA_R*np.pi/180), V_RS_HEIGH ])
 
         return LEG_STANCE

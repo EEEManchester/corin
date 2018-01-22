@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-# import rospy
-# from trajectory_msgs.msg import JointTrajectoryPoint
+import rospy
+from trajectory_msgs.msg import JointTrajectoryPoint
 
 import numpy as np
 from numpy.linalg import inv
@@ -173,21 +173,24 @@ class SplineGenerator:
 			ctp = np.vstack( (ctp,cx_t) )
 			ctv = np.vstack( (ctv,vx_t) )
 			cta = np.vstack( (cta,ax_t) )
-
+		
+		## return data based on type
 		if (return_type==0):
-			# put cartesian points into Joint Trajectory Point, clears previous items
+			## put cartesian points into Joint Trajectory Point, clears previous items
 			point = JointTrajectoryPoint()
-			#point.positions 	= [ np.around(ctx,decimals=4), np.around(cty,decimals=4), np.around(ctz,decimals=4) ]
+			#point.positions 	= [ np.around(ctp[:,0],decimals=4), np.around(ctp[:,1],decimals=4), np.around(ctp[:,2],decimals=4) ]
 			point.positions 		= [ ctp[:,0], ctp[:,1], ctp[:,2] ]
 			point.velocities 		= [ ctv[:,0], ctv[:,1], ctv[:,2] ]
 			point.accelerations	= [ cta[:,0], cta[:,1], cta[:,2] ]
 			point.time_from_start 	= [tt]
 
 			return point
+			pass
+
 		elif (return_type==1):
 			return ctp[:,0], ctp[:,1], ctp[:,2], tt
 		elif (return_type==2):
-			return ctp, ctv, cta, tt
+			return ctp, ctv, cta, tt, point
 
 	def generate_leg_spline(self, sp, ep, snorm , phase=2, ctime=2.0, spline_degree=4):
 		self.nc = spline_degree
@@ -227,8 +230,10 @@ ep = np.array([0.214,-0.025,-0.1451])
 snorm = (0, 0, 0)
 
 phase = 1
+
+x_com = np.array([.0,.0,UDC.BODY_HEIGHT])
+
 ### CoM linear path ###
-# x_com = np.array([.0,.0,0.15])
 # x_com = np.vstack((x_com,np.array([0.025, 0.00, 0.15])))
 # x_com = np.vstack((x_com,np.array([0.05, 0.00, 0.15])))
 # x_com = np.vstack((x_com,np.array([0.075, 0.00, 0.15])))
@@ -237,12 +242,10 @@ phase = 1
 # x_com = np.vstack((x_com,np.array([0.20, 0.00, 0.15])))
 # x_com = np.vstack((x_com,np.array([0.25, 0.10, 0.15])))
 # x_com = np.vstack((x_com,np.array([0.30, 0.05, 0.15])))
-# x_com = np.vstack((x_com,np.array([0.35, 0.05, 0.15])))
-
+# x_com = np.vstack((x_com,np.array([1.35, 0.05, 0.15])))
 # com_time = np.array([0.0,0.5,1.0,1.5,2.0,2.5,3.0,4.0,5.0, 6.0])
-x_com = np.array([.0,.0,UDC.BODY_HEIGHT])
 
-# ## short V spline
+### short V spline
 x_com = np.vstack((x_com,np.array([0.4, 0.0, UDC.BODY_HEIGHT])))
 x_com = np.vstack((x_com,np.array([0.6, 0.0, UDC.BODY_HEIGHT+0.025])))
 x_com = np.vstack((x_com,np.array([1.0, 0.0, UDC.BODY_HEIGHT+0.05])))
@@ -250,9 +253,10 @@ t_com = np.array([0.0,1.0,2.0,3.0])
 
 spliner = SplineGenerator()
 # spliner.generate_leg_spline(sp,ep,snorm,phase)
-ctp, ctv, cta, tt = spliner.generate_body_spline(x_com, t_com, 1)
-# print ctp
-
+ctp, ctv, cta, tt, rpoint = spliner.generate_body_spline(x_com, t_com, 2)
+# print np.shape(ctp)
+# print np.shape(rpoint.positions)
+# print type(rpoint.positions)
 # fig = plt.figure()
 # plt.plot(tt,ctp[:,1])
 # plt.xlabel('x-axis');plt.ylabel('y-axis');plt.grid('on');

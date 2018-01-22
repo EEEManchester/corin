@@ -47,18 +47,6 @@ from sensor_msgs.msg import Joy
 import connex
 import control_interface
 
-def point_to_array(cpoints, i, select=0):
-	## Extract linear task space position, velocity, acceleration
-	cp = np.array([cpoints.positions[0][i],  cpoints.positions[1][i],  cpoints.positions[2][i]])
-	cv = np.array([cpoints.velocities[0][i], cpoints.velocities[1][i], cpoints.velocities[2][i]])
-	ca = np.array([cpoints.accelerations[0][i], cpoints.accelerations[1][i], cpoints.accelerations[2][i]])
-	ct = cpoints.time_from_start[0][i]
-
-	if (select == 1):
-		return cp
-	else:
-		return cp, cv, ca, ct
-
 def rad2raw(radian):
 
 	value_of_0_radian_position_      = 2048
@@ -92,7 +80,7 @@ def raw2rads(raw):
 
 class CorinManager:
 	def __init__(self):
-		rospy.init_node('manual_leg_control') 		#Initialises node
+		rospy.init_node('read_joint_state') 		#Initialises node
 		self.robot_ns = ROBOT_NS
 		self.interval = TRAC_INTERVAL
 		self.rate 	  = rospy.Rate(1.0/TRAC_INTERVAL)	# frequency
@@ -134,6 +122,8 @@ class CorinManager:
 	def joint_state_callback(self, msg):
 		self.Robot.qc = msg
 
+		print msg.effort[13]
+
 	def _start(self):
 		#######################################
 		## initialise publishers/subscribers ##
@@ -168,104 +158,7 @@ class CorinManager:
 
 		self.on_start = False
 
-	def task_X_joint(self, j):
-		## Task to joint space
-		try:
-			if (self.Robot.Leg[j].getJointKinematic(True)):
-				for z in range(0,3):
-					self.point.positions.append( self.Robot.Leg[j].Joint.qpd.item(z) )
-					self.point.velocities.append( self.Robot.Leg[j].Joint.qvd.item(z) )
-					self.point.accelerations.append( self.Robot.Leg[j].Joint.qad.item(z) )
-					self.point.effort.append( 0.0 )
-			else:
-				self.Robot.invalid = True
-				raise ValueError
-		except Exception, e:
-			print 'Error - singularity in leg, ', j
-
-	def clear_point(self):
-		self.point = JointTrajectoryPoint()
-		self.point.time_from_start = rospy.Duration(TRAC_INTERVAL)
-
-	def publish_topics(self, leg):
-		if (not self.Robot.invalid):
-			self.Robot.active_legs = 6
-
-			if (self.hardware == 'simulation' or self.hardware == 'real'):
-				## TEMP
-				dqp = SyncWriteMulti()
-				dqp.item_name = str("profile_velocity") 	# goal_position
-				dqp.data_length = 8
-
-				for n in range(0,3):
-					## Gazebo
-					if (self.hardware == 'simulation'):
-						qp = Float64()
-						qp.data = self.point.positions[n]
-						self.qpub[(leg*3)+n].publish(qp)
-
-						## TEMP
-						# if (n<9 and n>5):
-						# dqp.joint_name.append(str(JOINT_NAME[n])) 				# joint name
-						# dqp.value.append(rads2raw(self.point.velocities[n]))	# velocity
-						# dqp.value.append(rad2raw(self.point.positions[n]))		# position
-
-					## Dynamixel - arebgun library
-					elif (self.hardware == 'real'):
-						data = PositionVelocity()
-						data.position = self.point.positions[n]
-						data.velocity = self.point.velocities[n]
-						self.qpub[n].publish(data)
-
-				self.sync_qpub_.publish(dqp) ## TEMP
-
-			elif (self.hardware == 'robotis'):
-				dqp = SyncWriteMulti()
-				dqp.item_name = str("profile_velocity") 	# goal_position
-				dqp.data_length = 8
-
-				for n in range(0,3): 	# loop for each joint on a leg
-					dqp.joint_name.append(str(JOINT_NAME[(leg*3)+n])) 				# joint name
-					dqp.value.append(0)	# velocity
-					dqp.value.append(rad2raw(self.point.positions[n]))		# position
-
-				self.sync_qpub_.publish(dqp)
-
-			# print '==================================='
-
-		self.clear_point()
-
-	def move_leg(self, j):
-		print 'Moving leg ', j
-		# update and reset states
-		self.Robot.reset_state = True
-		self.Robot.suspend = False
-		self.Robot.updateState()
-
-		if (STANCE_TYPE=="chimney"):
-			move_by_distance = np.array([ [0.07], [0.], [0.]])
-
-		elif (STANCE_TYPE=="sideways"):
-			if (j<3):
-				move_by_distance = np.array([ [0.05], [0.], [-0.1]])
-			else:
-				move_by_distance = np.array([ [0.0], [0.], [-0.1]])
-
-		self.Robot.Leg[j].hip_X_ee.ds.xp = self.Robot.Leg[j].hip_X_ee.cs.xp - move_by_distance
-		self.Robot.generateSpline(j, self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp,
-										self.Robot.Leg[j].qsurface, False, False, TRAC_PERIOD)
-
-		print 'ds: ', np.round(self.Robot.Leg[0].hip_X_ee.ds.xp.flatten(),3)
-		print 'cs: ', np.round(self.Robot.Leg[0].hip_X_ee.cs.xp.flatten(),3)
-
-		for npoint in range(0, int(TRAC_PERIOD/TRAC_INTERVAL)):
-			# set cartesian position for joint kinematics
-			self.Robot.Leg[j].pointToArray();
-			self.Robot.Leg[j].spline_counter += 1
-			self.task_X_joint(j)
-
-			self.publish_topics(j)
-			self.rate.sleep()
+	
 
 if __name__ == "__main__":
 
@@ -273,41 +166,5 @@ if __name__ == "__main__":
 	manager.Robot.updateState()
 	print 'Robot Initiated'
 
-	tsleep = 3 	# sleep interval after each leg liftoff
-	raw_input('Start leg control')
-
-	## get ready to move robot into position
-	rospy.sleep(5)
-	rospy.set_param('reset',True)
-	rospy.sleep(8)
-
-	## start lifting off feet
-	# if (STANCE_TYPE == 'sideways'):
-	# 	print 'Moving leg 3'
-	# 	manager.move_leg(3)
-	# 	rospy.sleep(3)
-
-	# 	print 'Moving leg 1'
-	# 	manager.move_leg(1)
-	# 	rospy.sleep(3)
-
-	# 	print 'Moving leg 5'
-	# 	manager.move_leg(5)
-	# 	rospy.sleep(3)
-
-	# 	print 'END!'
-	
-	# elif (STANCE_TYPE == 'chimney'):
-	# 	print 'Moving leg 0'
-	# 	manager.move_leg(0)
-	# 	rospy.sleep(3)
-
-	# 	print 'Moving leg 5'
-	# 	manager.move_leg(5)
-	# 	rospy.sleep(7)
-
-	## start bodypose
-	rospy.set_param('bodypose',True)
-	rospy.sleep(20)
-	# retract robot's legs
-	rospy.set_param('reset',True)	
+	while not rospy.is_shutdown():
+		manager.rate.sleep()

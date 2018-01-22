@@ -193,7 +193,7 @@ class CorinManager:
 		self.Robot.updateState() 		# get current state
 
 		# Variables
-		fix_stance = 0.21;
+		fix_stance = 0.18;
 		fix_height = 0.01
 		leg_stance = {}
 		# stance for air suspension
@@ -418,6 +418,7 @@ class CorinManager:
 			## Update robot's desired pose
 			self.Robot.fr_world_X_base 	  = tf.rotation_zyx(wp)
 			self.Robot.world_X_base.ds.wp = wp
+			
 			## generate trajectory for leg in transfer phase
 			for j in range (0, self.Robot.active_legs):
 
@@ -555,8 +556,6 @@ class CorinManager:
 
 		self.planner.heading = (1,0,0)
 		xn_com, wn_com, tn_com, twn_com, xlen, wlen = self.planner.generate_path(x_com, w_com)
-		print xlen
-		print wlen
 		self.planner.get_path_details() 	# for information about trajectory
 
 		## This segment to check output only
@@ -586,20 +585,22 @@ class CorinManager:
 
 		# Check which trajectory to follow
 		if (len(self.Robot.x_spline.time_from_start) > len(self.Robot.w_spline.time_from_start)):
-			tlen  = xlen
+			tlen  = wlen
 			tinst = self.Robot.x_spline.time_from_start
 		else:
-			tlen = wlen
-			tinst = self.Robot.x_spline.time_from_start
-
+			tlen = xlen
+			tinst = self.Robot.w_spline.time_from_start
+		print 'tlen: ', xlen, wlen
 		# cycle until trajectory complete
-		while (i != wlen):
+		while (i != tlen):
+			print 'counting: ', i, tlen
 			# suppress trajectory counter as body support suspended
 			if (self.Robot.suspend == True):
 				i -= 1
 
 			## Determine time interval
-			self.interval = self.Robot.x_spline.time_from_start[0][i] - self.Robot.x_spline.time_from_start[0][i-1]
+			# self.interval = self.Robot.x_spline.time_from_start[0][i] - self.Robot.x_spline.time_from_start[0][i-1]
+			self.interval = tinst[0][i] - tinst[0][i-1]
 
 			## Extract linear task space position, velocity, acceleration
 			cp, self.lin_v, ca, ct = point_to_array(self.Robot.x_spline, i)

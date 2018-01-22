@@ -8,7 +8,7 @@ lf_q1_joint :   # MX-64
    velocity_limit        : 150
    goal_position         : 2048   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000    # 0-1023
+   goal_velocity         : 50    # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383
@@ -27,7 +27,7 @@ lf_q2_joint :   # MX-64
    velocity_limit        : 150
    goal_position         : 3500   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000   # 0-1023
+   goal_velocity         : 50   # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383
@@ -46,7 +46,7 @@ lf_q3_joint :   # MX-64
    velocity_limit        : 150
    goal_position         : 228   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000   # 0-1023
+   goal_velocity         : 50   # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383
@@ -65,7 +65,7 @@ lm_q1_joint :   # MX-64
    velocity_limit        : 150
    goal_position         : 2048   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000   # 0-1023
+   goal_velocity         : 50   # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383
@@ -84,7 +84,7 @@ lm_q2_joint :   # MX-64
    velocity_limit        : 150
    goal_position         : 3500   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000   # 0-1023
+   goal_velocity         : 50   # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383
@@ -103,7 +103,7 @@ lm_q3_joint :   # MX-64
    velocity_limit        : 150
    goal_position         : 230   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000   # 0-1023
+   goal_velocity         : 50   # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383
@@ -122,7 +122,7 @@ lr_q1_joint :   # MX-64
    velocity_limit        : 150
    goal_position         : 2048   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000    # 0-1023
+   goal_velocity         : 50    # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383
@@ -141,7 +141,7 @@ lr_q2_joint :   # MX-64
    velocity_limit        : 150
    goal_position         : 3500   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000   # 0-1023
+   goal_velocity         : 50   # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383
@@ -160,7 +160,7 @@ lr_q3_joint :   # MX-64
    velocity_limit        : 150
    goal_position         : 230   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000   # 0-1023
+   goal_velocity         : 50   # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383
@@ -179,7 +179,7 @@ rf_q1_joint :   # MX-64
    velocity_limit        : 150
    goal_position         : 2048   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000    # 0-1023
+   goal_velocity         : 50    # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383
@@ -198,7 +198,7 @@ rf_q2_joint :   # MX-64
    velocity_limit        : 150
    goal_position         : 3500   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000   # 0-1023
+   goal_velocity         : 50   # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383
@@ -217,7 +217,7 @@ rf_q3_joint :   # MX-64
    velocity_limit        : 150
    goal_position         : 230   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000   # 0-1023
+   goal_velocity         : 50   # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383
@@ -236,7 +236,7 @@ rm_q1_joint :   # MX-64
    velocity_limit        : 150
    goal_position         : 2048   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000    # 0-1023
+   goal_velocity         : 50    # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383
@@ -255,7 +255,7 @@ rm_q2_joint :   # MX-64
    velocity_limit        : 150
    goal_position         : 3500   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000   # 0-1023
+   goal_velocity         : 50   # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383
@@ -274,7 +274,7 @@ rm_q3_joint :   # MX-64
    velocity_limit        : 150
    goal_position         : 230   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000   # 0-1023
+   goal_velocity         : 50   # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383
@@ -293,7 +293,7 @@ rr_q1_joint :   # MX-64
    velocity_limit        : 150
    goal_position         : 2048   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000    # 0-1023
+   goal_velocity         : 50    # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383
@@ -312,7 +312,7 @@ rr_q2_joint :   # MX-64
    velocity_limit        : 150
    goal_position         : 3500   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000   # 0-1023
+   goal_velocity         : 50   # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383
@@ -331,7 +331,7 @@ rr_q3_joint :   # MX-64
    velocity_limit        : 150    # 3.6 rad/s
    goal_position         : 230   # 0-4095
    goal_current          : 1941   # 0-1941
-   goal_velocity         : 1000   # 0-1023
+   goal_velocity         : 50   # 0-1023
    position_p_gain       : 850    # 0-16383
    position_i_gain       : 0      # 0-16383
    position_d_gain       : 0      # 0-16383

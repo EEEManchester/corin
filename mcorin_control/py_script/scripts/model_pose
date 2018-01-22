@@ -38,15 +38,22 @@ if __name__ == "__main__":
 	if (STANCE_TYPE == "sideways"):
 		print 'sideways'
 		pose.position.x		= 0.0
-		pose.position.y		= 0.11	#0.24
-		pose.position.z		= 0.21	#0.34
-		roll 				= 30	#60
+		pose.position.y		= 0.12	#0.12 0.21 0.26
+		pose.position.z		= 0.22	#0.22 0.34 0.42
+		roll 				= 30.	#30   60   90
 		pitch 				= 0.0
 		yaw 				= 0.0
 	elif (STANCE_TYPE == "chimney"):
 		pose.position.x		= 0.0
 		pose.position.y		= 0.0
 		pose.position.z		= 0.4
+		roll 				= 0.0
+		pitch 				= 0.0
+		yaw 				= 0.0
+	else:
+		pose.position.x		= 0.0
+		pose.position.y		= 0.0
+		pose.position.z		= BODY_HEIGHT
 		roll 				= 0.0
 		pitch 				= 0.0
 		yaw 				= 0.0

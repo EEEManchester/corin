@@ -186,11 +186,11 @@ CK.nominal_stance(bodypose, base_X_surface, qsurface)
 
 # print bodypose[3:7]
 # qs = [0., 1.238, -1.724] #[0., 1.195, -1.773] 	# left side
-qs = [0., 0.445, -2.04]	# right side
+qs = [0., 0.45, -2.033]	# right side
 
 cd = CK.FK(qs)
 print cd.flatten()
-cd = [ 0., 0.12,  0.06]
+cd = [ 0.288, 0., -0.019]
 qp = CK.IK(cd)
 # print 'q: ', qp
 # print qp
