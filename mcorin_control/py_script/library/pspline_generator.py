@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'class'))
 
 import numpy as np
 from numpy.linalg import inv
@@ -7,21 +10,22 @@ import math
 import matplotlib.pyplot as plt
 from scipy import linalg
 	
-import constant as UDC
+from constant import *
+from TrajectoryPoints import TrajectoryPoints
 
 class SplineGenerator:
 	def __init__(self):
 		# self.point 	= JointTrajectoryPoint()
-		self.sh 	= UDC.STEP_HEIGHT
+		self.sh 	= STEP_HEIGHT
 		self.nc 	= 4 					# Define the number of coefficients (order + 1) Quintic Polynomial: 6
 		self.td 	= np.matrix([0]) 		# time interval
 		self.cpx 	= np.zeros((1,3))		# cartesian position in matrix
-		self.t_samp = UDC.TRAC_INTERVAL
+		self.t_samp = TRAC_INTERVAL
 		self.Ax 	= np.zeros((self.nc,3)) # coefficient matrix
 
 	def LegPhase_Interpolation(self, sp, ep, snorm ,phase=2, ctime=2.0):
 		#set waypoints for trajectory	
-		self.sh = UDC.STEP_HEIGHT  	#param_gait.get_step_height()		
+		self.sh = STEP_HEIGHT  	#param_gait.get_step_height()		
 		print 'phase param: ', phase
 		# reject displacements less than 1mm
 		pd = np.array([0, 0, 0])
@@ -103,7 +107,8 @@ class SplineGenerator:
 		ctp = np.zeros((0,3))
 		ctv = np.zeros((0,3))
 		cta = np.zeros((0,3))
-		
+		x_com = TrajectoryPoints()
+
 		for i in range(0,k): 			# loop the number of via points
 			# set matrix variables
 			t0 = float(self.td.item(i))
@@ -172,11 +177,16 @@ class SplineGenerator:
 			ctv = np.vstack( (ctv,vx_t) )
 			cta = np.vstack( (cta,ax_t) )
 			
+			x_com.xp = np.vstack( (x_com.xp,cx_t) )
+			x_com.xv = np.vstack( (x_com.xv,vx_t) )
+			x_com.xa = np.vstack( (x_com.xa,ax_t) )
+			x_com.t  = np.hstack( (x_com.t ,t_t ) )
+		
 		## return data based on type
 		if (return_type==0):
-			return ctp, ctv, cta, tt
+			return x_com
 		elif (return_type==1):
-			return ctp[:,0], ctp[:,1], ctp[:,2], tt
+			return x_com.xp[:,0], x_com.xp[:,1], x_com.xp[:,2], x_com.t
 			
 
 	def generate_leg_spline(self, sp, ep, snorm , phase=2, ctime=2.0, spline_degree=4):
@@ -222,7 +232,7 @@ snorm = (0, 0, 0)
 
 phase = 1
 
-x_com = np.array([.0,.0,UDC.BODY_HEIGHT])
+x_com = np.array([.0,.0,BODY_HEIGHT])
 
 ### CoM linear path ###
 # x_com = np.vstack((x_com,np.array([0.025, 0.00, 0.15])))
@@ -237,14 +247,14 @@ x_com = np.array([.0,.0,UDC.BODY_HEIGHT])
 # com_time = np.array([0.0,0.5,1.0,1.5,2.0,2.5,3.0,4.0,5.0, 6.0])
 
 ### short V spline
-x_com = np.vstack((x_com,np.array([0.04, 0.0, UDC.BODY_HEIGHT])))
-# x_com = np.vstack((x_com,np.array([0.06, 0.0, UDC.BODY_HEIGHT+0.025])))
-# x_com = np.vstack((x_com,np.array([1.0, 0.0, UDC.BODY_HEIGHT+0.05])))
-t_com = np.array([0.0,1.0]) 
+x_com = np.vstack((x_com,np.array([0.04, 0.0, BODY_HEIGHT])))
+x_com = np.vstack((x_com,np.array([0.06, 0.0, BODY_HEIGHT+0.025])))
+# x_com = np.vstack((x_com,np.array([1.0, 0.0, BODY_HEIGHT+0.05])))
+t_com = np.array([0.0,1.0,2.0]) 
 
 spliner = SplineGenerator()
 # spliner.generate_leg_spline(sp,ep,snorm,phase)
-# ctp, ctv, cta, tt = spliner.generate_body_spline(x_com, t_com, 0)
+spliner.generate_body_spline(x_com, t_com, 0)
 
 # print np.shape(rpoint.positions)
 # print type(rpoint.positions)

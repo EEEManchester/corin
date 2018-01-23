@@ -8,54 +8,51 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'class'))
 sys.dont_write_bytecode = True
 
-import rospy
-from sensor_msgs.msg import JointState
-from sensor_msgs.msg import Imu
-import tf as RTF
+import rospy 										# ROS dependent file
+from sensor_msgs.msg import Imu 					# sub msg for IMU
+from sensor_msgs.msg import JointState 				# sub msg for joint states
+import tf as RTF 									# transform library
 
 import math
 import numpy as np
-from scipy import linalg
 
-from constant import *
-import transformations as tf
-from TrajectoryPoints import TrajectoryPoints
-import gait_class as Gaitgenerator
-import param_gait
-import kdl
-import plotgraph as Plot
-import pspline_generator as Pspline
-import bspline_generator as Bspline
+from constant import * 								# constants used
+from TrajectoryPoints import TrajectoryPoints		# class for 3D time array of points
+import transformations as tf 						# SE(3) transformation library
+import gait_class as Gaitgenerator					# class for gait coordinator
+import param_gait									# class for setting gait parameters in RT 
+import kdl 											# kinematic & dynamics library
+import pspline_generator as Pspline 				# spline generator for body
+import bspline_generator as Bspline 				# spline generator for leg
+import plotgraph as Plot 							# plot library
 
 
 class RobotState:
 	def __init__(self):
 		self.qc  = JointState() 					# JointState class for service call joint updates
 		self.imu = Imu()
+		
 		self.Leg = {} 								# leg class
+		self.gaitgen = Gaitgenerator.GaitClass(3) 	# gait class
+		self.bspline = Bspline.SplineGenerator() 	# bSplineClass for spline generation
 
 		self.x_spline = TrajectoryPoints() 			# CoM trajectory
 		self.w_spline = TrajectoryPoints() 			# Base angular trajectory
 
-		self.world_X_base = FrameClass('twist') 	# FrameClass for world to base transformation
-		self.bspline = Bspline.SplineGenerator() 	# bSplineClass for spline generation
-
-		self.pose = np.zeros((3,1))								# euler angle rotation x,y,z
+		self.world_X_base = FrameClass('twist') 				# FrameClass for world to base transformation
 		self.fr_world_X_base = tf.rotation_zyx(np.zeros(3)) 	# SO(3) rotation using pose
 
-		self.invalid = False 			# robot state: invalid - do not do anything
-		self.suspend = False 			# robot state: suspend support (TODO)
+		self.invalid = False 						# robot state: invalid - do not do anything
+		self.suspend = False 						# robot state: suspend support (TODO)
 
-		self.gaitgen = Gaitgenerator.GaitClass(3) 		# gait class
+		self.active_legs  = 6 						# robot state: number of legs selected to be active
+		self.phase_change = False 					# robot state: phase changed, enables transfer trajectory to be generated
+		self.reset_state  = True 					# robot state: reset whole of robot state
 
-		self.active_legs  = 6 				# robot state: number of legs selected to be active
-		self.phase_change = False 			# robot state: phase changed, enables transfer trajectory to be generated
-		self.reset_state  = True 			# robot state: reset whole of robot state
+		self.support_mode = False 					# robot state: puts robot into support mode
 
-		self.support_mode = False 			# puts robot into support mode
-
-		self.cstate = [None]*6 			# foot contact state
-		self.cforce = [None]*18			# foot contact forces
+		self.cstate = [None]*6 						# foot contact binary states
+		self.cforce = [None]*18						# foot contact forces
 
 		self._initialise()
 

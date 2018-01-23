@@ -20,8 +20,6 @@ import pspline_generator as Pspline
 # import bspline_generator as Bspline
 
 import plotgraph as Plot
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 class PathGenerator():
 	def __init__(self):
@@ -293,8 +291,8 @@ class PathGenerator():
 		w_com = TrajectoryPoints()
 
 		# Regenerate linear and angular spline with updated CoM position
-		x_com.xp, x_com.xv, x_com.xa, x_com.t = self.spline.generate_body_spline(self.x_com, self.t_com,  0)
-		w_com.xp, w_com.xv, w_com.xa, w_com.t = self.spline.generate_body_spline(self.w_com, self.tw_com, 0)
+		x_com = self.spline.generate_body_spline(self.x_com, self.t_com,  0)
+		w_com = self.spline.generate_body_spline(self.w_com, self.tw_com, 0)
 
 		# print self.x_com
 		# Plot.plot_3d(nx, nv, na)
@@ -337,6 +335,7 @@ planner = PathGenerator()
 planner.heading = (1,0,0)
 planner.gait = gait
 # xn_com, wn_com = planner.generate_path(x_com, w_com)
+# print xn_com.xp
 
 ## wall transition
 # cq = 0.

@@ -8,8 +8,6 @@ from TrajectoryPoints import TrajectoryPoints
 import plotgraph as Plot
 
 import time
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from scipy import linalg
 from scipy import arange
@@ -322,7 +320,7 @@ class SplineGenerator:
 		if (return_type==0):
 			return x_com
 		elif (return_type==1):
-			return x_com.xp[:,0], x_com.xp[:,1], x_com.xp[:,2], qt
+			return x_com.xp[:,0], x_com.xp[:,1], x_com.xp[:,2], x_com.t
 
 	def generate_leg_spline(self, sp, ep, qsurface, phase, reflex=False, td=2.0, return_type=0):
 		# print 'td: ', td
@@ -349,14 +347,6 @@ qpoints = TrajectoryPoints()
 spliner = SplineGenerator()
 # qpoints = spliner.generate_leg_spline(sp, ep, qsurface, phase, 0, TRAC_PERIOD, 0)
 
-# print (qpoints.t)
-# Plot.plot_3d(x,y,z)
-# Plot.plot_2d(t,z)
-# fig = plt.figure()
-# ax = fig.gca(projection='3d')
-# ax.plot(x, y, z, label='parametric curve')
-# plt.show()
-
 ### CoM linear path ###
 # com_path = np.array([.0,.0,0.15])
 # point_1  = np.array([0.05,0.0,0.15])
@@ -370,16 +360,6 @@ spliner = SplineGenerator()
 # com_time = np.array([0.0,1.0,2.0])
 
 # x, y, z, t  = spliner.generate_body_spline(com_path, com_time)
-
-# fig = plt.figure()
-# ax = fig.gca(projection='3d')
-# ax.plot(x, y, z, label='parametric curve')
-# plt.xlabel('x-axis');plt.ylabel('y-axis');
-# plt.show()
-# fig = plt.figure()
-# plt.plot(t,x)
-# plt.xlabel('x-axis');plt.ylabel('y-axis');
-# plt.show()
 
 # Path3D_msg(com_path, com_time)
 # def Path3D_msg(linear, angular=0, t=0):
