@@ -1,0 +1,101 @@
+#!/usr/bin/env python
+
+## Script to move robot joints into a position
+## the position is not held unless physics engine is paused
+
+import rospy, sys, os, time
+import string
+import warnings
+
+from gazebo_ros import gazebo_interface
+from std_srvs.srv import Empty
+
+def unpause(gazebo_namespace):
+	rospy.loginfo("Waiting for service %s/unpause_physics"%gazebo_namespace)
+	rospy.wait_for_service(gazebo_namespace+'/unpause_physics')
+	rospy.loginfo("temporary hack to **fix** the -J joint position option (issue #93), sleeping for 1 second to avoid race condition.");
+	time.sleep(1)
+	try:
+		unpause_physics = rospy.ServiceProxy(gazebo_namespace+'/unpause_physics', Empty)
+		rospy.loginfo("Calling service %s/unpause_physics"%gazebo_namespace)
+		resp = unpause_physics()
+		return
+	except rospy.ServiceException, e:
+		print "Service call failed: %s"%e
+
+if __name__ == "__main__":
+	if len(sys.argv) < 2:
+		sleep_time = 0.0
+	else:
+		print sys.argv[1]
+		sleep_time = float(sys.argv[1])
+
+	# Defined the variables
+	param_name              = ""
+	model_name              = ""
+	robot_namespace         = ""
+	gazebo_namespace        = "/gazebo"
+	joint_names             = []
+	joint_positions         = []
+
+	# Setting the parameters
+	model_name = 'corin'
+	param_name = 'robot_description'
+	# LF leg
+	joint_names.append('lf_q1_joint')
+	joint_positions.append(0.0)
+	joint_names.append('lf_q2_joint')
+	joint_positions.append(0.75)
+	joint_names.append('lf_q3_joint')
+	joint_positions.append(-1.5)
+	# LM leg
+	joint_names.append('lm_q1_joint')
+	joint_positions.append(0.0)
+	joint_names.append('lm_q2_joint')
+	joint_positions.append(0.75)
+	joint_names.append('lm_q3_joint')
+	joint_positions.append(-1.5)
+	# LR leg
+	joint_names.append('lr_q1_joint')
+	joint_positions.append(0.0)
+	joint_names.append('lr_q2_joint')
+	joint_positions.append(0.75)
+	joint_names.append('lr_q3_joint')
+	joint_positions.append(-1.5)
+
+	# RF leg
+	joint_names.append('rf_q1_joint')
+	joint_positions.append(0.0)
+	joint_names.append('rf_q2_joint')
+	joint_positions.append(0.75)
+	joint_names.append('rf_q3_joint')
+	joint_positions.append(-1.5)
+	# RM leg
+	joint_names.append('rm_q1_joint')
+	joint_positions.append(0.0)
+	joint_names.append('rm_q2_joint')
+	joint_positions.append(0.75)
+	joint_names.append('rm_q3_joint')
+	joint_positions.append(-1.5)
+	# RH leg
+	joint_names.append('rr_q1_joint')
+	joint_positions.append(0.0)
+	joint_names.append('rr_q2_joint')
+	joint_positions.append(0.75)
+	joint_names.append('rr_q3_joint')
+	joint_positions.append(-1.5)
+
+	gazebo_namespace = '/gazebo'
+	rospy.wait_for_service('%s/set_model_configuration'%(gazebo_namespace))
+	rospy.sleep(sleep_time)
+	try:
+		success = gazebo_interface.set_model_configuration_client(model_name, param_name, 
+                                                                  joint_names, joint_positions, gazebo_namespace)
+	except rospy.ServiceException, e:
+		print "set model configuration service call failed: %s"%e
+
+	# rospy.wait_for_service('%s/unpause_physics'%(gazebo_namespace))
+	# try:
+	# 	success = unpause(gazebo_namespace)
+	# except rospy.ServiceException, e:
+	# 	print "unpause physics service call failed: %s"%e

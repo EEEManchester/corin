@@ -64,7 +64,7 @@ class GaitClass:
 			self.gait_type = gait_selected
 			self.gait_dutyFactor()
 			self.change_phase()
-			print 'Gait class initiated with ', self.gdic['name']
+			print '>> INITIALISED GAIT CLASS - ', self.gdic['name']
 		else:
 			print 'Invalid gait selected'
 
@@ -96,7 +96,6 @@ class GaitClass:
 			# Condition for Leg 6 to start first - used for tetrapod and ripple due to fraction equals to 1 for leg 6
 			##### Runs once at the start 
 			if (self.gait.item(1,5)==1):	
-				print "executed"
 				for k in range(0,6):
 					self.gait[1,k] = self.gait.item(1,k) + Fraction(1,self.gdic['beta'].denominator)
 					if (self.gait[1,k] > 1.0): 															# modifies for phase to be fraction 

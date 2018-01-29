@@ -10,7 +10,7 @@ import transformations as tf
 from constant import *
 
 class corin_kinematics():
-	
+
 	def __init__(self):
 		self.link	= [L1, L2, L3]
 
@@ -22,12 +22,12 @@ class corin_kinematics():
 			Jv = np.matrix([	[-np.sin(q1)*(L3*np.cos(q2+q3)+np.cos(q2)*L2+L1),     -np.cos(q1)*(L3*np.sin(q2+q3)+np.sin(q2)*L2),     -np.sin(q2+q3)*np.cos(q1)*L3 ],
 								[ np.cos(q1)*(L3*np.cos(q2+q3)+np.cos(q2)*L2+L1),     -np.sin(q1)*(L3*np.sin(q2+q3)+np.sin(q2)*L2),     -np.sin(q2+q3)*np.sin(q1)*L3 ],
 								[ 0,                                          		   L3*np.cos(q2+q3)+np.cos(q2)*L2,                	 L3*np.cos(q2+q3)]			])
-			
+
 			# print Jv
-			return Jv 
+			return Jv
 		except:
 			return None
-		
+
 
 	def jacobian_transpose(self, q=None):
 		return self.jacobian(q).transpose()
@@ -64,7 +64,7 @@ class corin_kinematics():
 				q3 = q3t[1];
 
 			# Dividing the element (1,4) & (2,4) in inv(H01)*Psym = T12*T23
-			xp = x*np.cos(q1) + np.sin(q1)*y - L1; 
+			xp = x*np.cos(q1) + np.sin(q1)*y - L1;
 			yp = z;
 			q2t = [np.arctan2(yp,xp) - np.arctan2(L3*np.sin(q3), L2+L3*np.cos(q3)), np.arctan2(yp,xp) - np.arctan2(L3*np.sin(q3), L2+L3*np.cos(q3))];
 
@@ -79,7 +79,7 @@ class corin_kinematics():
 			pass
 
 	def singularity_check(self, q=None):
-		
+
 		rank = np.linalg.matrix_rank(self.jacobian(q))
 		if (rank < 3):
 			return 1
@@ -93,11 +93,11 @@ class corin_kinematics():
 
 			vel = np.matrix([ [v.item(0)], [v.item(1)], [v.item(2)] ])
 			acc = np.matrix([ [a.item(0)], [a.item(1)], [a.item(2)] ])
-			
+
 			Jv = self.jacobian(q)
 
 			qd = linalg.solve(Jv,vel)
-			
+
 			qd1 = qd.item(0); qd2 = qd.item(1); qd3 = qd.item(2);
 
 			Ja11 = -np.cos(q2)*np.cos(q1)*L2*qd1+np.sin(q2)*np.sin(q1)*L2*qd2-np.cos(q2+q3)*np.cos(q1)*L3*qd1+np.sin(q2+q3)*np.sin(q1)*L3*qd2+qd3*np.sin(q2+q3)*np.sin(q1)*L3-np.cos(q1)*L1*qd1;
@@ -108,14 +108,14 @@ class corin_kinematics():
 			Ja23 = -L3*(np.cos(q2+q3)*np.sin(q1)*qd2+np.cos(q2+q3)*np.sin(q1)*qd3+np.sin(q2+q3)*np.cos(q1)*qd1);
 			Ja31 = 0;
 			Ja32 = -np.sin(q2)*L2*qd2-qd2*L3*np.sin(q2+q3)-qd3*L3*np.sin(q2+q3);
-			Ja33 = -np.sin(q2+q3)*L3*(qd2+qd3);    
+			Ja33 = -np.sin(q2+q3)*L3*(qd2+qd3);
 
-			Ja = np.matrix([ [Ja11, Ja12, Ja13], [Ja21, Ja22, Ja23], [Ja31, Ja32, Ja33] ])  
-			
+			Ja = np.matrix([ [Ja11, Ja12, Ja13], [Ja21, Ja22, Ja23], [Ja31, Ja32, Ja33] ])
+
 			qdd = linalg.solve(Jv,(acc - Ja*qd))
 
-			return np.insert(np.array(qd), 0, 0), np.insert(np.array(qdd), 0, 0)
-
+			# return np.insert(np.array(qd), 0, 0), np.insert(np.array(qdd), 0, 0)
+			return qd, qdd
 		except Exception, e:
 			print 'Error in Jv: ', e
 			return None, None
@@ -135,11 +135,11 @@ class corin_kinematics():
 
 		qrx = qsurface.item(1)
 
-		world_hip_X_wall_Y = (np.dot(tf.rotation_zyx(bodypose[3:7]), (base_X_surface - COXA_Y)*np.array([ [0.],[1.],[0,] ])) ).item(1) 
+		world_hip_X_wall_Y = (np.dot(tf.rotation_zyx(bodypose[3:7]), (base_X_surface - COXA_Y)*np.array([ [0.],[1.],[0,] ])) ).item(1)
 		world_hip_X_wall_Z = bodypose.item(2) + (np.dot(tf.rotation_zyx(bodypose[3:7]), np.array([ [0.], [COXA_Y], [0.] ]) ) ).item(2)
 
 		# print 'f tf: ', np.round(world_hip_X_wall_Y, 3), np.round(world_hip_X_wall_Z, 3)
-		
+
 		# foothold algorithm
 		# Step 1:
 		h2 = L3*np.sin(np.pi/2 - qrx);
@@ -156,8 +156,8 @@ class corin_kinematics():
 		# Step 4:
 		world_X_wall_Z = world_hip_X_wall_Z + h1
 
-		# transform to world frame 
-		world_X_wall_Y = (np.dot(tf.rotation_zyx(bodypose[3:7]), base_X_surface*np.array([ [0.],[1.],[0,] ]))).item(1) 
+		# transform to world frame
+		world_X_wall_Y = (np.dot(tf.rotation_zyx(bodypose[3:7]), base_X_surface*np.array([ [0.],[1.],[0,] ]))).item(1)
 		base_X_wall_Z  = world_X_wall_Z - bodypose.item(2)
 
 		# transform to base frame
@@ -165,7 +165,7 @@ class corin_kinematics():
 
 		# output: in base frame, from hip to nominal position
 		base_hip_X_nom = np.dot(tf.rotation_zyx(-bodypose[3:7]), np.array([ [0.],[world_hip_X_wall_Y], [base_X_wall_Z] ]))
-		
+
 		# print world_X_wall_Y, base_X_wall_Z
 		# print base_X_nom.transpose()
 		# print base_hip_X_nom.transpose()
@@ -174,8 +174,10 @@ class corin_kinematics():
 		return base_hip_X_nom
 
 
-## Test values
 
+## ================================================================================================ ##
+## 												TESTING 											##
+## ================================================================================================ ##
 CK = corin_kinematics()
 
 qsurface = np.array([0.,-np.pi/2,0.])
@@ -185,17 +187,18 @@ bodypose = np.array([0.,0.,BODY_HEIGHT, 0.,0.,0.])
 CK.nominal_stance(bodypose, base_X_surface, qsurface)
 
 # print bodypose[3:7]
-qs = [0, 0, 0.013, -1.695]
-# v  = np.array([ 0, -0.05, 0.07318 ])
-# a  = np.array([ 0, 0, 0 ])
+# qs = [0., 1.238, -1.724] #[0., 1.195, -1.773] 	# left side
+qs = [0., 0.45, -2.033]	# right side
 
-# cd = CK.FK(qs)
-# print cd
-# qp = CK.IK(cd)
-# print cd
+cd = CK.FK(qs)
+# print cd.flatten()
+cd = [ 0.288, 0., -0.019]
+qp = CK.IK(cd)
+# print 'q: ', qp
+# print qp
 # if (not CK.singularity_check(qp)):
 # 	qd,qdd = CK.joint_speed(qp, v, a)
-	
+
 
 #[1, 2, 4, 2, 3, 4]
 	#print qd, qdd

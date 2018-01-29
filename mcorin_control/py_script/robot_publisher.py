@@ -13,7 +13,11 @@ import numpy as np
 import tf
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import Point
+from geometry_msgs.msg import Quaternion
 from sensor_msgs.msg import Imu
+
+from gazebo_msgs.msg import ModelStates
 
 from constant import *
 
@@ -21,41 +25,54 @@ class Node_class:
 	def __init__(self):
 		rospy.init_node("State_publisher")							# Initiates Ros node
 		self.freq = 80
-		self.rate = rospy.Rate(self.freq)							# Sets transmit frequency
-		self.broadcaster = tf.TransformBroadcaster()
+		self.rate = rospy.Rate(self.freq)					# Sets transmit frequency
+		self.robot_broadcaster = tf.TransformBroadcaster()	# Transform for robot pose
+		self.lidar_broadcaster = tf.TransformBroadcaster()	# Transform for robot pose
 		self.jointState  = JointState()
 
+		self.start()
+
 	def start(self):
-		self.imu_sub 	= rospy.Subscriber("/imu_data", Imu, self.imu_callback)
-		self.joint_sub 	= rospy.Subscriber(ROBOT_NS + "/joint_states", JointState, self.joint_state_callback) 	# temp not needed
+		##***************** SUBSCRIBERS ***************##
+		# subscribe to gazebo
+		if rospy.has_param('/gazebo/auto_disable_bodies'):
+			self.robot_state_sub_ = rospy.Subscriber("/gazebo/model_states", ModelStates, self.model_callback)
 
-		self.joint_pub  = rospy.Publisher(ROBOT_NS + "/joint_states_new", JointState, queue_size=1)
+		# subscribe to hardware IMU
+		else:
+			self.imu_sub_ 		  = rospy.Subscriber("/imu_data", Imu, self.imu_callback)
 
-	def joint_state_callback(self,joint_state):
-		self.jointState = joint_state
-		qname = [None] * 18
-		for i in range(0,18):
-			qname[i] = JOINT_TOPICS[int(self.jointState.name[i])-1]
+		##***************** PUBLISHERS ***************##
 
-		new_msg = JointState()
-		new_msg.name = qname
-		new_msg.position = joint_state.position
-		new_msg.velocity = joint_state.velocity
-		new_msg.effort = joint_state.effort
 
-		self.joint_pub.publish(new_msg)
+	## Transform from gazebo robot_pose to TF for RVIZ visualization
+	def model_callback(self, robot_state):
+		rs_size = len(robot_state.name)
+
+		for i in range(0,rs_size):
+			if (robot_state.name[i]=='corin'):
+				px = robot_state.pose[i].position.x
+				py = robot_state.pose[i].position.y
+				pz = robot_state.pose[i].position.z
+
+				rx = robot_state.pose[i].orientation.x
+				ry = robot_state.pose[i].orientation.y
+				rz = robot_state.pose[i].orientation.z
+				rw = robot_state.pose[i].orientation.w
+
+				self.robot_broadcaster.sendTransform( (px,py,pz), (rx,ry,rz,rw), rospy.Time.now(), "trunk", "base_link") ;
+				self.lidar_broadcaster.sendTransform( (px,py,pz), (rx,ry,rz,rw), rospy.Time.now(), "trunk_lidar", "trunk") ;
+
 
 	def imu_callback(self, imu):
 	    print imu.orientation.x, imu.orientation.y, imu.orientation.z
-	    self.broadcaster.sendTransform( (0.0,0.0,0.5), tf.transformations.quaternion_from_euler(imu.orientation.x, imu.orientation.y, imu.orientation.z),
+	    self.robot_broadcaster.sendTransform( (0.0,0.0,0.1), tf.transformations.quaternion_from_euler(imu.orientation.y, imu.orientation.x, -imu.orientation.z),
 	    							rospy.Time.now(), "trunk", "base_link") ;
 
 
 if __name__ == "__main__":
 	n = Node_class()
 
-	print "Initiation Complete","     Publish Time: ",float(1)/float(n.freq)
-
-	n.start()
+	print 'Robot publisher initiated'
 
 	rospy.spin()

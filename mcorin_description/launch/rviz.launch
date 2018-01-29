@@ -20,8 +20,9 @@
 	<node name="robot_state_publisher" pkg="robot_state_publisher"
 		type="state_publisher" respawn="true">
 		<param name="publish_frequency" value="200" />
-		<param name="rate" value="200" />
-		<remap from="/joint_states" to="/corin/joint_states_new" />
+		<!-- <param name="rate" value="200" /> -->
+		<!--<remap from="/joint_states" to="/corin/joint_states" /> 	 when running gazebo -->
+		<remap from="/joint_states" to="/robotis/present_joint_states" />
 	</node>
 
 	<!-- load displays -->

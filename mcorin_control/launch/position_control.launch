@@ -5,13 +5,15 @@
 
   <!-- load the controllers -->
   <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
-    output="screen" ns="/corin" args="joint_state_controller  
+    output="screen" ns="/corin" args="joint_state_controller
     lf_q1_controller lf_q2_controller lf_q3_controller
     lm_q1_controller lm_q2_controller lm_q3_controller
     lr_q1_controller lr_q2_controller lr_q3_controller
     rf_q1_controller rf_q2_controller rf_q3_controller
     rm_q1_controller rm_q2_controller rm_q3_controller
     rr_q1_controller rr_q2_controller rr_q3_controller   "/>
+
+  <node name="contact_foce" pkg="mcorin_control" type="footcontact.py" respawn="false"/>
   
   <!-- convert joint states to TF transforms for rviz, etc -->
   <!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"

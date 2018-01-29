@@ -2,7 +2,7 @@
 <launch>
 
 	<arg name="sensors" default="true"/>
-	<arg name="gui" default="false"/>
+	<arg name="gui" default="true"/>
 	<!-- <arg name="rviz_conf" default="$(find hyq_description)/rviz/hyq_model_tf.rviz"/> -->
 
 	<!-- load robot -->
