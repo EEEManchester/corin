@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   message_filters
   message_generation
+  robotis_controller_msgs
   roscpp
   rospy
   std_msgs
@@ -52,6 +53,7 @@ find_package(catkin REQUIRED COMPONENTS
    actionlib_msgs
    control_msgs
    geometry_msgs
+   robotis_controller_msgs
    sensor_msgs
    std_msgs
  )
