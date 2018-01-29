@@ -15,7 +15,6 @@
   <build_depend>actionlib</build_depend>
   <build_depend>control_msgs</build_depend>
   <build_depend>dynamic_reconfigure</build_depend>
-  <build_depend>dynamixel_msgs</build_depend>
   <build_depend>gazebo_msgs</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>message_filters</build_depend>
@@ -32,7 +31,6 @@
   <run_depend>actionlib</run_depend>
   <run_depend>control_msgs</run_depend>
   <run_depend>dynamic_reconfigure</run_depend>
-  <run_depend>dynamixel_msgs</run_depend>
   <run_depend>gazebo_msgs</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>message_filters</run_depend>

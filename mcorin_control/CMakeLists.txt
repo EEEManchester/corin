@@ -10,7 +10,6 @@ add_definitions(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   actionlib
   control_msgs
-  dynamixel_msgs
   gazebo_msgs
   geometry_msgs
   message_filters
@@ -55,8 +54,6 @@ find_package(catkin REQUIRED COMPONENTS
    geometry_msgs
    sensor_msgs
    std_msgs
-   dynamixel_msgs
-   # nano_driver
  )
 
 ################################################
