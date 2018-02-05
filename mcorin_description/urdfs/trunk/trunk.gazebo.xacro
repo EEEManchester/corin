@@ -3,6 +3,8 @@
 
 	<xacro:macro name="trunk_gazebo" params="name">
 		<gazebo reference="${name}">
+			<kp>100000.0</kp>
+			<kd>1000.0</kd>
 			<mu1>1.5</mu1>
 			<mu2>1.5</mu2>
 			<material>Gazebo/DarkGrey</material>

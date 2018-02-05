@@ -104,7 +104,7 @@ class control_interface:
 			self.w_com = np.vstack((self.w_com,np.array([-0.22,  0.075, 0.])))
 			self.x_com = np.vstack((self.x_com,np.array([0.00, 0.00, BODY_HEIGHT])))
 			self.w_com = np.vstack((self.w_com,np.array([0.00, 0.00, -0.2])))
-			self.x_com = np.vstack((self.x_com,np.array([0.00, 0.00, 0.22])))
+			self.x_com = np.vstack((self.x_com,np.array([0.00, 0.005, 0.22])))
 			self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.12])))
 			self.x_com = np.vstack((self.x_com,np.array([0.,  0.0, BODY_HEIGHT])))
 			self.w_com = np.vstack((self.w_com,np.array([0.,  0.0, 0.])))
@@ -113,7 +113,7 @@ class control_interface:
 		self.reset_variables()
 		self.mode = 2
 
-		self.x_com = np.vstack((self.x_com,np.array([0.2, 0.0, BODY_HEIGHT])))
+		self.x_com = np.vstack((self.x_com,np.array([0.4, 0.0, BODY_HEIGHT])))
 
 	def WalkBack(self):
 		self.reset_variables()

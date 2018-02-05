@@ -19,7 +19,7 @@ import numpy as np
 from constant import * 								# constants used
 from TrajectoryPoints import TrajectoryPoints		# class for 3D time array of points
 import transformations as tf 						# SE(3) transformation library
-import gait_class as Gaitgenerator					# class for gait coordinator
+import gait_class as Gaitgen					# class for gait coordinator
 import param_gait									# class for setting gait parameters in RT 
 import kdl 											# kinematic & dynamics library
 import pspline_generator as Pspline 				# spline generator for body
@@ -33,7 +33,7 @@ class RobotState:
 		self.imu = Imu()
 		
 		self.Leg = {} 								# leg class
-		self.gaitgen = Gaitgenerator.GaitClass(3) 	# gait class
+		self.gaitgen = Gaitgen.GaitClass(GAIT_TYPE)	# gait class
 		self.bspline = Bspline.SplineGenerator() 	# bSplineClass for spline generation
 
 		self.x_spline = TrajectoryPoints() 			# CoM trajectory

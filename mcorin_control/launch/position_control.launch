@@ -4,7 +4,7 @@
   <rosparam file="$(find mcorin_control)/config/leg_position_controller.yaml" command="load"/>
 
   <!-- load the controllers -->
-  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" clear_params="true"
     output="screen" ns="/corin" args="joint_state_controller
     lf_q1_controller lf_q2_controller lf_q3_controller
     lm_q1_controller lm_q2_controller lm_q3_controller

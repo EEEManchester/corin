@@ -87,13 +87,25 @@ class CorinManager:
 		self.sp_state  = JointState() 					# LOGGING
 		self.track_com = np.zeros(3) 					# tracking com location
 
-		self.resting = False 		# Flag indicating robot standing or resting
+		self.resting = False 			# Flag indicating robot standing or resting
 		self.ui_control	= control_interface.control_interface()
 
 		if (initialise):
-			self._start()
+			self._start() 				# initialise publishers and subscribers
 			rospy.sleep(0.5)
-			self._default_pose()
+			if rospy.has_param(ROBOT_NS + '/standing'):
+				if (rospy.get_param(ROBOT_NS + '/standing')==True):
+					pass
+			else:
+				self._default_pose() 		# move robot to default position
+
+			# update and reset states
+			self.Robot.reset_state = True
+			self.Robot.suspend = False
+			self.Robot.updateState()
+
+			for j in range(0,self.Robot.active_legs):
+				self.Robot.Leg[j].feedback_state = 2 	# trajectory completed
 
 	def hardware_selection(self):
 		# always default to simulation
@@ -151,7 +163,7 @@ class CorinManager:
 		# if (self.control_mode == 0): 	# manual control mode
 		# 	self.connex_sub = rospy.Subscriber('/spacenav/joy', Joy, self.connex_callback, queue_size=1 )
 
-		self.on_start = False
+		self.on_start = False 	# variable for resetting to leg suspended in air
 
 	# routine to stand up: using current state move leg up to air, then step up
 	def _air_suspend_legs(self):
@@ -191,9 +203,10 @@ class CorinManager:
 
 	def _default_pose(self, stand_state=0):
 
+		## moves leg into air
 		if (self.on_start == False):
 			print 'Resetting stance....'
-			self._air_suspend_legs() 	# moves leg into air
+			self._air_suspend_legs()
 			self.on_start = True
 
 		rospy.sleep(0.5)
@@ -254,13 +267,7 @@ class CorinManager:
 				self.publish_topics()
 				self.rate.sleep()
 
-		# update and reset states
-		self.Robot.reset_state = True
-		self.Robot.suspend = False
-		self.Robot.updateState()
-
-		for j in range(0,self.Robot.active_legs):
-			self.Robot.Leg[j].feedback_state = 2 	# trajectory completed
+		
 
 	def _Get_to_Stance(self):
 		dir_uv = np.array([0.,0.,0.]) 	# zero vector direction

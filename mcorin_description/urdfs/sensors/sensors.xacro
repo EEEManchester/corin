@@ -37,7 +37,7 @@
                 <bodyName>${imu_name}</bodyName>
                 <topicName>${imu_topic}</topicName>
                 <serviceName>${imu_service}</serviceName>
-                <gaussianNoise>0.001</gaussianNoise>
+                <gaussianNoise>0.1</gaussianNoise>
                 <updateRate>${update_rate}</updateRate> 
             </plugin>
         </gazebo>

@@ -7,7 +7,7 @@
 		<transmission name="${name}_q1_trans">
 			<type>transmission_interface/SimpleTransmission</type>
 			<joint name="${name}_q1_joint">
-				<hardwareInterface>EffortJointInterface</hardwareInterface>
+				<hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
 			</joint>
 			<actuator name="${name}_q1_motor">
 				<hardwareInterface>EffortJointInterface</hardwareInterface>
@@ -18,7 +18,7 @@
 		<transmission name="${name}_q2_trans">
 			<type>transmission_interface/SimpleTransmission</type>
 			<joint name="${name}_q2_joint">
-				<hardwareInterface>EffortJointInterface</hardwareInterface>
+				<hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
 			</joint>
 			<actuator name="${name}_q2_motor">
 				<hardwareInterface>EffortJointInterface</hardwareInterface>
@@ -29,7 +29,7 @@
 		<transmission name="${name}_q3_trans">
 			<type>transmission_interface/SimpleTransmission</type>
 			<joint name="${name}_q3_joint">
-				<hardwareInterface>EffortJointInterface</hardwareInterface>
+				<hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
 			</joint>
 			<actuator name="${name}_q3_motor">
 				<hardwareInterface>EffortJointInterface</hardwareInterface>

@@ -18,7 +18,7 @@ lf_q1_joint :   # MX-64
    profile_acceleration  : 0
 
 lf_q2_joint :   # MX-64
-   return_delay_time     : 03500
+   return_delay_time     : 0
    operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
@@ -42,9 +42,9 @@ lf_q3_joint :   # MX-64
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 3868   #  160 deg
-   min_position_limit    : 230    # -160 deg
+   min_position_limit    : 228    # -160 deg
    velocity_limit        : 150
-   goal_position         : 228   # 0-4095
+   goal_position         : 230   # 0-4095
    goal_current          : 1941   # 0-1941
    goal_velocity         : 50   # 0-1023
    position_p_gain       : 850    # 0-16383
@@ -75,7 +75,7 @@ lm_q1_joint :   # MX-64
    profile_acceleration  : 0
 
 lm_q2_joint :   # MX-64
-   return_delay_time     : 03500
+   return_delay_time     : 0
    operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
@@ -132,7 +132,7 @@ lr_q1_joint :   # MX-64
    profile_acceleration  : 0
 
 lr_q2_joint :   # MX-64
-   return_delay_time     : 03500
+   return_delay_time     : 0
    operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
@@ -189,7 +189,7 @@ rf_q1_joint :   # MX-64
    profile_acceleration  : 0
 
 rf_q2_joint :   # MX-64
-   return_delay_time     : 03500
+   return_delay_time     : 0
    operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
@@ -246,7 +246,7 @@ rm_q1_joint :   # MX-64
    profile_acceleration  : 0
 
 rm_q2_joint :   # MX-64
-   return_delay_time     : 03500
+   return_delay_time     : 0
    operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
@@ -303,7 +303,7 @@ rr_q1_joint :   # MX-64
    profile_acceleration  : 0
 
 rr_q2_joint :   # MX-64
-   return_delay_time     : 03500
+   return_delay_time     : 0
    operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
@@ -337,5 +337,5 @@ rr_q3_joint :   # MX-64
    position_d_gain       : 0      # 0-16383
    velocity_p_gain       : 50
    velocity_i_gain       : 0
-   profile_velocity      : 10
+   profile_velocity      : 40
    profile_acceleration  : 0
