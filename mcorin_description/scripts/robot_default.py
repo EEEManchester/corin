@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-## Sets Gazebo Corin model to default standing up nominal position
+## Sets Gazebo Corin model to default world position in nominal standing up position
 
 import rospy, sys, os, time
 import string
@@ -107,7 +107,7 @@ if __name__ == "__main__":
 
 	gazebo_namespace = '/gazebo'
 	rospy.wait_for_service('%s/set_model_state'%(gazebo_namespace))
-	rospy.sleep(3)
+	
 
 	try:
 		set_model_state = rospy.ServiceProxy('%s/set_model_state'%(gazebo_namespace), SetModelState)

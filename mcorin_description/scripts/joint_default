@@ -150,8 +150,8 @@ if __name__ == "__main__":
 
 
 	## Unpause physics
-	rospy.wait_for_service('%s/unpause_physics'%(gazebo_namespace))
-	try:
-		success = unpause(gazebo_namespace)
-	except rospy.ServiceException, e:
-		print "unpause physics service call failed: %s"%e
+	# rospy.wait_for_service('%s/unpause_physics'%(gazebo_namespace))
+	# try:
+	# 	success = unpause(gazebo_namespace)
+	# except rospy.ServiceException, e:
+	# 	print "unpause physics service call failed: %s"%e

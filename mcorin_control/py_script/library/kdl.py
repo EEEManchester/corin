@@ -194,7 +194,7 @@ cd = CK.FK(qs)
 # print cd.flatten()
 cd = [ 0.21, 0., -0.1]
 qp = CK.IK(cd)
-print 'q: ', qp
+# print 'q: ', qp
 # print qp
 # if (not CK.singularity_check(qp)):
 # 	qd,qdd = CK.joint_speed(qp, v, a)
