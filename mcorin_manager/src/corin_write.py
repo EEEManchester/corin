@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-## Function for manipulating the body pose of the hexapod with legs
-## fixed to the spot. Initial stance is the nominal stance
+## Test file for writing to servos
 import rospy
 import numpy as np
 import math

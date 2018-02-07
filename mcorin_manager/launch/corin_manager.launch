@@ -20,6 +20,9 @@
     <!-- corin Manager -->
     <node name="corin_manager_node" pkg="mcorin_manager" type="corin_manager" output="screen"/>
 
+    <!-- Torque server - enable/disable torque -->
+    <node name="dxl_server" pkg="mcorin_manager" type="torque_server.py" output="screen"/>
+
     <!-- Robot Model & TF -->
     <!-- <include file="$(find thormang3_description)/launch/thormang3_mpc.launch"/> -->
 </launch>
