@@ -46,7 +46,7 @@ TRAC_PERIOD			= 1.5			# cycle time for movement
 TRAC_INTERVAL 		= 0.005			# intervals for trajectory
 
 ## ================================================================ ##
-##                  Compensation parameters 	 					##
+##                  	Compensation parameters	 					##
 ## ================================================================ ## 
 QCOMPENSATION = -0.035
 ## ================================================================ ##
@@ -91,25 +91,6 @@ Z_AXIS = (0,0,1)
 ## ================================================================ ##
 ##                       	Topics 	 		 						##
 ## ================================================================ ##
-JOINT_TOPICS = {}
-JOINT_TOPICS[0] = 'lf_q1_controller'
-JOINT_TOPICS[1] = 'lf_q2_controller'
-JOINT_TOPICS[2] = 'lf_q3_controller'
-JOINT_TOPICS[3] = 'lm_q1_controller'
-JOINT_TOPICS[4] = 'lm_q2_controller'
-JOINT_TOPICS[5] = 'lm_q3_controller'
-JOINT_TOPICS[6] = 'lr_q1_controller'
-JOINT_TOPICS[7] = 'lr_q2_controller'
-JOINT_TOPICS[8] = 'lr_q3_controller'
-JOINT_TOPICS[9] = 'rf_q1_controller'
-JOINT_TOPICS[10] = 'rf_q2_controller'
-JOINT_TOPICS[11] = 'rf_q3_controller'
-JOINT_TOPICS[12] = 'rm_q1_controller'
-JOINT_TOPICS[13] = 'rm_q2_controller'
-JOINT_TOPICS[14] = 'rm_q3_controller'
-JOINT_TOPICS[15] = 'rr_q1_controller'
-JOINT_TOPICS[16] = 'rr_q2_controller'
-JOINT_TOPICS[17] = 'rr_q3_controller'
 
 JOINT_NAME = {}
 JOINT_NAME[0] = 'lf_q1_joint'

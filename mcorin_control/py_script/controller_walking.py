@@ -127,7 +127,7 @@ class CorinManager:
 			if (self.hardware == 'simulation'):
 				self.qpub_ = {}
 				for i in range(0,18):
-					self.qpub_[i] = rospy.Publisher(self.robot_ns + '/' + JOINT_TOPICS[i] + '/command', Float64, queue_size=1)
+					self.qpub_[i] = rospy.Publisher(self.robot_ns + '/' + JOINT_NAME[i] + '/command', Float64, queue_size=1)
 
 			## Publish to Dynamixel motors
 			elif (self.hardware == 'robotis'):
