@@ -13,9 +13,15 @@ ROBOT_NS = "corin"
 ##                       Robot parameters 	 						##
 ## ================================================================ ##
 # Link Length, Mass
-L1 = 0.060;	LL_LENG_1 = L1; LL_MASS_1 = 0.040
-L2 = 0.150;	LL_LENG_2 = L2;	LL_MASS_2 = 0.350
-L3 = 0.150;	LL_LENG_3 = L3;	LL_MASS_3 = 0.116
+L1 = 0.060;	LL_MASS_1 = 0.040
+L2 = 0.150;	LL_MASS_2 = 0.350
+L3 = 0.150;	LL_MASS_3 = 0.116
+
+# Joint limit
+Q1_F_LIM = 1.00     # q1 on front and rear legs
+Q1_M_LIM = 0.84     # q1 on middle legs
+Q2_A_LIM = 2.22     # q2 on all legs
+Q3_A_LIM = 2.79     # q3 on all legs
 
 # Offset from CoB to Leg using Body Frame
 COXA_X = 0.115
@@ -24,12 +30,6 @@ COXA_Z = 0.0
 
 g 	 = 9.81 	# Gravity
 M_KC = 16.06 	# MX64 motor torque constant
-
-# Joint limit
-Q1_F_LIM = 1.00     # q1 on front and rear legs
-Q1_M_LIM = 0.84     # q1 on middle legs
-Q2_A_LIM = 2.22     # q2 on all legs
-Q3_A_LIM = 2.79     # q3 on all legs
 
 ## ================================================================ ##
 ##                       Gait parameters 	 						##
