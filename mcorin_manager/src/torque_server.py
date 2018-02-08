@@ -13,10 +13,10 @@ from robotis_controller_msgs.srv import *
 
 class CorinManager:
 	def __init__(self):
-		rospy.init_node('torque_server') 		#Initialises node
+		rospy.init_node('torque_server') 		# Initialises node
 		self.freq	= 1 						# frequency
 		self.rate 	= rospy.Rate(self.freq)		# control rate
-		self.joint  = self._read_file()
+		self.joint  = self._read_file() 		# read list of joints
 
 		self._start()
 
