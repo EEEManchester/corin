@@ -6,12 +6,12 @@
   <!-- load the controllers -->
   <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" clear_params="true"
     output="screen" ns="/corin" args="joint_state_controller
-    lf_q1_controller lf_q2_controller lf_q3_controller
-    lm_q1_controller lm_q2_controller lm_q3_controller
-    lr_q1_controller lr_q2_controller lr_q3_controller
-    rf_q1_controller rf_q2_controller rf_q3_controller
-    rm_q1_controller rm_q2_controller rm_q3_controller
-    rr_q1_controller rr_q2_controller rr_q3_controller   "/>
+    lf_q1_joint lf_q2_joint lf_q3_joint
+    lm_q1_joint lm_q2_joint lm_q3_joint
+    lr_q1_joint lr_q2_joint lr_q3_joint
+    rf_q1_joint rf_q2_joint rf_q3_joint
+    rm_q1_joint rm_q2_joint rm_q3_joint
+    rr_q1_joint rr_q2_joint rr_q3_joint   "/>
 
   <node name="contact_foce" pkg="mcorin_control" type="footcontact.py" respawn="false"/>
   
