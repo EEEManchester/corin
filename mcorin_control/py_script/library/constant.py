@@ -38,7 +38,7 @@ DUTY_FACTOR = {'tripod':0.5, 'tetrapod':2./3., 'ripple':3./4., 'wave':5./6. }
 
 BODY_HEIGHT  		= 0.1           # ori: 0.10, chimney: 0.0
 STANCE_WIDTH 		= 0.21          # ori: 0.21, chimney: 0.27, 0.31 for tripod
-GAIT_TYPE 			= 4 			# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+GAIT_TYPE 			= 3 			# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 STEP_STROKE 		= 0.08 			# step size, x, 	default 0.07
 STEP_HEIGHT 		= 0.1 			# step height, z 	default 0.05
 WALKING_SPEED 		= 0.035 		# walking speed in m/s
