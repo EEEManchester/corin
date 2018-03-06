@@ -45,6 +45,8 @@ WALKING_SPEED 		= 0.035 		# walking speed in m/s
 TRAC_PERIOD			= 1.5			# cycle time for movement
 TRAC_INTERVAL 		= 0.005			# intervals for trajectory
 
+BASE_MAX_VELOCITY 	= 0.1	 		# maximum base velocity
+
 ## ================================================================ ##
 ##                  	Compensation parameters	 					##
 ## ================================================================ ## 

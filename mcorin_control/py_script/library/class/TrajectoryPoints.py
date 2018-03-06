@@ -5,8 +5,17 @@
 import numpy as np
 
 class TrajectoryPoints():
-	def __init__(self):
-		self.xp = np.zeros((0,3))
-		self.xv = np.zeros((0,3))
-		self.xa = np.zeros((0,3))
-		self.t  = []
+	def __init__(self,data=None):
+		if data is None:
+			self.t  = []
+			self.xp = np.zeros((0,3))
+			self.xv = np.zeros((0,3))
+			self.xa = np.zeros((0,3))
+		else:
+			self.t  = np.array(data[0])
+			self.xp = np.array(data[1])
+			self.xv = np.array(data[2])
+			self.xa = np.array(data[3])
+
+	def append(self, x):
+		pass

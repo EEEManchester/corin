@@ -15,7 +15,7 @@ from constant import *
 import control_interface 								# action selection from ROS parameter server
 import robot_class 										# class for robot states and function
 import gait_class as Gaitgenerator						# class for gait coordinator
-import path_generator as Pathgenerator 					# generates path from via points
+import path_generator_new as Pathgenerator 					# generates path from via points
 import transformations as tf 							# SE(3) transformation library
 # import pspline_generator as Pspline 					# polynomial spline generator 
 # import bspline_generator as Bspline 					# basis spline generator
@@ -576,8 +576,8 @@ class CorinManager:
 			self.track_com = np.array([ self.lin_v.item(0), self.lin_v.item(1), self.lin_v.item(2) ])*self.interval + self.track_com
 
 			# Next CoM point
-			if (self.Robot.x_spline.t[i] == self.planner.t_com[self.planner.count]):
-				self.planner.count += 1
+			# if (self.Robot.x_spline.t[i] == self.planner.t_com[self.planner.count]):
+			# 	self.planner.count += 1
 
 			# send command to body controller
 			self.execution(mag_v, dir_uv, i)
