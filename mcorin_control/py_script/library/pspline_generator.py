@@ -26,16 +26,6 @@ class SplineGenerator:
 		## declare variables ##
 		cpx = np.zeros((1,3))	# cartesian position in matrix
 		sh  = STEP_HEIGHT  		# step height for transfer phase
-
-		print 'phase param: ', phase
-		# reject displacements less than 1mm
-		pd = np.array([0, 0, 0])
-		for i in range (0,3):
-			pd[i] = ep[i]-sp[i]
-			if (phase>1):
-				if (abs(pd[i]) < 0.001):
-					pd[i] = 0
-		#print 'sp: ', sp, '  ep: ', ep
 		
 		# set via points according to phase
 		if (phase==1):						

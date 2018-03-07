@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-
 import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'class'))
 
 from constant import *
-import plotgraph as Plot
 from TrajectoryPoints import TrajectoryPoints
+import plotgraph as Plot
+
 import time
 import numpy as np
 from scipy import linalg
@@ -16,22 +16,28 @@ class SplineGenerator:
 	def __init__(self):
 		self.p  = 4; 			# order of spline
 		self.n  = 2; 			# derivative degree
-		self.C  = np.matrix([0])	# matrix of via points
-		self.t0 = np.array([0.0])	# array of time
+		self.C  = np.matrix([0])
+		self.t0 = np.array([0.0])
 		self.U  = np.array([0.0])
 		self.n_knot = 0
 
 	## For a start and end point, interpolate accordingly
-	def LegPhase_Interpolation(self, sp, ep, phase, snorm, reflex, ctime=2.0, p=4):
-		""" set via points for leg transfer phase """
+	def LegPhase_Interpolation(self, phase, sp, ep, qsurface, reflex, ctime=2.0, p=4):
+		vi = 0.0; 	vf = 0.0;
+		ai = 0.0;	af = 0.0;
 
-		## declare variables ##
-		sh = STEP_HEIGHT 	# step height for transfer phase
+		sh = STEP_HEIGHT #param_gait.get_step_height()		
 		
-		## set via points according to phase
-		if (phase==1):
-			## Transfer phase 
+		# reject displacements less than 1mm
+		pd = np.array([0, 0, 0])
+		for i in range (0,3):
+			pd[i] = ep[i]-sp[i]
+			if (phase > 1):
+				if (abs(pd[i]) < 0.001):
+					pd[i] = 0
 
+		# transfer phase 
+		if (phase==1):						
 			# vector from origin to travel path midpoint
 			pdiv = np.array([0.125,0.5,0.875]) 		# intervals for via points, in unity form
 			sdiv = np.array([0.6*sh,sh,0.6*sh])		# height clearance at each via points
@@ -48,13 +54,13 @@ class SplineGenerator:
 				m3 = np.matrix([ [1, 0, 0, v3.item(0)], [0, 1, 0, v3.item(1)], [0, 0, 1, v3.item(2)], [0, 0, 0, 1] ])
 				
 				# # surface normal; offset due to surface orientation = R(y,theta)*[0, 0, z]'
-				# nm = np.matrix([ [1, 0, 0, -sdiv.item(i)*np.sin(snorm[0])], [0, 1, 0, 0], [0, 0, 1, sdiv.item(i)*np.cos(snorm[0])], [0, 0, 0, 1] ]) 	
+				# nm = np.matrix([ [1, 0, 0, -sdiv.item(i)*np.sin(qsurface[0])], [0, 1, 0, 0], [0, 0, 1, sdiv.item(i)*np.cos(qsurface[0])], [0, 0, 0, 1] ]) 	
 
 				# # compute clearance point in SCS, SE(3)
 				# mp = m3*nm
 				##============================================
 				# surface orientation; offset due to surface orientation = R(y,theta)*[0, 0, z]'
-				ry = snorm.item(1) 	# rotation about y (leg frame pitch, world frame roll)
+				ry = qsurface.item(1) 	# rotation about y (leg frame pitch, world frame roll)
 				nm = np.matrix([ [np.cos(ry), 0., np.sin(ry), 0.],[0., 1., 0., 0.],[-np.sin(ry), 0., np.cos(ry), 0.],[0.,0.,0.,1.] ])
 				zh = np.matrix([ [1, 0, 0, 0.], [0, 1, 0, 0], [0, 0, 1, sdiv.item(i)], [0, 0, 0, 1] ]) 	
 				
@@ -65,48 +71,47 @@ class SplineGenerator:
 			
 			A = np.delete(A, 0, 1) # remove first column of matrix
 
-			t0 = np.array( [0, 0.25*ctime, 0.5*ctime, 0.75*ctime, ctime ])
-			C  = np.zeros((3,len(t0)+4))
+			self.t0 = np.array( [0, 0.25*ctime, 0.5*ctime, 0.75*ctime, ctime ])
+			self.C  = np.zeros((3,len(self.t0)+4))
 			
 			for i in range(0,3):
 				k = 0
-				for j in range(self.p-1,C.shape[1]-self.p+1):
-					C[i][j] = A.item(i,k)
+				for j in range(self.p-1,self.C.shape[1]-self.p+1):
+					self.C[i][j] = A.item(i,k)
 					k += 1
 
-		elif (phase==0):
-			## support phase - NOT USED
-			t0 = np.array( [0, ctime] )
-			C = np.zeros((3,len(t0)+4))
+		# support phase
+		elif (phase==0):					
+			self.t0 = np.array( [0, ctime] )
+			self.C = np.zeros((3,len(self.t0)+4))
 
 		for i in range(0,3):
-			C[i][0] = sp[i]
-			C[i][-1] = ep[i]
+			self.C[i][0] = sp[i]
+			self.C[i][-1] = ep[i]
 
-		C = np.matrix(C)
-		
-		# return self.C, self.t0
-		return C, t0
+		self.C = np.matrix(self.C)
 
 	def point_Interpolation(self, cpath, ctime):
-		""" expand input array size for bspline computation """
+		vi = 0.0; 	vf = 0.0;
+		ai = 0.0;	af = 0.0;
 
-		
-		self.C  = np.zeros((3,len(cpath)+4))
-		# print len(self.t0), len(self.C)
+		self.t0 = ctime
+		self.C  = np.zeros((3,len(self.t0)+4))
+		# print self.p-1,self.C.shape[1]-self.p+1
+		# print cpath
 		for i in range(0,3):
 			k = 0
 			for j in range(self.p-1,self.C.shape[1]-self.p+1):
 				self.C[i][j] = cpath.item(j-(self.p-2),i)
+				# print cpath.item(j-(self.p-2),i), j-(self.p-2), j
 				k += 1
 		
 		for i in range(0,3):
 			self.C[i][0] = cpath[0][i]
 			self.C[i][-1] = cpath[-1][i]
 		
-		self.C = np.matrix(self.C) 			# convert to matrix
-		
-		return self.C#, self.t0
+		self.C = np.matrix(self.C)
+		# print self.C
 
 	## Determine knots required
 	def knotFunction(self):
@@ -120,9 +125,7 @@ class SplineGenerator:
 			else:
 				self.U[i] = self.t0.item(-1)
 
-		n_knot = len(self.U) - 1
-
-		return self.U, n_knot
+		self.n_knot = len(self.U) - 1
 
 	## Compute i for a given u
 	def whichSpan(self, u, U, n_knot, p):
@@ -234,19 +237,19 @@ class SplineGenerator:
 		return Ders
 
 	## Calculate control points
-	def controlPoint(self, U, n_knot, d=1):
-		A = np.zeros((n_knot-self.p,n_knot-self.p))
+	def controlPoint(self, d=1):
+		A = np.zeros((self.n_knot-self.p,self.n_knot-self.p))
 		row_counter = 0
 		z_max = len(self.t0)
 
 		for z in range(0,z_max):
 			# check to prevent u = umax
-			if (U[-1]==self.t0[z]):		
+			if (self.U[-1]==self.t0[z]):		
 				u = self.t0[z] - 0.001	
 			else:
 				u = self.t0[z]
 
-			i = self.whichSpan(u, U, n_knot, self.p) 		# compute i
+			i = self.whichSpan(u, self.U, self.n_knot, self.p) 		# compute i
 
 			# order of derivatives & offset for stacking
 			if (z==0.0 or z==z_max-1):
@@ -254,7 +257,7 @@ class SplineGenerator:
 			else:
 				n = 0;	offset = 1;
 
-			temp = self.DersBasisFunction(u, U, self.p, i, n) 	# compute control point
+			temp = self.DersBasisFunction(u, self.U, self.p, i, n) 	# compute control point
 			
 			# Stack into matrix A
 			if (z==z_max-1):
@@ -273,85 +276,62 @@ class SplineGenerator:
 		A[-1][-1] = 1.0 	# first and last element always unity
 		# np.set_printoptions(formatter={'float': lambda A: "{0:0.3f}".format(A)})
 		# print A.shape, C.shape
-		try:
-			P = linalg.solve(A,self.C.getT(),check_finite=False) 		# control points
-		except: 
-			print 'no points found!'
+		P = linalg.solve(A,self.C.getT()) 											# control points
+
 		return P
 	
 	## Spline function for given time t
-	def evaluateSpline(self, u, P, n_knot, d=1):
-		sp  = []
-		sv  = []
-		sa  = []
+	def evaluateSpline(self, u, P, d=1):
+		s   = np.zeros(d);
+		sv  = np.zeros(d);
+		sa  = np.zeros(d);
 
-		# print 'going into whichSpan ', u
-		i = self.whichSpan(u, self.U, n_knot, self.p);
-		# print 'going into basis func ', u
+		i = self.whichSpan(u, self.U, self.n_knot, self.p);
 		A =	self.DersBasisFunction(u, self.U, self.p, i)
 		
 		for k in range(0,d): 	#/* For each components of the B-spline*/
-			sp.append(0)
-			sv.append(0)
-			sa.append(0)
+			s[k] = 0;
+			sv[k] = 0;
+			sa[k] = 0;
 			for j in range(0,self.p+1):
-				sp[k] = sp[k] + P[i-self.p+j][k]*A[0][j];
+				s[k]  = s[k]  + P[i-self.p+j][k]*A[0][j];
 				sv[k] = sv[k] + P[i-self.p+j][k]*A[1][j];
 				sa[k] = sa[k] + P[i-self.p+j][k]*A[2][j];
-		
-		return sp, sv, sa
 
-	def spline_generation(self, x, t, tn):
-		""" computes b-spline given via points and time interval 	"""
-		""" Input:  a) C  -> 2D array - positions (x,y,z) 					
-			 		b) t  -> Time interval for each via point
-					c) tn -> Output spline time interval			""" 
-		""" Ouput: Tuple of 2D list - 
-								(time,position,velocity, acceleration)	"""
-		self.t0 = t
-		self.C  = x
-		U, n_knot = self.knotFunction() 		# determine U, n_knot
-		P = self.controlPoint(U, n_knot) 			# calculate control point P
+		return s, sv, sa
 
-		ct = [] 	# output timing array
-		cp = [] 	# output position array
-		cv = [] 	# output velocity array
-		ca = [] 	# output array array
-		
+	def spline_generation(self, return_type=0):
+		self.knotFunction() 									# determine U, n_knot
+		P = self.controlPoint() 								# calculate control point P
+
+		x_com = TrajectoryPoints()
+
 		## Evaluate spline
-		for i in np.linspace(0,t[-1],(t[-1]-0)/tn+1):
-			t1, t2, t3 = self.evaluateSpline(i, P, n_knot, 3)
+		t_inc = TRAC_INTERVAL 	
+		for i in arange(0,self.t0[-1]+t_inc,t_inc):
+			t1, t2, t3 = self.evaluateSpline(i, P, 3)
+			
+			x_com.xp = np.vstack( (x_com.xp,t1) )
+			x_com.xv = np.vstack( (x_com.xv,t2) )
+			x_com.xa = np.vstack( (x_com.xa,t3) )
+			x_com.t  = np.hstack( (x_com.t ,i ) )
 
-			ct.append(i) 
-			cp.append(t1) 
-			cv.append(t2) 
-			ca.append(t3) 
+		# print np.around(qp,decimals=3)
+		if (return_type==0):
+			return x_com
+		elif (return_type==1):
+			return x_com.xp[:,0], x_com.xp[:,1], x_com.xp[:,2], x_com.t
+
+	def generate_leg_spline(self, sp, ep, qsurface, phase, reflex=False, td=2.0, return_type=0):
+		# print 'td: ', td
+		self.LegPhase_Interpolation(phase, sp, ep, qsurface, reflex, td) 	# determine C
 		
-		return ct,cp,cv,ca
+		return self.spline_generation(return_type)
 
-	def compute_time_intervals(self, q):
-		""" Compute time interval for spline if not specified 	"""
-		""" Intervals are at unit time (1)						"""
-
-		return np.arange(0,len(q),1)
-
-	def generate_leg_spline(self, sp, ep, snorm, phase=2, reflex=False, ctime=2.0, tn=0.1):
-		""" Generate transfer phase trajectory """
-
-		C, t = self.LegPhase_Interpolation(sp, ep, phase, snorm, reflex, ctime)	# determine C
+	def generate_body_spline(self, com_path, time, return_type=0):
+		self.point_Interpolation(com_path, time) 					# determine C
 		
-		return self.spline_generation(C, t, tn)
-
-	def generate_body_spline(self, x, t=None, tn=0.1):
-		""" 	Compute spline using via points only	"""
-
-		## Set t if undefined
-		if (t is None):
-			t = self.compute_time_intervals(x)
-
-		C = self.point_Interpolation(x, t)		# determine C
-		
-		return self.spline_generation(C, t, tn)
+		return self.spline_generation(return_type)
 		
 
 ## ================================================================================================ ##
@@ -359,30 +339,27 @@ class SplineGenerator:
 ## ================================================================================================ ##
 sp = np.array([0.50, -0.10, -0.05])
 ep = np.array([0.50,  0.10, -0.05])
-snorm = np.array([0, -1.571/2., 0.])
+qsurface = np.array([0, -1.571/2., 0.])
 phase = 1
 
+qpoints = TrajectoryPoints()
 ### Test scripts
 spliner = SplineGenerator()
-# x_out = spliner.generate_leg_spline(sp, ep, snorm, phase)
-# ndata = TrajectoryPoints(x_out)
+# qpoints = spliner.generate_leg_spline(sp, ep, qsurface, phase, 0, TRAC_PERIOD, 0)
 
 ### CoM linear path ###
-x_com = np.array([.0,.0,BODY_HEIGHT])
-x_com = np.vstack((x_com,np.array([0.04, 0.0, BODY_HEIGHT])))
-x_com = np.vstack((x_com,np.array([0.06, 0.0, BODY_HEIGHT+0.025])))
-x_com = np.vstack((x_com,np.array([0.01, 0.2, BODY_HEIGHT])))
-x_com = np.vstack((x_com,np.array([0.30, 0.05, 0.15])))
-x_com = np.vstack((x_com,np.array([1.35, 0.05, 0.15])))
-x_com = np.vstack((x_com,np.array([1.0, 0.5, BODY_HEIGHT+0.05])))
-t_com = np.array([0.0,1,2,3,4,8,10]) 
+# com_path = np.array([.0,.0,0.15])
+# point_1  = np.array([0.05,0.0,0.15])
+# com_path = np.vstack((com_path,point_1))
+# point_1  = np.array([0.1,0.0,0.15])
+# com_path = np.vstack((com_path,point_1))
+# # point_1  = np.array([3.0,3.0,0.15])
+# # com_path = np.vstack((com_path,point_1))
+# # point_1  = np.array([4.0,4.0,0.15])
+# # com_path = np.vstack((com_path,point_1))
+# com_time = np.array([0.0,1.0,2.0])
 
-# x_out  = spliner.generate_body_spline(x_com)
-# print type(x_out[0])
-# print type(x_out[1])
-# print x_out[1]
-# Plot.plot_2d(x_out[0],x_out[1])
-
+# x, y, z, t  = spliner.generate_body_spline(com_path, com_time)
 
 # Path3D_msg(com_path, com_time)
 # def Path3D_msg(linear, angular=0, t=0):

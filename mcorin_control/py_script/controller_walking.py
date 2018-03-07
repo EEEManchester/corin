@@ -36,11 +36,12 @@ from robotis_controller_msgs.msg import SyncWriteItem 	# pub msg for Robotis joi
 from robotis_controller_msgs.msg import SyncWriteMulti 	# pub msg for Robotis joints
 
 ## Operator control files
-from sensor_msgs.msg import Joy
-import connex
+# from sensor_msgs.msg import Joy
+# import connex
 
 def rad2raw(radian):
-	## convert joint position to dxl raw value
+	""" convert joint position to dxl raw value (Protocol v2.0) """
+	## TODO: move to another file
 	value_of_0_radian_position_      = 2048
 	value_of_min_radian_position_    = 0
 	value_of_max_radian_position_    = 4095
@@ -179,7 +180,7 @@ class CorinManager:
 		leg_stance[2] = np.array([ fix_stance*np.cos(TETA_R*np.pi/180), fix_stance*np.sin(TETA_R*np.pi/180), fix_height ])
 
 		leg_stance[3] = np.array([ fix_stance*np.cos(TETA_F*np.pi/180), fix_stance*np.sin(-TETA_F*np.pi/180), fix_height ])
-		leg_stance[4] = np.array([fix_stance, 0, fix_height])
+		leg_stance[4] = np.array([ fix_stance, 0, fix_height])
 		leg_stance[5] = np.array([ fix_stance*np.cos(TETA_R*np.pi/180), fix_stance*np.sin(-TETA_R*np.pi/180), fix_height ])
 
 		# generate spline to legs up position

@@ -28,7 +28,6 @@ class control_interface:
 		rospy.set_param('walkright', False)		# walk right ~0.4 metres (working)
 		rospy.set_param('walkback', False)		# Walk backwards ~0.4 metres (Working)
 		rospy.set_param('walkleft', False)		# walk left ~0.4 metres (working)
-		rospy.set_param('maplesim', False)
 		rospy.set_param('rotate', False)
 
 	#corin performs bodypose
@@ -113,7 +112,7 @@ class control_interface:
 		self.reset_variables()
 		self.mode = 2
 
-		self.x_com = np.vstack((self.x_com,np.array([0.4, 0.0, BODY_HEIGHT])))
+		self.x_com = np.vstack((self.x_com,np.array([0.2, 0.0, BODY_HEIGHT])))
 
 	def WalkBack(self):
 		self.reset_variables()
@@ -134,20 +133,6 @@ class control_interface:
 
 		self.x_com = np.vstack((self.x_com,np.array([0.0, 0.2, BODY_HEIGHT])))
 		self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
-
-	def MapleSim(self):
-		self.reset_variables
-		self.mode = 2
-
-		## Part 1
-		self.x_com = np.vstack((self.x_com,np.array([0.3, 0.0, BODY_HEIGHT])))
-		self.x_com = np.vstack((self.x_com,np.array([0.3, 0.3, BODY_HEIGHT])))
-		self.x_com = np.vstack((self.x_com,np.array([0.6, 0.6, BODY_HEIGHT])))
-
-		## Part 2
-		self.x_com = np.vstack((self.x_com,np.array([0.3,-0.3, BODY_HEIGHT])))
-		self.x_com = np.vstack((self.x_com,np.array([0.6, 0.0, BODY_HEIGHT])))
-		self.x_com = np.vstack((self.x_com,np.array([0.6,-0.3, BODY_HEIGHT])))
 
 	def Rotate(self):
 		self.reset_variables
@@ -184,11 +169,6 @@ class control_interface:
 		elif (rospy.get_param('walkright')==True):
 			rospy.set_param('walkright',False)
 			self.WalkRight()
-			return (self.x_com, self.w_com, self.mode)
-
-		elif (rospy.get_param('maplesim')==True):
-			rospy.set_param('maplesim',False)
-			self.MapleSim()
 			return (self.x_com, self.w_com, self.mode)
 
 		elif (rospy.get_param('rotate')==True):

@@ -134,9 +134,9 @@ w_com = np.array([.0,.0,.0])
 planner = PathGenerator()
 planner.heading = (1,0,0)
 planner.gait = gait
-x_out, w_out = planner.generate_path(x_com, w_com)
-print x_out.t.shape
-print x_out.t[1]
+# x_out, w_out = planner.generate_path(x_com, w_com)
+# print x_out.t.shape
+# print x_out.t[1]
 # Plot.plot_2d(x_out.t,x_out.xp)
 # Plot.plot_2d_multiple(2,x_out[0],x_out[1],x_out[3])
 ## wall transition

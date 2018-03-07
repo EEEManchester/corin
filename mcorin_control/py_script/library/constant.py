@@ -13,9 +13,18 @@ ROBOT_NS = "corin"
 ##                       Robot parameters 	 						##
 ## ================================================================ ##
 # Link Length, Mass
-L1 = 0.060;	LL_MASS_1 = 0.040
-L2 = 0.150;	LL_MASS_2 = 0.350
-L3 = 0.150;	LL_MASS_3 = 0.116
+BODY_MASS = 1.48
+L1 = 0.060;	L1_MASS = 0.040
+L2 = 0.150;	L2_MASS = 0.350
+L3 = 0.150;	L3_MASS = 0.116
+
+LEG_MASS = L1_MASS + L2_MASS + L3_MASS
+
+# Link Centre of Mass reference from parent frame
+BODY_COM = [0.0, 0.0, 0.0]
+L1_COM   = [0.0247, 0.0, 0.0]
+L2_COM   = [0.0750, 0.0, 0.0]
+L3_COM   = [0.0887, 0.0, 0.0]
 
 # Joint limit
 Q1_F_LIM = 1.00     # q1 on front and rear legs
@@ -27,6 +36,14 @@ Q3_A_LIM = 2.79     # q3 on all legs
 COXA_X = 0.115
 COXA_Y = 0.09
 COXA_Z = 0.0
+
+# rotation from base frame to leg frame (deg)
+ROT_BASE_X_LF = 50.
+ROT_BASE_X_LM = 90.
+ROT_BASE_X_LR = 130.
+ROT_BASE_X_RF = -50.
+ROT_BASE_X_RM = -90.
+ROT_BASE_X_RR = -130.
 
 g 	 = 9.81 	# Gravity
 M_KC = 16.06 	# MX64 motor torque constant
@@ -43,9 +60,9 @@ STEP_STROKE 		= 0.08 			# step size, x, 	default 0.07
 STEP_HEIGHT 		= 0.1 			# step height, z 	default 0.05
 WALKING_SPEED 		= 0.035 		# walking speed in m/s
 TRAC_PERIOD			= 1.5			# cycle time for movement
-TRAC_INTERVAL 		= 0.005			# intervals for trajectory
+TRAC_INTERVAL 		= 0.01			# intervals for trajectory
 
-BASE_MAX_VELOCITY 	= 0.1	 		# maximum base velocity
+BASE_MAX_VELOCITY 	= 0.025	 		# maximum base velocity
 
 ## ================================================================ ##
 ##                  	Compensation parameters	 					##
@@ -121,3 +138,22 @@ ROBOT_STATE[2] ='z'
 ROBOT_STATE[3] ='r'
 ROBOT_STATE[4] ='p'
 ROBOT_STATE[5] ='y'
+
+LF_Q1_JOINT = 0
+LF_Q2_JOINT = 1
+LF_Q3_JOINT = 2
+LM_Q1_JOINT = 3
+LM_Q2_JOINT = 4
+LM_Q3_JOINT = 5
+LR_Q1_JOINT = 6
+LR_Q2_JOINT = 7
+LR_Q3_JOINT = 8
+RF_Q1_JOINT = 9
+RF_Q2_JOINT = 10
+RF_Q3_JOINT = 11
+RM_Q1_JOINT = 12
+RM_Q2_JOINT = 13
+RM_Q3_JOINT = 14
+RR_Q1_JOINT = 15
+RR_Q2_JOINT = 16
+RR_Q3_JOINT = 17

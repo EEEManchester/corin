@@ -18,28 +18,30 @@ import numpy as np
 
 from constant import * 								# constants used
 from TrajectoryPoints import TrajectoryPoints		# class for 3D time array of points
+import Twist
+import State
 import transformations as tf 						# SE(3) transformation library
-import gait_class as Gaitgen					# class for gait coordinator
+import gait_class as Gaitgen						# class for gait coordinator
 import param_gait									# class for setting gait parameters in RT 
 import kdl 											# kinematic & dynamics library
 import pspline_generator as Pspline 				# spline generator for body
 import bspline_generator as Bspline 				# spline generator for leg
 import plotgraph as Plot 							# plot library
-
+import transforms
 
 class RobotState:
 	def __init__(self):
-		self.qc  = JointState() 					# JointState class for service call joint updates
-		self.imu = Imu()
+		self.qc  = JointState() 					# ROS JointState class for all joints
+		self.imu = Imu()							# ROS IMU class
 		
-		self.Leg = {} 								# leg class
+		self.Leg = [] 								# leg class
 		self.gaitgen = Gaitgen.GaitClass(GAIT_TYPE)	# gait class
 		self.bspline = Bspline.SplineGenerator() 	# bSplineClass for spline generation
 
-		self.x_spline = TrajectoryPoints() 			# CoM trajectory
-		self.w_spline = TrajectoryPoints() 			# Base angular trajectory
+		self.x_spline = TrajectoryPoints() 			# CoB linear trajectory
+		self.w_spline = TrajectoryPoints() 			# CoB angular trajectory
 
-		self.world_X_base = FrameClass('twist') 				# FrameClass for world to base transformation
+		self.world_X_base = State.StateClass('Twist') 				# FrameClass for world to base transformation
 		self.fr_world_X_base = tf.rotation_zyx(np.zeros(3)) 	# SO(3) rotation using pose
 
 		self.invalid = False 						# robot state: invalid - do not do anything
@@ -54,19 +56,27 @@ class RobotState:
 		self.cstate = [None]*6 						# foot contact binary states
 		self.cforce = [None]*18						# foot contact forces
 
+		self.XHc = transforms.HomogeneousTransform()
+		self.XHd = transforms.HomogeneousTransform()
+
 		self._initialise()
 
 	def _initialise(self):
+		""" Initialises robot class for setting up number of legs """
+
 		for i in range(6):
-			self.Leg[i] = LegClass(i)
+			self.Leg.append(LegClass(i))
 		print ">> INITIALISED ROBOT CLASS"
 
 	def updateState(self):
-		## update using topics - more elegant as rospy is multi-threaded
+		""" update robot state using readings from topics """ 
 		self.update_LegState()
 		# self.update_ImuState()
 
 	def update_LegState(self):
+		""" update legs state """
+
+		self.XHc.update_legs(self.qc.position)
 
 		# offset to deal with extra joints
 		if (len(self.qc.name)==18):
@@ -88,38 +98,41 @@ class RobotState:
 		self.reset_state = False if self.reset_state == True else False
 
 	def update_ImuState(self):
+		""" update imu state """
+
 		## quaternion to euler transformation
 		neuler = RTF.transformations.euler_from_quaternion([self.imu.orientation.x, self.imu.orientation.y, self.imu.orientation.z, self.imu.orientation.w])
 
 		## update variables
 		self.world_X_base.es.wp = self.world_X_base.ds.wp - self.world_X_base.cs.wp
 
-	def generateSpline(self, leg_no, start, end, qsurface, phase, reflex=False, ctime=2.0):
-		j = leg_no
-		self.Leg[j].spline = self.bspline.generate_leg_spline(start.flatten(), end.flatten(), qsurface, phase, reflex, ctime)
-		self.Leg[j].spline_counter = 1
-		self.Leg[j].spline_length  = len(self.Leg[j].spline.t)
+	def generateSpline(self, nLeg, start, end, snorm, phase, reflex=False, ctime=2.0):
+		""" generate leg trajectory using bspline and save to leg class 	"""
+		""" Input:  a) nLeg   -> Leg number
+			 		b) start  -> start position in 3D space wrt base frame
+					c) end    -> end position in 3D space wrt base frame
+					d) snorm  -> surface normal
+					e) phase  -> leg phase: transfer = 1, support = 0
+					f) reflex -> boolen for reflex trajectory
+					g) ctime  -> time for trajectory						"""
 
-
-class TrajectoryPoints():
-	def __init__(self):
-		self.xp = np.zeros((1,3))
-		self.xv = np.zeros((1,3))
-		self.xa = np.zeros((1,3))
+		self.Leg[nLeg].spline = TrajectoryPoints(self.bspline.generate_leg_spline(start.flatten(), end.flatten(), snorm, phase, reflex, ctime))
+		self.Leg[nLeg].spline_counter = 1
+		self.Leg[nLeg].spline_length  = len(self.Leg[nLeg].spline.t)
 
 class Joint_class:
 	#common base class for Joint
 	def __init__(self, num):
 		self.name 	= np.array([ 'leg_' + str(num) + '_q1', 'leg_' + str(num) + '_q2', 'leg_' + str(num) + '_q3'])
-		self.qpc 	= np.zeros(4) 		# joint current position
-		self.qpd 	= np.zeros(4)		# joint desired position
-		self.qpe 	= np.zeros(4)		# joint position error
-		self.qvc	= np.zeros(4)		# joint current velocity
-		self.qvd	= np.zeros(4)		# joint desired velocity
-		self.qac 	= np.zeros(4) 		# joint current acceleration
-		self.qad 	= np.zeros(4) 		# joint desired acceleration
-		self.qtc 	= np.zeros(4)		# joint current effort
-		self.qtd 	= np.zeros(4)		# joint desired effort
+		self.qpc 	= np.zeros(3) 		# joint current position
+		self.qpd 	= np.zeros(3)		# joint desired position
+		self.qpe 	= np.zeros(3)		# joint position error
+		self.qvc	= np.zeros(3)		# joint current velocity
+		self.qvd	= np.zeros(3)		# joint desired velocity
+		self.qac 	= np.zeros(3) 		# joint current acceleration
+		self.qad 	= np.zeros(3) 		# joint desired acceleration
+		self.qtc 	= np.zeros(3)		# joint current effort
+		self.qtd 	= np.zeros(3)		# joint desired effort
 
 	def update_state(self, jointState):
 		self.qpc = np.array(jointState.m_state.actual.positions)
@@ -129,33 +142,10 @@ class Joint_class:
 		self.qtc = np.array(jointState.m_state.actual.effort)
 
 	def state_display(self):
-		print 'q position: ', self.qpc[1:4]
-		print 'q p  error: ', self.qpe[1:4]
-		print 'q velocity: ', self.qvc[1:4]
-		print 'q  effort : ', self.qtc[1:4]
-
-class TwistClass:
-	def __init__(self):
-		# linear components
-		self.xp = np.zeros((3,1))
-		self.xv = np.zeros((3,1))
-		self.xa = np.zeros((3,1))
-		# angular components
-		self.wp = np.zeros((3,1))
-		self.wv = np.zeros((3,1))
-		self.wa = np.zeros((3,1))
-
-
-class FrameClass:
-	def __init__(self, stype):
-		if (stype == 'twist'):
-			self.cs = TwistClass()
-			self.ds = TwistClass()
-			self.es = TwistClass()
-		elif (stype == 'force'):
-			self.cs = np.zeros((3,1))
-			self.ds = np.zeros((3,1))
-			self.es = np.zeros((3,1))
+		print 'q position: ', self.qpc[0:3]
+		print 'q p  error: ', self.qpe[0:3]
+		print 'q velocity: ', self.qvc[0:3]
+		print 'q  effort : ', self.qtc[0:3]
 
 class LegClass:
 	#common base class for Leg
@@ -177,12 +167,12 @@ class LegClass:
 		self.cstate = 0 	# foot contact state: 1 or 0
 
 		# transformation frames
-		self.hip_X_ee 	= FrameClass('twist')
-		self.base_X_ee 	= FrameClass('twist')
+		self.hip_X_ee 	= State.StateClass('Twist')
+		self.base_X_ee 	= State.StateClass('Twist')
 
-		self.foot_XF_ee = FrameClass('force')
-		self.hip_XF_ee 	= FrameClass('force')
-		self.base_XF_ee	= FrameClass('force')
+		self.foot_XF_ee = State.StateClass('Wrench')
+		self.hip_XF_ee 	= State.StateClass('Wrench')
+		self.base_XF_ee	= State.StateClass('Wrench')
 
 		self.tf_base_X_hip 	= tf.rotation_matrix(TF_BASE_X_HIP[self.number],Z_AXIS)[:3, :3]
 
@@ -231,14 +221,15 @@ class LegClass:
 
 		# if (self.number == 0):
 		# 	print self.number, ' ', jointState
-		# 	print 'Lubds: ', np.round(self.base_X_ee.ds.xp.flatten(),4)
-		# 	print 'Lubcs: ', np.round(self.base_X_ee.cs.xp.flatten(),4)
-		# 	print 'Luhds: ', np.round(self.hip_X_ee.ds.xp.flatten(),4)
-		# 	print 'Luhcs: ', np.round(self.hip_X_ee.cs.xp.flatten(),4)
+		# 	print 'bXe_ds: ', np.round(self.base_X_ee.ds.xp.flatten(),4)
+		# 	print 'bXe_cs: ', np.round(self.base_X_ee.cs.xp.flatten(),4)
+		# 	print 'hXe_ds: ', np.round(self.hip_X_ee.ds.xp.flatten(),4)
+		# 	print 'hXe_cs: ', np.round(self.hip_X_ee.cs.xp.flatten(),4)
 
 		return bound_exceed
 
 	def updateForceState(self, cState, cForce):
+		""" contact force of leg """
 		## ********************************	Contact Force  ******************************** ##
 		self.cstate = cState
 		self.foot_XF_ee.cs = np.reshape(np.array(cForce),(3,1))
@@ -339,6 +330,7 @@ class LegClass:
 		self.REP = FR_base_X_hip[self.number] + np.dot( tf.rotation_matrix(TF_HIP_X_BASE[self.number],Z_AXIS)[:3, :3], np.reshape(LEG_STANCE[self.number],(3,1)) )
 
 	def update_REP(self, bodypose, base_X_surface):
+		""" updates nominal stance of robot """
 
 		# update only if surface orientation above deadzone
 		if (abs(self.qsurface.item(0)) > QDEADZONE or abs(self.qsurface.item(1)) > QDEADZONE):
