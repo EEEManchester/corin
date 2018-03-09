@@ -19,3 +19,12 @@ class TrajectoryPoints():
 
 	def append(self, x):
 		pass
+
+class BaseTrajectory():
+	def __init__(self,data=None):
+		if data is None:
+			self.X = TrajectoryPoints()	# linear
+			self.W = TrajectoryPoints()	# angular
+		else:
+			self.X = TrajectoryPoints(data[0])
+			self.W = TrajectoryPoints(data[1])

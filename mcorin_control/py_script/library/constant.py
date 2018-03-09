@@ -48,26 +48,41 @@ ROT_BASE_X_RR = -130.
 g 	 = 9.81 	# Gravity
 M_KC = 16.06 	# MX64 motor torque constant
 
+# Joint numbering used in transforms.py
+LF_Q1_JOINT = 0;	LM_Q1_JOINT = 3;	LR_Q1_JOINT = 6;
+LF_Q2_JOINT = 1;	LM_Q2_JOINT = 4;	LR_Q2_JOINT = 7;
+LF_Q3_JOINT = 2;	LM_Q3_JOINT = 5;	LR_Q3_JOINT = 8;
+
+RF_Q1_JOINT = 9; 	RM_Q1_JOINT = 12;	RR_Q1_JOINT = 15;
+RF_Q2_JOINT = 10;	RM_Q2_JOINT = 13;	RR_Q2_JOINT = 16;
+RF_Q3_JOINT = 11;	RM_Q3_JOINT = 14;	RR_Q3_JOINT = 17;
+
+## ================================================================ ##
+##                      Controller parameters 	 					##
+## ================================================================ ##
+CTR_RATE 	= 100 			# controller rate for robot, Hz
+CTR_INTV 	= 1./CTR_RATE 	# controller interval for robot, s
+
 ## ================================================================ ##
 ##                       Gait parameters 	 						##
 ## ================================================================ ##
-DUTY_FACTOR = {'tripod':0.5, 'tetrapod':2./3., 'ripple':3./4., 'wave':5./6. }
 
+GAIT_TYPE 			= 3 			# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 BODY_HEIGHT  		= 0.1           # ori: 0.10, chimney: 0.0
 STANCE_WIDTH 		= 0.21          # ori: 0.21, chimney: 0.27, 0.31 for tripod
-GAIT_TYPE 			= 3 			# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 STEP_STROKE 		= 0.08 			# step size, x, 	default 0.07
 STEP_HEIGHT 		= 0.1 			# step height, z 	default 0.05
-WALKING_SPEED 		= 0.035 		# walking speed in m/s
 TRAC_PERIOD			= 1.5			# cycle time for movement
-TRAC_INTERVAL 		= 0.01			# intervals for trajectory
 
 BASE_MAX_VELOCITY 	= 0.025	 		# maximum base velocity
 
+# BASE_SPEED 			= 0.025 		# walking speed in m/s
+# DUTY_FACTOR = {'tripod':0.5, 'tetrapod':2./3., 'ripple':3./4., 'wave':5./6. }
 ## ================================================================ ##
-##                  	Compensation parameters	 					##
+##                  Error Compensation parameters 					##
 ## ================================================================ ## 
 QCOMPENSATION = -0.035
+
 ## ================================================================ ##
 ##                  	Inclination parameters 	 					##
 ## ================================================================ ##
@@ -89,6 +104,7 @@ LEG_STANCE = stance_selection.initial_stance(STANCE_WIDTH,BODY_HEIGHT, STANCE_TY
 ## ================================================================ ##
 ##                       	Transforms 		 						##
 ## ================================================================ ##
+# TODO: MODIFY THESE TO USE transforms.py
 FR_base_X_hip = {}
 FR_base_X_hip[0] = np.array([ [COXA_X],  [COXA_Y],  [COXA_Z] ])
 FR_base_X_hip[1] = np.array([ [0.0]	  ,  [COXA_Y],  [COXA_Z] ])
@@ -139,21 +155,3 @@ ROBOT_STATE[3] ='r'
 ROBOT_STATE[4] ='p'
 ROBOT_STATE[5] ='y'
 
-LF_Q1_JOINT = 0
-LF_Q2_JOINT = 1
-LF_Q3_JOINT = 2
-LM_Q1_JOINT = 3
-LM_Q2_JOINT = 4
-LM_Q3_JOINT = 5
-LR_Q1_JOINT = 6
-LR_Q2_JOINT = 7
-LR_Q3_JOINT = 8
-RF_Q1_JOINT = 9
-RF_Q2_JOINT = 10
-RF_Q3_JOINT = 11
-RM_Q1_JOINT = 12
-RM_Q2_JOINT = 13
-RM_Q3_JOINT = 14
-RR_Q1_JOINT = 15
-RR_Q2_JOINT = 16
-RR_Q3_JOINT = 17

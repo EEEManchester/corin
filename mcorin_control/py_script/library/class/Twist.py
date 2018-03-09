@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ## Class for 2D arrays for twist
-
+## actually, not accurate as twist refers to linear and angular velocity only
 import numpy as np
 
 class TwistClass:

@@ -13,8 +13,12 @@
     rm_q1_joint rm_q2_joint rm_q3_joint
     rr_q1_joint rr_q2_joint rr_q3_joint   "/>
 
+  <!-- contact force node -->
   <node name="contact_foce" pkg="mcorin_control" type="footcontact.py" respawn="false"/>
-  
+
+  <!-- unpause physics engine -->
+  <node name="unpause" pkg="mcorin_description" type="unpause_physics_engine" args="5.0" />
+
   <!-- convert joint states to TF transforms for rviz, etc -->
   <!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"
     respawn="false" output="screen">

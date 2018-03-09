@@ -6,6 +6,7 @@
   <!-- For robot to retain its default standing up position, launch joint control file then enable physics -->
 
   <!-- launch file arguments -->              
+  <arg name="fixed" default="false"/>         <!-- robot fixed in place -->
   <arg name="paused" default="true"/>         <!-- pause the physics engine -->
   <arg name="use_sim_time" default="true"/>   <!-- use simulation time -->
   <arg name="debug" default="false"/>         <!-- debug mode -->
@@ -26,7 +27,10 @@
 
   <!-- Load the URDF into the ROS Parameter Server -->
   <param name="robot_description"
-	 command="$(find xacro)/xacro --inorder '$(find mcorin_description)/robots/mCorin_model.urdf.xacro'" />
+   command="$(find xacro)/xacro --inorder '$(find mcorin_description)/robots/mCorin_fixed.urdf.xacro'" if="$(arg fixed)"/>
+
+  <param name="robot_description"
+	 command="$(find xacro)/xacro --inorder '$(find mcorin_description)/robots/mCorin_model.urdf.xacro'" unless="$(arg fixed)"/>
 
   <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"

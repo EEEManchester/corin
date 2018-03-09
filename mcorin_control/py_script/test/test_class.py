@@ -35,7 +35,12 @@ def compute_path_length(via_points):
 
 	return t_com
 
+def test_func(game_type):
+	return 'white' if game_type == 'home' else 'green'
+
 if __name__ == "__main__":
+	data = test_func('home1')
+	# print data
 	test1 = 1
 
 	data = func1()
@@ -46,7 +51,7 @@ if __name__ == "__main__":
 	# 	print 'manager is global'
 
 	# print globals()
-	radian = 127.*np.pi/180.
+	radian = -0.9
 	## Direct Control
 	value_of_0_radian_position_      = 2048
 	value_of_min_radian_position_    = 0
@@ -61,14 +66,18 @@ if __name__ == "__main__":
 		value = (radian * (value_of_min_radian_position_ - value_of_0_radian_position_) / min_radian_) + value_of_0_radian_position_;
 	else:
 		value = 2048;
+	print value
 
 	quat = [0.258819153480218,    0.0,    0.0,    0.965925797249345]
 	angles = tf.euler_from_quaternion(quat)
-	print (angles)
-
-	xp = np.array([ [1,2,3],[4,5,6],[7,8,9] ])
-	print (xp[1])
-	tlen = np.array([1,2,3,4,54,6])
 	
-	print tlen[6-1]
-	print tlen[-1]
+	xp = np.array([ [1,2,3],[4,5,6],[7,8,9] ])
+	
+	tlen = np.array([1,2,3,4,5.4,6])
+	print range(len(tlen))
+	# for i in range(len(tlen)):
+	# 	print i, tlen[i]
+	# while (i in range(len(tlen))):
+	# 	print i, tlen[i]
+	# print tlen[6-1]
+	# print tlen[-1]

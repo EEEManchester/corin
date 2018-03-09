@@ -2,9 +2,7 @@
 
 ## Main file for Corin
 import rospy
-
-import controller_walking as Control_Framework
-
+import robot_controller as Control_Framework
 
 if __name__ == "__main__":
 

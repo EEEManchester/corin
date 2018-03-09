@@ -78,11 +78,12 @@ class RobotState:
 
 		self.XHc.update_legs(self.qc.position)
 
-		# offset to deal with extra joints
+		# offset to deal with base joints - suspended control of base
 		if (len(self.qc.name)==18):
 			offset = 0
 		else:
 			offset = 1
+
 		# update leg states and check if boundary exceeded
 		for i in range(0,self.active_legs):
 
@@ -106,7 +107,7 @@ class RobotState:
 		## update variables
 		self.world_X_base.es.wp = self.world_X_base.ds.wp - self.world_X_base.cs.wp
 
-	def generateSpline(self, nLeg, start, end, snorm, phase, reflex=False, ctime=2.0):
+	def generateSpline(self, nLeg, start, end, snorm, phase, reflex=False, ctime=2.0, tn=0.1):
 		""" generate leg trajectory using bspline and save to leg class 	"""
 		""" Input:  a) nLeg   -> Leg number
 			 		b) start  -> start position in 3D space wrt base frame
@@ -114,9 +115,10 @@ class RobotState:
 					d) snorm  -> surface normal
 					e) phase  -> leg phase: transfer = 1, support = 0
 					f) reflex -> boolen for reflex trajectory
-					g) ctime  -> time for trajectory						"""
+					g) ctime  -> time for trajectory						
+					h) tn 	  -> rate of trajectory 						"""
 
-		self.Leg[nLeg].spline = TrajectoryPoints(self.bspline.generate_leg_spline(start.flatten(), end.flatten(), snorm, phase, reflex, ctime))
+		self.Leg[nLeg].spline = TrajectoryPoints(self.bspline.generate_leg_spline(start.flatten(), end.flatten(), snorm, phase, reflex, ctime, tn))
 		self.Leg[nLeg].spline_counter = 1
 		self.Leg[nLeg].spline_length  = len(self.Leg[nLeg].spline.t)
 

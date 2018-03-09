@@ -135,6 +135,7 @@ class HomogeneousTransform:
 		self.update_fr_world_X_base(qb)
 
 	def update_legs(self,q):
+		## Forward Kinematics using leg joint angles
 		self.update_fr_base_X_LF_foot(q)
 		self.update_fr_base_X_LM_foot(q)
 		self.update_fr_base_X_LR_foot(q)
@@ -142,6 +143,7 @@ class HomogeneousTransform:
 		self.update_fr_base_X_RM_foot(q)
 		self.update_fr_base_X_RR_foot(q)
 
+		## Forward Kinematics using leg joint angles
 		self.update_fr_LF_coxa_X_LF_foot(q)
 		self.update_fr_LM_coxa_X_LM_foot(q)
 		self.update_fr_LR_coxa_X_LR_foot(q)
@@ -211,7 +213,7 @@ class HomogeneousTransform:
 		self.fr_world_X_base[2,2] =	 qy_cos*qx_cos
 		self.fr_world_X_base[2,3] =  qy_cos*qx_cos*tz + qy_cos*qx_sin*ty - qy_sin*tx
 		
-	def update_fr_base_X_LF_coxa(self,q):
+	def update_fr_base_X_LF_coxa(self,q=None):
 		self.fr_base_X_LF_coxa[0,0] =  np.cos(deg2rad(ROT_BASE_X_LF))
 		self.fr_base_X_LF_coxa[0,1] = -np.sin(deg2rad(ROT_BASE_X_LF))
 		self.fr_base_X_LF_coxa[1,0] =  np.sin(deg2rad(ROT_BASE_X_LF))
@@ -219,14 +221,14 @@ class HomogeneousTransform:
 		self.fr_base_X_LF_coxa[0,3] =  COXA_X
 		self.fr_base_X_LF_coxa[1,3] =  COXA_Y
 
-	def update_fr_base_X_LM_coxa(self,q):
+	def update_fr_base_X_LM_coxa(self,q=None):
 		self.fr_base_X_LM_coxa[0,0] =  np.cos(deg2rad(ROT_BASE_X_LM))
 		self.fr_base_X_LM_coxa[0,1] = -np.sin(deg2rad(ROT_BASE_X_LM))
 		self.fr_base_X_LM_coxa[1,0] =  np.sin(deg2rad(ROT_BASE_X_LM))
 		self.fr_base_X_LM_coxa[1,1] =  np.cos(deg2rad(ROT_BASE_X_LM))
 		self.fr_base_X_LM_coxa[1,3] =  COXA_Y
 
-	def update_fr_base_X_LR_coxa(self,q):
+	def update_fr_base_X_LR_coxa(self,q=None):
 		self.fr_base_X_LR_coxa[0,0] =  np.cos(deg2rad(ROT_BASE_X_LR))
 		self.fr_base_X_LR_coxa[0,1] = -np.sin(deg2rad(ROT_BASE_X_LR))
 		self.fr_base_X_LR_coxa[1,0] =  np.sin(deg2rad(ROT_BASE_X_LR))
@@ -234,7 +236,7 @@ class HomogeneousTransform:
 		self.fr_base_X_LR_coxa[0,3] = -COXA_X
 		self.fr_base_X_LR_coxa[1,3] =  COXA_Y
 
-	def update_fr_base_X_RF_coxa(self,q):
+	def update_fr_base_X_RF_coxa(self,q=None):
 		self.fr_base_X_RF_coxa[0,0] =  np.cos(deg2rad(ROT_BASE_X_RF))
 		self.fr_base_X_RF_coxa[0,1] = -np.sin(deg2rad(ROT_BASE_X_RF))
 		self.fr_base_X_RF_coxa[1,0] =  np.sin(deg2rad(ROT_BASE_X_RF))
@@ -242,14 +244,14 @@ class HomogeneousTransform:
 		self.fr_base_X_RF_coxa[0,3] =  COXA_X
 		self.fr_base_X_RF_coxa[1,3] = -COXA_Y
 
-	def update_fr_base_X_RM_coxa(self,q):
+	def update_fr_base_X_RM_coxa(self,q=None):
 		self.fr_base_X_RM_coxa[0,0] =  np.cos(deg2rad(ROT_BASE_X_RM))
 		self.fr_base_X_RM_coxa[0,1] = -np.sin(deg2rad(ROT_BASE_X_RM))
 		self.fr_base_X_RM_coxa[1,0] =  np.sin(deg2rad(ROT_BASE_X_RM))
 		self.fr_base_X_RM_coxa[1,1] =  np.cos(deg2rad(ROT_BASE_X_RM))
 		self.fr_base_X_RM_coxa[1,3] = -COXA_Y
 
-	def update_fr_base_X_RR_coxa(self,q):
+	def update_fr_base_X_RR_coxa(self,q=None):
 		self.fr_base_X_RR_coxa[0,0] =  np.cos(deg2rad(ROT_BASE_X_RR))
 		self.fr_base_X_RR_coxa[0,1] = -np.sin(deg2rad(ROT_BASE_X_RR))
 		self.fr_base_X_RR_coxa[1,0] =  np.sin(deg2rad(ROT_BASE_X_RR))
@@ -258,12 +260,20 @@ class HomogeneousTransform:
 		self.fr_base_X_RR_coxa[1,3] = -COXA_Y
 
 	def update_fr_LF_coxa_X_LF_foot(self,q):
-		q1_sin = np.sin(q[LF_Q1_JOINT])
-		q2_sin = np.sin(q[LF_Q2_JOINT])
-		q3_sin = np.sin(q[LF_Q3_JOINT])
-		q1_cos = np.cos(q[LF_Q1_JOINT])
-		q2_cos = np.cos(q[LF_Q2_JOINT])
-		q3_cos = np.cos(q[LF_Q3_JOINT])
+		if (len(q)>3):
+			q1_sin = np.sin(q[LF_Q1_JOINT])
+			q2_sin = np.sin(q[LF_Q2_JOINT])
+			q3_sin = np.sin(q[LF_Q3_JOINT])
+			q1_cos = np.cos(q[LF_Q1_JOINT])
+			q2_cos = np.cos(q[LF_Q2_JOINT])
+			q3_cos = np.cos(q[LF_Q3_JOINT])
+		else:
+			q1_sin = np.sin(q[0])
+			q2_sin = np.sin(q[1])
+			q3_sin = np.sin(q[2])
+			q1_cos = np.cos(q[0])
+			q2_cos = np.cos(q[1])
+			q3_cos = np.cos(q[2])
 
 		self.fr_LF_coxa_X_LF_foot[0,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos
 		self.fr_LF_coxa_X_LF_foot[0,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_cos
@@ -278,12 +288,20 @@ class HomogeneousTransform:
 		self.fr_LF_coxa_X_LF_foot[2,3] = L3*(q2_sin*q3_cos + q2_cos*q3_sin) + L2*q2_sin
 
 	def update_fr_LM_coxa_X_LM_foot(self,q):
-		q1_sin = np.sin(q[LM_Q1_JOINT])
-		q2_sin = np.sin(q[LM_Q2_JOINT])
-		q3_sin = np.sin(q[LM_Q3_JOINT])
-		q1_cos = np.cos(q[LM_Q1_JOINT])
-		q2_cos = np.cos(q[LM_Q2_JOINT])
-		q3_cos = np.cos(q[LM_Q3_JOINT])
+		if (len(q)>3):
+			q1_sin = np.sin(q[LM_Q1_JOINT])
+			q2_sin = np.sin(q[LM_Q2_JOINT])
+			q3_sin = np.sin(q[LM_Q3_JOINT])
+			q1_cos = np.cos(q[LM_Q1_JOINT])
+			q2_cos = np.cos(q[LM_Q2_JOINT])
+			q3_cos = np.cos(q[LM_Q3_JOINT])
+		else:
+			q1_sin = np.sin(q[0])
+			q2_sin = np.sin(q[1])
+			q3_sin = np.sin(q[2])
+			q1_cos = np.cos(q[0])
+			q2_cos = np.cos(q[1])
+			q3_cos = np.cos(q[2])
 
 		self.fr_LM_coxa_X_LM_foot[0,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos
 		self.fr_LM_coxa_X_LM_foot[0,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_cos
@@ -298,12 +316,20 @@ class HomogeneousTransform:
 		self.fr_LM_coxa_X_LM_foot[2,3] = L3*(q2_sin*q3_cos + q2_cos*q3_sin) + L2*q2_sin
 
 	def update_fr_LR_coxa_X_LR_foot(self,q):
-		q1_sin = np.sin(q[LR_Q1_JOINT])
-		q2_sin = np.sin(q[LR_Q2_JOINT])
-		q3_sin = np.sin(q[LR_Q3_JOINT])
-		q1_cos = np.cos(q[LR_Q1_JOINT])
-		q2_cos = np.cos(q[LR_Q2_JOINT])
-		q3_cos = np.cos(q[LR_Q3_JOINT])
+		if (len(q)>3):
+			q1_sin = np.sin(q[LR_Q1_JOINT])
+			q2_sin = np.sin(q[LR_Q2_JOINT])
+			q3_sin = np.sin(q[LR_Q3_JOINT])
+			q1_cos = np.cos(q[LR_Q1_JOINT])
+			q2_cos = np.cos(q[LR_Q2_JOINT])
+			q3_cos = np.cos(q[LR_Q3_JOINT])
+		else:
+			q1_sin = np.sin(q[0])
+			q2_sin = np.sin(q[1])
+			q3_sin = np.sin(q[2])
+			q1_cos = np.cos(q[0])
+			q2_cos = np.cos(q[1])
+			q3_cos = np.cos(q[2])
 
 		self.fr_LR_coxa_X_LR_foot[0,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos
 		self.fr_LR_coxa_X_LR_foot[0,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_cos
@@ -318,12 +344,20 @@ class HomogeneousTransform:
 		self.fr_LR_coxa_X_LR_foot[2,3] = L3*(q2_sin*q3_cos + q2_cos*q3_sin) + L2*q2_sin
 
 	def update_fr_RF_coxa_X_RF_foot(self,q):
-		q1_sin = np.sin(q[RF_Q1_JOINT])
-		q2_sin = np.sin(q[RF_Q2_JOINT])
-		q3_sin = np.sin(q[RF_Q3_JOINT])
-		q1_cos = np.cos(q[RF_Q1_JOINT])
-		q2_cos = np.cos(q[RF_Q2_JOINT])
-		q3_cos = np.cos(q[RF_Q3_JOINT])
+		if (len(q)>3):
+			q1_sin = np.sin(q[RF_Q1_JOINT])
+			q2_sin = np.sin(q[RF_Q2_JOINT])
+			q3_sin = np.sin(q[RF_Q3_JOINT])
+			q1_cos = np.cos(q[RF_Q1_JOINT])
+			q2_cos = np.cos(q[RF_Q2_JOINT])
+			q3_cos = np.cos(q[RF_Q3_JOINT])
+		else:
+			q1_sin = np.sin(q[0])
+			q2_sin = np.sin(q[1])
+			q3_sin = np.sin(q[2])
+			q1_cos = np.cos(q[0])
+			q2_cos = np.cos(q[1])
+			q3_cos = np.cos(q[2])
 
 		self.fr_RF_coxa_X_RF_foot[0,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos
 		self.fr_RF_coxa_X_RF_foot[0,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_cos
@@ -338,12 +372,20 @@ class HomogeneousTransform:
 		self.fr_RF_coxa_X_RF_foot[2,3] = L3*(q2_sin*q3_cos + q2_cos*q3_sin) + L2*q2_sin
 
 	def update_fr_RM_coxa_X_RM_foot(self,q):
-		q1_sin = np.sin(q[RM_Q1_JOINT])
-		q2_sin = np.sin(q[RM_Q2_JOINT])
-		q3_sin = np.sin(q[RM_Q3_JOINT])
-		q1_cos = np.cos(q[RM_Q1_JOINT])
-		q2_cos = np.cos(q[RM_Q2_JOINT])
-		q3_cos = np.cos(q[RM_Q3_JOINT])
+		if (len(q)>3):
+			q1_sin = np.sin(q[RM_Q1_JOINT])
+			q2_sin = np.sin(q[RM_Q2_JOINT])
+			q3_sin = np.sin(q[RM_Q3_JOINT])
+			q1_cos = np.cos(q[RM_Q1_JOINT])
+			q2_cos = np.cos(q[RM_Q2_JOINT])
+			q3_cos = np.cos(q[RM_Q3_JOINT])
+		else:
+			q1_sin = np.sin(q[0])
+			q2_sin = np.sin(q[1])
+			q3_sin = np.sin(q[2])
+			q1_cos = np.cos(q[0])
+			q2_cos = np.cos(q[1])
+			q3_cos = np.cos(q[2])
 
 		self.fr_RM_coxa_X_RM_foot[0,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos
 		self.fr_RM_coxa_X_RM_foot[0,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_cos
@@ -358,12 +400,20 @@ class HomogeneousTransform:
 		self.fr_RM_coxa_X_RM_foot[2,3] = L3*(q2_sin*q3_cos + q2_cos*q3_sin) + L2*q2_sin
 
 	def update_fr_RR_coxa_X_RR_foot(self,q):
-		q1_sin = np.sin(q[RR_Q1_JOINT])
-		q2_sin = np.sin(q[RR_Q2_JOINT])
-		q3_sin = np.sin(q[RR_Q3_JOINT])
-		q1_cos = np.cos(q[RR_Q1_JOINT])
-		q2_cos = np.cos(q[RR_Q2_JOINT])
-		q3_cos = np.cos(q[RR_Q3_JOINT])
+		if (len(q)>3):
+			q1_sin = np.sin(q[RR_Q1_JOINT])
+			q2_sin = np.sin(q[RR_Q2_JOINT])
+			q3_sin = np.sin(q[RR_Q3_JOINT])
+			q1_cos = np.cos(q[RR_Q1_JOINT])
+			q2_cos = np.cos(q[RR_Q2_JOINT])
+			q3_cos = np.cos(q[RR_Q3_JOINT])
+		else:
+			q1_sin = np.sin(q[0])
+			q2_sin = np.sin(q[1])
+			q3_sin = np.sin(q[2])
+			q1_cos = np.cos(q[0])
+			q2_cos = np.cos(q[1])
+			q3_cos = np.cos(q[2])
 
 		self.fr_RR_coxa_X_RR_foot[0,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos
 		self.fr_RR_coxa_X_RR_foot[0,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_cos
@@ -379,15 +429,23 @@ class HomogeneousTransform:
 
 
 	def update_fr_base_X_LF_foot(self,q):
-		q1_sin = np.sin(q[LF_Q1_JOINT])
-		q2_sin = np.sin(q[LF_Q2_JOINT])
-		q3_sin = np.sin(q[LF_Q3_JOINT])
-		q1_cos = np.cos(q[LF_Q1_JOINT])
-		q2_cos = np.cos(q[LF_Q2_JOINT])
-		q3_cos = np.cos(q[LF_Q3_JOINT])
+		if (len(q)>3):
+			q1_sin = np.sin(q[LF_Q1_JOINT])
+			q2_sin = np.sin(q[LF_Q2_JOINT])
+			q3_sin = np.sin(q[LF_Q3_JOINT])
+			q1_cos = np.cos(q[LF_Q1_JOINT])
+			q2_cos = np.cos(q[LF_Q2_JOINT])
+			q3_cos = np.cos(q[LF_Q3_JOINT])
+		else:
+			q1_sin = np.sin(q[0])
+			q2_sin = np.sin(q[1])
+			q3_sin = np.sin(q[2])
+			q1_cos = np.cos(q[0])
+			q2_cos = np.cos(q[1])
+			q3_cos = np.cos(q[2])
 		rZ_sin = np.sin(deg2rad(ROT_BASE_X_LF))
 		rZ_cos = np.cos(deg2rad(ROT_BASE_X_LF))
-		
+
 		self.fr_base_X_LF_foot[0,0] = -(q2_cos*q3_cos - q2_sin*q3_sin)*(rZ_sin*q1_sin - rZ_cos*q1_cos)
 		self.fr_base_X_LF_foot[0,1] =  (q2_sin*q3_cos + q2_cos*q3_sin)*(rZ_sin*q1_sin - rZ_cos*q1_cos)
 		self.fr_base_X_LF_foot[0,2] =  rZ_cos*q1_sin + rZ_sin*q1_cos
@@ -402,15 +460,23 @@ class HomogeneousTransform:
 		self.fr_base_X_LF_foot[2,3] =  (q2_sin*q3_cos + q2_cos*q3_sin)*L3 + q2_sin*L2
 
 	def update_fr_base_X_LM_foot(self,q):
-		q1_sin = np.sin(q[LM_Q1_JOINT])
-		q2_sin = np.sin(q[LM_Q2_JOINT])
-		q3_sin = np.sin(q[LM_Q3_JOINT])
-		q1_cos = np.cos(q[LM_Q1_JOINT])
-		q2_cos = np.cos(q[LM_Q2_JOINT])
-		q3_cos = np.cos(q[LM_Q3_JOINT])
+		if (len(q)>3):
+			q1_sin = np.sin(q[LM_Q1_JOINT])
+			q2_sin = np.sin(q[LM_Q2_JOINT])
+			q3_sin = np.sin(q[LM_Q3_JOINT])
+			q1_cos = np.cos(q[LM_Q1_JOINT])
+			q2_cos = np.cos(q[LM_Q2_JOINT])
+			q3_cos = np.cos(q[LM_Q3_JOINT])
+		else:
+			q1_sin = np.sin(q[0])
+			q2_sin = np.sin(q[1])
+			q3_sin = np.sin(q[2])
+			q1_cos = np.cos(q[0])
+			q2_cos = np.cos(q[1])
+			q3_cos = np.cos(q[2])
 		rZ_sin = np.sin(deg2rad(ROT_BASE_X_LM))
 		rZ_cos = np.cos(deg2rad(ROT_BASE_X_LM))
-		
+
 		self.fr_base_X_LM_foot[0,0] = -(q2_cos*q3_cos - q2_sin*q3_sin)*(rZ_sin*q1_sin - rZ_cos*q1_cos)
 		self.fr_base_X_LM_foot[0,1] =  (q2_sin*q3_cos + q2_cos*q3_sin)*(rZ_sin*q1_sin - rZ_cos*q1_cos)
 		self.fr_base_X_LM_foot[0,2] =  rZ_cos*q1_sin + rZ_sin*q1_cos
@@ -425,12 +491,20 @@ class HomogeneousTransform:
 		self.fr_base_X_LM_foot[2,3] =  (q2_sin*q3_cos + q2_cos*q3_sin)*L3 + q2_sin*L2
 
 	def update_fr_base_X_LR_foot(self,q):
-		q1_sin = np.sin(q[LR_Q1_JOINT])
-		q2_sin = np.sin(q[LR_Q2_JOINT])
-		q3_sin = np.sin(q[LR_Q3_JOINT])
-		q1_cos = np.cos(q[LR_Q1_JOINT])
-		q2_cos = np.cos(q[LR_Q2_JOINT])
-		q3_cos = np.cos(q[LR_Q3_JOINT])
+		if (len(q)>3):
+			q1_sin = np.sin(q[LR_Q1_JOINT])
+			q2_sin = np.sin(q[LR_Q2_JOINT])
+			q3_sin = np.sin(q[LR_Q3_JOINT])
+			q1_cos = np.cos(q[LR_Q1_JOINT])
+			q2_cos = np.cos(q[LR_Q2_JOINT])
+			q3_cos = np.cos(q[LR_Q3_JOINT])
+		else:
+			q1_sin = np.sin(q[0])
+			q2_sin = np.sin(q[1])
+			q3_sin = np.sin(q[2])
+			q1_cos = np.cos(q[0])
+			q2_cos = np.cos(q[1])
+			q3_cos = np.cos(q[2])
 		rZ_sin = np.sin(deg2rad(ROT_BASE_X_LR))
 		rZ_cos = np.cos(deg2rad(ROT_BASE_X_LR))
 
@@ -448,12 +522,20 @@ class HomogeneousTransform:
 		self.fr_base_X_LR_foot[2,3] =  (q2_sin*q3_cos + q2_cos*q3_sin)*L3 + q2_sin*L2
 
 	def update_fr_base_X_RF_foot(self,q):
-		q1_sin = np.sin(q[RF_Q1_JOINT])
-		q2_sin = np.sin(q[RF_Q2_JOINT])
-		q3_sin = np.sin(q[RF_Q3_JOINT])
-		q1_cos = np.cos(q[RF_Q1_JOINT])
-		q2_cos = np.cos(q[RF_Q2_JOINT])
-		q3_cos = np.cos(q[RF_Q3_JOINT])
+		if (len(q)>3):
+			q1_sin = np.sin(q[RF_Q1_JOINT])
+			q2_sin = np.sin(q[RF_Q2_JOINT])
+			q3_sin = np.sin(q[RF_Q3_JOINT])
+			q1_cos = np.cos(q[RF_Q1_JOINT])
+			q2_cos = np.cos(q[RF_Q2_JOINT])
+			q3_cos = np.cos(q[RF_Q3_JOINT])
+		else:
+			q1_sin = np.sin(q[0])
+			q2_sin = np.sin(q[1])
+			q3_sin = np.sin(q[2])
+			q1_cos = np.cos(q[0])
+			q2_cos = np.cos(q[1])
+			q3_cos = np.cos(q[2])
 		rZ_sin = np.sin(deg2rad(ROT_BASE_X_RF))
 		rZ_cos = np.cos(deg2rad(ROT_BASE_X_RF))
 
@@ -471,12 +553,20 @@ class HomogeneousTransform:
 		self.fr_base_X_RF_foot[2,3] =  (q2_sin*q3_cos + q2_cos*q3_sin)*L3 + q2_sin*L2
 
 	def update_fr_base_X_RM_foot(self,q):
-		q1_sin = np.sin(q[RM_Q1_JOINT])
-		q2_sin = np.sin(q[RM_Q2_JOINT])
-		q3_sin = np.sin(q[RM_Q3_JOINT])
-		q1_cos = np.cos(q[RM_Q1_JOINT])
-		q2_cos = np.cos(q[RM_Q2_JOINT])
-		q3_cos = np.cos(q[RM_Q3_JOINT])
+		if (len(q)>3):
+			q1_sin = np.sin(q[RM_Q1_JOINT])
+			q2_sin = np.sin(q[RM_Q2_JOINT])
+			q3_sin = np.sin(q[RM_Q3_JOINT])
+			q1_cos = np.cos(q[RM_Q1_JOINT])
+			q2_cos = np.cos(q[RM_Q2_JOINT])
+			q3_cos = np.cos(q[RM_Q3_JOINT])
+		else:
+			q1_sin = np.sin(q[0])
+			q2_sin = np.sin(q[1])
+			q3_sin = np.sin(q[2])
+			q1_cos = np.cos(q[0])
+			q2_cos = np.cos(q[1])
+			q3_cos = np.cos(q[2])
 		rZ_sin = np.sin(deg2rad(ROT_BASE_X_RM))
 		rZ_cos = np.cos(deg2rad(ROT_BASE_X_RM))
 
@@ -494,12 +584,20 @@ class HomogeneousTransform:
 		self.fr_base_X_RM_foot[2,3] =  (q2_sin*q3_cos + q2_cos*q3_sin)*L3 + q2_sin*L2
 
 	def update_fr_base_X_RR_foot(self,q):
-		q1_sin = np.sin(q[RR_Q1_JOINT])
-		q2_sin = np.sin(q[RR_Q2_JOINT])
-		q3_sin = np.sin(q[RR_Q3_JOINT])
-		q1_cos = np.cos(q[RR_Q1_JOINT])
-		q2_cos = np.cos(q[RR_Q2_JOINT])
-		q3_cos = np.cos(q[RR_Q3_JOINT])
+		if (len(q)>3):
+			q1_sin = np.sin(q[RR_Q1_JOINT])
+			q2_sin = np.sin(q[RR_Q2_JOINT])
+			q3_sin = np.sin(q[RR_Q3_JOINT])
+			q1_cos = np.cos(q[RR_Q1_JOINT])
+			q2_cos = np.cos(q[RR_Q2_JOINT])
+			q3_cos = np.cos(q[RR_Q3_JOINT])
+		else:
+			q1_sin = np.sin(q[0])
+			q2_sin = np.sin(q[1])
+			q3_sin = np.sin(q[2])
+			q1_cos = np.cos(q[0])
+			q2_cos = np.cos(q[1])
+			q3_cos = np.cos(q[2])
 		rZ_sin = np.sin(deg2rad(ROT_BASE_X_RR))
 		rZ_cos = np.cos(deg2rad(ROT_BASE_X_RR))
 
@@ -593,5 +691,7 @@ for i in range(0,6):
 qb[5] = BODY_HEIGHT
 
 XH.update_robot(qb,q) 	# set initial stance of robot
-
+# q = np.array([0,0.5,1.1])
+# print len(q)
+XH.update_fr_base_X_LF_foot(q)
 # print XH.fr_base_X_LF_edge_1
