@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package>
+  <name>corin_gazebo</name>
+  <version>0.0.0</version>
+  <description>The corin_gazebo package</description>
+
+  <maintainer email="wilson@todo.todo">wilson</maintainer>
+  <license>BSD</license>
+  <author email="wilson@todo.todo">wilson</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>gazebo_msgs</build_depend>
+  <build_depend>gazebo_plugins</build_depend>
+  <build_depend>gazebo_ros</build_depend>
+  <build_depend>gazebo_ros_control</build_depend>
+  <build_depend>corin_description</build_depend>
+  
+  <run_depend>gazebo_msgs</run_depend>
+  <run_depend>gazebo_plugins</run_depend>
+  <run_depend>gazebo_ros</run_depend>
+  <run_depend>gazebo_ros_control</run_depend>
+  <run_depend>corin_description</run_depend>
+
+</package>

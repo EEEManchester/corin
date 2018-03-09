@@ -1,0 +1,28 @@
+<launch>
+
+   <!-- Load joint controller configurations from YAML file to parameter server -->
+  <rosparam file="$(find corin_control)/config/leg_position_controller.yaml" command="load"/>
+
+  <!-- load the controllers -->
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" clear_params="true"
+    output="screen" ns="/corin" args="joint_state_controller
+    lf_q1_joint lf_q2_joint lf_q3_joint
+    lm_q1_joint lm_q2_joint lm_q3_joint
+    lr_q1_joint lr_q2_joint lr_q3_joint
+    rf_q1_joint rf_q2_joint rf_q3_joint
+    rm_q1_joint rm_q2_joint rm_q3_joint
+    rr_q1_joint rr_q2_joint rr_q3_joint   "/>
+
+  <!-- contact force node -->
+  <node name="contact_foce" pkg="corin_control" type="footcontact.py" respawn="false"/>
+
+  <!-- unpause physics engine -->
+  <node name="unpause" pkg="corin_description" type="unpause_physics_engine" args="5.0" />
+
+  <!-- convert joint states to TF transforms for rviz, etc -->
+  <!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"
+    respawn="false" output="screen">
+    <remap from="/joint_states" to="/corin/joint_states" />
+  </node> -->
+
+</launch>
