@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 ## Publishes state for RVIZ
+
 import rospy
 import roslib
 import os

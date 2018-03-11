@@ -46,7 +46,7 @@ class corin_kinematics():
 			print 'FK: ', e
 			pass
 
-	def IK(self, p=None):
+	def Leg_IK(self, p=None):
 
 		try:
 			x = p[0];	y = p[1];	z = p[2];
@@ -79,12 +79,15 @@ class corin_kinematics():
 			pass
 
 	def singularity_check(self, q=None):
-
+		""" checks if robot configuration is singular 			"""
+		""" Input: 	1) q -> joint angles (2D array) in radians
+			Output: 1) Flag -> True: singular, False: OK 		"""
+			
 		rank = np.linalg.matrix_rank(self.jacobian(q))
 		if (rank < 3):
-			return 1
+			return True
 		else:
-			return 0
+			return False
 
 	def joint_speed(self, q=None, v=None, a=None):
 
@@ -193,7 +196,7 @@ qs = [0., 0.45, -2.033]	# right side
 cd = CK.FK(qs)
 # print cd.flatten()
 cd = [ 0.21, 0., -0.1]
-qp = CK.IK(cd)
+qp = CK.Leg_IK(cd)
 # print 'q: ', qp
 # print qp
 # if (not CK.singularity_check(qp)):

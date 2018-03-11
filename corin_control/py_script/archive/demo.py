@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-## Main file for Corin
+## Actions for corin stitched together - 
+## Does not fully work, not exactly sure why
 import rospy
 
 import controller_walking as Control_Framework

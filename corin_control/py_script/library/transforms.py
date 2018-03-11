@@ -16,10 +16,230 @@ import kdl 					# corin kinematic library
 def deg2rad(q):
 	return (q*np.pi/180.)
 
+class ArrayHomogeneousTransform:
+	def __init__(self, leg_no):
+		self.n = leg_no
+
+		self.fr_world_X_base = np.identity(4)	# done
+		self.fr_world_X_foot = np.identity(4)	# 
+		
+		self.fr_base_X_coxa = np.identity(4) 	# done
+		self.fr_base_X_foot = np.identity(4)	# done
+		self.fr_base_X_AEP  = np.identity(4)	# 
+		self.fr_base_X_PEP  = np.identity(4)	# 
+		self.fr_base_X_NRP  = np.identity(4)	# done
+
+		self.fr_coxa_X_foot = np.identity(4) 	# done
+		self.fr_coxa_X_AEP  = np.identity(4) 	# done
+		self.fr_coxa_X_PEP  = np.identity(4) 	# done
+		self.fr_coxa_X_NRP  = np.identity(4) 	# done
+
+		## CoM ##
+		self.fr_base_X_COM = np.identity(4)		# done
+
+		self._initialize_()
+
+	def _initialize_(self):
+		## Set default values for robot's nominal stance
+		q  = np.zeros(18)
+		qb = np.zeros(6)
+
+		KDL = kdl.corin_kinematics()
+		xp  = KDL.Leg_IK([STANCE_WIDTH,0.,-BODY_HEIGHT])
+		# set legs to default standup position
+		for i in range(0,6): 	
+			q[0+i*3] = xp[0]
+			q[1+i*3] = xp[1]
+			q[2+i*3] = xp[2]
+		qb[5] = BODY_HEIGHT
+
+		self.init_update() 		# single update
+		# self.update_robot(qb,q) # runtime update
+
+	def init_update(self):
+		self.update_fr_base_X_coxa(ROT_BASE_X_LEG[self.n],TRN_BASE_X_LEG[self.n])
+		
+
+	def update_fr_world_X_base(self,q):
+		# rotates in sequence x, y, z in world frame 
+		tx = q[0]
+		ty = q[1]
+		tz = q[2]
+		qx_sin = np.sin(q[3])
+		qy_sin = np.sin(q[4])
+		qz_sin = np.sin(q[5])
+		qx_cos = np.cos(q[3])
+		qy_cos = np.cos(q[4])
+		qz_cos = np.cos(q[5])
+
+		self.fr_world_X_base[0,0] =  qz_cos*qy_cos
+		self.fr_world_X_base[0,1] = -qz_sin*qx_cos + qz_cos*qy_sin*qx_sin
+		self.fr_world_X_base[0,2] =  qz_sin*qx_sin + qz_cos*qy_sin*qx_cos
+		self.fr_world_X_base[0,3] =  (qz_sin*qx_sin + qz_cos*qy_sin*qx_cos)*tz + (-qz_sin*qx_cos + qz_cos*qy_sin*qx_sin)*ty + qz_cos*qy_cos*tx
+		self.fr_world_X_base[1,0] =  qz_sin*qy_cos
+		self.fr_world_X_base[1,1] =  qz_cos*qx_cos + qz_sin*qy_sin*qx_sin
+		self.fr_world_X_base[1,2] = -qz_cos*qx_sin + qz_sin*qy_sin*qx_cos
+		self.fr_world_X_base[1,3] =  (-qz_cos*qx_sin + qz_sin*qy_sin*qx_cos)*tz + (qz_cos*qx_cos + qz_sin*qy_sin*qx_sin)*ty + qz_sin*qy_cos*tx
+		self.fr_world_X_base[2,0] = -qy_sin
+		self.fr_world_X_base[2,1] =  qy_cos*qx_sin
+		self.fr_world_X_base[2,2] =	 qy_cos*qx_cos
+		self.fr_world_X_base[2,3] =  qy_cos*qx_cos*tz + qy_cos*qx_sin*ty - qy_sin*tx
+		
+	def update_fr_base_X_coxa(self, q, tx):
+		self.fr_base_X_coxa[0,0] =  np.cos(deg2rad(q))
+		self.fr_base_X_coxa[0,1] = -np.sin(deg2rad(q))
+		self.fr_base_X_coxa[1,0] =  np.sin(deg2rad(q))
+		self.fr_base_X_coxa[1,1] =  np.cos(deg2rad(q))
+		self.fr_base_X_coxa[0,3] =  tx[0]
+		self.fr_base_X_coxa[1,3] =  tx[1]
+
+	def update_fr_base_X_foot(self,q):	
+		q1_sin = np.sin(q[0])
+		q2_sin = np.sin(q[1])
+		q3_sin = np.sin(q[2])
+		q1_cos = np.cos(q[0])
+		q2_cos = np.cos(q[1])
+		q3_cos = np.cos(q[2])
+		rZ_sin = np.sin(deg2rad(ROT_BASE_X_LEG[self.n]))
+		rZ_cos = np.cos(deg2rad(ROT_BASE_X_LEG[self.n]))
+
+		self.fr_base_X_foot[0,0] = -(q2_cos*q3_cos - q2_sin*q3_sin)*(rZ_sin*q1_sin - rZ_cos*q1_cos)
+		self.fr_base_X_foot[0,1] =  (q2_sin*q3_cos + q2_cos*q3_sin)*(rZ_sin*q1_sin - rZ_cos*q1_cos)
+		self.fr_base_X_foot[0,2] =  rZ_cos*q1_sin + rZ_sin*q1_cos
+		self.fr_base_X_foot[0,3] = -rZ_sin*(q2_cos*q3_cos - q2_sin*q3_sin)*q1_sin*L3 - rZ_sin*q2_cos*q1_sin*L2 + (q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos*rZ_cos*L3 + q2_cos*q1_cos*rZ_cos*L2 - rZ_sin*q1_sin*L1 + q1_cos*rZ_cos*L1 + COXA_X
+		self.fr_base_X_foot[1,0] =  (q2_cos*q3_cos - q2_sin*q3_sin)*(rZ_cos*q1_sin + rZ_sin*q1_cos)
+		self.fr_base_X_foot[1,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*(rZ_cos*q1_sin + rZ_sin*q1_cos)
+		self.fr_base_X_foot[1,2] =  rZ_sin*q1_sin - rZ_cos*q1_cos
+		self.fr_base_X_foot[1,3] =  rZ_sin*(q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos*L3 + rZ_sin*q2_cos*q1_cos*L2 + (q2_cos*q3_cos - q2_sin*q3_sin)*rZ_cos*q1_sin*L3 + q2_cos*rZ_cos*q1_sin*L2 + rZ_sin*q1_cos*L1 + rZ_cos*q1_sin*L1 + COXA_Y
+		self.fr_base_X_foot[2,0] =  (q2_sin*q3_cos + q2_cos*q3_sin)
+		self.fr_base_X_foot[2,1] =  (q2_cos*q3_cos - q2_sin*q3_sin)
+		self.fr_base_X_foot[2,1] =  0.
+		self.fr_base_X_foot[2,3] =  (q2_sin*q3_cos + q2_cos*q3_sin)*L3 + q2_sin*L2
+
+	def update_fr_base_X_NRP(self, q):
+		self.update_fr_coxa_X_NRP(q)
+		self.fr_base_X_NRP = np.dot(self.fr_base_X_coxa, self.fr_coxa_X_NRP)
+
+	def update_fr_base_X_AEP(self, q):
+		self.update_fr_coxa_X_AEP(q)
+		self.fr_base_X_AEP = np.dot(self.fr_base_X_coxa, self.fr_coxa_X_AEP)
+
+	def update_fr_base_X_PEP(self, q):
+		self.update_fr_coxa_X_PEP(q)
+		self.fr_base_X_PEP = np.dot(self.fr_base_X_coxa, self.fr_coxa_X_PEP)
+
+	def update_fr_coxa_X_foot(self, q):
+		q1_sin = np.sin(q[0])
+		q2_sin = np.sin(q[1])
+		q3_sin = np.sin(q[2])
+		q1_cos = np.cos(q[0])
+		q2_cos = np.cos(q[1])
+		q3_cos = np.cos(q[2])
+
+		self.fr_coxa_X_foot[0,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos
+		self.fr_coxa_X_foot[0,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_cos
+		self.fr_coxa_X_foot[0,2] = q1_sin
+		self.fr_coxa_X_foot[0,3] = q1_cos*(L1 + L3*(q2_cos*q3_cos - q2_sin*q3_sin) + L2*q2_cos)
+		self.fr_coxa_X_foot[1,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_sin
+		self.fr_coxa_X_foot[1,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_sin
+		self.fr_coxa_X_foot[1,2] = -q1_cos
+		self.fr_coxa_X_foot[1,3] = q1_sin*(L1 + L3*(q2_cos*q3_cos - q2_sin*q3_sin) + L2*q2_cos)
+		self.fr_coxa_X_foot[2,0] = (q2_sin*q3_cos + q2_cos*q3_sin)
+		self.fr_coxa_X_foot[2,1] = (q2_cos*q3_cos - q2_sin*q3_sin)
+		self.fr_coxa_X_foot[2,3] = L3*(q2_sin*q3_cos + q2_cos*q3_sin) + L2*q2_sin
+
+	def update_fr_coxa_X_NRP(self, q):
+		q1_sin = np.sin(q[0])
+		q2_sin = np.sin(q[1])
+		q3_sin = np.sin(q[2])
+		q1_cos = np.cos(q[0])
+		q2_cos = np.cos(q[1])
+		q3_cos = np.cos(q[2])
+
+		self.fr_coxa_X_NRP[0,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos
+		self.fr_coxa_X_NRP[0,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_cos
+		self.fr_coxa_X_NRP[0,2] = q1_sin
+		self.fr_coxa_X_NRP[0,3] = q1_cos*(L1 + L3*(q2_cos*q3_cos - q2_sin*q3_sin) + L2*q2_cos)
+		self.fr_coxa_X_NRP[1,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_sin
+		self.fr_coxa_X_NRP[1,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_sin
+		self.fr_coxa_X_NRP[1,2] = -q1_cos
+		self.fr_coxa_X_NRP[1,3] = q1_sin*(L1 + L3*(q2_cos*q3_cos - q2_sin*q3_sin) + L2*q2_cos)
+		self.fr_coxa_X_NRP[2,0] = (q2_sin*q3_cos + q2_cos*q3_sin)
+		self.fr_coxa_X_NRP[2,1] = (q2_cos*q3_cos - q2_sin*q3_sin)
+		self.fr_coxa_X_NRP[2,3] = L3*(q2_sin*q3_cos + q2_cos*q3_sin) + L2*q2_sin
+
+	def update_fr_coxa_X_AEP(self, q):
+		q1_sin = np.sin(q[0])
+		q2_sin = np.sin(q[1])
+		q3_sin = np.sin(q[2])
+		q1_cos = np.cos(q[0])
+		q2_cos = np.cos(q[1])
+		q3_cos = np.cos(q[2])
+
+		self.fr_coxa_X_AEP[0,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos
+		self.fr_coxa_X_AEP[0,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_cos
+		self.fr_coxa_X_AEP[0,2] = q1_sin
+		self.fr_coxa_X_AEP[0,3] = q1_cos*(L1 + L3*(q2_cos*q3_cos - q2_sin*q3_sin) + L2*q2_cos)
+		self.fr_coxa_X_AEP[1,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_sin
+		self.fr_coxa_X_AEP[1,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_sin
+		self.fr_coxa_X_AEP[1,2] = -q1_cos
+		self.fr_coxa_X_AEP[1,3] = q1_sin*(L1 + L3*(q2_cos*q3_cos - q2_sin*q3_sin) + L2*q2_cos)
+		self.fr_coxa_X_AEP[2,0] = (q2_sin*q3_cos + q2_cos*q3_sin)
+		self.fr_coxa_X_AEP[2,1] = (q2_cos*q3_cos - q2_sin*q3_sin)
+		self.fr_coxa_X_AEP[2,3] = L3*(q2_sin*q3_cos + q2_cos*q3_sin) + L2*q2_sin
+
+	def update_fr_coxa_X_PEP(self, q):
+		q1_sin = np.sin(q[0])
+		q2_sin = np.sin(q[1])
+		q3_sin = np.sin(q[2])
+		q1_cos = np.cos(q[0])
+		q2_cos = np.cos(q[1])
+		q3_cos = np.cos(q[2])
+
+		self.fr_coxa_X_PEP[0,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos
+		self.fr_coxa_X_PEP[0,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_cos
+		self.fr_coxa_X_PEP[0,2] = q1_sin
+		self.fr_coxa_X_PEP[0,3] = q1_cos*(L1 + L3*(q2_cos*q3_cos - q2_sin*q3_sin) + L2*q2_cos)
+		self.fr_coxa_X_PEP[1,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_sin
+		self.fr_coxa_X_PEP[1,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_sin
+		self.fr_coxa_X_PEP[1,2] = -q1_cos
+		self.fr_coxa_X_PEP[1,3] = q1_sin*(L1 + L3*(q2_cos*q3_cos - q2_sin*q3_sin) + L2*q2_cos)
+		self.fr_coxa_X_PEP[2,0] = (q2_sin*q3_cos + q2_cos*q3_sin)
+		self.fr_coxa_X_PEP[2,1] = (q2_cos*q3_cos - q2_sin*q3_sin)
+		self.fr_coxa_X_PEP[2,3] = L3*(q2_sin*q3_cos + q2_cos*q3_sin) + L2*q2_sin
+
+	def update_fr_base_X_COM(self):
+		# TODO: what if base is rotated?
+		self.fr_base_X_COM[0:3] = BODY_COM[0] + LEG_MASS*(self.fr_LF_COM[0,3])
+		self.fr_base_X_COM[1:3] = BODY_COM[1] + LEG_MASS*(self.fr_LF_COM[1,3])
+		self.fr_base_X_COM[2:3] = BODY_COM[2] + LEG_MASS*(self.fr_LF_COM[2,3])
+
+XH = ArrayHomogeneousTransform(0)
+# print XH.fr_base_X_coxa
+
+## ============================================================================================================================= ##
+## ============================================================================================================================= ##
+## ============================================================================================================================= ##
+
 class HomogeneousTransform:
 	def __init__(self):
 		self.fr_world_X_base = np.identity(4)
 
+		## ============================================= ##
+		self.fr_world_X_foot = np.identity(4)
+		
+		self.fr_base_X_coxa = np.identity(4)
+		self.fr_base_X_foot = np.identity(4)
+		self.fr_base_X_AEP  = np.identity(4)
+		self.fr_base_X_PEP  = np.identity(4)
+		self.fr_base_X_NRP  = np.identity(4)
+
+		self.fr_coxa_X_foot = np.identity(4)
+		self.fr_coxa_X_AEP  = np.identity(4)
+		self.fr_coxa_X_PEP  = np.identity(4)
+		self.fr_coxa_X_NRP  = np.identity(4)
+
+		## ============================================= ##
 		self.fr_world_X_LF_foot = np.identity(4)
 		self.fr_world_X_LM_foot = np.identity(4)
 		self.fr_world_X_LR_foot = np.identity(4)
@@ -48,6 +268,30 @@ class HomogeneousTransform:
 		self.fr_RF_coxa_X_RF_foot = np.identity(4)
 		self.fr_RM_coxa_X_RM_foot = np.identity(4)
 		self.fr_RR_coxa_X_RR_foot = np.identity(4)
+
+		## Anterior Extreme Position
+		self.fr_base_X_LF_AEP = np.identity(4)
+		self.fr_base_X_LM_AEP = np.identity(4)
+		self.fr_base_X_LR_AEP = np.identity(4)
+		self.fr_base_X_RF_AEP = np.identity(4)
+		self.fr_base_X_RM_AEP = np.identity(4)
+		self.fr_base_X_RR_AEP = np.identity(4)
+
+		## Posterior Extreme Position
+		self.fr_base_X_LF_PEP = np.identity(4)
+		self.fr_base_X_LM_PEP = np.identity(4)
+		self.fr_base_X_LR_PEP = np.identity(4)
+		self.fr_base_X_RF_PEP = np.identity(4)
+		self.fr_base_X_RM_PEP = np.identity(4)
+		self.fr_base_X_RR_PEP = np.identity(4)
+
+		## Nominal Resting Position
+		self.fr_base_X_LF_NRP = np.identity(4)
+		self.fr_base_X_LM_NRP = np.identity(4)
+		self.fr_base_X_LR_NRP = np.identity(4)
+		self.fr_base_X_RF_NRP = np.identity(4)
+		self.fr_base_X_RM_NRP = np.identity(4)
+		self.fr_base_X_RR_NRP = np.identity(4)
 
 		## CoM frames
 		self.fr_base_X_COM = np.identity(4)
@@ -96,7 +340,7 @@ class HomogeneousTransform:
 		qb = np.zeros(6)
 
 		KDL = kdl.corin_kinematics()
-		xp  = KDL.IK([STANCE_WIDTH,0.,-BODY_HEIGHT])
+		xp  = KDL.Leg_IK([STANCE_WIDTH,0.,-BODY_HEIGHT])
 		# set legs to default standup position
 		for i in range(0,6): 	
 			q[0+i*3] = xp[0]
@@ -213,6 +457,16 @@ class HomogeneousTransform:
 		self.fr_world_X_base[2,2] =	 qy_cos*qx_cos
 		self.fr_world_X_base[2,3] =  qy_cos*qx_cos*tz + qy_cos*qx_sin*ty - qy_sin*tx
 		
+	def update_fr_base_X_coxa(self, q, tx):
+		""" generic method for updating each leg """
+
+		self.fr_base_X_coxa[0,0] =  np.cos(deg2rad(q))
+		self.fr_base_X_coxa[0,1] = -np.sin(deg2rad(q))
+		self.fr_base_X_coxa[1,0] =  np.sin(deg2rad(q))
+		self.fr_base_X_coxa[1,1] =  np.cos(deg2rad(q))
+		self.fr_base_X_coxa[0,3] =  tx[0]
+		self.fr_base_X_coxa[1,3] =  tx[1]
+
 	def update_fr_base_X_LF_coxa(self,q=None):
 		self.fr_base_X_LF_coxa[0,0] =  np.cos(deg2rad(ROT_BASE_X_LF))
 		self.fr_base_X_LF_coxa[0,1] = -np.sin(deg2rad(ROT_BASE_X_LF))
@@ -258,6 +512,30 @@ class HomogeneousTransform:
 		self.fr_base_X_RR_coxa[1,1] =  np.cos(deg2rad(ROT_BASE_X_RR))
 		self.fr_base_X_RR_coxa[0,3] = -COXA_X
 		self.fr_base_X_RR_coxa[1,3] = -COXA_Y
+
+	def update_fr_base_X_LF_NRP(self,q):
+		self.update_fr_LF_coxa_X_LF_foot(q)
+		self.fr_base_X_LF_NRP = np.dot(self.fr_base_X_LF_coxa, self.fr_LF_coxa_X_LF_foot)
+
+	def update_fr_base_X_LM_NRP(self,q):
+		self.update_fr_LM_coxa_X_LM_foot(q)
+		self.fr_base_X_LM_NRP = np.dot(self.fr_base_X_LM_coxa, self.fr_LM_coxa_X_LM_foot)
+
+	def update_fr_base_X_LR_NRP(self,q):
+		self.update_fr_LR_coxa_X_LR_foot(q)
+		self.fr_base_X_LR_NRP = np.dot(self.fr_base_X_LR_coxa, self.fr_LR_coxa_X_LR_foot)
+
+	def update_fr_base_X_RF_NRP(self,q):
+		self.update_fr_RF_coxa_X_RF_foot(q)
+		self.fr_base_X_RF_NRP = np.dot(self.fr_base_X_RF_coxa, self.fr_RF_coxa_X_RF_foot)
+
+	def update_fr_base_X_RM_NRP(self,q):
+		self.update_fr_RM_coxa_X_RM_foot(q)
+		self.fr_base_X_RM_NRP = np.dot(self.fr_base_X_RM_coxa, self.fr_RM_coxa_X_RM_foot)
+
+	def update_fr_base_X_RR_NRP(self,q):
+		self.update_fr_RR_coxa_X_RR_foot(q)
+		self.fr_base_X_RR_NRP = np.dot(self.fr_base_X_RR_coxa, self.fr_RR_coxa_X_RR_foot)
 
 	def update_fr_LF_coxa_X_LF_foot(self,q):
 		if (len(q)>3):
