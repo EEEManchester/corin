@@ -118,8 +118,8 @@ FR_base_X_hip[4] = np.array([ [0.0]	  ,  [-COXA_Y], [COXA_Z] ])
 FR_base_X_hip[5] = np.array([ [-COXA_X], [-COXA_Y], [COXA_Z] ])
 
 # transform from base to hip is reversed h_A_e = R(-90)*b_A_e
-TF_BASE_X_HIP = np.array([-(2./9.)*np.pi,-np.pi/2.,-(13./18.)*np.pi, (2./9.)*np.pi, np.pi/2., (13./18.)*np.pi])
-TF_HIP_X_BASE = np.array([ (5./18.)*np.pi, np.pi/2., (13./18.)*np.pi,-(2./9.)*np.pi,-np.pi/2.,-(13./18.)*np.pi])
+TF_BASE_X_HIP = np.array([-(5./18.)*np.pi,-np.pi/2.,-(13./18.)*np.pi, (5./18.)*np.pi, np.pi/2., (13./18.)*np.pi])
+TF_HIP_X_BASE = np.array([ (5./18.)*np.pi, np.pi/2., (13./18.)*np.pi,-(5./18.)*np.pi,-np.pi/2.,-(13./18.)*np.pi])
 
 # Direction tuple - for use with tf class
 ORIGIN = (0,0,0)

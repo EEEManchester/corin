@@ -56,6 +56,10 @@ class LegClass:
 		self.XHc = transforms.ArrayHomogeneousTransform(self.number)
 		self.XHd = transforms.ArrayHomogeneousTransform(self.number)
 
+		self.v3c = transforms.Vector3D(self.number)
+		self.v3d = transforms.Vector3D(self.number)
+		self.v3e = transforms.Vector3D(self.number)
+
 		self.hip_X_ee 	= State.StateClass('Twist')
 		self.base_X_ee 	= State.StateClass('Twist')
 
@@ -144,6 +148,9 @@ class LegClass:
 		self.hip_X_ee.cs.xp  = self.KL.FK(q_compensated)
 		self.base_X_ee.cs.xp = self.hip_X_base_ee(self.hip_X_ee.cs.xp)
 
+		self.XHc.update_coxa_X_foot(q_compensated)
+		self.XHc.update_base_X_foot(q_compensated)
+		
 		## error
 		self.hip_X_ee.es.xp  = self.hip_X_ee.ds.xp  - self.hip_X_ee.cs.xp
 		self.base_X_ee.es.xp = self.base_X_ee.ds.xp - self.base_X_ee.cs.xp
@@ -155,6 +162,9 @@ class LegClass:
 		if (resetState):
 			self.hip_X_ee.ds.xp  = self.hip_X_ee.cs.xp
 			self.base_X_ee.ds.xp = self.base_X_ee.cs.xp
+
+			self.XHc.coxa_X_foot  = self.XHd.coxa_X_foot
+			self.XHc.base_X_foot = self.XHd.base_X_foot
 
 		# if (self.number == 0):
 		# 	print self.number, ' ', jointState
@@ -226,7 +236,7 @@ class LegClass:
 
 		## Define variables ##
 		error = 0 					# Error indicator
-		
+
 		if (xp is None):
 			xp = self.hip_X_ee.ds.xp # TEMP: remove later
 		
@@ -279,7 +289,6 @@ class LegClass:
 	## Configure leg positions - MOD: moved to robot class
 	def leg_positions(self):
 		self.REP = FR_base_X_hip[self.number] + np.dot( tf.rotation_matrix(TF_HIP_X_BASE[self.number],Z_AXIS)[:3, :3], np.reshape(LEG_STANCE[self.number],(3,1)) )
-
 
 	def update_REP(self, bodypose, base_X_surface):
 		""" updates nominal stance of robot """

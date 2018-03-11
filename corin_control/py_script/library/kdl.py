@@ -82,7 +82,7 @@ class corin_kinematics():
 		""" checks if robot configuration is singular 			"""
 		""" Input: 	1) q -> joint angles (2D array) in radians
 			Output: 1) Flag -> True: singular, False: OK 		"""
-			
+
 		rank = np.linalg.matrix_rank(self.jacobian(q))
 		if (rank < 3):
 			return True

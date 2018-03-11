@@ -311,6 +311,17 @@ def SO3_selection(qsnorm, axis):
 #         z /= norm;
 #     return numpy.array([x,y,z]), angle
 
+def rotation_xyz(qarr):
+    rot_x = qarr.item(0);
+    rot_y = qarr.item(1);
+    rot_z = qarr.item(2);
+    
+    rx = numpy.matrix([ [1.0, .0, .0], [.0, numpy.cos(rot_x), -numpy.sin(rot_x)], [.0, numpy.sin(rot_x), numpy.cos(rot_x)] ])
+    ry = numpy.matrix([ [numpy.cos(rot_y), 0.0, numpy.sin(rot_y)], [.0, 1.0, .0], [-numpy.sin(rot_y), 0.0, numpy.cos(rot_y)] ])
+    rz = numpy.matrix([ [numpy.cos(rot_z), -numpy.sin(rot_z), 0.0], [numpy.sin(rot_z), numpy.cos(rot_z), 0.0],[.0, .0, 1.0] ])
+
+    return numpy.array(rx*ry*rz)
+
 def rotation_zyx(qarr):
     rot_x = qarr.item(0);
     rot_y = qarr.item(1);

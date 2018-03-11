@@ -370,7 +370,7 @@ t_com = np.array([0.0,1,2,3,4,8,10])
 x_out  = spliner.generate_body_spline(x_com)
 # print type(x_out[0])
 # print type(x_out[1])
-print x_out[1]
+# print x_out[1]
 # Plot.plot_2d(x_out[0],x_out[1])
 
 

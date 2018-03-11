@@ -33,6 +33,30 @@ import tf as RTF 										# ROS transform library
 ## Robotis ROS msgs for joint control
 from robotis_controller_msgs.msg import SyncWriteMultiFloat
 
+def r3_X_m(r3a):
+	""" convert 3D angular vector in R^(3x1) to SE(3) """
+	out = np.eye(4)
+	out[0:3,0:3] = tf.rotation_xyz(r3a)
+	return out
+
+def v3_X_m(v3a):
+	""" convert 3D linear vector in R^(3x1) to SE(3) """
+	out = np.eye(4)
+	out[0:3,3] = v3a.flatten()
+	return out
+
+def mX(a, b, c=None, d=None, e=None):
+	""" multiplies 2D array in matrix style """
+	## TODO: include check on array size
+	if (c is None):
+		return np.dot(a,b)
+	elif (d is None):
+		return np.dot(np.dot(a,b), c)
+	elif (e is None):
+		return np.dot(np.dot(a,b), np.dot(c,d))
+	elif (e is not None):
+		return np.dot(np.dot(np.dot(a,b), np.dot(c,d)), e)
+
 class CorinManager:
 	def __init__(self, initialise):
 		rospy.init_node('main_controller') 		# Initialises node
@@ -355,7 +379,7 @@ class CorinManager:
 		# cycle through trajectory points until complete
 		i = 1 	# skip first point since spline has zero initial differential conditions
 		while (i != len(coba.X.t) and not rospy.is_shutdown()):
-			print 'counting: ', i, len(coba.X.t)
+			# print 'counting: ', i, len(coba.X.t)
 
 			## suppress trajectory counter as body support suspended
 			if (self.Robot.suspend == True):
@@ -401,10 +425,17 @@ class CorinManager:
 			## update robot state
 			self.Robot.updateState()
 			self.Robot.world_X_base.cs.wp = self.Robot.world_X_base.ds.wp 	# overwrite - TC: use IMU data
+			
+			self.Robot.XHc.world_X_base = self.Robot.XHd.world_X_base 		# overwrite - TC: use IMU data
+			self.Robot.XHc.base_X_world = self.Robot.XHd.base_X_world
 
 			## Update robot's desired pose
 			# self.Robot.fr_world_X_base 	  = tf.rotation_zyx(wp)
 			self.Robot.world_X_base.ds.wp = wp
+			self.Robot.XHd.update_world_X_base(np.concatenate((np.zeros(3),wp)))
+
+			# print j, ' bXf ', tf.rotation_zyx(-1.*self.Robot.world_X_base.cs.wp)
+			# print j, ' bXf ', self.Robot.XHc.base_X_world
 
 			## generate trajectory for leg in transfer phase
 			for j in range (0, self.Robot.active_legs):
@@ -441,19 +472,31 @@ class CorinManager:
 
 					# normal walking condition
 					else:
-						# change in vertical height between next CoB and REP, in v3 representation (extract vertical component only)
-						d_h = np.dot(e_z, cp_n + self.Robot.Leg[j].REP)
-						self.Robot.Leg[j].AEP = (self.Robot.Leg[j].REP + dir_uv*STEP_STROKE/2. - d_h)
-						# self.Robot.Leg[j].XHc.fr_base_X_AEP = np.dot(self.Robot.Leg[j].XHc.fr_base_X_NRP, 
-					self.Robot.Leg[j].base_X_ee.ds.xp = np.dot(tf.rotation_zyx(-1.*self.Robot.world_X_base.cs.wp), self.Robot.Leg[j].AEP)
+						# change in vertical height between next CoB and REP, in R^(3x1) representation - extract vertical component only
+						v3_delta_height = mX(e_z, cp_n + self.Robot.Leg[j].REP)
+						
+						# update AEP
+						self.Robot.Leg[j].AEP = self.Robot.Leg[j].REP + dir_uv*STEP_STROKE/2. - v3_delta_height
+						self.Robot.Leg[j].XHc.base_X_AEP = mX(v3_X_m(dir_uv*STEP_STROKE/2. - v3_delta_height), self.Robot.Leg[j].XHc.base_X_NRP)
+						
+					# set base_X_foot position based on AEP
+					self.Robot.Leg[j].base_X_ee.ds.xp = mX(tf.rotation_zyx(-1.*self.Robot.world_X_base.cs.wp), self.Robot.Leg[j].AEP)
+					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHc.base_X_world, self.Robot.Leg[j].XHc.base_X_AEP)
 
 					# Base to hip frame conversion
 					self.Robot.Leg[j].hip_X_ee.ds.xp = self.Robot.Leg[j].base_X_hip_ee(self.Robot.Leg[j].base_X_ee.ds.xp)
 					self.Robot.Leg[j].hip_AEP = self.Robot.Leg[j].hip_X_ee.ds.xp 											# set only during transfer phase
 
+					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHc.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
+					self.Robot.Leg[j].XHd.coxa_X_AEP  = self.Robot.Leg[j].XHd.coxa_X_foot
+
 					## generate spline for transfer phase leg - 
-					svalid = self.Robot.Leg[j].generateSpline(self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp,
+					svalid = self.Robot.Leg[j].generateSpline(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3], self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],
 																self.Robot.Leg[j].qsurface, False, TRAC_PERIOD, CTR_INTV)
+
+					# svalid = self.Robot.Leg[j].generateSpline(self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp,
+					# 											self.Robot.Leg[j].qsurface, False, TRAC_PERIOD, CTR_INTV)
+
 					if (svalid is False):
 						self.Robot.invalid = True
 					else:	

@@ -68,16 +68,16 @@ class RobotState:
 
 		for i in range(6):
 			self.Leg.append(LegClass.LegClass(i))
-			self.Leg[i].XHc.update_fr_base_X_NRP(self.KDL.Leg_IK(LEG_STANCE[i]))
+			self.Leg[i].XHc.update_base_X_NRP(self.KDL.Leg_IK(LEG_STANCE[i]))
 		
 
 		# set NRP for each leg 
-		self.XHc.update_fr_base_X_LF_NRP(self.KDL.Leg_IK(LEG_STANCE[0]))
-		self.XHc.update_fr_base_X_LM_NRP(self.KDL.Leg_IK(LEG_STANCE[1]))
-		self.XHc.update_fr_base_X_LR_NRP(self.KDL.Leg_IK(LEG_STANCE[2]))
-		self.XHc.update_fr_base_X_RF_NRP(self.KDL.Leg_IK(LEG_STANCE[3]))
-		self.XHc.update_fr_base_X_RM_NRP(self.KDL.Leg_IK(LEG_STANCE[4]))
-		self.XHc.update_fr_base_X_RR_NRP(self.KDL.Leg_IK(LEG_STANCE[5]))
+		# self.XHc.update_fr_base_X_LF_NRP(self.KDL.Leg_IK(LEG_STANCE[0]))
+		# self.XHc.update_fr_base_X_LM_NRP(self.KDL.Leg_IK(LEG_STANCE[1]))
+		# self.XHc.update_fr_base_X_LR_NRP(self.KDL.Leg_IK(LEG_STANCE[2]))
+		# self.XHc.update_fr_base_X_RF_NRP(self.KDL.Leg_IK(LEG_STANCE[3]))
+		# self.XHc.update_fr_base_X_RM_NRP(self.KDL.Leg_IK(LEG_STANCE[4]))
+		# self.XHc.update_fr_base_X_RR_NRP(self.KDL.Leg_IK(LEG_STANCE[5]))
 		
 		print ">> INITIALISED ROBOT CLASS"
 
@@ -158,7 +158,7 @@ class RobotState:
 
 		return TrajectoryPoints.JointTrajectoryPoints(18,(qt,qp,qv,qa))
 
-robot = RobotState()
+# robot = RobotState()
 ## ====================================================================================================================================== ##
 ## ====================================================================================================================================== ##
 
