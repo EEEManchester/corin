@@ -64,7 +64,7 @@ RF_Q3_JOINT = 11;	RM_Q3_JOINT = 14;	RR_Q3_JOINT = 17;
 ## ================================================================ ##
 ##                      Controller parameters 	 					##
 ## ================================================================ ##
-CTR_RATE 	= 100 			# controller rate for robot, Hz
+CTR_RATE 	= 50 			# controller rate for robot, Hz
 CTR_INTV 	= 1./CTR_RATE 	# controller interval for robot, s
 
 ## ================================================================ ##
@@ -131,7 +131,7 @@ Z_AXIS = (0,0,1)
 ##                       	Topics 	 		 						##
 ## ================================================================ ##
 
-JOINT_NAME = {}
+JOINT_NAME 	  = [None]*18
 JOINT_NAME[0] = 'lf_q1_joint'
 JOINT_NAME[1] = 'lf_q2_joint'
 JOINT_NAME[2] = 'lf_q3_joint'
@@ -151,11 +151,5 @@ JOINT_NAME[15] = 'rr_q1_joint'
 JOINT_NAME[16] = 'rr_q2_joint'
 JOINT_NAME[17] = 'rr_q3_joint'
 
-ROBOT_STATE = {}
-ROBOT_STATE[0] ='x'
-ROBOT_STATE[1] ='y'
-ROBOT_STATE[2] ='z'
-ROBOT_STATE[3] ='r'
-ROBOT_STATE[4] ='p'
-ROBOT_STATE[5] ='y'
+ROBOT_STATE = ['x','y','z','r','p','y']
 

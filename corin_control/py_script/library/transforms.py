@@ -15,39 +15,49 @@ import kdl 					# corin kinematic library
 
 import transformations as TF
 
+Column6D = np.zeros((6,1))
+
 def deg2rad(q):
 	return (q*np.pi/180.)
 
-class Vector3D:
-	def __init__(self, leg_no):
-		self.n = leg_no
+class Vector6D:
+	""" 6D vector for robot """ 
+	def __init__(self):
+		self.world_X_base = Column6D
+		self.world_X_LF_foot = Column6D
+		self.world_X_LM_foot = Column6D
+		self.world_X_LR_foot = Column6D
+		self.world_X_RF_foot = Column6D
+		self.world_X_RM_foot = Column6D
+		self.world_X_RR_foot = Column6D
 
-		## vector in R^(3x1) representation
-		self.world_X_base = np.zeros((3,1))	# 
-		self.world_X_foot = np.zeros((3,1))	# 
+		## TODO: following needs expanding if to be used
+		self.base_X_coxa  = Column6D
+		self.base_X_foot  = Column6D
+		self.base_X_AEP   = Column6D
+		self.base_X_PEP   = Column6D
+		self.base_X_NRP   = Column6D
+		self.coxa_X_foot  = Column6D
+		self.coxa_X_AEP   = Column6D
+		self.coxa_X_PEP   = Column6D
+		self.coxa_X_NRP   = Column6D
+
+class ArrayVector6D:
+	""" 6D vector for robot's legs """ 
+	def __init__(self):
+		self.world_X_foot = Column6D
+		self.base_X_coxa  = Column6D
+		self.base_X_foot  = Column6D
+		self.coxa_X_base  = Column6D
+		self.coxa_X_foot  = Column6D
 		
-		self.base_X_coxa  = np.zeros((3,1)) 	# 
-		self.base_X_foot  = np.zeros((3,1))	# 
-		self.base_X_AEP   = np.zeros((3,1))	# 
-		self.base_X_PEP   = np.zeros((3,1))	# 
-		self.base_X_NRP   = np.zeros((3,1))	# 
-		
-		self.coxa_X_foot  = np.zeros((3,1)) 	# 
-		self.coxa_X_AEP   = np.zeros((3,1)) 	# 
-		self.coxa_X_PEP   = np.zeros((3,1)) 	# 
-		self.coxa_X_NRP   = np.zeros((3,1)) 	# 
-
-		self._initialize_()
-
-	def _initialize_(self):
-		pass
 
 class ArrayHomogeneousTransform:
+	""" SE(3) for robot's leg transformations """
 	def __init__(self, leg_no):
 		self.n = leg_no
 
-		self.world_X_base = np.identity(4)	# done
-		self.world_X_foot = np.identity(4)	# 
+		self.world_X_foot = np.identity(4)	# done
 		
 		self.base_X_coxa = np.identity(4) 	# done
 		self.base_X_foot = np.identity(4)	# done
@@ -1008,15 +1018,4 @@ XH.update_robot(qb,q) 	# set initial stance of robot
 # print len(q)
 XH.update_base_X_LF_foot(q)
 # print XH.base_X_LF_foot
-a = XH.base_X_LF_foot[0:3,3]
-
-
-# qw = np.array([0.,0.5,0.])
-# print TF.rotation_zyx(-1.*qw)
-# print '-------------------------------------------------'
-# # print TF.rotation_xyz(qw)
-# XH.update_world_X_base(np.concatenate((np.zeros(3),qw)))
-# print '-------------------------------------------------'
-# # print XH.world_X_base
-# print '-------------------------------------------------'
-# print np.linalg.inv(XH.world_X_base)
+# print XH.base_X_LF_foot[:3,:3]

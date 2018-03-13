@@ -14,7 +14,7 @@ class corin_kinematics():
 	def __init__(self):
 		self.link	= [L1, L2, L3]
 
-	def jacobian(self, q=None):
+	def Jacobian(self, q=None):
 
 		try:
 			q1 = q.item(0); q2 = q.item(1); q3 = q.item(2)
@@ -29,8 +29,8 @@ class corin_kinematics():
 			return None
 
 
-	def jacobian_transpose(self, q=None):
-		return self.jacobian(q).transpose()
+	def JacobianTranspose(self, q=None):
+		return self.Jacobian(q).transpose()
 
 	def FK(self, q=None):
 
@@ -78,18 +78,18 @@ class corin_kinematics():
 			print 'IK: ', e
 			pass
 
-	def singularity_check(self, q=None):
+	def CheckSingularity(self, q=None):
 		""" checks if robot configuration is singular 			"""
 		""" Input: 	1) q -> joint angles (2D array) in radians
 			Output: 1) Flag -> True: singular, False: OK 		"""
 
-		rank = np.linalg.matrix_rank(self.jacobian(q))
+		rank = np.linalg.matrix_rank(self.Jacobian(q))
 		if (rank < 3):
 			return True
 		else:
 			return False
 
-	def joint_speed(self, q=None, v=None, a=None):
+	def JointSpeed(self, q=None, v=None, a=None):
 
 		try:
 			q1 = q.item(0); q2 = q.item(1); q3 = q.item(2)
@@ -97,7 +97,7 @@ class corin_kinematics():
 			vel = np.matrix([ [v.item(0)], [v.item(1)], [v.item(2)] ])
 			acc = np.matrix([ [a.item(0)], [a.item(1)], [a.item(2)] ])
 
-			Jv = self.jacobian(q)
+			Jv = self.Jacobian(q)
 
 			qd = linalg.solve(Jv,vel)
 
@@ -124,14 +124,16 @@ class corin_kinematics():
 			return None, None
 
 	## Torque to force mapping and vice versa uses the relationship: tau = J^(T)*f
-	def force_to_torque(self, q=None, f=None):
-		return self.jacobian_transpose(q)*f
+	def ForceToTorque(self, q=None, f=None):
+		return self.JacobianTranspose(q)*f
 
-	def torque_to_force(self, q=None, tau=None):
+	def TorqueToForce(self, q=None, tau=None):
 		# f = J^(-T)*tau
-		return inv(self.jacobian_transpose(q))*tau
+		return inv(self.JacobianTranspose(q))*tau
 
-	def nominal_stance(self, bodypose, base_X_surface, qsurface):
+	def UpdateNominalStance(self, bodypose, base_X_surface, qsurface):
+		""" updates the robot nominal stance (REP/NRP) """
+
 		# print 'bodypose: ', bodypose
 		# print 'b X surf: ', base_X_surface
 		# print 'q surf  : ', qsurface
@@ -187,7 +189,7 @@ qsurface = np.array([0.,-np.pi/2,0.])
 base_X_surface = 0.29
 bodypose = np.array([0.,0.,BODY_HEIGHT, 0.,0.,0.])
 
-CK.nominal_stance(bodypose, base_X_surface, qsurface)
+CK.UpdateNominalStance(bodypose, base_X_surface, qsurface)
 
 # print bodypose[3:7]
 # qs = [0., 1.238, -1.724] #[0., 1.195, -1.773] 	# left side
@@ -199,8 +201,8 @@ cd = [ 0.21, 0., -0.1]
 qp = CK.Leg_IK(cd)
 # print 'q: ', qp
 # print qp
-# if (not CK.singularity_check(qp)):
-# 	qd,qdd = CK.joint_speed(qp, v, a)
+# if (not CK.CheckSingularity(qp)):
+# 	qd,qdd = CK.JointSpeed(qp, v, a)
 
 
 #[1, 2, 4, 2, 3, 4]

@@ -57,8 +57,12 @@ class RobotState:
 		self.cstate = [None]*6 						# foot contact binary states
 		self.cforce = [None]*18						# foot contact forces
 
-		self.XHc = transforms.HomogeneousTransform() 	# current state
-		self.XHd = transforms.HomogeneousTransform()	# desired state
+		self.XHc = transforms.HomogeneousTransform() 	# position: current state
+		self.XHd = transforms.HomogeneousTransform()	# position: desired state
+		self.V6c = transforms.Vector6D() 				# velocity: current state
+		self.V6d = transforms.Vector6D() 				# velocity: desired state
+		self.A6c = transforms.ArrayVector6D() 			# acceleration: current
+		self.A6d = transforms.ArrayVector6D() 			# acceleration: desired
 
 		self.KDL = kdl.corin_kinematics()
 		self._initialise()
@@ -81,17 +85,18 @@ class RobotState:
 		
 		print ">> INITIALISED ROBOT CLASS"
 
-	def updateState(self):
+	def UpdateState(self):
 		""" update robot state using readings from topics """ 
-		self.update_LegState()
-		self.update_ImuState()
+		self.UpdateLegState()
+		self.UpdateImuState()
 
-	def update_LegState(self):
+	def UpdateLegState(self):
 		""" update legs state """
+		## TODO: INTEGRATE HW FORCE SENSOR READINGS
 
 		self.XHc.update_legs(self.qc.position)
 
-		# offset to deal with base joints - suspended control of base
+		# offset to deal with base joints - suspended control of base (for )
 		if (len(self.qc.name)==18):
 			offset = 0
 		else:
@@ -100,20 +105,20 @@ class RobotState:
 		# update leg states and check if boundary exceeded
 		for i in range(0,self.active_legs):
 
-			bstate = self.Leg[i].updateJointState(self.qc.position[offset+i*3:offset+(i*3)+3], self.reset_state)
+			bstate = self.Leg[i].UpdateJointState(self.qc.position[offset+i*3:offset+(i*3)+3], self.reset_state)
 
-			self.Leg[i].updateForceState(self.cstate[i], self.cforce[i*3:(i*3)+3])
+			self.Leg[i].UpdateForceState(self.cstate[i], self.cforce[i*3:(i*3)+3])
 
 			if (bstate==True and self.gaitgen.cs[i]==0 and self.support_mode==False):
 				self.suspend = True
 				print 'suspended'
 
-		# clear reset state
+		# clear reset state if set
 		self.reset_state = False if self.reset_state == True else False
 
-	def update_ImuState(self):
+	def UpdateImuState(self):
 		""" update imu state """
-
+		## TODO: INCLUDE STATE ESTIMATION
 		## quaternion to euler transformation
 		try:
 			# rpy = RTF.transformations.euler_from_quaternion([self.imu.orientation.x, self.imu.orientation.y, self.imu.orientation.z, self.imu.orientation.w])
@@ -126,25 +131,26 @@ class RobotState:
 
 		self.XHc.update_base(np.concatenate([xyz,rpy]))
 
-	def task_X_joint(self):
-		""" Convert all leg task space to joint space 			"""
-		""" Input:  None									
-			Output: joint space setpoint for all joints 	 	"""
+	def task_X_joint(self,legs_phase=None): # TODO - to be revisited
+		""" Convert all leg task space to joint space 		"""								
+		""" Output: joint space setpoint for all joints		"""
 
 		## Define variables ##
+		error = 0
 		qt = []
 		qp = []
 		qv = []
 		qa = []
-		
+		print legs_phase
 		for j in range(0,6):
+			error, qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
+			## append to list if valid, otherwise break and raise error
 			try:
-				error, qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
 				if (error == 0):
 					for z in range(0,3):
-						qp.append(qpd[z])
-						qv.append(qvd[z])
-						qa.append(qad[z])
+						qp.append(qpd.item(z))#[z])
+						qv.append(qvd.item(z))#[z])
+						qa.append(qad.item(z))#[z])
 				else:
 					if (error == 1):
 						err_str = 'Error - joint limit exceeded in leg, '
@@ -152,9 +158,9 @@ class RobotState:
 						err_str = 'Error - singularity in leg, '
 					else:
 						err_str = 'Unknown error'
-					raise ValueError
+					raise ValueError, err_str
 			except Exception, e:
-				print err_str, j
+				print e, j
 
 		return TrajectoryPoints.JointTrajectoryPoints(18,(qt,qp,qv,qa))
 

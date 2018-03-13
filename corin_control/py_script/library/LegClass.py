@@ -36,18 +36,16 @@ class LegClass:
 		self.number = name
 		self.Joint 	= cd.Joint_class(3)
 
-		# kinematic library functions
+		# library functions
 		self.KL 	= kdl.corin_kinematics()
 		# self.DL 	= kdl.corin_dynamics()
-
 		self.bspline = Bspline.SplineGenerator() 	# bSplineClass for leg transfer spline generation
 		
 		# transfer phase variables - created in controller class and stored here
-		self.xspline = TP.TrajectoryPoints()
-		self.qspline = TP.JointTrajectoryPoints()
+		self.xspline = TP.TrajectoryPoints() 		# trajectory in cartesian position 
+		self.qspline = TP.JointTrajectoryPoints()	# trajectory in joint space
 		self.spline_counter = 1 		# counter to track execution of spline
 		self.spline_length  = 0			# spline length
-
 		self.feedback_state	= 0 		# 0 = idle, 1 = command received (executing), 2 = command completed
 
 		self.cstate = 0 	# foot contact state: 1 or 0
@@ -55,32 +53,78 @@ class LegClass:
 		# transformation frames
 		self.XHc = transforms.ArrayHomogeneousTransform(self.number)
 		self.XHd = transforms.ArrayHomogeneousTransform(self.number)
+		self.V6c = transforms.ArrayVector6D() 							# velocity: current
+		self.V6d = transforms.ArrayVector6D() 							# velocity: desired
+		self.A6c = transforms.ArrayVector6D() 							# acceleration: current
+		self.A6d = transforms.ArrayVector6D() 							# acceleration: desired
 
-		self.v3c = transforms.Vector3D(self.number)
-		self.v3d = transforms.Vector3D(self.number)
-		self.v3e = transforms.Vector3D(self.number)
-
+		## AIM: GET RID OF FOLLOWING
 		self.hip_X_ee 	= State.StateClass('Twist')
 		self.base_X_ee 	= State.StateClass('Twist')
-
 		self.foot_XF_ee = State.StateClass('Wrench')
 		self.hip_XF_ee 	= State.StateClass('Wrench')
 		self.base_XF_ee	= State.StateClass('Wrench')
-
 		self.tf_base_X_hip 	= tf.rotation_matrix(TF_BASE_X_HIP[self.number],Z_AXIS)[:3, :3]
-
 		self.AEP = np.zeros((3,1)) 		# Anterior Extreme Position for leg wrt base frame
 		self.PEP = np.zeros((3,1))		# Posterior Extreme Position for leg wrt base frame
 		self.REP = np.zeros((3,1)) 		# nominal stance for leg wrt base frame
-
 		self.hip_AEP = np.zeros((3,1)) 	# for storing transfer AEP
 
-		self.leg_positions() 			# set rest position of legs
-
+		## TODO: CHANGE TO HOMOGENOUS AND VECTOR FORM
 		self.qsurface = np.array([0.,0.,0.]) 		# surface orientation in leg frame, (roll, pitch, yaw)
 		self.qsnorm   = np.array([[0.],[0.],[1.]]) 	# surface normal
 
 		self.phase_change = False 		# Flag for enabling trajectory to be generated at transfer
+
+		self.SetLegREP() 				# set rest position of legs
+
+	## Update functions
+	def UpdateJointState(self, jointState, resetState):
+		""" Update current joint state of legs and forward transformations 			"""
+		""" Input: 	1) jointState -> joint angles 
+					2) resetState -> flag to set desired state as current state 	""" 
+
+		## Error Compensation
+		q_compensated = (jointState[0], jointState[1]+QCOMPENSATION, jointState[2]) 		# offset q2 by 0.01 - gravity
+
+		## current
+		self.hip_X_ee.cs.xp  = self.KL.FK(q_compensated)
+		self.base_X_ee.cs.xp = self.hip_X_base_ee(self.hip_X_ee.cs.xp)
+
+		## error
+		self.hip_X_ee.es.xp  = self.hip_X_ee.ds.xp  - self.hip_X_ee.cs.xp
+		self.base_X_ee.es.xp = self.base_X_ee.ds.xp - self.base_X_ee.cs.xp
+
+		## check work envelope
+		bound_exceed = self.CheckBoundaryLimit()
+
+		self.XHc.update_coxa_X_foot(q_compensated)
+		self.XHc.update_base_X_foot(q_compensated)
+		
+		## state reset
+		if (resetState):
+			self.hip_X_ee.ds.xp  = self.hip_X_ee.cs.xp
+			self.base_X_ee.ds.xp = self.base_X_ee.cs.xp
+
+			self.XHc.coxa_X_foot = self.XHd.coxa_X_foot
+			self.XHc.base_X_foot = self.XHd.base_X_foot
+
+		# if (self.number == 0):
+		# 	print self.number, ' ', jointState
+		# 	print 'bXe_ds: ', np.round(self.base_X_ee.ds.xp.flatten(),4)
+		# 	print 'bXe_cs: ', np.round(self.base_X_ee.cs.xp.flatten(),4)
+		# 	print 'hXe_ds: ', np.round(self.hip_X_ee.ds.xp.flatten(),4)
+		# 	print 'hXe_cs: ', np.round(self.hip_X_ee.cs.xp.flatten(),4)
+
+		return bound_exceed
+
+	def UpdateForceState(self, cState, cForce):
+		""" contact force of leg """
+		## ********************************	Contact Force  ******************************** ##
+		self.cstate = cState
+		self.foot_XF_ee.cs = np.reshape(np.array(cForce),(3,1))
+
+		## TODO: TRANSFORM FROM FOOT FRAME TO HIP, BASE, WORLD FRAME
 
 	def generateSpline(self, start, end, snorm, reflex=False, ctime=2.0, tn=0.1):
 		""" generate leg trajectory using bspline and check for kinematic constraints 	"""
@@ -97,10 +141,7 @@ class LegClass:
 		self.spline_length  = len(self.xspline.t)
 
 		## checks spline for kinematic constraint
-		qt = []
-		qp = []
-		qv = []
-		qa = []
+		qt = [];	qp = [];	qv = [];	qa = [];
 
 		try:
 			for i in range(0,self.spline_length):
@@ -108,10 +149,9 @@ class LegClass:
 
 				if (error == 0):
 					qt.append(i*CTR_INTV)
-					for z in range(0,3):
-						qp.append(qpd.tolist())
-						qv.append(qvd.tolist())
-						qa.append(qad.tolist())
+					qp.append(qpd.tolist())
+					qv.append(qvd.tolist())
+					qa.append(qad.tolist())
 				else:
 					if (error == 1):
 						err_str = 'Error - joint limit exceeded in Leg '
@@ -130,60 +170,38 @@ class LegClass:
 			print err_str, self.number
 			return False
 
-	## Transformation functions
-	def base_X_hip_ee(self, base_X_ee_xp):
-		return np.dot( tf.rotation_matrix(TF_BASE_X_HIP[self.number],Z_AXIS)[:3, :3], (-FR_base_X_hip[self.number] + base_X_ee_xp))
-
-	def hip_X_base_ee(self, hip_X_ee_xp):
-		return (FR_base_X_hip[self.number] + np.dot( tf.rotation_matrix(TF_HIP_X_BASE[self.number],Z_AXIS)[:3, :3], hip_X_ee_xp))
-
-	## Update functions
-	def updateJointState(self, jointState, resetState):
-
-		## ********************************	Joint Angle  ******************************** ##
-		## Error Compensation
-		q_compensated = (jointState[0], jointState[1]+QCOMPENSATION, jointState[2]) 		# offset q2 by 0.01 - gravity
-
-		## current
-		self.hip_X_ee.cs.xp  = self.KL.FK(q_compensated)
-		self.base_X_ee.cs.xp = self.hip_X_base_ee(self.hip_X_ee.cs.xp)
-
-		self.XHc.update_coxa_X_foot(q_compensated)
-		self.XHc.update_base_X_foot(q_compensated)
+	def tf_task_X_joint(self, xp=None, xv=None, xa=None):
+		""" Converts task space position wrt hip frame to joint space 	  """
+		""" Input: 	1) xp -> task space position 						
+			Output: joint position, velocity and acceleration in 1D array """
 		
-		## error
-		self.hip_X_ee.es.xp  = self.hip_X_ee.ds.xp  - self.hip_X_ee.cs.xp
-		self.base_X_ee.es.xp = self.base_X_ee.ds.xp - self.base_X_ee.cs.xp
+		## Define variables ##
+		error = 0 					# Error indicator
 
-		## check work envelope
-		bound_exceed = self.boundary_limit()
+		if (xp is None):
+			xpn = self.XHd.coxa_X_foot[:3,3:4]
+			xp = self.hip_X_ee.ds.xp.reshape(3,1) # TEMP: remove later
+			print self.number, np.round( (xpn - xp).transpose(),4) 	# TODO: LEG 5 ERROR IS LARGE
+		self.Joint.qpd = self.KL.Leg_IK(xp)
+		
+		# checks if joint limit exceeded and singularity occurs
+		if (self.CheckJointLimit(self.Joint.qpd) is True):
+			error = 1
+		else:
+			if (self.KL.CheckSingularity(self.Joint.qpd) is False):
+				qvn, qan = self.KL.JointSpeed(self.Joint.qpd, self.V6d.coxa_X_foot, self.A6d.coxa_X_foot)
+				self.Joint.qvd, self.Joint.qad = self.KL.JointSpeed(self.Joint.qpd, self.hip_X_ee.ds.xv, self.hip_X_ee.ds.xa)
+				diff_v = (qvn - self.Joint.qvd).flatten()
+				diff_a = (qan - self.Joint.qad).flatten()
+				# print diff_v #, diff_a
+			else:
+				error = 2
+		
+		return error, self.Joint.qpd, self.Joint.qvd, self.Joint.qad 	# TEMP: change to normal (huh?)
 
-		## state reset
-		if (resetState):
-			self.hip_X_ee.ds.xp  = self.hip_X_ee.cs.xp
-			self.base_X_ee.ds.xp = self.base_X_ee.cs.xp
-
-			self.XHc.coxa_X_foot  = self.XHd.coxa_X_foot
-			self.XHc.base_X_foot = self.XHd.base_X_foot
-
-		# if (self.number == 0):
-		# 	print self.number, ' ', jointState
-		# 	print 'bXe_ds: ', np.round(self.base_X_ee.ds.xp.flatten(),4)
-		# 	print 'bXe_cs: ', np.round(self.base_X_ee.cs.xp.flatten(),4)
-		# 	print 'hXe_ds: ', np.round(self.hip_X_ee.ds.xp.flatten(),4)
-		# 	print 'hXe_cs: ', np.round(self.hip_X_ee.cs.xp.flatten(),4)
-
-		return bound_exceed
-
-	def updateForceState(self, cState, cForce):
-		""" contact force of leg """
-		## ********************************	Contact Force  ******************************** ##
-		self.cstate = cState
-		self.foot_XF_ee.cs = np.reshape(np.array(cForce),(3,1))
-
-		## TODO: TRANSFORM FROM FOOT FRAME TO HIP, BASE, WORLD FRAME
-
-	def boundary_limit(self):
+	
+	def CheckBoundaryLimit(self):
+		""" leg boundary area projected to 2D """
 		bound_violate = False
 		BOUND_FACTOR  = 1.8 	# relaxes the boundary constraint
 
@@ -228,32 +246,7 @@ class LegClass:
 		return bound_violate
 
 	## Kinematic functions
-	def tf_task_X_joint(self, xp=None, xv=None, xa=None):
-		""" Converts task space position wrt hip frame to joint space 	"""
-		""" Input: 	1) xp -> task space position 						
-			Output: joint position, velocity and acceleration"""
-		## TODO: use data from qspline
-
-		## Define variables ##
-		error = 0 					# Error indicator
-
-		if (xp is None):
-			xp = self.hip_X_ee.ds.xp # TEMP: remove later
-		
-		self.Joint.qpd = self.KL.Leg_IK(xp)
-		
-		# checks if joint limit exceeded and singularity occurs
-		if (self.checkJointLimit(self.Joint.qpd) is True):
-			error = 1
-		else:
-			if (self.KL.singularity_check(self.Joint.qpd) is False):
-				self.Joint.qvd, self.Joint.qad = self.KL.joint_speed(self.Joint.qpd, self.hip_X_ee.ds.xv, self.hip_X_ee.ds.xa)
-			else:
-				error = 2
-		
-		return error, self.Joint.qpd, self.Joint.qvd, self.Joint.qad 	# TEMP: change to normal
-
-	def checkJointLimit(self, qp):
+	def CheckJointLimit(self, qp):
 		""" checks if joint angle exceeds limit 			"""
 		""" Input:  qp -> joint angles
 			Output: boolean -> True: exceeded, False: OK	"""
@@ -277,24 +270,47 @@ class LegClass:
 
 		return False
 
-	## ============ Convenience functions ============ ## 
-	## Unstack next point
-	def pointToArray(self):
-		# if (self.number==0): print 'spline count: ', self.spline_counter, '\t', self.spline_length
+	def UpdateFromSpline(self):
+		""" Update positions from generated leg spline & increment counter	"""
+		""" Trajectory feedback_state set to 2 (finished execution) when 
+			spline has been finished 										"""
+		""" Output: boolean: True if update valid, False otherwise 			"""
+
+		## Variable mapping ##
 		i = self.spline_counter
-		self.hip_X_ee.ds.xp = self.xspline.xp[i]
-		self.hip_X_ee.ds.xv = self.xspline.xv[i]
-		self.hip_X_ee.ds.xa = self.xspline.xa[i]
+		try:
+			self.hip_X_ee.ds.xp = self.xspline.xp[i]
+			self.hip_X_ee.ds.xv = self.xspline.xv[i]
+			self.hip_X_ee.ds.xa = self.xspline.xa[i]
 
-	## Configure leg positions - MOD: moved to robot class
-	def leg_positions(self):
-		self.REP = FR_base_X_hip[self.number] + np.dot( tf.rotation_matrix(TF_HIP_X_BASE[self.number],Z_AXIS)[:3, :3], np.reshape(LEG_STANCE[self.number],(3,1)) )
+			self.XHd.update_coxa_X_foot(self.qspline.xp[i])
+			self.V6d.coxa_X_foot[:3]  = self.xspline.xv[i].reshape(3,1)
+			self.A6d.coxa_X_foot[:3]  = self.xspline.xa[i].reshape(3,1)
 
-	def update_REP(self, bodypose, base_X_surface):
+			self.spline_counter += 1
+
+			return True
+		except:
+			self.feedback_state = 2
+			return False
+
+	def UpdateREP(self, bodypose, base_X_surface):
 		""" updates nominal stance of robot """
 
 		# update only if surface orientation above deadzone
 		if (abs(self.qsurface.item(0)) > QDEADZONE or abs(self.qsurface.item(1)) > QDEADZONE):
-			self.REP = FR_base_X_hip[self.number] + self.KL.nominal_stance(bodypose, base_X_surface, self.qsurface)
+			self.REP = FR_base_X_hip[self.number] + self.KL.UpdateNominalStance(bodypose, base_X_surface, self.qsurface)
 			# print 'updating REP for leg ', self.number
 			# if (self.number == 0):
+	
+	## TODO: FOLLOWING SHOULD NOT BE REQUIRED ANYMORE
+	def base_X_hip_ee(self, base_X_ee_xp):
+		return np.dot( tf.rotation_matrix(TF_BASE_X_HIP[self.number],Z_AXIS)[:3, :3], (-FR_base_X_hip[self.number] + base_X_ee_xp))
+
+	def hip_X_base_ee(self, hip_X_ee_xp):
+		return (FR_base_X_hip[self.number] + np.dot( tf.rotation_matrix(TF_HIP_X_BASE[self.number],Z_AXIS)[:3, :3], hip_X_ee_xp))
+
+	def SetLegREP(self):
+		self.REP = FR_base_X_hip[self.number] + np.dot( tf.rotation_matrix(TF_HIP_X_BASE[self.number],Z_AXIS)[:3, :3], np.reshape(LEG_STANCE[self.number],(3,1)) )
+
+	
