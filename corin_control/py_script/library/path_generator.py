@@ -95,9 +95,9 @@ class PathGenerator():
 
 		# check if base linear velocity exceeds limit
 		v_max = np.amax(x_out[2]);
-		if (v_max > BASE_MAX_VELOCITY):
-			# print 'max linear velocity exceeded'
-			ndiv  = v_max/BASE_MAX_VELOCITY			# determine number of divisions to reduce by
+		if (v_max > BASE_MAX_LINEAR_VELOCITY):
+			print 'max linear velocity exceeded'
+			ndiv  = v_max/BASE_MAX_LINEAR_VELOCITY	# determine number of divisions to reduce by
 			t_cob = np.round(t_cob*ndiv,1) 			# set new time interval
 			# regenerate spline
 			x_out = SplineGenerator.generate_body_spline(x_cob, t_cob, tn)
@@ -105,9 +105,9 @@ class PathGenerator():
 
 		# check if base angular velocity exceeds limit
 		w_max = np.amax(w_out[2]);
-		if (w_max > BASE_MAX_VELOCITY):
-			# print 'max angular velocity exceeded'
-			ndiv  = w_max/BASE_MAX_VELOCITY			# determine number of divisions to reduce by
+		if (w_max > BASE_MAX_ANGULAR_VELOCITY):
+			print 'max angular velocity exceeded'
+			ndiv  = w_max/BASE_MAX_ANGULAR_VELOCITY	# determine number of divisions to reduce by
 			t_cob = np.round(t_cob*ndiv,1) 			# set new time interval
 			# regenerate spline
 			x_out = SplineGenerator.generate_body_spline(x_cob, t_cob, tn)
@@ -127,22 +127,28 @@ gait = {'name': "wave",
 		'phase':np.matrix([ Fraction(6, 6), Fraction(5, 6), Fraction(4, 6), Fraction(3, 6), Fraction(2, 6), Fraction(1, 6) ])}
 
 x_cob = np.array([.0,.0,BODY_HEIGHT])
-x_cob = np.vstack((x_cob,np.array([0.2, 0.0, BODY_HEIGHT+0.05])))
-x_cob = np.vstack((x_cob,np.array([0.3, 0.5, BODY_HEIGHT])))
-x_cob = np.vstack((x_cob,np.array([0.1, 0.0, BODY_HEIGHT-0.05])))
+w_cob = np.array([.0,.0,.0])
+# x_cob = np.vstack((x_cob,np.array([0.2, 0.0, BODY_HEIGHT+0.05])))
+# x_cob = np.vstack((x_cob,np.array([0.3, 0.5, BODY_HEIGHT])))
+# x_cob = np.vstack((x_cob,np.array([0.1, 0.0, BODY_HEIGHT-0.05])))
 # x_cob = np.vstack((x_cob,np.array([0.7, 0.0, BODY_HEIGHT+0.12])))
 
-w_cob = np.array([.0,.0,.0])
-w_cob = np.vstack((w_cob,np.array([1.0,.0,.0])))
-w_cob = np.vstack((w_cob,np.array([1.0,.0,.0])))
-w_cob = np.vstack((w_cob,np.array([1.0,.0,.0])))
+
+# w_cob = np.vstack((w_cob,np.array([1.0,.0,.0])))
+# w_cob = np.vstack((w_cob,np.array([1.0,.0,.0])))
+# w_cob = np.vstack((w_cob,np.array([1.0,.0,.0])))
+
+x_cob = np.vstack((x_cob,np.array([0. , -0.04, BODY_HEIGHT])))
+w_cob = np.vstack((w_cob,np.array([-0.2, -0.1, 0.])))
+x_cob = np.vstack((x_cob,np.array([0.03,  0.04, BODY_HEIGHT])))
+w_cob = np.vstack((w_cob,np.array([0.2, -0.1, 0.])))
+x_cob = np.vstack((x_cob,np.array([.0,.0,BODY_HEIGHT])))
+w_cob = np.vstack((w_cob,np.array([0., 0., 0.])))
 
 planner = PathGenerator()
 planner.gait = gait
-# x_out, w_out = planner.generate_path(x_cob, w_cob, 0.1)
-# print x_out.t.shape
-# print x_out.t[1]
-# Plot.plot_2d(x_out.t,x_out.xp)
+# path = planner.generate_path(x_cob, w_cob, 0.1)
+# Plot.plot_2d(path.W.t,path.W.xp)
 # Plot.plot_2d_multiple(2,x_out[0],x_out[1],x_out[3])
 ## wall transition
 # cq = 0.

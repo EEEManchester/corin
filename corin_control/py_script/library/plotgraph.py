@@ -19,6 +19,7 @@ def plot_2d(x=0,y=0):
 	fig = plt.figure()
 	plt.plot(x,y, marker='x')
 	plt.xlabel('x-axis');plt.ylabel('y-axis');plt.grid('on');
+	# plt.legend(loc='upper center', shadow=True)
 	plt.show()
 
 def plot_2d_multiple(no_plots=0, t=0, x=0, y=0, z=0):

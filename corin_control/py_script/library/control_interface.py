@@ -93,27 +93,28 @@ class control_interface:
 
 		## Full bodypose demo
 		elif (STANCE_TYPE == "flat"):
-			self.x_com = np.vstack((self.x_com,np.array([0. , -0.04, BODY_HEIGHT])))
-			self.w_com = np.vstack((self.w_com,np.array([-0.22, -0.075, 0.])))
-			self.x_com = np.vstack((self.x_com,np.array([0.03,  0.04, BODY_HEIGHT])))
-			self.w_com = np.vstack((self.w_com,np.array([0.22, -0.075, 0.])))
-			self.x_com = np.vstack((self.x_com,np.array([-0.03, 0.04, BODY_HEIGHT])))
-			self.w_com = np.vstack((self.w_com,np.array([0.22,  0.075, 0.])))
-			self.x_com = np.vstack((self.x_com,np.array([-0.03, -0.04, BODY_HEIGHT])))
-			self.w_com = np.vstack((self.w_com,np.array([-0.22,  0.075, 0.])))
-			self.x_com = np.vstack((self.x_com,np.array([0.00, 0.00, BODY_HEIGHT])))
+			# self.x_com = np.vstack((self.x_com,np.array([0. , -0.04, BODY_HEIGHT])))
+			# self.x_com = np.vstack((self.x_com,np.array([0.03,  0.04, BODY_HEIGHT])))
+			# self.x_com = np.vstack((self.x_com,np.array([-0.03, 0.04, BODY_HEIGHT])))
+			# self.x_com = np.vstack((self.x_com,np.array([-0.03, -0.04, BODY_HEIGHT])))
+			# self.x_com = np.vstack((self.x_com,np.array([0.00, 0.00, BODY_HEIGHT])))
+			# self.x_com = np.vstack((self.x_com,np.array([0.00, 0.0, 0.22])))
+			# self.x_com = np.vstack((self.x_com,np.array([0.,  0.0, BODY_HEIGHT])))
+
+			self.w_com = np.vstack((self.w_com,np.array([-0.2, -0.1, 0.])))
+			self.w_com = np.vstack((self.w_com,np.array([ 0.2, -0.1, 0.])))
+			self.w_com = np.vstack((self.w_com,np.array([ 0.2,  0.1, 0.])))
+			self.w_com = np.vstack((self.w_com,np.array([-0.2,  0.1, 0.])))
 			self.w_com = np.vstack((self.w_com,np.array([0.00, 0.00, -0.2])))
-			self.x_com = np.vstack((self.x_com,np.array([0.00, 0.005, 0.22])))
-			self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.12])))
-			self.x_com = np.vstack((self.x_com,np.array([0.,  0.0, BODY_HEIGHT])))
+			self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.1])))
 			self.w_com = np.vstack((self.w_com,np.array([0.,  0.0, 0.])))
 
 	def WalkForward(self):
 		self.reset_variables()
 		self.mode = 2
 
-		self.x_com = np.vstack((self.x_com,np.array([0.1, 0., BODY_HEIGHT])))
-		self.w_com = np.vstack((self.w_com,np.array([0.1, 0., 0.])))
+		self.x_com = np.vstack((self.x_com,np.array([0.3, 0., BODY_HEIGHT])))
+		self.w_com = np.vstack((self.w_com,np.array([0.3, 0., 0.])))
 
 	def WalkBack(self):
 		self.reset_variables()

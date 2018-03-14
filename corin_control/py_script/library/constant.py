@@ -64,28 +64,29 @@ RF_Q3_JOINT = 11;	RM_Q3_JOINT = 14;	RR_Q3_JOINT = 17;
 ## ================================================================ ##
 ##                      Controller parameters 	 					##
 ## ================================================================ ##
-CTR_RATE 	= 50 			# controller rate for robot, Hz
+CTR_RATE 	= 100 			# controller rate for robot, Hz
 CTR_INTV 	= 1./CTR_RATE 	# controller interval for robot, s
 
 ## ================================================================ ##
 ##                       Gait parameters 	 						##
 ## ================================================================ ##
 
-GAIT_TYPE 			= 3 			# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
-BODY_HEIGHT  		= 0.1           # ori: 0.10, chimney: 0.0
-STANCE_WIDTH 		= 0.21          # ori: 0.21, chimney: 0.27, 0.31 for tripod
-STEP_STROKE 		= 0.08 			# step size, x, 	default 0.07
-STEP_HEIGHT 		= 0.1 			# step height, z 	default 0.05
-TRAC_PERIOD			= 1.5			# cycle time for movement
+GAIT_TYPE 	 = 3 			# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+BODY_HEIGHT  = 0.1          # ori: 0.10, chimney: 0.0
+STANCE_WIDTH = 0.21         # ori: 0.21, chimney: 0.27, 0.31 for tripod
+STEP_STROKE  = 0.08			# step size, x, 	default 0.07
+STEP_HEIGHT  = 0.1 			# step height, z 	default 0.05
+TRAC_PERIOD	 = 1.5			# cycle time for movement
 
-BASE_MAX_VELOCITY 	= 0.025	 		# maximum base velocity
+BASE_MAX_LINEAR_VELOCITY  = 0.1		# maximum base velocity, m/s
+BASE_MAX_ANGULAR_VELOCITY = 0.3		# maximum base velocity, rad/s
 
 # BASE_SPEED 			= 0.025 		# walking speed in m/s
 # DUTY_FACTOR = {'tripod':0.5, 'tetrapod':2./3., 'ripple':3./4., 'wave':5./6. }
 ## ================================================================ ##
 ##                  Error Compensation parameters 					##
 ## ================================================================ ## 
-QCOMPENSATION = -0.035
+QCOMPENSATION = 0.02#-0.035
 
 ## ================================================================ ##
 ##                  	Inclination parameters 	 					##

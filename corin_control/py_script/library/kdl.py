@@ -9,12 +9,12 @@ from scipy import linalg
 import transformations as tf
 from constant import *
 
-class corin_kinematics():
+class KDL():
 
 	def __init__(self):
 		self.link	= [L1, L2, L3]
 
-	def Jacobian(self, q=None):
+	def leg_jacobian(self, q=None):
 
 		try:
 			q1 = q.item(0); q2 = q.item(1); q3 = q.item(2)
@@ -29,10 +29,10 @@ class corin_kinematics():
 			return None
 
 
-	def JacobianTranspose(self, q=None):
-		return self.Jacobian(q).transpose()
+	def transpose_leg_jacobian(self, q=None):
+		return self.leg_jacobian(q).transpose()
 
-	def FK(self, q=None):
+	def leg_FK(self, q=None):
 
 		try:
 			q1 = q[0]; q2 = q[1]; q3 = q[2]
@@ -46,7 +46,7 @@ class corin_kinematics():
 			print 'FK: ', e
 			pass
 
-	def Leg_IK(self, p=None):
+	def leg_IK(self, p=None):
 
 		try:
 			x = p[0];	y = p[1];	z = p[2];
@@ -76,20 +76,23 @@ class corin_kinematics():
 			return np.array([q1, q2, q3])
 		except Exception, e:
 			print 'IK: ', e
-			pass
+			return None
 
-	def CheckSingularity(self, q=None):
+	def check_singularity(self, q=None):
 		""" checks if robot configuration is singular 			"""
 		""" Input: 	1) q -> joint angles (2D array) in radians
 			Output: 1) Flag -> True: singular, False: OK 		"""
 
-		rank = np.linalg.matrix_rank(self.Jacobian(q))
-		if (rank < 3):
-			return True
-		else:
-			return False
+		try:
+			rank = np.linalg.matrix_rank(self.leg_jacobian(q))
+			if (rank < 3):
+				return True
+			else:
+				return False
+		except Exception, e:
+			return None
 
-	def JointSpeed(self, q=None, v=None, a=None):
+	def joint_speed(self, q=None, v=None, a=None):
 
 		try:
 			q1 = q.item(0); q2 = q.item(1); q3 = q.item(2)
@@ -97,7 +100,7 @@ class corin_kinematics():
 			vel = np.matrix([ [v.item(0)], [v.item(1)], [v.item(2)] ])
 			acc = np.matrix([ [a.item(0)], [a.item(1)], [a.item(2)] ])
 
-			Jv = self.Jacobian(q)
+			Jv = self.leg_jacobian(q)
 
 			qd = linalg.solve(Jv,vel)
 
@@ -124,14 +127,14 @@ class corin_kinematics():
 			return None, None
 
 	## Torque to force mapping and vice versa uses the relationship: tau = J^(T)*f
-	def ForceToTorque(self, q=None, f=None):
-		return self.JacobianTranspose(q)*f
+	def force_to_torque(self, q=None, f=None):
+		return self.transpose_leg_jacobian(q)*f
 
-	def TorqueToForce(self, q=None, tau=None):
+	def torque_to_force(self, q=None, tau=None):
 		# f = J^(-T)*tau
-		return inv(self.JacobianTranspose(q))*tau
+		return inv(self.transpose_leg_jacobian(q))*tau
 
-	def UpdateNominalStance(self, bodypose, base_X_surface, qsurface):
+	def update_nominal_stance(self, bodypose, base_X_surface, qsurface):
 		""" updates the robot nominal stance (REP/NRP) """
 
 		# print 'bodypose: ', bodypose
@@ -183,26 +186,26 @@ class corin_kinematics():
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-CK = corin_kinematics()
+CK = KDL()
 
 qsurface = np.array([0.,-np.pi/2,0.])
 base_X_surface = 0.29
 bodypose = np.array([0.,0.,BODY_HEIGHT, 0.,0.,0.])
 
-CK.UpdateNominalStance(bodypose, base_X_surface, qsurface)
+CK.update_nominal_stance(bodypose, base_X_surface, qsurface)
 
 # print bodypose[3:7]
 # qs = [0., 1.238, -1.724] #[0., 1.195, -1.773] 	# left side
 qs = [0., 0.45, -2.033]	# right side
 
-cd = CK.FK(qs)
+cd = CK.leg_FK(qs)
 # print cd.flatten()
 cd = [ 0.21, 0., -0.1]
-qp = CK.Leg_IK(cd)
+qp = CK.leg_IK(cd)
 # print 'q: ', qp
 # print qp
-# if (not CK.CheckSingularity(qp)):
-# 	qd,qdd = CK.JointSpeed(qp, v, a)
+# if (not CK.check_singularity(qp)):
+# 	qd,qdd = CK.joint_speed(qp, v, a)
 
 
 #[1, 2, 4, 2, 3, 4]

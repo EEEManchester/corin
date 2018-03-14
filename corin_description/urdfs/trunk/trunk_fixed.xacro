@@ -9,7 +9,7 @@
 
 	<!-- ================================ Trunk ================================ -->
 
-	<xacro:macro name="mCorin_trunk" params="name *origin">
+	<xacro:macro name="RobotTrunk" params="name *origin">
 		<!-- Floating-base Joint -->
 		<joint name="${name}_qx_joint" type="revolute">
 			<axis xyz="1 0 0"/>

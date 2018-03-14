@@ -7,7 +7,7 @@
 
 	<!-- ================================ Trunk ================================ -->
 
-	<xacro:macro name="mCorin_trunk" params="name *origin">
+	<xacro:macro name="RobotTrunk" params="name *origin">
 		<!-- Floating-base Joint -->
 		<joint name="floating_base" type="fixed">
 			<axis xyz="0 0 1"/>

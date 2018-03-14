@@ -7,7 +7,7 @@
 
 	<!-- ================================== Leg ================================== -->
 	<!-- The xacro macro xacro:corin_leg contains: hip assembly, upper and lower leg -->
-	<xacro:macro name="mCorin_leg" params="name parent middle_leg *origin load_force_sensors">
+	<xacro:macro name="RobotLeg" params="name parent middle_leg *origin load_force_sensors">
 		<!-- Joints -->
 		<!-- Coxa joint -->
 		<joint name="${name}_q1_joint" type="revolute">

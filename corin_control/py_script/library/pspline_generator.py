@@ -424,7 +424,8 @@ class SplineGenerator:
 				cp.append( [qpx,qpy,qpz]) 
 				cv.append( [qvx,qvy,qvz]) 
 				ca.append( [qax,qay,qaz]) 
-			
+		
+
 		return np.around(ct,4),cp,cv,ca
 
 	def compute_time_intervals(self, q):
@@ -493,15 +494,21 @@ test_times  = np.array([0.,5.,7.,8.,10.,15.,18.])
 test_points = np.array([0.025,0.01875,0,-0.01875,-0.025])	
 test_times  = np.array([0.,0.5,1.,1.5,2.])
 
+w_cob = np.array([.0,.0,.0])
+w_cob = np.vstack((w_cob,np.array([-0.2, -0.1, 0.])))
+w_cob = np.vstack((w_cob,np.array([0.2, -0.1, 0.])))
+w_cob = np.vstack((w_cob,np.array([0., 0., 0.])))
+t_cob = np.array([0,1,2,3])
+
 spliner = SplineGenerator()
-# x_out = spliner.spline_1D(test_points,test_times,TRAC_INTERVAL)
+# x_out  = spliner.spline_1D(test_points,test_times,TRAC_INTERVAL)
 # spoints = spliner.spline_1D_acc(test_points,t_com)
-# spoints = spliner.spline_3D(x_com,t_com)
+# spoints = spliner.spline_3D(w_cob,t_cob)
 
 # x_out = spliner.generate_leg_spline(sp,ep,snorm,phase)
-x_out = spliner.generate_body_spline(x_com)
+# x_out = spliner.generate_body_spline(w_cob)
 
-# Plot.plot_2d(x_out[0],x_out[3])
+# Plot.plot_2d(x_out[0],x_out[1])
 # Plot.plot_2d_multiple(2,x_out.t,x_out.xv,x_out.xa)
 
 

@@ -37,7 +37,7 @@ class LegClass:
 		self.Joint 	= cd.Joint_class(3)
 
 		# library functions
-		self.KL 	= kdl.corin_kinematics()
+		self.KDL 	= kdl.KDL()
 		# self.DL 	= kdl.corin_dynamics()
 		self.bspline = Bspline.SplineGenerator() 	# bSplineClass for leg transfer spline generation
 		
@@ -79,7 +79,7 @@ class LegClass:
 		self.SetLegREP() 				# set rest position of legs
 
 	## Update functions
-	def UpdateJointState(self, jointState, resetState):
+	def update_joint_state(self, jointState, resetState):
 		""" Update current joint state of legs and forward transformations 			"""
 		""" Input: 	1) jointState -> joint angles 
 					2) resetState -> flag to set desired state as current state 	""" 
@@ -88,7 +88,7 @@ class LegClass:
 		q_compensated = (jointState[0], jointState[1]+QCOMPENSATION, jointState[2]) 		# offset q2 by 0.01 - gravity
 
 		## current
-		self.hip_X_ee.cs.xp  = self.KL.FK(q_compensated)
+		self.hip_X_ee.cs.xp  = self.KDL.leg_FK(q_compensated)
 		self.base_X_ee.cs.xp = self.hip_X_base_ee(self.hip_X_ee.cs.xp)
 
 		## error
@@ -96,19 +96,19 @@ class LegClass:
 		self.base_X_ee.es.xp = self.base_X_ee.ds.xp - self.base_X_ee.cs.xp
 
 		## check work envelope
-		bound_exceed = self.CheckBoundaryLimit()
+		bound_exceed = self.check_boundary_limit()
 
 		self.XHc.update_coxa_X_foot(q_compensated)
 		self.XHc.update_base_X_foot(q_compensated)
 		
 		## state reset
 		if (resetState):
-			self.hip_X_ee.ds.xp  = self.hip_X_ee.cs.xp
-			self.base_X_ee.ds.xp = self.base_X_ee.cs.xp
+			self.hip_X_ee.ds.xp  = self.hip_X_ee.cs.xp.copy()
+			self.base_X_ee.ds.xp = self.base_X_ee.cs.xp.copy()
 
-			self.XHc.coxa_X_foot = self.XHd.coxa_X_foot
-			self.XHc.base_X_foot = self.XHd.base_X_foot
-
+			self.XHd.coxa_X_foot = self.XHc.coxa_X_foot.copy()
+			self.XHd.base_X_foot = self.XHc.base_X_foot.copy()
+			print 'RESET TRUE'
 		# if (self.number == 0):
 		# 	print self.number, ' ', jointState
 		# 	print 'bXe_ds: ', np.round(self.base_X_ee.ds.xp.flatten(),4)
@@ -118,7 +118,7 @@ class LegClass:
 
 		return bound_exceed
 
-	def UpdateForceState(self, cState, cForce):
+	def update_force_state(self, cState, cForce):
 		""" contact force of leg """
 		## ********************************	Contact Force  ******************************** ##
 		self.cstate = cState
@@ -126,7 +126,7 @@ class LegClass:
 
 		## TODO: TRANSFORM FROM FOOT FRAME TO HIP, BASE, WORLD FRAME
 
-	def generateSpline(self, start, end, snorm, reflex=False, ctime=2.0, tn=0.1):
+	def generate_spline(self, start, end, snorm, reflex=False, ctime=2.0, tn=0.1):
 		""" generate leg trajectory using bspline and check for kinematic constraints 	"""
 		""" Input:  a) nLeg   -> Leg number
 			 		b) start  -> start position in 3D space wrt base frame
@@ -179,20 +179,20 @@ class LegClass:
 		error = 0 					# Error indicator
 
 		if (xp is None):
-			xpn = self.XHd.coxa_X_foot[:3,3:4]
-			xp = self.hip_X_ee.ds.xp.reshape(3,1) # TEMP: remove later
-			print self.number, np.round( (xpn - xp).transpose(),4) 	# TODO: LEG 5 ERROR IS LARGE
-		self.Joint.qpd = self.KL.Leg_IK(xp)
+			xp = self.XHd.coxa_X_foot[:3,3:4]
+			# xp = self.hip_X_ee.ds.xp.reshape(3,1) # TEMP: remove later
+			# print self.number, np.round( (xpn - xp).transpose(),4) 	# TODO: LEG 5 ERROR IS LARGE
+		self.Joint.qpd = self.KDL.leg_IK(xp)
 		
 		# checks if joint limit exceeded and singularity occurs
-		if (self.CheckJointLimit(self.Joint.qpd) is True):
+		if (self.check_joint_limit(self.Joint.qpd) is True):
 			error = 1
 		else:
-			if (self.KL.CheckSingularity(self.Joint.qpd) is False):
-				qvn, qan = self.KL.JointSpeed(self.Joint.qpd, self.V6d.coxa_X_foot, self.A6d.coxa_X_foot)
-				self.Joint.qvd, self.Joint.qad = self.KL.JointSpeed(self.Joint.qpd, self.hip_X_ee.ds.xv, self.hip_X_ee.ds.xa)
-				diff_v = (qvn - self.Joint.qvd).flatten()
-				diff_a = (qan - self.Joint.qad).flatten()
+			if (self.KDL.check_singularity(self.Joint.qpd) is False):
+				self.Joint.qvd, self.Joint.qad = self.KDL.joint_speed(self.Joint.qpd, self.V6d.coxa_X_foot, self.A6d.coxa_X_foot)
+				# self.Joint.qvd, self.Joint.qad = self.KDL.joint_speed(self.Joint.qpd, self.hip_X_ee.ds.xv, self.hip_X_ee.ds.xa)
+				# diff_v = (qvn - self.Joint.qvd).flatten()
+				# diff_a = (qan - self.Joint.qad).flatten()
 				# print diff_v #, diff_a
 			else:
 				error = 2
@@ -200,7 +200,7 @@ class LegClass:
 		return error, self.Joint.qpd, self.Joint.qvd, self.Joint.qad 	# TEMP: change to normal (huh?)
 
 	
-	def CheckBoundaryLimit(self):
+	def check_boundary_limit(self):
 		""" leg boundary area projected to 2D """
 		bound_violate = False
 		BOUND_FACTOR  = 1.8 	# relaxes the boundary constraint
@@ -246,7 +246,7 @@ class LegClass:
 		return bound_violate
 
 	## Kinematic functions
-	def CheckJointLimit(self, qp):
+	def check_joint_limit(self, qp):
 		""" checks if joint angle exceeds limit 			"""
 		""" Input:  qp -> joint angles
 			Output: boolean -> True: exceeded, False: OK	"""
@@ -270,7 +270,7 @@ class LegClass:
 
 		return False
 
-	def UpdateFromSpline(self):
+	def update_from_spline(self):
 		""" Update positions from generated leg spline & increment counter	"""
 		""" Trajectory feedback_state set to 2 (finished execution) when 
 			spline has been finished 										"""
@@ -294,12 +294,15 @@ class LegClass:
 			self.feedback_state = 2
 			return False
 
-	def UpdateREP(self, bodypose, base_X_surface):
+	def update_NRP(self, bodypose, base_X_surface):
 		""" updates nominal stance of robot """
 
 		# update only if surface orientation above deadzone
 		if (abs(self.qsurface.item(0)) > QDEADZONE or abs(self.qsurface.item(1)) > QDEADZONE):
-			self.REP = FR_base_X_hip[self.number] + self.KL.UpdateNominalStance(bodypose, base_X_surface, self.qsurface)
+			# self.REP = FR_base_X_hip[self.number] + self.KDL.update_nominal_stance(bodypose, base_X_surface, self.qsurface)
+			# TODO: this needs checking
+			self.XHc.coxa_X_NRP[:3,3:4] = (self.KDL.update_nominal_stance(bodypose, base_X_surface, self.qsurface)).reshape(3,1)
+			self.XHc.base_X_NRP[:3,3:4] = np.dot(self.base_X_coxa, self.XHc.coxa_X_NRP)
 			# print 'updating REP for leg ', self.number
 			# if (self.number == 0):
 	

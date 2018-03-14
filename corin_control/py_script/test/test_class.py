@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-sys.path.insert(0, '/home/wilson/catkin_ws/src/mcorin/mcorin_control/py_script/library')
+sys.path.insert(0, '/home/wilson/catkin_ws/src/corin/corin_control/py_script/library')
 sys.dont_write_bytecode = True
 
 import numpy as np
@@ -38,7 +38,72 @@ def compute_path_length(via_points):
 def test_func(game_type):
 	return 'white' if game_type == 'home' else 'green'
 
+def bar(first, second, third, **options):
+    if options.get("action") == "sum":
+        print("The sum is: %d" %(first + second + third))
+
+    if options.get("number") == "first":
+        return first
+
+def mXn(a, b, c=None, d=None, e=None):
+	""" multiplies 2D array in matrix style """
+	## TODO: include check on array size
+	try:
+		if (c is None and a.shape == b.shape):
+			return np.dot(a,b)
+		elif (d is None):
+			return np.dot(np.dot(a,b), c)
+		elif (e is None):
+			return np.dot(np.dot(a,b), np.dot(c,d))
+		elif (e is not None):
+			return np.dot(np.dot(np.dot(a,b), np.dot(c,d)), e)
+	except Exception, e:
+		print e
+		return None
+
+def mX(a, b, c=None, d=None, e=None):
+	""" multiplies 2D array in matrix style """
+	## TODO: include check on array size
+	if (a.shape == b.shape):
+		if (c is None):
+			return np.dot(a,b)
+		elif (c is not None):
+			if (d is None and a.shape == c.shape):
+				return np.dot(np.dot(a,b), c)
+			elif (d is not None):
+				if (e is None and b.shape == c.shape
+								and c.shape == d.shape):
+					return np.dot(np.dot(a,b), np.dot(c,d))
+				elif (e is not None and b.shape == c.shape
+									and c.shape == d.shape
+									and d.shape == e.shape):
+					return np.dot(np.dot(np.dot(a,b), np.dot(c,d)), e)
+				else:
+					return None
+			else:
+				return None
+		else:
+			return None
+	else:
+		return None
+
+	# elif (c is not None and d is None):
+	# 	return np.dot(np.dot(a,b), c)
+	# elif (c is not None and d is not None and e is None):
+	# 	return np.dot(np.dot(a,b), np.dot(c,d))
+	# elif (c is not None and d is not None and e is not None):
+	# 	return np.dot(np.dot(np.dot(a,b), np.dot(c,d)), e)
+	# else:
+	# 	return None
+
 if __name__ == "__main__":
+	f = np.array([1,2])
+	
+	a = np.array([[1,2],[2,2]])
+	b = np.array([[1,2],[2,2]])
+	
+	print mXn(f,a)
+
 	data = test_func('home1')
 	# print data
 	test1 = 1
@@ -59,25 +124,14 @@ if __name__ == "__main__":
 	min_radian_                      = -3.14159265
 	max_radian_                      =  3.14159265
 
-	if (radian > 0):
-		value = (radian * (value_of_max_radian_position_ - value_of_0_radian_position_) / max_radian_) + value_of_0_radian_position_;
-
-	elif (radian < 0):
-		value = (radian * (value_of_min_radian_position_ - value_of_0_radian_position_) / min_radian_) + value_of_0_radian_position_;
-	else:
-		value = 2048;
-	print value
-
-	quat = [0.258819153480218,    0.0,    0.0,    0.965925797249345]
-	angles = tf.euler_from_quaternion(quat)
+	# angles = tf.euler_from_quaternion(quat)
 	
 	xp = np.array([ [1,2,3],[4,5,6],[7,8,9] ])
 	
 	tlen = np.array([1,2,3,4,5.4,6])
-	print range(len(tlen))
-	# for i in range(len(tlen)):
-	# 	print i, tlen[i]
-	# while (i in range(len(tlen))):
-	# 	print i, tlen[i]
-	# print tlen[6-1]
-	# print tlen[-1]
+	
+	Column6D = (6,1)
+	x  = np.zeros(Column6D)
+	y  = np.zeros(Column6D)
+	
+	# print bar(1,2,3, action='sum')

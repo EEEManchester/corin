@@ -13,9 +13,9 @@ import numpy as np
 from constant import * 		# constants used
 import kdl 					# corin kinematic library
 
-import transformations as TF
+# import transformations as TF
 
-Column6D = np.zeros((6,1))
+Column6D = (6,1)
 
 def deg2rad(q):
 	return (q*np.pi/180.)
@@ -23,33 +23,33 @@ def deg2rad(q):
 class Vector6D:
 	""" 6D vector for robot """ 
 	def __init__(self):
-		self.world_X_base = Column6D
-		self.world_X_LF_foot = Column6D
-		self.world_X_LM_foot = Column6D
-		self.world_X_LR_foot = Column6D
-		self.world_X_RF_foot = Column6D
-		self.world_X_RM_foot = Column6D
-		self.world_X_RR_foot = Column6D
+		self.world_X_base 	 = np.zeros(Column6D)
+		self.world_X_LF_foot = np.zeros(Column6D)
+		self.world_X_LM_foot = np.zeros(Column6D)
+		self.world_X_LR_foot = np.zeros(Column6D)
+		self.world_X_RF_foot = np.zeros(Column6D)
+		self.world_X_RM_foot = np.zeros(Column6D)
+		self.world_X_RR_foot = np.zeros(Column6D)
 
 		## TODO: following needs expanding if to be used
-		self.base_X_coxa  = Column6D
-		self.base_X_foot  = Column6D
-		self.base_X_AEP   = Column6D
-		self.base_X_PEP   = Column6D
-		self.base_X_NRP   = Column6D
-		self.coxa_X_foot  = Column6D
-		self.coxa_X_AEP   = Column6D
-		self.coxa_X_PEP   = Column6D
-		self.coxa_X_NRP   = Column6D
+		self.base_X_coxa  = np.zeros(Column6D)
+		self.base_X_foot  = np.zeros(Column6D)
+		self.base_X_AEP   = np.zeros(Column6D)
+		self.base_X_PEP   = np.zeros(Column6D)
+		self.base_X_NRP   = np.zeros(Column6D)
+		self.coxa_X_foot  = np.zeros(Column6D)
+		self.coxa_X_AEP   = np.zeros(Column6D)
+		self.coxa_X_PEP   = np.zeros(Column6D)
+		self.coxa_X_NRP   = np.zeros(Column6D)
 
 class ArrayVector6D:
 	""" 6D vector for robot's legs """ 
 	def __init__(self):
-		self.world_X_foot = Column6D
-		self.base_X_coxa  = Column6D
-		self.base_X_foot  = Column6D
-		self.coxa_X_base  = Column6D
-		self.coxa_X_foot  = Column6D
+		self.world_X_foot = np.zeros(Column6D)
+		self.base_X_coxa  = np.zeros(Column6D)
+		self.base_X_foot  = np.zeros(Column6D)
+		self.coxa_X_base  = np.zeros(Column6D)
+		self.coxa_X_foot  = np.zeros(Column6D)
 		
 
 class ArrayHomogeneousTransform:
@@ -57,19 +57,28 @@ class ArrayHomogeneousTransform:
 	def __init__(self, leg_no):
 		self.n = leg_no
 
-		self.world_X_foot = np.identity(4)	# done
+		# Transformation wrt world frame: world to parts
+		self.world_X_foot = np.identity(4)
 		
-		self.base_X_coxa = np.identity(4) 	# done
-		self.base_X_foot = np.identity(4)	# done
-		self.base_X_AEP  = np.identity(4)	# 
-		self.base_X_PEP  = np.identity(4)	# 
-		self.base_X_NRP  = np.identity(4)	# done
+		# Transformations wrt world frame: base to parts
+		self.world_base_X_foot = np.identity(4)
+		self.world_base_X_AEP  = np.identity(4)
+		self.world_base_X_PEP  = np.identity(4)
+		self.world_base_X_NRP  = np.identity(4)
 
-		self.coxa_X_base = np.identity(4) 	# done
-		self.coxa_X_foot = np.identity(4) 	# done
-		self.coxa_X_AEP  = np.identity(4) 	# done
-		self.coxa_X_PEP  = np.identity(4) 	# done
-		self.coxa_X_NRP  = np.identity(4) 	# done
+		# Transformations wrt base frame: base to parts
+		self.base_X_coxa = np.identity(4)
+		self.base_X_foot = np.identity(4)
+		self.base_X_AEP  = np.identity(4)
+		self.base_X_PEP  = np.identity(4)
+		self.base_X_NRP  = np.identity(4)
+
+		# Transformations wrt leg frame: leg to parts
+		self.coxa_X_base = np.identity(4)
+		self.coxa_X_foot = np.identity(4)
+		self.coxa_X_AEP  = np.identity(4)
+		self.coxa_X_PEP  = np.identity(4)
+		self.coxa_X_NRP  = np.identity(4)
 
 		## CoM ##
 		self.base_X_COM = np.identity(4)		# done
@@ -81,8 +90,8 @@ class ArrayHomogeneousTransform:
 		q  = np.zeros(18)
 		qb = np.zeros(6)
 
-		KDL = kdl.corin_kinematics()
-		xp  = KDL.Leg_IK([STANCE_WIDTH,0.,-BODY_HEIGHT])
+		KDL = kdl.KDL()
+		xp  = KDL.leg_IK([STANCE_WIDTH,0.,-BODY_HEIGHT])
 		# set legs to default standup position
 		for i in range(0,6): 	
 			q[0+i*3] = xp[0]
@@ -90,10 +99,10 @@ class ArrayHomogeneousTransform:
 			q[2+i*3] = xp[2]
 		qb[5] = BODY_HEIGHT
 
-		self.init_update() 		# single update
+		self.__init_update() 		# single update
 		# self.update_robot(qb,q) # runtime update
 
-	def init_update(self):
+	def __init_update(self):
 		self.update_base_X_coxa(ROT_BASE_X_LEG[self.n],TRN_BASE_X_LEG[self.n])
 		
 
@@ -141,15 +150,17 @@ class ArrayHomogeneousTransform:
 		q3_cos = np.cos(q[2])
 		rZ_sin = np.sin(deg2rad(ROT_BASE_X_LEG[self.n]))
 		rZ_cos = np.cos(deg2rad(ROT_BASE_X_LEG[self.n]))
+		tX = TRN_BASE_X_LEG[self.n][0]
+		tY = TRN_BASE_X_LEG[self.n][1]
 
 		self.base_X_foot[0,0] = -(q2_cos*q3_cos - q2_sin*q3_sin)*(rZ_sin*q1_sin - rZ_cos*q1_cos)
 		self.base_X_foot[0,1] =  (q2_sin*q3_cos + q2_cos*q3_sin)*(rZ_sin*q1_sin - rZ_cos*q1_cos)
 		self.base_X_foot[0,2] =  rZ_cos*q1_sin + rZ_sin*q1_cos
-		self.base_X_foot[0,3] = -rZ_sin*(q2_cos*q3_cos - q2_sin*q3_sin)*q1_sin*L3 - rZ_sin*q2_cos*q1_sin*L2 + (q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos*rZ_cos*L3 + q2_cos*q1_cos*rZ_cos*L2 - rZ_sin*q1_sin*L1 + q1_cos*rZ_cos*L1 + COXA_X
+		self.base_X_foot[0,3] = -rZ_sin*(q2_cos*q3_cos - q2_sin*q3_sin)*q1_sin*L3 - rZ_sin*q2_cos*q1_sin*L2 + (q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos*rZ_cos*L3 + q2_cos*q1_cos*rZ_cos*L2 - rZ_sin*q1_sin*L1 + q1_cos*rZ_cos*L1 + tX
 		self.base_X_foot[1,0] =  (q2_cos*q3_cos - q2_sin*q3_sin)*(rZ_cos*q1_sin + rZ_sin*q1_cos)
 		self.base_X_foot[1,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*(rZ_cos*q1_sin + rZ_sin*q1_cos)
 		self.base_X_foot[1,2] =  rZ_sin*q1_sin - rZ_cos*q1_cos
-		self.base_X_foot[1,3] =  rZ_sin*(q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos*L3 + rZ_sin*q2_cos*q1_cos*L2 + (q2_cos*q3_cos - q2_sin*q3_sin)*rZ_cos*q1_sin*L3 + q2_cos*rZ_cos*q1_sin*L2 + rZ_sin*q1_cos*L1 + rZ_cos*q1_sin*L1 + COXA_Y
+		self.base_X_foot[1,3] =  rZ_sin*(q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos*L3 + rZ_sin*q2_cos*q1_cos*L2 + (q2_cos*q3_cos - q2_sin*q3_sin)*rZ_cos*q1_sin*L3 + q2_cos*rZ_cos*q1_sin*L2 + rZ_sin*q1_cos*L1 + rZ_cos*q1_sin*L1 + tY
 		self.base_X_foot[2,0] =  (q2_sin*q3_cos + q2_cos*q3_sin)
 		self.base_X_foot[2,1] =  (q2_cos*q3_cos - q2_sin*q3_sin)
 		self.base_X_foot[2,1] =  0.
@@ -158,14 +169,17 @@ class ArrayHomogeneousTransform:
 	def update_base_X_NRP(self, q):
 		self.update_coxa_X_NRP(q)
 		self.base_X_NRP = np.dot(self.base_X_coxa, self.coxa_X_NRP)
+		self.world_base_X_NRP = self.base_X_NRP.copy()
 
 	def update_base_X_AEP(self, q):
 		self.update_coxa_X_AEP(q)
 		self.base_X_AEP = np.dot(self.base_X_coxa, self.coxa_X_AEP)
+		self.world_base_X_AEP = self.base_X_AEP.copy()
 
 	def update_base_X_PEP(self, q):
 		self.update_coxa_X_PEP(q)
 		self.base_X_PEP = np.dot(self.base_X_coxa, self.coxa_X_PEP)
+		self.world_base_X_PEP = self.base_X_PEP.copy()
 
 	def update_coxa_X_foot(self, q):
 		q1_sin = np.sin(q[0])
@@ -379,8 +393,8 @@ class HomogeneousTransform:
 		q  = np.zeros(18)
 		qb = np.zeros(6)
 
-		KDL = kdl.corin_kinematics()
-		xp  = KDL.Leg_IK([STANCE_WIDTH,0.,-BODY_HEIGHT])
+		KDL = kdl.KDL()
+		xp  = KDL.leg_IK([STANCE_WIDTH,0.,-BODY_HEIGHT])
 		# set legs to default standup position
 		for i in range(0,6): 	
 			q[0+i*3] = xp[0]
@@ -388,10 +402,10 @@ class HomogeneousTransform:
 			q[2+i*3] = xp[2]
 		qb[5] = BODY_HEIGHT
 
-		self.init_update() 		# single update
+		self.__init_update() 		# single update
 		self.update_robot(qb,q) # runtime update
 
-	def init_update(self):
+	def __init_update(self):
 		self.update_base_X_LF_coxa(0)
 		self.update_base_X_LM_coxa(0)
 		self.update_base_X_LR_coxa(0)
