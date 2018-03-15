@@ -76,7 +76,7 @@ BODY_HEIGHT  = 0.1          # ori: 0.10, chimney: 0.0
 STANCE_WIDTH = 0.21         # ori: 0.21, chimney: 0.27, 0.31 for tripod
 STEP_STROKE  = 0.08			# step size, x, 	default 0.07
 STEP_HEIGHT  = 0.1 			# step height, z 	default 0.05
-TRAC_PERIOD	 = 1.5			# cycle time for movement
+TRAC_PERIOD	 = 2.0			# cycle time for movement
 
 BASE_MAX_LINEAR_VELOCITY  = 0.025		# maximum base velocity, m/s
 BASE_MAX_ANGULAR_VELOCITY = 0.3		# maximum base velocity, rad/s

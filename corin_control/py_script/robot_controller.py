@@ -11,11 +11,12 @@ sys.dont_write_bytecode = True
 
 import time
 import warnings
-import numpy as np
+import numpy as np 
 
 ## Personal libraries
 from constant import *
 import control_interface 					# action selection from ROS parameter server
+import routines 							# class for pre-defined routines to execute
 import robot_class 							# class for robot states and function
 import gait_class 							# class for gait coordinator
 import path_generator as Pathgenerator 		# generates path from via points
@@ -77,10 +78,12 @@ class CorinManager:
 		self.__initialise_topics()
 
 		## moves robot to nominal position if haven't done so
-		if (rospy.has_param(ROBOT_NS + '/standing') is False and 
-			rospy.get_param(ROBOT_NS + '/standing')==False):
+		try:
+			if (rospy.get_param(ROBOT_NS + '/standing') is False):
+				raise Exception
+		except Exception, e:
 			self._default_pose()
-		
+
 		## update and reset robot states
 		self.Robot.suspend = False
 		self.Robot.update_state(reset=True)
@@ -126,102 +129,81 @@ class CorinManager:
 
 		rospy.sleep(0.5) # sleep for short while for topics to be initiated properly
 
-	def _air_suspend_legs(self):
-		""" routine to move legs from current position to in the air """
-		## TODO: move elsewhere
+	def leg_level_controller(self, setpoints):
+		""" Generates and execute trajectory by specified desired leg position 	"""
+		""" Input: 	1) nleg -> list of corresponding legs to move
+					2) leg_stance -> list of 3D positions for each leg 
+									expressed wrt leg frame
+					3) leg_phase -> type of trajectory
+					4) period -> timing of leg execution
+			Output: flag -> True: execution complete, False: error occured 		"""
+
 		self.Robot.update_state() 		# get current state
 
-		# Variables
-		fix_stance = 0.18;
-		fix_height = 0.01
-		leg_stance = {}
-		# stance for air suspension
-		leg_stance[0] = np.array([ fix_stance*np.cos(TETA_F*np.pi/180), fix_stance*np.sin(TETA_F*np.pi/180), fix_height ])
-		leg_stance[1] = np.array([ fix_stance, 0, fix_height])
-		leg_stance[2] = np.array([ fix_stance*np.cos(TETA_R*np.pi/180), fix_stance*np.sin(TETA_R*np.pi/180), fix_height ])
+		## define variables
+		td = 0 		# period for trajectory
+		tv = False 	# flag if period is an array
+		nleg, leg_stance, leg_phase, period = setpoints
 
-		leg_stance[3] = np.array([ fix_stance*np.cos(TETA_F*np.pi/180), fix_stance*np.sin(-TETA_F*np.pi/180), fix_height ])
-		leg_stance[4] = np.array([ fix_stance, 0, fix_height])
-		leg_stance[5] = np.array([ fix_stance*np.cos(TETA_R*np.pi/180), fix_stance*np.sin(-TETA_R*np.pi/180), fix_height ])
+		## Check if time intervals is used
+		try:
+			len(period)
+			tv = True
+		except TypeError:
+			td = TRAC_PERIOD
+		
+		try:
+			## Generate spline for each leg
+			for i in range(len(nleg)):
+				j = nleg[i]
+				td = period[j][1]-period[j][0] if tv else td
 
-		# generate spline to legs up position
-		for j in range(0,self.Robot.active_legs):
-			# self.Robot.Leg[j].hip_X_ee.ds.xp = LEG_STANCE[j] + np.array([0.0,0.0,BODY_HEIGHT+fix_height]) 	# put leg on final ground position first
-			self.Robot.Leg[j].hip_X_ee.ds.xp = leg_stance[j] 	# place leg in fixed position in air
-			self.Robot.generate_spline(j, self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp,
-											self.Robot.Leg[j].qsurface, 1, False, TRAC_PERIOD)
-			
-		# move leg into position
-		for npoint in range(0, int(TRAC_PERIOD/CTR_INTV)):
-			for j in range(0,self.Robot.active_legs):
-				# set cartesian position for joint kinematics
-				self.Robot.Leg[j].update_from_spline();
-				self.Robot.Leg[j].spline_counter += 1
-			qd = self.Robot.task_X_joint()
+				# set new stance for leg
+				self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3] = leg_stance[j]
+				# generate spline
+				svalid = self.Robot.Leg[j].generate_spline(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3], self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],
+															self.Robot.Leg[j].qsurface, leg_phase[j], False, td, CTR_INTV)
+				
+				if (svalid is False):
+					print 'Trajectory Invalid!'
+					self.Robot.invalid = True
+					raise Exception, "robot invalid"
 
-			# publish appended joint angles if motion valid
-			self.publish_topics(qd)
+			## Unstack trajectory and execute
+			npoints = self.Robot.Leg[nleg[0]].spline_length 	# use arbitrary length as counter
+			for p in range(0, npoints):
+				print p, npoints
+				for i in range(len(nleg)):
+					j = nleg[i]
+					self.Robot.Leg[j].update_from_spline(); 	# set cartesian position for joint kinematics
+
+				qd = self.Robot.task_X_joint()
+				self.publish_topics(qd)
+		except Exception, e:
+			print "Exception raised: ", e
+			return False
+
+		return True
 
 	def _default_pose(self, stand_state=0):
-		""" moves robot to nominal stance (default pose) """
-		## TODO: move elsewhere
+		""" Moves robot to nominal stance (default pose) 		 """
+		""" Input: 1) stand_state -> indicates if robot standing """
+
 		## moves leg into air
 		if (self.on_start == False):
 			print 'Resetting stance....'
-			self._air_suspend_legs()
-			self.on_start = True
+			setpoints = routines.air_suspend_legs()
+			self.on_start = True if self.leg_level_controller(setpoints) else False
 
 		rospy.sleep(0.5)
-		# get current state
-		for i in range(0,3):
-			self.Robot.update_state()
-
+		
 		print 'Moving to nominal stance....'
-
-		# generate spline to standup position
-		for j in range(0,self.Robot.active_legs):
-			self.Robot.Leg[j].hip_X_ee.ds.xp = LEG_STANCE[j]
-			self.Robot.generate_spline(j, self.Robot.Leg[j].hip_X_ee.cs.xp, self.Robot.Leg[j].hip_X_ee.ds.xp,
-											self.Robot.Leg[j].qsurface, stand_state, False, TRAC_PERIOD)
-
-		## move leg into position
-		# already in stand up position, shuffle in tripod fashion
 		if (stand_state):
-			for npoint in range(0, int(TRAC_PERIOD/CTR_INTV)):
-				for j in range(0,self.Robot.active_legs):
-					# set cartesian position for joint kinematics
-					if (j%2 == 0): 	# even number legs
-						self.Robot.Leg[j].update_from_spline();
-						self.Robot.Leg[j].spline_counter += 1
-					else: 			# odd number legs
-						self.Robot.Leg[j].hip_X_ee.ds.xp = self.Robot.Leg[j].hip_X_ee.cs.xp
-				qd = self.Robot.task_X_joint()
-				self.publish_topics(qd)
-
-			self.Robot.update_state()
-			for npoint in range(0, int(TRAC_PERIOD/CTR_INTV)):
-				for j in range(0,self.Robot.active_legs):
-					# set cartesian position for joint kinematics
-					if (j%2 == 1): 	# even number legs
-						self.Robot.Leg[j].update_from_spline();
-						self.Robot.Leg[j].spline_counter += 1
-					else: 			# odd number legs
-						self.Robot.Leg[j].hip_X_ee.ds.xp = self.Robot.Leg[j].hip_X_ee.cs.xp
-
-				qd = self.Robot.task_X_joint()
-				self.publish_topics(qd)
-
-		## belly on ground, move all together
+			pass
+			setpoints = self.routine_shuffle()
 		else:
-			for npoint in range(0, int(TRAC_PERIOD/CTR_INTV)):
-				for j in range(0,self.Robot.active_legs):
-					# set cartesian position for joint kinematics
-					self.Robot.Leg[j].update_from_spline();
-					self.Robot.Leg[j].spline_counter += 1
-
-				# convert and publish joint angles if motion valid
-				qd = self.Robot.task_X_joint()
-				self.publish_topics(qd)
+			setpoints = (range(0,6), LEG_STANCE, [0]*6, 2)
+		self.leg_level_controller(setpoints)
 
 	def complete_transfer_trajectory(self):
 		""" Executes remaining leg trajectories in transfer phase """
@@ -237,8 +219,7 @@ class CorinManager:
 			if (self.Robot.Gait.cs[j] == 1):
 				# get number of points yet to execute
 				spline_count = self.Robot.Leg[j].spline_length - self.Robot.Leg[j].spline_counter
-		# 		print self.Robot.Leg[j].spline_length, spline_count
-		# raw_input('cont')
+		
 		try:
 			# loop only required via points
 			for sc in range(0, spline_count):
@@ -248,7 +229,6 @@ class CorinManager:
 						# unstack next point in individual leg spline to be processed
 						try:
 							self.Robot.Leg[j].update_from_spline()
-							self.Robot.Leg[j].spline_counter += 1
 						except:
 							self.Robot.Leg[j].feedback_state = 2 	# trajectory completed
 							
@@ -449,7 +429,7 @@ class CorinManager:
 
 					## generate spline for transfer phase leg - 
 					svalid = self.Robot.Leg[j].generate_spline(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3], self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],
-																self.Robot.Leg[j].qsurface, False, TRAC_PERIOD, CTR_INTV)
+																self.Robot.Leg[j].qsurface, 1, False, TRAC_PERIOD, CTR_INTV)
 					# if (j==1):
 					# 	print 'sp : ', np.round(self.Robot.Leg[j].XHc.base_X_foot[0:3,3].flatten(),4)
 					# 	print 'ep : ', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3].flatten(),4)
@@ -589,7 +569,7 @@ class CorinManager:
 			elif (mode == 3):
 				if (self.resting == False): 	# rest robot
 					print 'Rest'
-					self._air_suspend_legs()
+					self.routine_air_suspend_legs()
 					self.resting = True
 				elif (self.resting == True): 	# standup from rest
 					print 'Standup'

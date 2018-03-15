@@ -6,6 +6,8 @@ sys.dont_write_bytecode = True
 
 import numpy as np
 from matrix_transforms import *
+from enum import Enum 
+
 
 dglobe = 2
 
@@ -51,8 +53,11 @@ def update_state(**options):
 	print 'Running as normal'
 
 if __name__ == "__main__":
+	a = True
+	bar(1,2,3, action='sum') if a else None
+	
 	# print bar(1,2,3, action='sum')
-	update_state(reset=True)
+	# update_state(reset=True)
 
 	f = np.array([1,2])
 	
@@ -63,7 +68,7 @@ if __name__ == "__main__":
 	data = test_func('home1')
 	# print data
 	test1 = 1
-
+	Animal = Enum('Animal', 'ant bee cat dog')
 	data = func1()
 	# print type(data)
 	x_com, w_com, mode = data
@@ -86,8 +91,12 @@ if __name__ == "__main__":
 	
 	tlen = np.array([1,2,3,4,5.4,6])
 	
-	Column6D = (6,1)
-	x  = np.zeros(Column6D)
-	y  = np.zeros(Column6D)
+	Column6D = (1,1)
 	
-	
+	a = 1
+	try:
+		len(a)
+	except TypeError, e:
+		print 'Value ', e
+	except Exception, e:
+		print e

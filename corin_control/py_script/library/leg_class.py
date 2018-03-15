@@ -125,7 +125,7 @@ class LegClass:
 
 		## TODO: TRANSFORM FROM FOOT FRAME TO HIP, BASE, WORLD FRAME
 
-	def generate_spline(self, start, end, snorm, reflex=False, ctime=2.0, tn=0.1):
+	def generate_spline(self, start, end, snorm, phase=1, reflex=False, ctime=2.0, tn=0.1):
 		""" generate leg trajectory using bspline and check for kinematic constraints 	"""
 		""" Input:  a) nLeg   -> Leg number
 			 		b) start  -> start position in 3D space wrt base frame
@@ -135,9 +135,11 @@ class LegClass:
 					f) ctime  -> time for trajectory						
 					g) tn 	  -> rate of trajectory 						"""
 
-		self.xspline = TP.TrajectoryPoints(self.bspline.generate_leg_spline(start.flatten(), end.flatten(), snorm, reflex, ctime, tn))
+		self.xspline = TP.TrajectoryPoints(self.bspline.generate_leg_spline(start.flatten(), end.flatten(), snorm, phase, reflex, ctime, tn))
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)
+		if (self.number==1):
+			Plot.plot_2d(self.xspline.t,self.xspline.xp)
 
 		## checks spline for kinematic constraint
 		qt = [];	qp = [];	qv = [];	qa = [];
