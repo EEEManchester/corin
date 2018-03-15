@@ -21,14 +21,14 @@ import TrajectoryPoints as TP						# class for 3D time array of points
 import Twist
 import State
 import declarations as cd 							# custom class for robot classes
-import transformations as tf 						# SE(3) transformation library
+from matrix_transforms import *						# SE(3) transformation library
 import gait_class as Gaitgen						# class for gait coordinator
 # import param_gait									# class for setting gait parameters in RT 
 import kdl 											# kinematic & dynamics library
 import pspline_generator as Pspline 				# spline generator for body
 import bspline_generator as Bspline 				# spline generator for leg
 import plotgraph as Plot 							# plot library
-import transforms
+import robot_transforms
 
 class LegClass:
 	#common base class for Leg
@@ -38,7 +38,6 @@ class LegClass:
 
 		# library functions
 		self.KDL 	= kdl.KDL()
-		# self.DL 	= kdl.corin_dynamics()
 		self.bspline = Bspline.SplineGenerator() 	# bSplineClass for leg transfer spline generation
 		
 		# transfer phase variables - created in controller class and stored here
@@ -51,12 +50,12 @@ class LegClass:
 		self.cstate = 0 	# foot contact state: 1 or 0
 
 		# transformation frames
-		self.XHc = transforms.ArrayHomogeneousTransform(self.number)
-		self.XHd = transforms.ArrayHomogeneousTransform(self.number)
-		self.V6c = transforms.ArrayVector6D() 							# velocity: current
-		self.V6d = transforms.ArrayVector6D() 							# velocity: desired
-		self.A6c = transforms.ArrayVector6D() 							# acceleration: current
-		self.A6d = transforms.ArrayVector6D() 							# acceleration: desired
+		self.XHc = robot_transforms.ArrayHomogeneousTransform(self.number)
+		self.XHd = robot_transforms.ArrayHomogeneousTransform(self.number)
+		self.V6c = robot_transforms.ArrayVector6D() 							# velocity: current
+		self.V6d = robot_transforms.ArrayVector6D() 							# velocity: desired
+		self.A6c = robot_transforms.ArrayVector6D() 							# acceleration: current
+		self.A6d = robot_transforms.ArrayVector6D() 							# acceleration: desired
 
 		## AIM: GET RID OF FOLLOWING
 		self.hip_X_ee 	= State.StateClass('Twist')
@@ -64,11 +63,12 @@ class LegClass:
 		self.foot_XF_ee = State.StateClass('Wrench')
 		self.hip_XF_ee 	= State.StateClass('Wrench')
 		self.base_XF_ee	= State.StateClass('Wrench')
-		self.tf_base_X_hip 	= tf.rotation_matrix(TF_BASE_X_HIP[self.number],Z_AXIS)[:3, :3]
+		self.tf_base_X_hip 	= rotation_matrix(TF_BASE_X_HIP[self.number],Z_AXIS)[:3, :3]
 		self.AEP = np.zeros((3,1)) 		# Anterior Extreme Position for leg wrt base frame
 		self.PEP = np.zeros((3,1))		# Posterior Extreme Position for leg wrt base frame
 		self.REP = np.zeros((3,1)) 		# nominal stance for leg wrt base frame
 		self.hip_AEP = np.zeros((3,1)) 	# for storing transfer AEP
+		self.SetLegREP() 				# set rest position of legs
 
 		## TODO: CHANGE TO HOMOGENOUS AND VECTOR FORM
 		self.qsurface = np.array([0.,0.,0.]) 		# surface orientation in leg frame, (roll, pitch, yaw)
@@ -76,10 +76,8 @@ class LegClass:
 
 		self.phase_change = False 		# Flag for enabling trajectory to be generated at transfer
 
-		self.SetLegREP() 				# set rest position of legs
-
 	## Update functions
-	def update_joint_state(self, jointState, resetState):
+	def update_joint_state(self, mx_world_X_base, jointState, resetState):
 		""" Update current joint state of legs and forward transformations 			"""
 		""" Input: 	1) jointState -> joint angles 
 					2) resetState -> flag to set desired state as current state 	""" 
@@ -100,7 +98,8 @@ class LegClass:
 
 		self.XHc.update_coxa_X_foot(q_compensated)
 		self.XHc.update_base_X_foot(q_compensated)
-		
+		self.XHc.update_world_base_X_foot(mx_world_X_base, q_compensated)
+
 		## state reset
 		if (resetState):
 			self.hip_X_ee.ds.xp  = self.hip_X_ee.cs.xp.copy()
@@ -308,12 +307,12 @@ class LegClass:
 	
 	## TODO: FOLLOWING SHOULD NOT BE REQUIRED ANYMORE
 	def base_X_hip_ee(self, base_X_ee_xp):
-		return np.dot( tf.rotation_matrix(TF_BASE_X_HIP[self.number],Z_AXIS)[:3, :3], (-FR_base_X_hip[self.number] + base_X_ee_xp))
+		return np.dot( rotation_matrix(TF_BASE_X_HIP[self.number],Z_AXIS)[:3, :3], (-FR_base_X_hip[self.number] + base_X_ee_xp))
 
 	def hip_X_base_ee(self, hip_X_ee_xp):
-		return (FR_base_X_hip[self.number] + np.dot( tf.rotation_matrix(TF_HIP_X_BASE[self.number],Z_AXIS)[:3, :3], hip_X_ee_xp))
+		return (FR_base_X_hip[self.number] + np.dot( rotation_matrix(TF_HIP_X_BASE[self.number],Z_AXIS)[:3, :3], hip_X_ee_xp))
 
 	def SetLegREP(self):
-		self.REP = FR_base_X_hip[self.number] + np.dot( tf.rotation_matrix(TF_HIP_X_BASE[self.number],Z_AXIS)[:3, :3], np.reshape(LEG_STANCE[self.number],(3,1)) )
+		self.REP = FR_base_X_hip[self.number] + np.dot( rotation_matrix(TF_HIP_X_BASE[self.number],Z_AXIS)[:3, :3], np.reshape(LEG_STANCE[self.number],(3,1)) )
 
 	

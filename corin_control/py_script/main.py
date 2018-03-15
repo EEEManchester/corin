@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
-## Main file for Corin
+""" Main file for Corin """ 
+__version__ = '1.0'
+__author__ = 'Wei Cheah'
+
 import rospy
 import robot_controller as Control_Framework
 

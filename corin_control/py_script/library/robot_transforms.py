@@ -58,6 +58,7 @@ class ArrayHomogeneousTransform:
 		self.n = leg_no
 
 		# Transformation wrt world frame: world to parts
+		# self.world_X_base = np.identity(4)
 		self.world_X_foot = np.identity(4)
 		
 		# Transformations wrt world frame: base to parts
@@ -86,51 +87,22 @@ class ArrayHomogeneousTransform:
 		self._initialize_()
 
 	def _initialize_(self):
-		## Set default values for robot's nominal stance
-		q  = np.zeros(18)
-		qb = np.zeros(6)
+		""" Set default values for robot's nominal stance """
 
+		## Define Variables ##
+		# qb  = np.zeros((6,1))
+		q   = np.zeros((3,1))
 		KDL = kdl.KDL()
-		xp  = KDL.leg_IK([STANCE_WIDTH,0.,-BODY_HEIGHT])
+
+		# set base to be standing up height
+		# qb[2] = BODY_HEIGHT
 		# set legs to default standup position
-		for i in range(0,6): 	
-			q[0+i*3] = xp[0]
-			q[1+i*3] = xp[1]
-			q[2+i*3] = xp[2]
-		qb[5] = BODY_HEIGHT
+		q = KDL.leg_IK([STANCE_WIDTH,0.,-BODY_HEIGHT])
 
-		self.__init_update() 		# single update
-		# self.update_robot(qb,q) # runtime update
-
-	def __init_update(self):
 		self.update_base_X_coxa(ROT_BASE_X_LEG[self.n],TRN_BASE_X_LEG[self.n])
-		
+		self.update_base_X_foot(q)
+		self.update_coxa_X_foot(q)
 
-	def update_world_X_base(self,q):
-		# rotates in sequence x, y, z in world frame 
-		tx = q[0]
-		ty = q[1]
-		tz = q[2]
-		qx_sin = np.sin(q[3])
-		qy_sin = np.sin(q[4])
-		qz_sin = np.sin(q[5])
-		qx_cos = np.cos(q[3])
-		qy_cos = np.cos(q[4])
-		qz_cos = np.cos(q[5])
-
-		self.world_X_base[0,0] =  qz_cos*qy_cos
-		self.world_X_base[0,1] = -qz_sin*qx_cos + qz_cos*qy_sin*qx_sin
-		self.world_X_base[0,2] =  qz_sin*qx_sin + qz_cos*qy_sin*qx_cos
-		self.world_X_base[0,3] =  (qz_sin*qx_sin + qz_cos*qy_sin*qx_cos)*tz + (-qz_sin*qx_cos + qz_cos*qy_sin*qx_sin)*ty + qz_cos*qy_cos*tx
-		self.world_X_base[1,0] =  qz_sin*qy_cos
-		self.world_X_base[1,1] =  qz_cos*qx_cos + qz_sin*qy_sin*qx_sin
-		self.world_X_base[1,2] = -qz_cos*qx_sin + qz_sin*qy_sin*qx_cos
-		self.world_X_base[1,3] =  (-qz_cos*qx_sin + qz_sin*qy_sin*qx_cos)*tz + (qz_cos*qx_cos + qz_sin*qy_sin*qx_sin)*ty + qz_sin*qy_cos*tx
-		self.world_X_base[2,0] = -qy_sin
-		self.world_X_base[2,1] =  qy_cos*qx_sin
-		self.world_X_base[2,2] =	 qy_cos*qx_cos
-		self.world_X_base[2,3] =  qy_cos*qx_cos*tz + qy_cos*qx_sin*ty - qy_sin*tx
-		
 	def update_base_X_coxa(self, q, tx):
 		self.base_X_coxa[0,0] =  np.cos(deg2rad(q))
 		self.base_X_coxa[0,1] = -np.sin(deg2rad(q))
@@ -165,6 +137,23 @@ class ArrayHomogeneousTransform:
 		self.base_X_foot[2,1] =  (q2_cos*q3_cos - q2_sin*q3_sin)
 		self.base_X_foot[2,1] =  0.
 		self.base_X_foot[2,3] =  (q2_sin*q3_cos + q2_cos*q3_sin)*L3 + q2_sin*L2
+
+	def update_world_base_X_foot(self, mx_world_X_base, q):
+		q1_sin = np.sin(q[0])
+		q2_sin = np.sin(q[1])
+		q3_sin = np.sin(q[2])
+		q1_cos = np.cos(q[0])
+		q2_cos = np.cos(q[1])
+		q3_cos = np.cos(q[2])
+		rZ_sin = np.sin(deg2rad(ROT_BASE_X_LEG[self.n]))
+		rZ_cos = np.cos(deg2rad(ROT_BASE_X_LEG[self.n]))
+		tX = TRN_BASE_X_LEG[self.n][0]
+		tY = TRN_BASE_X_LEG[self.n][1]
+
+		mx_world_X_base[:3,3:4] = np.zeros((3,1)) 	# overwrite linear components to ignore them
+		
+		self.world_X_foot = np.dot(mx_world_X_base, self.base_X_foot)
+		self.world_base_X_foot = np.dot(self.world_X_foot, mx_world_X_base)
 
 	def update_base_X_NRP(self, q):
 		self.update_coxa_X_NRP(q)
@@ -267,8 +256,9 @@ class ArrayHomogeneousTransform:
 		self.base_X_COM[1:3] = BODY_COM[1] + LEG_MASS*(self.LF_COM[1,3])
 		self.base_X_COM[2:3] = BODY_COM[2] + LEG_MASS*(self.LF_COM[2,3])
 
-XH = ArrayHomogeneousTransform(0)
-# print XH.fr_base_X_coxa
+XH = ArrayHomogeneousTransform(1)
+# print XH.base_X_foot
+# print XH.world_base_X_foot
 
 ## ============================================================================================================================= ##
 ## ============================================================================================================================= ##
@@ -280,18 +270,9 @@ class HomogeneousTransform:
 		self.base_X_world = np.identity(4)
 
 		## ============================================= ##
-		self.world_X_foot = np.identity(4)
-		
-		self.base_X_coxa = np.identity(4)
-		self.base_X_foot = np.identity(4)
-		self.base_X_AEP  = np.identity(4)
-		self.base_X_PEP  = np.identity(4)
-		self.base_X_NRP  = np.identity(4)
-
-		self.coxa_X_foot = np.identity(4)
-		self.coxa_X_AEP  = np.identity(4)
-		self.coxa_X_PEP  = np.identity(4)
-		self.coxa_X_NRP  = np.identity(4)
+		# self.Leg = [None]*6
+		# for j in range(0,6):
+		# 	self.Leg[j] = ArrayHomogeneousTransform()
 
 		## ============================================= ##
 		self.world_X_LF_foot = np.identity(4)

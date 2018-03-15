@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+# sys.dont_write_bytecode = True
+
+""" Functions for plotting - for convenience """
+
+import sys
+sys.dont_write_bytecode = True
 
 import numpy as np
 import math
@@ -15,12 +21,15 @@ def plot_3d(x=0,y=0,z=0):
 	plt.grid('on');
 	plt.show()
 
-def plot_2d(x=0,y=0):
+def plot_2d(x=0,y=0,show=True):
 	fig = plt.figure()
 	plt.plot(x,y, marker='x')
 	plt.xlabel('x-axis');plt.ylabel('y-axis');plt.grid('on');
 	# plt.legend(loc='upper center', shadow=True)
-	plt.show()
+	if (show is True):
+		plt.show()
+	else:
+		pass
 
 def plot_2d_multiple(no_plots=0, t=0, x=0, y=0, z=0):
 	fig, ax = plt.subplots()

@@ -64,7 +64,7 @@ RF_Q3_JOINT = 11;	RM_Q3_JOINT = 14;	RR_Q3_JOINT = 17;
 ## ================================================================ ##
 ##                      Controller parameters 	 					##
 ## ================================================================ ##
-CTR_RATE 	= 100 			# controller rate for robot, Hz
+CTR_RATE 	= 50 			# controller rate for robot, Hz
 CTR_INTV 	= 1./CTR_RATE 	# controller interval for robot, s
 
 ## ================================================================ ##
@@ -78,11 +78,17 @@ STEP_STROKE  = 0.08			# step size, x, 	default 0.07
 STEP_HEIGHT  = 0.1 			# step height, z 	default 0.05
 TRAC_PERIOD	 = 1.5			# cycle time for movement
 
-BASE_MAX_LINEAR_VELOCITY  = 0.1		# maximum base velocity, m/s
+BASE_MAX_LINEAR_VELOCITY  = 0.025		# maximum base velocity, m/s
 BASE_MAX_ANGULAR_VELOCITY = 0.3		# maximum base velocity, rad/s
 
 # BASE_SPEED 			= 0.025 		# walking speed in m/s
 # DUTY_FACTOR = {'tripod':0.5, 'tetrapod':2./3., 'ripple':3./4., 'wave':5./6. }
+
+## ================================================================ ##
+##                  	Stability Parameters 						##
+## ================================================================ ## 
+SM_MIN = 0.05
+
 ## ================================================================ ##
 ##                  Error Compensation parameters 					##
 ## ================================================================ ## 
@@ -109,7 +115,7 @@ LEG_STANCE = stance_selection.initial_stance(STANCE_WIDTH,BODY_HEIGHT, STANCE_TY
 ## ================================================================ ##
 ##                       	Transforms 		 						##
 ## ================================================================ ##
-# TODO: MODIFY THESE TO USE transforms.py
+# TODO: THESE SHOULD NOT BE REQUIRED ANYMORE
 FR_base_X_hip = {}
 FR_base_X_hip[0] = np.array([ [COXA_X],  [COXA_Y],  [COXA_Z] ])
 FR_base_X_hip[1] = np.array([ [0.0]	  ,  [COXA_Y],  [COXA_Z] ])

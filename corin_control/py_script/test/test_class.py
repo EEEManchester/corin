@@ -5,8 +5,7 @@ sys.path.insert(0, '/home/wilson/catkin_ws/src/corin/corin_control/py_script/lib
 sys.dont_write_bytecode = True
 
 import numpy as np
-import transformations as tf
-# import connex
+from matrix_transforms import *
 
 dglobe = 2
 
@@ -45,65 +44,22 @@ def bar(first, second, third, **options):
     if options.get("number") == "first":
         return first
 
-def mXn(a, b, c=None, d=None, e=None):
-	""" multiplies 2D array in matrix style """
-	## TODO: include check on array size
-	try:
-		if (c is None and a.shape == b.shape):
-			return np.dot(a,b)
-		elif (d is None):
-			return np.dot(np.dot(a,b), c)
-		elif (e is None):
-			return np.dot(np.dot(a,b), np.dot(c,d))
-		elif (e is not None):
-			return np.dot(np.dot(np.dot(a,b), np.dot(c,d)), e)
-	except Exception, e:
-		print e
-		return None
+def update_state(**options):
+	if options.get("reset") == True:
+		print 'Resetting'
 
-def mX(a, b, c=None, d=None, e=None):
-	""" multiplies 2D array in matrix style """
-	## TODO: include check on array size
-	if (a.shape == b.shape):
-		if (c is None):
-			return np.dot(a,b)
-		elif (c is not None):
-			if (d is None and a.shape == c.shape):
-				return np.dot(np.dot(a,b), c)
-			elif (d is not None):
-				if (e is None and b.shape == c.shape
-								and c.shape == d.shape):
-					return np.dot(np.dot(a,b), np.dot(c,d))
-				elif (e is not None and b.shape == c.shape
-									and c.shape == d.shape
-									and d.shape == e.shape):
-					return np.dot(np.dot(np.dot(a,b), np.dot(c,d)), e)
-				else:
-					return None
-			else:
-				return None
-		else:
-			return None
-	else:
-		return None
-
-	# elif (c is not None and d is None):
-	# 	return np.dot(np.dot(a,b), c)
-	# elif (c is not None and d is not None and e is None):
-	# 	return np.dot(np.dot(a,b), np.dot(c,d))
-	# elif (c is not None and d is not None and e is not None):
-	# 	return np.dot(np.dot(np.dot(a,b), np.dot(c,d)), e)
-	# else:
-	# 	return None
+	print 'Running as normal'
 
 if __name__ == "__main__":
+	# print bar(1,2,3, action='sum')
+	update_state(reset=True)
+
 	f = np.array([1,2])
 	
 	a = np.array([[1,2],[2,2]])
 	b = np.array([[1,2],[2,2]])
 	
-	print mXn(f,a)
-
+	
 	data = test_func('home1')
 	# print data
 	test1 = 1
@@ -134,4 +90,4 @@ if __name__ == "__main__":
 	x  = np.zeros(Column6D)
 	y  = np.zeros(Column6D)
 	
-	# print bar(1,2,3, action='sum')
+	

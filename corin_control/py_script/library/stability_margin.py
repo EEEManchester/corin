@@ -9,7 +9,7 @@ from constant import *
 
 class StabilityMargin():
 	def __init__(self):
-		pass
+		self.sm = np.zeros(2) 	# current stability margin
 
 	def support_leg_identification(self, leg_phase):
 		""" Identifies front and rear legs in support phase """ 
@@ -66,10 +66,15 @@ class StabilityMargin():
 			p_f   = p1 + p_p  												# rejection vector from base
 			sm[i] = np.sqrt(p_f[0]**2 + p_f[1]**2) 							# magnitude of rejection vector
 
+		self.sm = sm
 		return sm
 
 	def force_moment(self):
 		pass
+
+## ================================================================================================ ##
+## 												TESTING 											##
+## ================================================================================================ ##
 
 BASE_X_LF_FOOT = np.array([1., 2., 0.1])
 BASE_X_LM_FOOT = np.array([0., 2., 0.1])
@@ -84,6 +89,3 @@ Legs = [BASE_X_LF_FOOT, BASE_X_LM_FOOT, BASE_X_LR_FOOT,
 leg_phase = [0,0,0,0,0,0]
 
 SM = StabilityMargin()
-print SM.LSM(Legs, leg_phase)
-
-

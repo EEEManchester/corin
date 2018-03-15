@@ -6,7 +6,7 @@ import sys; sys.dont_write_bytecode = True
 import numpy as np
 from scipy import linalg
 
-import transformations as tf
+from matrix_transforms import *
 from constant import *
 
 class KDL():
@@ -143,8 +143,8 @@ class KDL():
 
 		qrx = qsurface.item(1)
 
-		world_hip_X_wall_Y = (np.dot(tf.rotation_zyx(bodypose[3:7]), (base_X_surface - COXA_Y)*np.array([ [0.],[1.],[0,] ])) ).item(1)
-		world_hip_X_wall_Z = bodypose.item(2) + (np.dot(tf.rotation_zyx(bodypose[3:7]), np.array([ [0.], [COXA_Y], [0.] ]) ) ).item(2)
+		world_hip_X_wall_Y = (np.dot(rotation_zyx(bodypose[3:7]), (base_X_surface - COXA_Y)*np.array([ [0.],[1.],[0,] ])) ).item(1)
+		world_hip_X_wall_Z = bodypose.item(2) + (np.dot(rotation_zyx(bodypose[3:7]), np.array([ [0.], [COXA_Y], [0.] ]) ) ).item(2)
 
 		# print 'f tf: ', np.round(world_hip_X_wall_Y, 3), np.round(world_hip_X_wall_Z, 3)
 
@@ -165,14 +165,14 @@ class KDL():
 		world_X_wall_Z = world_hip_X_wall_Z + h1
 
 		# transform to world frame
-		world_X_wall_Y = (np.dot(tf.rotation_zyx(bodypose[3:7]), base_X_surface*np.array([ [0.],[1.],[0,] ]))).item(1)
+		world_X_wall_Y = (np.dot(rotation_zyx(bodypose[3:7]), base_X_surface*np.array([ [0.],[1.],[0,] ]))).item(1)
 		base_X_wall_Z  = world_X_wall_Z - bodypose.item(2)
 
 		# transform to base frame
-		# base_X_nom = np.dot(tf.rotation_zyx(-bodypose[3:7]), np.array([ [0.],[world_X_wall_Y], [base_X_wall_Z] ]))
+		# base_X_nom = np.dot(rotation_zyx(-bodypose[3:7]), np.array([ [0.],[world_X_wall_Y], [base_X_wall_Z] ]))
 
 		# output: in base frame, from hip to nominal position
-		base_hip_X_nom = np.dot(tf.rotation_zyx(-bodypose[3:7]), np.array([ [0.],[world_hip_X_wall_Y], [base_X_wall_Z] ]))
+		base_hip_X_nom = np.dot(rotation_zyx(-bodypose[3:7]), np.array([ [0.],[world_hip_X_wall_Y], [base_X_wall_Z] ]))
 
 		# print world_X_wall_Y, base_X_wall_Z
 		# print base_X_nom.transpose()

@@ -404,7 +404,7 @@ class SplineGenerator:
 			if (t[i+1]==t[-1]):	
 				lv = 0.
 				nv = 1
-
+				
 			for tk in np.linspace(t[i],t[i+1]-lv,(t[i+1]-t[i])/tint+nv):
 				td = tk - t[i]
 				qpx = a0x + a1x*td + a2x*td**2 + a3x*td**3
