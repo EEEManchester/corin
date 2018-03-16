@@ -438,7 +438,8 @@ class SplineGenerator:
 		""" Generate transfer phase trajectory """
 
 		x, t = self.LegPhase_Interpolation(sp, ep, snorm ,phase)
-		
+		# print (x)
+		# print (t)
 		## use zero initial and final acceleration
 		cx = np.zeros((len(x)+2,3))	# via point 2D array
 		tx = np.zeros(len(x)+2)		# time interval array
@@ -470,11 +471,13 @@ class SplineGenerator:
 ## ================================================================================================ ##
 
 # sample variable
-sp = np.array([0.214,0.025, -0.1451])
-ep = np.array([0.214,-0.025,-0.1451])
+sp = np.array([0.50, -0.10, -0.05])
+ep = np.array([0.50,  0.10, -0.05])
 snorm = (0, 0, 1)
-
 phase = 1
+
+spliner = SplineGenerator()
+# x_out = spliner.generate_leg_spline(sp, ep, snorm, phase)
 
 x_com = np.array([.0,.0,BODY_HEIGHT])
 

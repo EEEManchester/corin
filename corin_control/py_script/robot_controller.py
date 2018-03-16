@@ -16,14 +16,14 @@ import numpy as np
 ## Personal libraries
 from constant import *
 import control_interface 					# action selection from ROS parameter server
-import routines 							# class for pre-defined routines to execute
+import robot_routines as Routine			# class for pre-defined routines to execute
 import robot_class 							# class for robot states and function
 import gait_class 							# class for gait coordinator
 import path_generator as Pathgenerator 		# generates path from via points
 from matrix_transforms 	import *			# SE(3) transformation library
 import plotgraph as Plot 					# library for plotting 
 
-## ROS messages
+## ROS messages & libraries
 import rospy
 from sensor_msgs.msg import Imu 						# sub msg for IMU
 from sensor_msgs.msg import JointState 					# sub msg for joint states
@@ -50,7 +50,7 @@ class CorinManager:
 		self.resting   = False 	# Flag indicating robot standing or resting
 		self.on_start  = False 	# variable for resetting to leg suspended in air
 
-		self._initialise_()
+		self.__initialise__()
 
 	def joint_state_callback(self, msg):
 		""" robot joint state callback """
@@ -68,21 +68,21 @@ class CorinManager:
 		""" foot contact force """
 		self.Robot.cforce = msg.data
 
-	def _initialise_(self):
+	def __initialise__(self):
 		""" Initialises robot and classes """
 
 		## Identifies interface to control: simulation or robotis motors
 		self.interface = 'simulation' if rospy.has_param('/gazebo/auto_disable_bodies') else 'robotis'
 
 		## set up publisher and subscriber topics
-		self.__initialise_topics()
+		self.__initialise_topics__()
 
 		## moves robot to nominal position if haven't done so
 		try:
 			if (rospy.get_param(ROBOT_NS + '/standing') is False):
 				raise Exception
 		except Exception, e:
-			self._default_pose()
+			self.default_pose()
 
 		## update and reset robot states
 		self.Robot.suspend = False
@@ -91,8 +91,7 @@ class CorinManager:
 		for j in range(0,self.Robot.active_legs):
 			self.Robot.Leg[j].feedback_state = 2 	# trajectory completed
 
-
-	def __initialise_topics(self):
+	def __initialise_topics__(self):
 		""" Initialises publishers and subscribers """
 
 		##***************** PUBLISHERS ***************##
@@ -129,119 +128,6 @@ class CorinManager:
 
 		rospy.sleep(0.5) # sleep for short while for topics to be initiated properly
 
-	def leg_level_controller(self, setpoints):
-		""" Generates and execute trajectory by specified desired leg position 	"""
-		""" Input: 	1) nleg -> list of corresponding legs to move
-					2) leg_stance -> list of 3D positions for each leg 
-									expressed wrt leg frame
-					3) leg_phase -> type of trajectory
-					4) period -> timing of leg execution
-			Output: flag -> True: execution complete, False: error occured 		"""
-
-		self.Robot.update_state() 		# get current state
-
-		## define variables
-		td = 0 		# period for trajectory
-		tv = False 	# flag if period is an array
-		nleg, leg_stance, leg_phase, period = setpoints
-
-		## Check if time intervals is used
-		try:
-			len(period)
-			tv = True
-		except TypeError:
-			td = TRAC_PERIOD
-		
-		try:
-			## Generate spline for each leg
-			for i in range(len(nleg)):
-				j = nleg[i]
-				td = period[j][1]-period[j][0] if tv else td
-
-				# set new stance for leg
-				self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3] = leg_stance[j]
-				# generate spline
-				svalid = self.Robot.Leg[j].generate_spline(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3], self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],
-															self.Robot.Leg[j].qsurface, leg_phase[j], False, td, CTR_INTV)
-				
-				if (svalid is False):
-					print 'Trajectory Invalid!'
-					self.Robot.invalid = True
-					raise Exception, "robot invalid"
-
-			## Unstack trajectory and execute
-			npoints = self.Robot.Leg[nleg[0]].spline_length 	# use arbitrary length as counter
-			for p in range(0, npoints):
-				print p, npoints
-				for i in range(len(nleg)):
-					j = nleg[i]
-					self.Robot.Leg[j].update_from_spline(); 	# set cartesian position for joint kinematics
-
-				qd = self.Robot.task_X_joint()
-				self.publish_topics(qd)
-		except Exception, e:
-			print "Exception raised: ", e
-			return False
-
-		return True
-
-	def _default_pose(self, stand_state=0):
-		""" Moves robot to nominal stance (default pose) 		 """
-		""" Input: 1) stand_state -> indicates if robot standing """
-
-		## moves leg into air
-		if (self.on_start == False):
-			print 'Resetting stance....'
-			setpoints = routines.air_suspend_legs()
-			self.on_start = True if self.leg_level_controller(setpoints) else False
-
-		rospy.sleep(0.5)
-		
-		print 'Moving to nominal stance....'
-		if (stand_state):
-			pass
-			setpoints = self.routine_shuffle()
-		else:
-			setpoints = (range(0,6), LEG_STANCE, [0]*6, 2)
-		self.leg_level_controller(setpoints)
-
-	def complete_transfer_trajectory(self):
-		""" Executes remaining leg trajectories in transfer phase """
-		""" Checks remaining points on trajectory and finish off  """ 
-
-		dir_uv = np.array([0.,0.,0.]) 	# zero vector direction
-		spline_count = 0 				# current spline count for transfer phase legs
-		self.Robot.suspend = True 		# suspend robot for zero trunk movement
-
-		# Get leg phases
-		for j in range(0,6):
-			# check leg transfer status, if true
-			if (self.Robot.Gait.cs[j] == 1):
-				# get number of points yet to execute
-				spline_count = self.Robot.Leg[j].spline_length - self.Robot.Leg[j].spline_counter
-		
-		try:
-			# loop only required via points
-			for sc in range(0, spline_count):
-				for j in range(0,6):
-					# transfer phase
-					if (self.Robot.Gait.cs[j] == 1 and self.Robot.Leg[j].feedback_state==1):
-						# unstack next point in individual leg spline to be processed
-						try:
-							self.Robot.Leg[j].update_from_spline()
-						except:
-							self.Robot.Leg[j].feedback_state = 2 	# trajectory completed
-							
-				## Task to joint space
-				qd = self.Robot.task_X_joint()
-				self.publish_topics(qd)
-				
-			return True
-		except Exception, e:
-			print "Error: ", e
-			print "Returning legs to ground failed"
-			return False
-
 	def publish_topics(self, q, q_log=None):
 		""" Publish joint position to joint controller topics and
 			setpoint topic (for logging all setpoint states) 				"""
@@ -276,18 +162,123 @@ class CorinManager:
 
 		self.rate.sleep()
 
-	def alternate_phase(self):
-		# change gait phase
-		self.Robot.Gait.change_phase()
+	def default_pose(self, stand_state=0):
+		""" Moves robot to nominal stance (default pose) 		 """
+		""" Input: 1) stand_state -> indicates if robot standing """
 
-		# update robot leg phase_change
-		for i in range(0,6):
-			if (self.Robot.Gait.cs[i] == 1):
-				self.Robot.Leg[i].phase_change = False
+		## Moves leg into air
+		if (self.on_start == False):
+			print 'Resetting stance....'
+			setpoints = Routine.air_suspend_legs()
+			self.on_start = True if self.leg_level_controller(setpoints) else False
 
-		self.Robot.suspend = False
-		# print 'Gait phase changed!'
-		# raw_input('gait continue')
+		rospy.sleep(0.5)
+		
+		print 'Moving to nominal stance....'
+		if (stand_state):
+			setpoints = Routine.shuffle_legs()
+		else:
+			setpoints = (range(0,6), LEG_STANCE, [0]*6, 2)
+		self.leg_level_controller(setpoints)
+		rospy.set_param(ROBOT_NS + '/standing', True)
+
+	def leg_level_controller(self, setpoints):
+		""" Generates and execute trajectory by specified desired leg position 	"""
+		""" Input: 	setpoints -> tuple of 4 items:-
+							- nleg -> list of corresponding legs to move
+							- leg_stance -> list of 3D positions for each leg 
+											expressed wrt leg frame
+							- leg_phase -> type of trajectory
+							- period -> timing of leg execution
+			Output: flag -> True: execution complete, False: error occured 		"""
+
+		self.Robot.update_state() 		# get current state
+
+		## Define Variables ##
+		te = 0 		# end time of motion
+		td = 0 		# duration of trajectory
+		tv = False 	# flag if period is an array
+		nleg, leg_stance, leg_phase, period = setpoints
+
+		## Check if time intervals is used - set trajectory duration and end time
+		try:
+			len(period)
+			tv = True
+			te = np.amax(period[3])
+		except TypeError:
+			td = te = period
+			period = [[0.,2.]]*6 	# change period from int to list
+		
+		# Number of points based on duration of trajectory
+		npc = int(te/CTR_INTV+1)
+		
+		try:
+			## Generate spline for each leg
+			for i in range(len(nleg)):
+				j = nleg[i]
+				td = period[j][1]-period[j][0] if tv else td
+
+				self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3] = leg_stance[j]
+				svalid = self.Robot.Leg[j].generate_spline(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3], self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],
+															self.Robot.Leg[j].qsurface, leg_phase[j], False, td, CTR_INTV)
+				if (svalid is False):
+					self.Robot.invalid = True
+					raise Exception, "Trajectory Invalid"
+
+			## Unstack trajectory and execute
+			for p in range(0, npc):
+				ti = p*CTR_INTV 	# current time in seconds
+				for i in range(len(nleg)):
+					j = nleg[i]
+					# identify start and end of transfer trajectory
+					if (ti >= period[j][0] and ti <= period[j][1]):
+						self.Robot.Leg[j].update_from_spline(); 	# set cartesian position for joint kinematics
+
+				qd = self.Robot.task_X_joint()
+				self.publish_topics(qd)
+
+		except Exception, e:
+			print "Exception raised: ", e
+			return False
+
+		return True
+
+	def complete_transfer_trajectory(self):
+		""" Executes remaining leg trajectories in transfer phase """
+		""" Checks remaining points on trajectory and finish off  """ 
+
+		## Define Variables ##
+		sc_new = 0	# current spline count for transfer phase legs
+		sc_max = 0	# maximum spline count among the transfer phase legs
+		dir_uv = np.array([0.,0.,0.]) 	# zero vector direction
+		self.Robot.suspend = True 		# suspend robot for zero trunk movement
+
+		# Check for legs that are in transfer phase
+		for j in range(0,6):
+			if (self.Robot.Gait.cs[j] == 1):
+				# get number of points yet to execute
+				sc_new = self.Robot.Leg[j].spline_length - self.Robot.Leg[j].spline_counter
+				sc_max = sc_new if (sc_new > sc_max) else sc_max
+
+		try:
+			# loop only required via points for legs in transfer phase
+			for sc in range(0, sc_max):
+				for j in range(0,6):
+					if (self.Robot.Gait.cs[j] == 1 and self.Robot.Leg[j].feedback_state==1):
+						try:
+							self.Robot.Leg[j].update_from_spline()
+						except:
+							self.Robot.Leg[j].feedback_state = 2
+							
+				## Task to joint space
+				qd = self.Robot.task_X_joint()
+				self.publish_topics(qd)
+				
+			return True
+		except Exception, e:
+			print "Error: ", e
+			print "Returning legs to ground failed"
+			return False
 
 	def trajectory_tracking(self, x_cob, w_cob=0):
 		""" Generates body trajectory from given via points and
@@ -296,18 +287,15 @@ class CorinManager:
 					2) w_com -> 2D array of angular orientations
 			Output: None											"""
 
-		## TEMP
-		self.Robot.update_state()
-
-		## define variables ##
+		## Define Variables ##
 		PathGenerator = Pathgenerator.PathGenerator() 	# path generator for robot's base
 		# PathGenerator.gait = self.Robot.Gait.gdic
 		cob_X_desired = np.zeros((3,1)) 	# cob linear location
 		cob_W_desired = np.zeros((3,1)) 	# cob angular location
 
 		# Trajectory for robot's base
-		# x_spline, w_spline = PathGenerator.generate_path(x_cob, w_cob, CTR_INTV)
-		base_path = PathGenerator.generate_path(x_cob, w_cob, CTR_INTV) 
+		# x_spline, w_spline = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV)
+		base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV) 
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 		
 		# Set all legs to support mode for bodyposing, prevent AEP from being set
@@ -373,6 +361,8 @@ class CorinManager:
 			self.Robot.V6d.world_X_base = np.vstack((v3cv,v3wv))
 			self.Robot.A6d.world_X_base = np.vstack((v3ca,v3wa))
 			
+			
+			
 			## generate trajectory for leg in transfer phase
 			for j in range (0, self.Robot.active_legs):
 
@@ -430,9 +420,7 @@ class CorinManager:
 					## generate spline for transfer phase leg - 
 					svalid = self.Robot.Leg[j].generate_spline(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3], self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],
 																self.Robot.Leg[j].qsurface, 1, False, TRAC_PERIOD, CTR_INTV)
-					# if (j==1):
-					# 	print 'sp : ', np.round(self.Robot.Leg[j].XHc.base_X_foot[0:3,3].flatten(),4)
-					# 	print 'ep : ', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3].flatten(),4)
+					
 					if (svalid is False):
 						self.Robot.invalid = True
 					else:	
@@ -508,7 +496,7 @@ class CorinManager:
 			# triggers only when all transfer phase legs complete and greater than zero
 			# > 0: prevents trigger during all leg support
 			if (transfer_total == leg_complete and transfer_total > 0 and leg_complete > 0):
-				self.alternate_phase()
+				self.Robot.alternate_phase()
 
 			## LOGGING: initialise variable and set respective data ##
 			qlog 		  = JointState()
@@ -546,7 +534,7 @@ class CorinManager:
 			## stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
 				print 'Going to standup'
-				self._default_pose()
+				self.default_pose()
 
 			## condition for support (1), walk (2), reset (3)
 			if (mode == 1):
@@ -556,14 +544,14 @@ class CorinManager:
 				self.Robot.suspend = False 		# clear suspension flag
 				
 				self.trajectory_tracking(x_cob, w_cob)
-				# self._default_pose()
-				# self._default_pose(1) 	# required for resetting stance for walking
+				# self.default_pose()
+				# self.default_pose(1) 	# required for resetting stance for walking
 
 			elif (mode == 2):
 				print 'walk mode'
 				self.Robot.support_mode = False
 
-				self.alternate_phase()
+				self.Robot.alternate_phase()
 				self.trajectory_tracking(x_cob, w_cob)
 
 			elif (mode == 3):
@@ -573,7 +561,7 @@ class CorinManager:
 					self.resting = True
 				elif (self.resting == True): 	# standup from rest
 					print 'Standup'
-					self._default_pose()
+					self.default_pose()
 					self.resting = False
 
 		else:

@@ -64,10 +64,10 @@ class RobotState:
 	def _initialise(self):
 		""" Initialises robot class for setting up number of legs """
 
-		for i in range(6):
-			self.Leg.append(leg_class.LegClass(i))
-			self.Leg[i].XHc.update_base_X_NRP(self.KDL.leg_IK(LEG_STANCE[i]))
-			self.Leg[i].XHd.update_base_X_NRP(self.KDL.leg_IK(LEG_STANCE[i]))
+		for j in range(6):
+			self.Leg.append(leg_class.LegClass(j))
+			self.Leg[j].XHc.update_base_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
+			self.Leg[j].XHd.update_base_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
 
 		print ">> INITIALISED ROBOT CLASS"
 
@@ -84,25 +84,23 @@ class RobotState:
 		""" update legs state """
 		## TODO: INTEGRATE HW FORCE SENSOR READINGS
 
-		# self.XHc.update_legs(self.qc.position)
+		# self.XHc.update_legs(self.qc.position) 	# NOT USED
 
-		# offset to deal with base joints - suspended control of base (for )
-		if (len(self.qc.name)==18):
-			offset = 0
-		else:
-			offset = 1
+		## Offset to deal with base joints - suspended control of base for
+		## fixed_robot evaluation in Gazebo
+		offset = 0 if (len(self.qc.name)==18) else 1
 
 		# update leg states and check if boundary exceeded
-		for i in range(0,self.active_legs):
+		for j in range(0,self.active_legs):
 
-			bstate = self.Leg[i].update_joint_state(self.XHc.world_X_base, self.qc.position[offset+i*3:offset+(i*3)+3], reset)
+			bstate = self.Leg[j].update_joint_state(self.XHc.world_X_base, self.qc.position[offset+j*3:offset+(j*3)+3], reset)
 
-			self.Leg[i].update_force_state(self.cstate[i], self.cforce[i*3:(i*3)+3])
+			self.Leg[j].update_force_state(self.cstate[j], self.cforce[j*3:(j*3)+3])
 
-			if (bstate==True and self.Gait.cs[i]==0 and self.support_mode==False):
+			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
 				self.suspend = True
-				# print 'suspended'
-
+				print 'Suspend ', j, bstate
+		# print '-------------------------------------------------------'
 
 	def update_Imu_state(self):
 		""" update imu state """
@@ -143,6 +141,20 @@ class RobotState:
 			print 'Error: ', e
 			print 'Robot Stopping'
 			self.invalid = True
+
+	def alternate_phase(self):
+		""" change gait to next phase """
+		
+		self.Gait.change_phase()
+
+		# update robot leg phase_change
+		for j in range(0,6):
+			if (self.Gait.cs[j] == 1):
+				self.Leg[j].phase_change = False
+
+		self.suspend = False
+		# print 'Gait phase changed!'
+		# raw_input('gait continue')
 
 	def task_X_joint(self,legs_phase=None): # TODO - to be revisited
 		""" Convert all leg task space to joint space 		"""								

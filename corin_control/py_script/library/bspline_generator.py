@@ -84,28 +84,9 @@ class SplineGenerator:
 		
 		return C, t0
 
-	def point_Interpolation(self, cpath, ctime):
-		""" expand input array size for bspline computation """
-
-		
-		self.C  = np.zeros((3,len(cpath)+4))
-		# print len(self.t0), len(self.C)
-		for i in range(0,3):
-			k = 0
-			for j in range(self.p-1,self.C.shape[1]-self.p+1):
-				self.C[i][j] = cpath.item(j-(self.p-2),i)
-				k += 1
-		
-		for i in range(0,3):
-			self.C[i][0] = cpath[0][i]
-			self.C[i][-1] = cpath[-1][i]
-		
-		self.C = np.matrix(self.C) 			# convert to matrix
-		
-		return self.C#, self.t0
-
-	## Determine knots required
 	def knotFunction(self):
+		""" Determine knots required """
+
 		self.U = np.zeros(len(self.t0)+2*self.p+1)
 
 		for i in range(0,len(self.t0)+2*self.p+1):
@@ -325,6 +306,23 @@ class SplineGenerator:
 		
 		return ct,cp,cv,ca
 
+	def point_Interpolation(self, cpath, ctime):
+		""" expand input array size for bspline computation """
+
+		C  = np.zeros((3,len(cpath)+4))
+		
+		for i in range(0,3):
+			k = 0
+			for j in range(self.p-1,C.shape[1]-self.p+1):
+				C[i][j] = cpath.item(j-(self.p-2),i)
+				k += 1
+		
+		for i in range(0,3):
+			C[i][0] = cpath[0][i]
+			C[i][-1] = cpath[-1][i]
+		
+		return np.matrix(C)
+
 	def compute_time_intervals(self, q):
 		""" Compute time interval for spline if not specified 	"""
 		""" Intervals are at unit time (1)						"""
@@ -360,8 +358,7 @@ phase = 1
 
 ### Test scripts
 spliner = SplineGenerator()
-x_out = spliner.generate_leg_spline(sp, ep, snorm, phase)
-# print x_out[1]
+# x_out = spliner.generate_leg_spline(sp, ep, snorm, phase)
 # Plot.plot_2d(x_out[0],x_out[1])
 # ndata = TrajectoryPoints(x_out)
 

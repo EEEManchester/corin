@@ -94,9 +94,4 @@ if __name__ == "__main__":
 	Column6D = (1,1)
 	
 	a = 1
-	try:
-		len(a)
-	except TypeError, e:
-		print 'Value ', e
-	except Exception, e:
-		print e
+	

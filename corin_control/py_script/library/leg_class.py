@@ -99,6 +99,7 @@ class LegClass:
 		self.XHc.update_coxa_X_foot(q_compensated)
 		self.XHc.update_base_X_foot(q_compensated)
 		self.XHc.update_world_base_X_foot(mx_world_X_base, q_compensated)
+		self.XHc.update_world_base_X_NRP(mx_world_X_base)
 
 		## state reset
 		if (resetState):
@@ -138,8 +139,8 @@ class LegClass:
 		self.xspline = TP.TrajectoryPoints(self.bspline.generate_leg_spline(start.flatten(), end.flatten(), snorm, phase, reflex, ctime, tn))
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)
-		if (self.number==1):
-			Plot.plot_2d(self.xspline.t,self.xspline.xp)
+		# if (self.number==1):
+		# 	Plot.plot_2d(self.xspline.t,self.xspline.xp)
 
 		## checks spline for kinematic constraint
 		qt = [];	qp = [];	qv = [];	qa = [];
@@ -191,10 +192,6 @@ class LegClass:
 		else:
 			if (self.KDL.check_singularity(self.Joint.qpd) is False):
 				self.Joint.qvd, self.Joint.qad = self.KDL.joint_speed(self.Joint.qpd, self.V6d.coxa_X_foot, self.A6d.coxa_X_foot)
-				# self.Joint.qvd, self.Joint.qad = self.KDL.joint_speed(self.Joint.qpd, self.hip_X_ee.ds.xv, self.hip_X_ee.ds.xa)
-				# diff_v = (qvn - self.Joint.qvd).flatten()
-				# diff_a = (qan - self.Joint.qad).flatten()
-				# print diff_v #, diff_a
 			else:
 				error = 2
 		
@@ -202,30 +199,31 @@ class LegClass:
 
 	
 	def check_boundary_limit(self):
-		""" leg boundary area projected to 2D """
+		""" leg boundary area projected to 2D space """
+
 		bound_violate = False
 		BOUND_FACTOR  = 1.8 	# relaxes the boundary constraint
 
-		# vector to aep and current position wrt nominal point
-		vec_nom_X_aep = self.hip_AEP - np.reshape(LEG_STANCE[self.number],(3,1))
-		vec_nom_X_ee  = self.hip_X_ee.cs.xp - np.reshape(LEG_STANCE[self.number],(3,1))
+		# Vector to aep and current position wrt nominal point
+		v3_NRP_X_AEP  = self.XHd.world_base_X_AEP[:3,3:4]  - self.XHd.world_base_X_NRP[:3,3:4]
+		v3_NRP_X_foot = self.XHc.world_base_X_foot[:3,3:4] - self.XHd.world_base_X_NRP[:3,3:4]
 
-		# magnitude of current point
-		mag_nom_X_ee  = np.dot(vec_nom_X_aep.flatten(), vec_nom_X_ee.flatten())
+		# Magnitude of current point
+		mag_nom_X_ee  = np.dot(v3_NRP_X_AEP.flatten(), v3_NRP_X_foot.flatten())
 
-		# angle between hip frame and AEP
-		vec_ang = np.arctan2(vec_nom_X_aep.item(1), vec_nom_X_aep.item(0))
+		# Angle between hip frame and AEP
+		vec_ang = np.arctan2(v3_NRP_X_AEP.item(1), v3_NRP_X_AEP.item(0))
 
-		# ellipse boundary - for the front half: p_nom to AEP
+		## Ellipse boundary - for the front half: p_nom to AEP
 		if (mag_nom_X_ee > 0.):
 			# print self.number, ' ellipse boundary'
 			try:
 				# ellipse major, minor radius, rotation
-				a  = np.sqrt(vec_nom_X_aep.item(0)**2 + vec_nom_X_aep.item(1)**2)
+				a  = np.sqrt(v3_NRP_X_AEP.item(0)**2 + v3_NRP_X_AEP.item(1)**2)
 				b  = STEP_STROKE/2.
 				qr = vec_ang
-				x  = vec_nom_X_ee.item(0)
-				y  = vec_nom_X_ee.item(1)
+				x  = v3_NRP_X_foot.item(0)
+				y  = v3_NRP_X_foot.item(1)
 
 				r_state = ((x*np.cos(qr)+y*np.sin(qr))**2)/(a**2) + ((x*np.sin(qr)-y*np.cos(qr))**2)/(b**2)
 
@@ -235,10 +233,9 @@ class LegClass:
 			except:
 				pass
 
-		# circle boundary - for the back half: p_nom to PEP
+		## Circle boundary - for the back half: p_nom to PEP
 		else:
-			# print self.number, ' circle boundary'
-			r_state = (vec_nom_X_ee.item(0)**2 + vec_nom_X_ee.item(1)**2)/(STEP_STROKE/2.)**2
+			r_state = (v3_NRP_X_foot.item(0)**2 + v3_NRP_X_foot.item(1)**2)/(STEP_STROKE/2.)**2
 
 			if (BOUND_FACTOR < r_state):
 				bound_violate = True

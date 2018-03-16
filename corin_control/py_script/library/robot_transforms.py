@@ -155,6 +155,13 @@ class ArrayHomogeneousTransform:
 		self.world_X_foot = np.dot(mx_world_X_base, self.base_X_foot)
 		self.world_base_X_foot = np.dot(self.world_X_foot, mx_world_X_base)
 
+	def update_world_base_X_NRP(self, mx_world_X_base):
+		
+		mx_world_X_base[:3,3:4] = np.zeros((3,1)) 	# overwrite linear components to ignore them
+		
+		self.world_X_NRP = np.dot(mx_world_X_base, self.base_X_NRP)
+		self.world_base_X_NRP = np.dot(self.world_X_NRP, mx_world_X_base)
+
 	def update_base_X_NRP(self, q):
 		self.update_coxa_X_NRP(q)
 		self.base_X_NRP = np.dot(self.base_X_coxa, self.coxa_X_NRP)
@@ -381,7 +388,7 @@ class HomogeneousTransform:
 			q[0+i*3] = xp[0]
 			q[1+i*3] = xp[1]
 			q[2+i*3] = xp[2]
-		qb[5] = BODY_HEIGHT
+		qb[2] = BODY_HEIGHT
 
 		self.__init_update() 		# single update
 		self.update_robot(qb,q) # runtime update
@@ -489,7 +496,7 @@ class HomogeneousTransform:
 		self.world_X_base[1,3] =  (-qz_cos*qx_sin + qz_sin*qy_sin*qx_cos)*tz + (qz_cos*qx_cos + qz_sin*qy_sin*qx_sin)*ty + qz_sin*qy_cos*tx
 		self.world_X_base[2,0] = -qy_sin
 		self.world_X_base[2,1] =  qy_cos*qx_sin
-		self.world_X_base[2,2] =	 qy_cos*qx_cos
+		self.world_X_base[2,2] =  qy_cos*qx_cos
 		self.world_X_base[2,3] =  qy_cos*qx_cos*tz + qy_cos*qx_sin*ty - qy_sin*tx
 
 		self.update_base_X_world()
@@ -1006,9 +1013,10 @@ for i in range(0,6):
 	q[0+i*3] = 0.
 	q[1+i*3] = 0.3381
 	q[2+i*3] = -1.852
-qb[5] = BODY_HEIGHT
+qb[2] = BODY_HEIGHT
 
 XH.update_robot(qb,q) 	# set initial stance of robot
+print XH.world_X_base
 # q = np.array([0,0.5,1.1])
 # print len(q)
 XH.update_base_X_LF_foot(q)

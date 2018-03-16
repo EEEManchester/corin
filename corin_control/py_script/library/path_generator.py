@@ -26,7 +26,6 @@ class PathGenerator():
 	def __init__(self):
 		self.base_path = TP.BaseTrajectory() 		# class for 6D path storage
 		
-
 	def get_path_details(self):
 		""" display details of path generated """
 		pass
@@ -74,14 +73,14 @@ class PathGenerator():
 		
 		return x_cob, w_cob, t_cob
 
-	def generate_path(self, x_cob, w_cob, tn):
-		""" Generate body trajectory and modify to be within velocity limit """
-		""" Size of x_cob & w_cob needs to be the same otherwise the array
-			with the smaller size will be ignored and set to zero 			"""
+	def generate_base_path(self, x_cob, w_cob, tn):
+		""" Generate body trajectory (Re^6) and modify to be within velocity limit 	"""
+		""" Size of x_cob & w_cob needs to be the same otherwise the array with 
+			the smaller size will be ignored and set to zero 						"""
 		""" Input: 	1) x_cob -> array of via points for linear translation
 					2) w_cob -> array of via points for angular rotations 	
 			Output:	1) array of linear translation points
-					2) array of angular rotation points 					"""
+					2) array of angular rotation points 							"""
 
 		# SplineGenerator = Bspline.SplineGenerator()	# biezer spline generator
 		SplineGenerator = Pspline.SplineGenerator() 	# cubic polynomial spline generator 
@@ -118,7 +117,72 @@ class PathGenerator():
 		# return TP.TrajectoryPoints(x_out), TP.TrajectoryPoints(w_out)	# convert to TrajectoryPoints format
 		return TP.BaseTrajectory((x_out,w_out))
 
-	def generate_path_old(self, x_com, w_com, tn):
+	def generate_leg_path(self, sp, ep, snorm, phase=1, reflex=False, ctime=2.0):
+		""" Generate leg trajectory (Re^3) based on phase and type 			"""
+		""" First:  introduce via points for transfer phase trajectory
+			Second: generate the spline based on the new array of points 	"""
+		""" Input: 	1) x_cob -> array of via points for linear translation
+					2) w_cob -> array of via points for angular rotations 	
+			Output:	1) array of linear translation points
+					2) array of angular rotation points 							"""
+
+		## Define Variables ##
+		cpx = np.zeros((1,3))	# cartesian position in matrix
+		sh  = STEP_HEIGHT  		# step height for transfer phase
+		
+		## 1) Set via points according to phase
+		if (phase==1):						
+			## Transfer phase 
+
+			# vector from origin to travel path midpoint
+			pdiv = np.array([0.125,0.5,0.875])
+			sdiv = np.array([0.6*sh, sh, 0.6*sh])
+			A = np.zeros((1,3))
+
+			for i in range(0,len(pdiv)):
+				if (reflex and i==0):
+					print 'TRIGGER REFLEX'
+					v3 = sp + (ep - sp)*pdiv.item(i) + np.array([0.0, +0.03, 0.0]) 	# via point 
+				else:
+					v3 = sp + (ep - sp)*pdiv.item(i) 	# via point
+
+				# vector to SE(3)
+				m3 = np.matrix([ [1, 0, 0, v3.item(0)], [0, 1, 0, v3.item(1)], [0, 0, 1, v3.item(2)], [0, 0, 0, 1] ])
+				
+				# surface orientation; offset due to surface orientation = R(y,theta)*[0, 0, z]'
+				ry = snorm.item(1) 	# rotation about y (leg frame pitch, world frame roll)
+				nm = np.matrix([ [np.cos(ry), 0., np.sin(ry), 0.],[0., 1., 0., 0.],
+								 [-np.sin(ry), 0., np.cos(ry), 0.],[0.,0.,0.,1.] ])
+				zh = np.matrix([ [1, 0, 0, 0.], [0, 1, 0, 0], [0, 0, 1, sdiv.item(i)], [0, 0, 0, 1] ]) 	
+				
+				# compute clearance point in SCS, SE(3) & stack into array
+				mp = m3*nm*zh
+				A  = np.vstack( (A, np.array([ mp[0,3],mp[1,3],mp[2,3] ]) ) )
+
+			A  = np.delete(A, 0, 0) # clean up first row of matrix
+
+			td = np.array( [0, 0.25*ctime, 0.5*ctime, 0.75*ctime, ctime ])
+			
+			cpx = sp
+			cpx = np.vstack( (cpx, A ))
+			cpx = np.vstack( (cpx, ep ))
+
+		elif (phase==0):
+			## support phase - direct interpolation NOT USED ACTUALLY
+			td  = np.array( [0, ctime] )
+			cpx = np.array([ sp, ep])
+
+		else:
+			print "No phase" 	# have a way to exit function if no phase selected
+		
+		## 2) Generate spline
+		SplineGenerator = Pspline.SplineGenerator() 	# cubic polynomial spline generator 
+		SplineGenerator = Bspline.SplineGenerator() 	# cubic polynomial spline generator 
+		x_out = SplineGenerator.generate_body_spline(cpx, td)
+
+		return x_out
+
+	def generate_base_path_old(self, x_com, w_com, tn):
 
 		## Define variables ##
 		SplineGenerator = Pspline.SplineGenerator() 	# cubic polynomial spline generator 
@@ -341,6 +405,17 @@ class PathGenerator():
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
+sp = np.array([0.50, -0.10, -0.05])
+ep = np.array([0.50,  0.10, -0.05])
+snorm = np.array([0, 0, 0.])
+phase = 1
+
+### Test scripts
+spliner = PathGenerator()
+x_out = spliner.generate_leg_path(sp, ep, snorm, phase)
+Plot.plot_2d(x_out[0],x_out[2])
+# print x_out
+
 gait = {'name': "wave",
 		'beta': Fraction(5, 6),
 		'dphase': Fraction(1, 5),
@@ -367,8 +442,8 @@ w_cob = np.vstack((w_cob,np.array([0., 0., 0.])))
 
 planner = PathGenerator()
 planner.gait = gait
-# path_n = planner.generate_path(x_cob, w_cob, 0.1)
-# path_o = planner.generate_path_old(x_cob, w_cob, 0.1)
+# path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
+# path_o = planner.generate_base_path_old(x_cob, w_cob, 0.1)
 # Plot.plot_2d(path_o.W.t,path_o.W.xp,False)
 # Plot.plot_2d(path_n.W.t,path_n.W.xp,False)
 # plt.show()
@@ -391,7 +466,7 @@ planner.gait = gait
 # t_cob = np.delete(t_cob, 0)
 
 
-# nt,nx,nv,na = planner.generate_path(x_cob, w_cob)
+# nt,nx,nv,na = planner.generate_base_path(x_cob, w_cob)
 # planner.get_path_details()
 # Plot.plot_3d(nx,nv,na)
 # Plot.plot_2d_multiple(3,nt,nx,nv,na)
