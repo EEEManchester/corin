@@ -13,57 +13,11 @@ from scipy import linalg
 
 from constant import *
 import plotgraph as Plot
-from TrajectoryPoints import TrajectoryPoints
 
 class SplineGenerator:
 	def __init__(self):
-		# self.point 	= JointTrajectoryPoint()
 		self.nc 	= 4 	# Define the number of coefficients (order + 1) Quintic Polynomial: 6
 
-	def LegPhase_Interpolation(self, sp, ep, snorm ,phase=2, ctime=2.0):
-		""" set via points for leg transfer phase """
-
-		## declare variables ##
-		cpx = np.zeros((1,3))	# cartesian position in matrix
-		sh  = STEP_HEIGHT  		# step height for transfer phase
-		
-		# set via points according to phase
-		if (phase==1):						
-			## Transfer phase 
-
-			# vector from origin to travel path midpoint
-			pdiv = np.array([0.125,0.5,0.875])
-			sdiv = np.array([0.6*sh, sh, 0.6*sh])
-			A = np.zeros((1,3))
-
-			for i in range(0,len(pdiv)):
-				v3 = sp + (ep - sp)*pdiv.item(i)
-				m3 = np.matrix([ [1, 0, 0, v3.item(0)], [0, 1, 0, v3.item(1)], [0, 0, 1, v3.item(2)], [0, 0, 0, 1] ])
-				
-				# surface normal
-				nm = np.matrix([ [1, 0, 0, -sdiv.item(i)*np.sin(snorm[0])], [0, 1, 0, 0], [0, 0, 1, sdiv.item(i)*np.cos(snorm[0])], [0, 0, 0, 1] ])
-				
-				# compute clearance point in SCS
-				mp = m3*nm
-				A  = np.vstack( (A, np.array([ mp[0,3],mp[1,3],mp[2,3] ]) ) )
-			A  = np.delete(A, 0, 0) # clean up first row of matrix
-
-			td = np.array( [0, 0.25*ctime, 0.5*ctime, 0.75*ctime, ctime ])
-			
-			cpx = sp
-			cpx = np.vstack( (cpx, A ))
-			cpx = np.vstack( (cpx, ep ))
-
-		elif (phase==0):
-			## support phase - direct interpolation NOT USED ACTUALLY
-			td  = np.array( [0, ctime] )
-			cpx = np.array([ sp, ep])
-
-		else:
-			print "No phase" 	# have a way to exit function if no phase selected
-		
-		return cpx, td
-	
 	def velocity_heuristics(self, cx, td):
 		""" compute intermediate velocity using heuristics """
 
@@ -350,8 +304,10 @@ class SplineGenerator:
 		ca = [] 	# output array array
 
 		## Populate matrix for calculating intermediate velocity with via points (pg. 171)
+
 		if (sz>0):
 			for i in range(0,sz):
+				print ns, sz, i, t[i+2], t[i+1]
 				T0 = t[i+1]-t[i]
 				T1 = t[i+2]-t[i+1]
 
@@ -434,22 +390,7 @@ class SplineGenerator:
 
 		return np.arange(0,len(q),1)
 
-	def generate_leg_spline(self, sp, ep, snorm , phase=2, ctime=2.0, tn=0.1):
-		""" Generate transfer phase trajectory """
-
-		x, t = self.LegPhase_Interpolation(sp, ep, snorm ,phase)
-		# print (x)
-		# print (t)
-		## use zero initial and final acceleration
-		cx = np.zeros((len(x)+2,3))	# via point 2D array
-		tx = np.zeros(len(x)+2)		# time interval array
-		for i in range(0,3):
-			cx[:,i], tx = self.spline_1D_acc(x[:,i].flatten(), t)
-
-		# return self.spline_3D_heuristic(cx, tx, tn)	# zero initial & final velocity
-		return self.spline_3D(cx, tx, tn)	# zero initial & final velocity & acceleration
-
-	def generate_body_spline(self, x, t=None, tn=0.1):
+	def generate_spline(self, x, t=None, tn=0.1):
 		""" 	Compute spline using via points only	"""
 		
 		## Set t if undefined
@@ -469,15 +410,6 @@ class SplineGenerator:
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-
-# sample variable
-sp = np.array([0.50, -0.10, -0.05])
-ep = np.array([0.50,  0.10, -0.05])
-snorm = (0, 0, 1)
-phase = 1
-
-spliner = SplineGenerator()
-# x_out = spliner.generate_leg_spline(sp, ep, snorm, phase)
 
 x_com = np.array([.0,.0,BODY_HEIGHT])
 
@@ -509,8 +441,7 @@ spliner = SplineGenerator()
 # spoints = spliner.spline_3D(w_cob,t_cob)
 
 # x_out = spliner.generate_leg_spline(sp,ep,snorm,phase)
-# x_out = spliner.generate_body_spline(w_cob)
-
+# x_out = spliner.generate_spline(w_cob)
 # Plot.plot_2d(x_out[0],x_out[1])
 # Plot.plot_2d_multiple(2,x_out.t,x_out.xv,x_out.xa)
 

@@ -25,6 +25,7 @@ from matrix_transforms import *						# SE(3) transformation library
 import gait_class as Gaitgen						# class for gait coordinator
 # import param_gait									# class for setting gait parameters in RT 
 import kdl 											# kinematic & dynamics library
+import path_generator
 import pspline_generator as Pspline 				# spline generator for body
 import bspline_generator as Bspline 				# spline generator for leg
 import plotgraph as Plot 							# plot library
@@ -39,7 +40,8 @@ class LegClass:
 		# library functions
 		self.KDL 	= kdl.KDL()
 		self.bspline = Bspline.SplineGenerator() 	# bSplineClass for leg transfer spline generation
-		
+		self.Path = path_generator.PathGenerator()
+
 		# transfer phase variables - created in controller class and stored here
 		self.xspline = TP.TrajectoryPoints() 		# trajectory in cartesian position 
 		self.qspline = TP.JointTrajectoryPoints()	# trajectory in joint space
@@ -136,11 +138,9 @@ class LegClass:
 					f) ctime  -> time for trajectory						
 					g) tn 	  -> rate of trajectory 						"""
 
-		self.xspline = TP.TrajectoryPoints(self.bspline.generate_leg_spline(start.flatten(), end.flatten(), snorm, phase, reflex, ctime, tn))
+		self.xspline = TP.TrajectoryPoints(self.Path.generate_leg_path(start.flatten(), end.flatten(), snorm, phase, reflex, ctime, tn))
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)
-		# if (self.number==1):
-		# 	Plot.plot_2d(self.xspline.t,self.xspline.xp)
 
 		## checks spline for kinematic constraint
 		qt = [];	qp = [];	qv = [];	qa = [];

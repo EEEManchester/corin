@@ -79,8 +79,8 @@ class PathGenerator():
 			the smaller size will be ignored and set to zero 						"""
 		""" Input: 	1) x_cob -> array of via points for linear translation
 					2) w_cob -> array of via points for angular rotations 	
-			Output:	1) array of linear translation points
-					2) array of angular rotation points 							"""
+			Output:	BaseTrajectory() array of linear translation and angular
+					rotation points 												"""
 
 		# SplineGenerator = Bspline.SplineGenerator()	# biezer spline generator
 		SplineGenerator = Pspline.SplineGenerator() 	# cubic polynomial spline generator 
@@ -89,8 +89,8 @@ class PathGenerator():
 		x_cob, w_cob, t_cob = self.auto_generate_points(x_cob, w_cob)
 		
 		# generate spline based on unit time interval between via points
-		x_out = SplineGenerator.generate_body_spline(x_cob, t_cob, tn)
-		w_out = SplineGenerator.generate_body_spline(w_cob, t_cob, tn)
+		x_out = SplineGenerator.generate_spline(x_cob, t_cob, tn)
+		w_out = SplineGenerator.generate_spline(w_cob, t_cob, tn)
 
 		# check if base linear velocity exceeds limit
 		v_max = np.amax(x_out[2]);
@@ -99,8 +99,8 @@ class PathGenerator():
 			ndiv  = v_max/BASE_MAX_LINEAR_VELOCITY	# determine number of divisions to reduce by
 			t_cob = np.round(t_cob*ndiv,1) 			# set new time interval
 			# regenerate spline
-			x_out = SplineGenerator.generate_body_spline(x_cob, t_cob, tn)
-			w_out = SplineGenerator.generate_body_spline(w_cob, t_cob, tn)
+			x_out = SplineGenerator.generate_spline(x_cob, t_cob, tn)
+			w_out = SplineGenerator.generate_spline(w_cob, t_cob, tn)
 
 		# check if base angular velocity exceeds limit
 		w_max = np.amax(w_out[2]);
@@ -109,22 +109,27 @@ class PathGenerator():
 			ndiv  = w_max/BASE_MAX_ANGULAR_VELOCITY	# determine number of divisions to reduce by
 			t_cob = np.round(t_cob*ndiv,1) 			# set new time interval
 			# regenerate spline
-			x_out = SplineGenerator.generate_body_spline(x_cob, t_cob, tn)
-			w_out = SplineGenerator.generate_body_spline(w_cob, t_cob, tn)
+			x_out = SplineGenerator.generate_spline(x_cob, t_cob, tn)
+			w_out = SplineGenerator.generate_spline(w_cob, t_cob, tn)
 
 		# return x_out, w_out 		# python 2D array
 		self.base_path = TP.BaseTrajectory((x_out,w_out))
 		# return TP.TrajectoryPoints(x_out), TP.TrajectoryPoints(w_out)	# convert to TrajectoryPoints format
 		return TP.BaseTrajectory((x_out,w_out))
 
-	def generate_leg_path(self, sp, ep, snorm, phase=1, reflex=False, ctime=2.0):
+	def generate_leg_path(self, sp, ep, snorm, phase=1, reflex=False, ctime=2.0, tn=0.1, type='trapezoidal'):
 		""" Generate leg trajectory (Re^3) based on phase and type 			"""
 		""" First:  introduce via points for transfer phase trajectory
 			Second: generate the spline based on the new array of points 	"""
-		""" Input: 	1) x_cob -> array of via points for linear translation
-					2) w_cob -> array of via points for angular rotations 	
-			Output:	1) array of linear translation points
-					2) array of angular rotation points 							"""
+		""" Input: 	1) sp -> starting position (Re^3)
+					2) ep -> end position (Re^3)
+					3) snorm -> surface normal in unit vector (Re^3)
+					4) phase -> leg phase: 1 = transfer, 0 = support
+					5) reflex -> boolean for triggering reflex
+					6) ctime -> duration of trajectory
+					7) tn -> trajectory interval
+					8) type -> spline shape 
+			Output:	List of trajectory (position, velocity, acceleration)	"""
 
 		## Define Variables ##
 		cpx = np.zeros((1,3))	# cartesian position in matrix
@@ -135,8 +140,15 @@ class PathGenerator():
 			## Transfer phase 
 
 			# vector from origin to travel path midpoint
-			pdiv = np.array([0.125,0.5,0.875])
-			sdiv = np.array([0.6*sh, sh, 0.6*sh])
+			if (type=='parabolic'):
+				pdiv = np.array([0.125, 0.5, 0.875]) 		# time division
+				sdiv = np.array([0.6*sh, sh, 0.6*sh])
+				td   = np.array([0, 0.25*ctime, 0.5*ctime, 0.75*ctime, ctime ])
+			elif (type == 'trapezoidal'):
+				pdiv = np.array([0., 0.12, 0.5, 0.88, 1.])
+				sdiv = np.array([0.9*sh, sh, sh, sh, 0.9*sh])
+				td   = np.array([0, 0.3*ctime, 0.4*ctime, 0.5*ctime, 0.6*ctime, 0.7*ctime, ctime ])
+
 			A = np.zeros((1,3))
 
 			for i in range(0,len(pdiv)):
@@ -161,8 +173,6 @@ class PathGenerator():
 
 			A  = np.delete(A, 0, 0) # clean up first row of matrix
 
-			td = np.array( [0, 0.25*ctime, 0.5*ctime, 0.75*ctime, ctime ])
-			
 			cpx = sp
 			cpx = np.vstack( (cpx, A ))
 			cpx = np.vstack( (cpx, ep ))
@@ -176,9 +186,9 @@ class PathGenerator():
 			print "No phase" 	# have a way to exit function if no phase selected
 		
 		## 2) Generate spline
-		SplineGenerator = Pspline.SplineGenerator() 	# cubic polynomial spline generator 
-		SplineGenerator = Bspline.SplineGenerator() 	# cubic polynomial spline generator 
-		x_out = SplineGenerator.generate_body_spline(cpx, td)
+		# SpGen = Pspline.SplineGenerator()
+		SpGen = Bspline.SplineGenerator()
+		x_out = SpGen.generate_spline(cpx, td, tn)
 
 		return x_out
 
@@ -196,7 +206,7 @@ class PathGenerator():
 
 		x_com, w_com, t_com = self.auto_generate_points(x_com, w_com)
 
-		x_out = SplineGenerator.generate_body_spline( x_com, t_com , 1)
+		x_out = SplineGenerator.generate_spline( x_com, t_com , 1)
 		# Plot.plot_3d(x,y,z)
 		# Plot.plot_2d(t,x)
 		# travel distance per phase in a gait cycle
@@ -240,7 +250,7 @@ class PathGenerator():
 					t = ts
 
 					# generate spline coefficient
-					xnew = SplineGenerator.generate_body_spline( np.array([ x_prv, x_com[io] ]), np.array([0.0,1.0]) , 1)
+					xnew = SplineGenerator.generate_spline( np.array([ x_prv, x_com[io] ]), np.array([0.0,1.0]) , 1)
 					# print 't ', t, ' td: ', td, ' ts  : ', ts
 					# print 'xcom ', np.round(x_prv,3), np.round(x_com[io],3)
 					# print 'xnc  ', np.round(self.x_com[nc],3)
@@ -391,8 +401,8 @@ class PathGenerator():
 		print self.t_com
 		print self.x_com
 		# Regenerate linear and angular spline with updated CoM position
-		x_out = SplineGenerator.generate_body_spline(self.x_com, self.t_com,  tn)
-		w_out = SplineGenerator.generate_body_spline(self.w_com, self.tw_com, tn)
+		x_out = SplineGenerator.generate_spline(self.x_com, self.t_com,  tn)
+		w_out = SplineGenerator.generate_spline(self.w_com, self.tw_com, tn)
 
 		# print self.x_com
 		# Plot.plot_3d(nx, nv, na)
@@ -405,15 +415,28 @@ class PathGenerator():
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
+## Test leg path generation ##
 sp = np.array([0.50, -0.10, -0.05])
 ep = np.array([0.50,  0.10, -0.05])
-snorm = np.array([0, 0, 0.])
+snorm = np.array([0., 0., 0.])
 phase = 1
 
 ### Test scripts
 spliner = PathGenerator()
-x_out = spliner.generate_leg_path(sp, ep, snorm, phase)
-Plot.plot_2d(x_out[0],x_out[2])
+xout = spliner.generate_leg_path(sp, ep, snorm, phase)
+
+cx = np.zeros(len(xout[0]))
+cy = np.zeros(len(xout[0]))
+cz = np.zeros(len(xout[0]))
+for i in range(0,len(xout[0])):
+	data  = xout[1][i]
+	cx[i] = data[0]
+	cy[i] = data[1] 
+	cz[i] = data[2] 
+	
+# Plot.plot_2d(xout[0],xout[1])
+# Plot.plot_3d(cx,cy,cz)
+
 # print x_out
 
 gait = {'name': "wave",

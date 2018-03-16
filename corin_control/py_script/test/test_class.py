@@ -94,4 +94,19 @@ if __name__ == "__main__":
 	Column6D = (1,1)
 	
 	a = 1
+	b = [1,2,3]
+	test = []
+
+	for i in range(0,6):
+		test.append(b)
 	
+	cx = np.zeros(len(test))
+	cy = np.zeros(len(test))
+	cz = np.zeros(len(test))
+	for i in range(0,len(test)):
+		cx[i] = test[i][0]
+		cy[i] = test[i][1] 
+		cz[i] = test[i][2] 
+		print i
+	print cz
+	# print len(test)
