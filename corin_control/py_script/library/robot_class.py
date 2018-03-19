@@ -31,6 +31,7 @@ import plotgraph as Plot 				# plot library
 class RobotState:
 	def __init__(self):
 		self.qc  = None;	# ROS JointState class for all joints
+		self.qd  = None; 	# Vector array (Re^18x1) for joint position
 		self.imu = None;	# ROS IMU class
 		
 		self.Leg  = [] 								# leg class
@@ -68,6 +69,11 @@ class RobotState:
 			self.Leg.append(leg_class.LegClass(j))
 			self.Leg[j].XHc.update_base_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
 			self.Leg[j].XHd.update_base_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
+			self.Leg[j].XHc.update_coxa_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
+			self.Leg[j].XHd.update_coxa_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
+			self.Leg[j].XHc.update_coxa_X_foot(self.KDL.leg_IK(LEG_STANCE[j]))
+			self.Leg[j].XHd.update_coxa_X_foot(self.KDL.leg_IK(LEG_STANCE[j]))
+		self.task_X_joint()
 
 		print ">> INITIALISED ROBOT CLASS"
 
@@ -75,12 +81,13 @@ class RobotState:
 		""" update robot state using readings from topics """ 
 
 		reset = True if options.get("reset") == True else False
+		cmode = "simfast" if options.get("control_mode") == "simfast" else "normal"
 
-		# self.update_Imu_state()
-		self.update_leg_state(reset)
+		# self.update_Imu_state(cmode)
+		self.update_leg_state(reset, cmode)
 		# self.update_stability_margin()
 		
-	def update_leg_state(self, reset):
+	def update_leg_state(self, reset, cmode):
 		""" update legs state """
 		## TODO: INTEGRATE HW FORCE SENSOR READINGS
 
@@ -90,11 +97,19 @@ class RobotState:
 		## fixed_robot evaluation in Gazebo
 		offset = 0 if (len(self.qc.name)==18) else 1
 
+		if (cmode == "simfast"):
+			## Updates robot state using setpoints
+			wXb = self.XHd.world_X_base
+			qpc = self.qd
+		else:
+			## Updates robot state based on measured states
+			wXb = self.XHc.world_X_base
+			qpc = self.qc.position
+
 		# update leg states and check if boundary exceeded
 		for j in range(0,self.active_legs):
-
-			bstate = self.Leg[j].update_joint_state(self.XHc.world_X_base, self.qc.position[offset+j*3:offset+(j*3)+3], reset)
-
+			
+			bstate = self.Leg[j].update_joint_state(wXb, qpc, reset)
 			self.Leg[j].update_force_state(self.cstate[j], self.cforce[j*3:(j*3)+3])
 
 			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
@@ -102,7 +117,7 @@ class RobotState:
 				print 'Suspend ', j, bstate
 		# print '-------------------------------------------------------'
 
-	def update_Imu_state(self):
+	def update_Imu_state(self, cmode):
 		""" update imu state """
 		## TODO: INCLUDE STATE ESTIMATION
 
@@ -115,9 +130,16 @@ class RobotState:
 		## state estimation
 		xyz = np.zeros((3,1))
 
-		self.XHc.update_base(np.vstack([xyz,rpy]))
-		self.V6c.world_X_base[3:6] = wv
-		self.A6c.world_X_base[0:3] = ca
+		if (cmode == "simfast"):
+			## Updates robot state using setpoints
+			self.XHc.world_X_base = self.XHd.world_X_base
+			self.V6c.world_X_base = self.V6d.world_X_base
+			self.A6c.world_X_base = self.A6d.world_X_base
+		else:
+			## Updates robot state based on measured states
+			self.XHc.update_base(np.vstack([xyz,rpy]))
+			self.V6c.world_X_base[3:6] = wv
+			self.A6c.world_X_base[0:3] = ca
 
 	def update_stability_margin(self):
 		""" updates the current stability margin """
@@ -169,7 +191,7 @@ class RobotState:
 		for j in range(0,6):
 			error, qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
 			# if (j==0 or j==2):
-			# 	print j, ' err: ', error, ' qpd ', qpd.flatten()
+			# print j, ' err: ', error, ' qpd ', qpd.flatten()
 			## append to list if valid, otherwise break and raise error
 			try:
 				err_str = 'Unknown error'
@@ -190,6 +212,7 @@ class RobotState:
 		## check to ensure size is correct
 		# print 'length: ', len(qp)
 		if (len(qp)==18):
+			self.qd = qp 	# remap for "simfast"
 			return TrajectoryPoints.JointTrajectoryPoints(18,(qt,qp,qv,qa))
 		else:
 			self.invalid = True

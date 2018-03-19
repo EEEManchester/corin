@@ -49,6 +49,7 @@ class CorinManager:
 		self.interface = None	# interface to control: simulation or Robotis hardware
 		self.resting   = False 	# Flag indicating robot standing or resting
 		self.on_start  = False 	# variable for resetting to leg suspended in air
+		self.control_mode = "simfast" # run controller in various mode: 1) normal, 2) fast, 3) simfast
 
 		self.__initialise__()
 
@@ -160,7 +161,9 @@ class CorinManager:
 		if (q_log is not None):
 			self.setpoint_pub_.publish(q_log)
 
-		self.rate.sleep()
+		## Runs controller at desired rate for normal control mode
+		if (self.control_mode is "normal"):
+			self.rate.sleep()
 
 	def default_pose(self, stand_state=0):
 		""" Moves robot to nominal stance (default pose) 		 """
@@ -192,7 +195,7 @@ class CorinManager:
 							- period -> timing of leg execution
 			Output: flag -> True: execution complete, False: error occured 		"""
 
-		self.Robot.update_state() 		# get current state
+		self.Robot.update_state(control_mode=self.control_mode) 		# get current state
 
 		## Define Variables ##
 		te = 0 		# end time of motion
@@ -294,7 +297,6 @@ class CorinManager:
 		cob_W_desired = np.zeros((3,1)) 	# cob angular location
 
 		# Trajectory for robot's base
-		# x_spline, w_spline = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV)
 		base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV) 
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 		
@@ -313,9 +315,12 @@ class CorinManager:
 			if (self.Robot.suspend == True):
 				i -= 1
 
+			## FOLLOWING 3 LINES TO BE REMOVED ##
 			cp = base_path.X.xp[i];	wp = base_path.W.xp[i]
 			cv = base_path.X.xv[i];	wv = base_path.W.xv[i]
 			ca = base_path.X.xa[i];	wa = base_path.W.xa[i]
+			########################################################
+			
 			## Variable mapping to R^(3x1) for base linear and angular time, position, velocity, acceleration
 			v3cp = base_path.X.xp[i].reshape(3,1);	v3wp = base_path.W.xp[i].reshape(3,1);
 			v3cv = base_path.X.xv[i].reshape(3,1);	v3wv = base_path.W.xv[i].reshape(3,1);
@@ -342,26 +347,25 @@ class CorinManager:
 			## ==================== ##
 			
 			## update robot state
-			self.Robot.update_state()
+			self.Robot.update_state(control_mode=self.control_mode)
+
+			## FOLLOWING 6 LINES TO BE REMOVED ##
 			for j in range(0,6):
 				self.Robot.Leg[j].hip_X_ee.cs.xp  = self.Robot.Leg[j].hip_X_ee.ds.xp.copy()  #
 				self.Robot.Leg[j].base_X_ee.cs.xp = self.Robot.Leg[j].base_X_ee.ds.xp.copy() #
-
 			self.Robot.world_X_base.cs.wp = self.Robot.world_X_base.ds.wp.copy() 	# TC: use IMU data
 			self.Robot.fr_world_X_base 	  = rotation_zyx(wp)
 			self.Robot.world_X_base.ds.wp = wp.copy()
+			###########################################################################################
 
 			## overwrite - TC: use IMU data
 			self.Robot.XHc.world_X_base = self.Robot.XHd.world_X_base.copy()
 			self.Robot.XHc.base_X_world = self.Robot.XHd.base_X_world.copy()
 
 			## Update robot's desired pose & twist
-			# self.Robot.XHd.update_world_X_base(np.vstack((np.zeros((3,1)),v3wp)))
-			self.Robot.XHd.update_world_X_base(np.vstack((v3cp,v3wp)))
+			self.Robot.XHd.update_world_X_base(np.vstack((v3cp,v3wp))) 	# np.zeros((3,1))
 			self.Robot.V6d.world_X_base = np.vstack((v3cv,v3wv))
 			self.Robot.A6d.world_X_base = np.vstack((v3ca,v3wa))
-			
-			
 			
 			## generate trajectory for leg in transfer phase
 			for j in range (0, self.Robot.active_legs):
@@ -522,7 +526,7 @@ class CorinManager:
 		""" Interface for commanding robot """
 
 		## update robot state prior to starting action
-		self.Robot.update_state()
+		self.Robot.update_state(control_mode=self.control_mode)
 		
 		## check action to take
 		data = self.Action.action_to_take()
