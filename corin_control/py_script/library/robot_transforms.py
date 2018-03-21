@@ -12,7 +12,7 @@ sys.dont_write_bytecode = True
 import numpy as np
 from constant import * 		# constants used
 import kdl 					# corin kinematic library
-
+from matrix_transforms import *
 # import transformations as TF
 
 Column6D = (6,1)
@@ -498,11 +498,22 @@ class HomogeneousTransform:
 		self.world_X_base[2,1] =  qy_cos*qx_sin
 		self.world_X_base[2,2] =  qy_cos*qx_cos
 		self.world_X_base[2,3] =  qy_cos*qx_cos*tz + qy_cos*qx_sin*ty - qy_sin*tx
-
-		self.update_base_X_world()
+		# print 'old: '
+		# print self.world_X_base[:3,:3]
+		self.world_X_base[:3,:3] = rotation_zyx(q[3:6])
+		# print 'new: '
+		# print self.world_X_base[:3,:3]
+		self.update_base_X_world(q)
 		
-	def update_base_X_world(self):
+	def update_base_X_world(self, q=None):
 		self.base_X_world = np.linalg.inv(self.world_X_base)
+		
+		self.base_X_world[:3,:3] = self.world_X_base[:3,:3].transpose()
+		# if (q is not None):
+		# 	rzyx = np.array([q[5],q[4],q[3]])
+		# 	self.base_X_world[:3,:3] = rotation_xyz(rzyx)
+		# 	print 'new b: '
+		# 	print self.base_X_world[:3,:3]
 
 	def update_base_X_coxa(self, q, tx):
 		""" generic method for updating each leg """
@@ -1016,7 +1027,7 @@ for i in range(0,6):
 qb[2] = BODY_HEIGHT
 
 XH.update_robot(qb,q) 	# set initial stance of robot
-print XH.world_X_base
+
 # q = np.array([0,0.5,1.1])
 # print len(q)
 XH.update_base_X_LF_foot(q)

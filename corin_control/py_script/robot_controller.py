@@ -143,7 +143,10 @@ class CorinManager:
 					qp = Float64()
 					qp.data = q.xp[n]
 					# Publish joint angles individually
-					self.qpub_[n].publish(qp)
+					if (self.control_mode is "normal" or self.control_mode is "fast"):
+						self.qpub_[n].publish(qp)
+					elif (self.control_mode is "simfast"):
+						pass
 
 			elif (self.interface == 'robotis'):
 				dqp = SyncWriteMultiFloat()
@@ -155,7 +158,10 @@ class CorinManager:
 					dqp.value.append(q.xp[n])					# joint angle
 
 				# Publish all joint angles together
-				self.sync_qpub_.publish(dqp)
+				if (self.control_mode is "normal" or self.control_mode is "fast"):
+					self.sync_qpub_.publish(dqp)
+				elif (self.control_mode is "simfast"):
+					pass
 
 		## Publish setpoints to logging topic
 		if (q_log is not None):
@@ -305,7 +311,14 @@ class CorinManager:
 			for j in range(0,6):
 				self.Robot.Gait.cs[j] = 0
 				# self.Gait.cs[j] = 0
-
+		leg_sum_1 = np.zeros((3,1))
+		leg_sum_2 = np.zeros((3,1))
+		leg_sum_3 = np.zeros((3,1))
+		# self.Robot.XHd.update_world_X_base(np.vstack((np.array([[0.],[0.],[0.]]),np.array([[-0.4],[0.],[0.]]))))
+		# self.Robot.XHc.world_X_base = self.Robot.XHd.world_X_base.copy()
+		# self.Robot.XHc.base_X_world = self.Robot.XHd.base_X_world.copy()
+		# print self.Robot.XHc.base_X_world
+		
 		# cycle through trajectory points until complete
 		i = 1 	# skip first point since spline has zero initial differential conditions
 		while (i != len(base_path.X.t) and not rospy.is_shutdown()):
@@ -461,9 +474,12 @@ class CorinManager:
 					## ================================================================================================================== ##
 					## determine foot velocity using CoB velocity; world_X_base cause rotation
 
-					v3_world_fr_base_X_foot = ( mX(self.Robot.XHc.world_X_base[:3,:3] , self.Robot.Leg[j].XHd.base_X_foot[:3,3:4]) )
-					self.Robot.Leg[j].V6d.world_X_foot[:3] 	= -( v3cv - mC(v3_world_fr_base_X_foot, v3wv) )
-					self.Robot.Leg[j].V6d.base_X_foot[:3]	= mX(self.Robot.XHc.base_X_world[:3,:3], self.Robot.Leg[j].V6d.world_X_foot[:3])
+					# v3_world_X_foot = ( mX(self.Robot.XHd.world_X_base[:3,:3] , self.Robot.Leg[j].XHd.base_X_foot[:3,3:4]) )
+					# self.Robot.Leg[j].V6d.world_X_foot[:3] 	= -( v3cv + mC(v3wv,v3_world_X_foot) )
+					# self.Robot.Leg[j].V6d.base_X_foot[:3]	= mX(self.Robot.XHd.base_X_world[:3,:3], self.Robot.Leg[j].V6d.world_X_foot[:3])
+					v3_world_X_foot = ( mX(self.Robot.XHd.base_X_world[:3,:3] , self.Robot.Leg[j].XHd.base_X_foot[:3,3:4]) )
+					self.Robot.Leg[j].V6d.world_X_foot[:3] 	= ( v3cv - mC(v3_world_X_foot,v3wv) )
+					self.Robot.Leg[j].V6d.base_X_foot[:3]	= mX(self.Robot.XHd.world_X_base[:3,:3], self.Robot.Leg[j].V6d.world_X_foot[:3])
 
 					## base_X_feet position: integrate base_X_feet velocity
 					self.Robot.Leg[j].XHd.base_X_foot[:3,3:4] += self.Robot.Leg[j].V6d.base_X_foot[:3]*CTR_INTV
@@ -472,15 +488,24 @@ class CorinManager:
 					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHc.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
 					self.Robot.Leg[j].V6d.coxa_X_foot[:3] = mX(self.Robot.Leg[j].XHc.coxa_X_base[:3,:3],self.Robot.Leg[j].V6d.base_X_foot[:3])
 
-					# if (j==1 or j==0):
-					# 	print 'old: ', j, ' ', np.round(self.Robot.Leg[j].base_X_ee.ds.xp.flatten(),4)
-					# 	print 'cXf: ', j, ' ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3:4].flatten(),4)
-					# 	print 'DwXf: ', np.round(v3_world_fr_base_X_foot.flatten(),5)
-					# 	print 'DbXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3:4].flatten(),5)
-					# 	print 'CbXf: ', np.round(self.Robot.Leg[j].XHc.base_X_foot[:3,3:4].flatten(),5)
+					if (j==1):
+						# print 'vwXf: ', np.round(v3_world_X_foot.flatten(),4)
+						leg_sum_1 += self.Robot.Leg[j].V6d.world_X_foot[:3]*CTR_INTV
+						leg_sum_2 += self.Robot.Leg[j].V6d.base_X_foot[:3]*CTR_INTV
+						print 'cv:  ', np.round(v3cv.flatten(),4)
+						print 'wXf: ', np.round(leg_sum_1.flatten(),4)
+						print 'bXf: ', np.round(leg_sum_2.flatten(),4)
+						# print 'old: ', np.round(self.Robot.Leg[j].base_X_ee.ds.xp.flatten(),4)
+						# print 'cXf: ', j, ' ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3:4].flatten(),4)
+					# 	print 'DwXf: ', np.round(v3_world_X_foot.flatten(),5)
+						# print self.Robot.XHc.world_X_base[:3,:3]
+						print 'DbXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3:4].flatten(),4)
+						# print 'CbXf: ', np.round(self.Robot.Leg[j].XHc.base_X_foot[:3,3:4].flatten(),4)
 					# 	print 'CcXf: ', np.round(self.Robot.Leg[j].XHc.coxa_X_foot[:3,3:4].flatten(),4)
 					# 	print '------------------------------------------------------------------------'
-			
+			if (i==1):
+				raw_input('continue')			
+
 			## Task to joint space
 			qd = self.Robot.task_X_joint()	
 			
@@ -515,11 +540,11 @@ class CorinManager:
 			i += 1
 
 		# Finish off transfer legs trajectory onto ground
-		self.complete_transfer_trajectory()
+		# self.complete_transfer_trajectory()
 
 		print 'Trajectory executed'
-		print 'Desired Goal: ', base_path.X.xp[-1]
-		print 'Tracked Goal: ', np.round(cob_X_desired.flatten(),4)
+		print 'Desired Goal: ', np.round(base_path.X.xp[-1],4), np.round(base_path.W.xp[-1],4)
+		print 'Tracked Goal: ', np.round(cob_X_desired.flatten(),4), np.round(cob_W_desired.flatten(),4)
 		
 
 	def action_interface(self):

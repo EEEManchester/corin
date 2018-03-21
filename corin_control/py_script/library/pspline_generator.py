@@ -307,7 +307,6 @@ class SplineGenerator:
 
 		if (sz>0):
 			for i in range(0,sz):
-				print ns, sz, i, t[i+2], t[i+1]
 				T0 = t[i+1]-t[i]
 				T1 = t[i+2]-t[i+1]
 
@@ -390,18 +389,44 @@ class SplineGenerator:
 
 		return np.arange(0,len(q),1)
 
+	def compute_spline_extension(self, x, t):
+		""" extends the spline to four via points so that zero 
+			initial & final acceleration can be computated 		"""
+		print 'in extension'
+		## Define variables ##
+		size = len(t)
+		xnew = np.zeros((4,3))
+
+		xnew[0]  = x[0]
+		xnew[-1] = x[-1]
+
+		if (size == 2):
+			for s in range(1,3):
+				for i in range(0,3):
+					xd = (x[-1][i] - x[0][i])/3
+					xnew[s][i] = x[0][i] + xd*s
+		elif (size ==3):
+			xnew[1] = x[1]
+			for i in range(0,3):
+				xd = (x[-1][i] - x[1][i])/2
+				xnew[2][i] = x[1][i] + xd
+
+		return xnew, self.compute_time_intervals(xnew)
+
 	def generate_spline(self, x, t=None, tn=0.1):
 		""" 	Compute spline using via points only	"""
 		
-		## Set t if undefined
-		if (t is None):
+		## Extend size if less than 3 or set t if undefined
+		if (len(t)<4):
+			x, t = self.compute_spline_extension(x, t)
+		elif (t is None):
 			t = self.compute_time_intervals(x)
 		
 		## use zero initial and final acceleration
 		cx = np.zeros((len(x)+2,3))	# via point 2D array
 		tx = np.zeros(len(x)+2)		# time interval array
-		# for i in range(0,3):
-		# 	cx[:,i], tx = self.spline_1D_acc(x[:,i].flatten(), t)
+		for i in range(0,3):
+			cx[:,i], tx = self.spline_1D_acc(x[:,i].flatten(), t)
 
 		return self.spline_3D(x, t, tn)	# zero initial & final velocity
 		# return self.spline_3D(cx, tx, tn) 	# zero initial & final velocity & acceleration

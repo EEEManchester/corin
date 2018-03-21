@@ -82,8 +82,8 @@ class PathGenerator():
 			Output:	BaseTrajectory() array of linear translation and angular
 					rotation points 												"""
 
-		# SplineGenerator = Bspline.SplineGenerator()	# biezer spline generator
-		SplineGenerator = Pspline.SplineGenerator() 	# cubic polynomial spline generator 
+		SplineGenerator = Bspline.SplineGenerator()	# biezer spline generator
+		# SplineGenerator = Pspline.SplineGenerator() # cubic polynomial spline generator 
 
 		# generate linear or angular via points if size mismatch
 		x_cob, w_cob, t_cob = self.auto_generate_points(x_cob, w_cob)
@@ -423,16 +423,16 @@ phase = 1
 
 ### Test scripts
 spliner = PathGenerator()
-xout = spliner.generate_leg_path(sp, ep, snorm, phase)
+# xout = spliner.generate_leg_path(sp, ep, snorm, phase)
 
-cx = np.zeros(len(xout[0]))
-cy = np.zeros(len(xout[0]))
-cz = np.zeros(len(xout[0]))
-for i in range(0,len(xout[0])):
-	data  = xout[1][i]
-	cx[i] = data[0]
-	cy[i] = data[1] 
-	cz[i] = data[2] 
+# cx = np.zeros(len(xout[0]))
+# cy = np.zeros(len(xout[0]))
+# cz = np.zeros(len(xout[0]))
+# for i in range(0,len(xout[0])):
+# 	data  = xout[1][i]
+# 	cx[i] = data[0]
+# 	cy[i] = data[1] 
+# 	cz[i] = data[2] 
 	
 # Plot.plot_2d(xout[0],xout[1])
 # Plot.plot_3d(cx,cy,cz)
@@ -458,17 +458,17 @@ w_cob = np.array([.0,.0,.0])
 
 x_cob = np.vstack((x_cob,np.array([0. , -0.04, BODY_HEIGHT])))
 w_cob = np.vstack((w_cob,np.array([-0.2, -0.1, 0.])))
-x_cob = np.vstack((x_cob,np.array([0.03,  0.04, BODY_HEIGHT])))
-w_cob = np.vstack((w_cob,np.array([0.2, -0.1, 0.])))
-x_cob = np.vstack((x_cob,np.array([.0,.0,BODY_HEIGHT])))
-w_cob = np.vstack((w_cob,np.array([0., 0., 0.])))
+# x_cob = np.vstack((x_cob,np.array([0.03,  0.04, BODY_HEIGHT])))
+# w_cob = np.vstack((w_cob,np.array([0.2, -0.1, 0.])))
+# x_cob = np.vstack((x_cob,np.array([.0,.0,BODY_HEIGHT])))
+# w_cob = np.vstack((w_cob,np.array([0., 0., 0.])))
 
 planner = PathGenerator()
-planner.gait = gait
-# path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
+# planner.gait = gait
+path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
 # path_o = planner.generate_base_path_old(x_cob, w_cob, 0.1)
 # Plot.plot_2d(path_o.W.t,path_o.W.xp,False)
-# Plot.plot_2d(path_n.W.t,path_n.W.xp,False)
+# Plot.plot_2d(path_n.X.t,path_n.X.xp)
 # plt.show()
 # Plot.plot_2d_multiple(2,x_out[0],x_out[1],x_out[3])
 ## wall transition

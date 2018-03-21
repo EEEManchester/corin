@@ -107,6 +107,7 @@ if __name__ == "__main__":
 		cx[i] = test[i][0]
 		cy[i] = test[i][1] 
 		cz[i] = test[i][2] 
-		print i
-	print cz
+	
+	x = np.arange(0,1.0,0.01)
+	print len(x)
 	# print len(test)

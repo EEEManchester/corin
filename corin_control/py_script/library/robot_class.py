@@ -115,6 +115,7 @@ class RobotState:
 			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
 				self.suspend = True
 				print 'Suspend ', j, bstate
+				
 		# print '-------------------------------------------------------'
 
 	def update_Imu_state(self, cmode):
