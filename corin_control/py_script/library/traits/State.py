@@ -8,6 +8,8 @@ import Twist
 import Wrench
 import numpy as np
 
+__all__ = ['StateClass']
+
 class StateClass:
 	def __init__(self, stype):
 		if (stype == 'Twist'):

@@ -4,6 +4,8 @@
 
 import numpy as np
 
+__all__ = ['JointTrajectoryPoints','BaseTrajectory','TrajectoryPoints']
+
 class JointTrajectoryPoints():
 	def __init__(self,size=1,data=None):
 		if data is None:

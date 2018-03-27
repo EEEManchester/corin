@@ -4,10 +4,7 @@
  	Indexing for leg starts with 0, 1 .... 5
 """ 
 
-import os
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'class'))
-sys.dont_write_bytecode = True
+import sys; sys.dont_write_bytecode = True
 
 import math
 import numpy as np
@@ -23,8 +20,9 @@ import kdl 								# kinematic & dynamics library
 import robot_transforms					# transformation and vector class for robot
 from matrix_transforms import *			# generic transformation library
 
-import TrajectoryPoints					# class for 3D time array of points
-import State
+from traits import *
+# import TrajectoryPoints					# class for 3D time array of points
+# import State
 
 import plotgraph as Plot 				# plot library
 
@@ -214,7 +212,7 @@ class RobotState:
 		# print 'length: ', len(qp)
 		if (len(qp)==18):
 			self.qd = qp 	# remap for "simfast"
-			return TrajectoryPoints.JointTrajectoryPoints(18,(qt,qp,qv,qa))
+			return JointTrajectoryPoints(18,(qt,qp,qv,qa))
 		else:
 			self.invalid = True
 			return None

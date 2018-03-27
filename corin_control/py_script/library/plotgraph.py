@@ -1,10 +1,8 @@
 #!/usr/bin/env python
-# sys.dont_write_bytecode = True
 
 """ Functions for plotting - for convenience """
 
-import sys
-sys.dont_write_bytecode = True
+import sys; sys.dont_write_bytecode = True
 
 import numpy as np
 import math

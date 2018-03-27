@@ -4,6 +4,8 @@
 
 import numpy as np
 
+__all__ = ['Wrench','Twist','Pose','Joint']
+
 class Wrench:
 	def __init__(self):
 		self.force  = np.zeros((3,1))
@@ -19,7 +21,7 @@ class Pose:
 		self.position    = np.zeros((3,1))
 		self.orientation = np.zeros((3,1))
 
-class Joint_class:
+class Joint:
 	def __init__(self, size):
 		self.qpc 	= np.zeros(3) 		# joint position current
 		self.qpd 	= np.zeros(3)		# joint position desired
@@ -31,8 +33,6 @@ class Joint_class:
 		self.qtc 	= np.zeros(3)		# joint effort current 
 		self.qtd 	= np.zeros(3)		# joint effort desired 
 
-a = [1,2,3]
-b = np.array([1,2,3])
 
 # try:
 # 	for i in range(0,6):

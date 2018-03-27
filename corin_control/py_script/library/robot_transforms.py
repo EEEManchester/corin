@@ -523,15 +523,15 @@ class HomogeneousTransform:
 		self.world_X_base[0,0] =  qz_cos*qy_cos
 		self.world_X_base[0,1] = -qz_sin*qx_cos + qz_cos*qy_sin*qx_sin
 		self.world_X_base[0,2] =  qz_sin*qx_sin + qz_cos*qy_sin*qx_cos
-		self.world_X_base[0,3] =  (qz_sin*qx_sin + qz_cos*qy_sin*qx_cos)*tz + (-qz_sin*qx_cos + qz_cos*qy_sin*qx_sin)*ty + qz_cos*qy_cos*tx
+		self.world_X_base[0,3] =  tx
 		self.world_X_base[1,0] =  qz_sin*qy_cos
 		self.world_X_base[1,1] =  qz_cos*qx_cos + qz_sin*qy_sin*qx_sin
 		self.world_X_base[1,2] = -qz_cos*qx_sin + qz_sin*qy_sin*qx_cos
-		self.world_X_base[1,3] =  (-qz_cos*qx_sin + qz_sin*qy_sin*qx_cos)*tz + (qz_cos*qx_cos + qz_sin*qy_sin*qx_sin)*ty + qz_sin*qy_cos*tx
+		self.world_X_base[1,3] =  ty
 		self.world_X_base[2,0] = -qy_sin
 		self.world_X_base[2,1] =  qy_cos*qx_sin
 		self.world_X_base[2,2] =  qy_cos*qx_cos
-		self.world_X_base[2,3] =  qy_cos*qx_cos*tz + qy_cos*qx_sin*ty - qy_sin*tx
+		self.world_X_base[2,3] =  tz
 		# print 'old: '
 		# print self.world_X_base[:3,:3]
 		self.world_X_base[:3,:3] = rotation_zyx(q[3:6])

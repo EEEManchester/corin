@@ -14,17 +14,18 @@ from mpl_toolkits.mplot3d import Axes3D
 
 # import robot_class
 # import param_gait
-import plotgraph as Plot
+from traits import *
 from constant import *
 
 from matrix_transforms import *
 import pspline_generator as Pspline
 import bspline_generator as Bspline
-import TrajectoryPoints as TP
+
+import plotgraph as Plot
 
 class PathGenerator():
 	def __init__(self):
-		self.base_path = TP.BaseTrajectory() 		# class for 6D path storage
+		self.base_path = BaseTrajectory() 		# class for 6D path storage
 		
 	def get_path_details(self):
 		""" display details of path generated """
@@ -113,9 +114,9 @@ class PathGenerator():
 			w_out = SplineGenerator.generate_spline(w_cob, t_cob, tn)
 
 		# return x_out, w_out 		# python 2D array
-		self.base_path = TP.BaseTrajectory((x_out,w_out))
-		# return TP.TrajectoryPoints(x_out), TP.TrajectoryPoints(w_out)	# convert to TrajectoryPoints format
-		return TP.BaseTrajectory((x_out,w_out))
+		self.base_path = BaseTrajectory((x_out,w_out))
+		# return TrajectoryPoints(x_out), TrajectoryPoints(w_out)	# convert to TrajectoryPoints format
+		return BaseTrajectory((x_out,w_out))
 
 	def generate_leg_path(self, sp, ep, snorm, phase=1, reflex=False, ctime=2.0, tn=0.1, type='trapezoidal'):
 		""" Generate leg trajectory (Re^3) based on phase and type 			"""
@@ -409,9 +410,9 @@ class PathGenerator():
 		# Plot.plot_2d(nt,na)
 		# Plot.plot_2d_multiple(3,wt,wx,wv,wa)
 
-		self.base_path = TP.BaseTrajectory((x_out,w_out))
-		# return TP.TrajectoryPoints(x_out), TP.TrajectoryPoints(w_out)	# convert to TrajectoryPoints format
-		return TP.BaseTrajectory((x_out,w_out))
+		self.base_path = BaseTrajectory((x_out,w_out))
+		# return TrajectoryPoints(x_out), TrajectoryPoints(w_out)	# convert to TrajectoryPoints format
+		return BaseTrajectory((x_out,w_out))
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
@@ -465,7 +466,7 @@ w_cob = np.vstack((w_cob,np.array([-0.2, -0.1, 0.])))
 
 planner = PathGenerator()
 # planner.gait = gait
-path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
+# path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
 # path_o = planner.generate_base_path_old(x_cob, w_cob, 0.1)
 # Plot.plot_2d(path_o.W.t,path_o.W.xp,False)
 # Plot.plot_2d(path_n.X.t,path_n.X.xp)

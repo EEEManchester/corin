@@ -2,7 +2,7 @@
 
 """ Main controller for the robot """
 __version__ = '1.0'
-__author__ = 'Wei Cheah'
+__author__  = 'Wei Cheah'
 
 import os
 import sys

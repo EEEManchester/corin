@@ -4,6 +4,8 @@
 ## actually, not accurate as twist refers to linear and angular velocity only
 import numpy as np
 
+__all__ = ['TwistClass']
+
 class TwistClass:
 	def __init__(self):
 		# linear components

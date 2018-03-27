@@ -3,48 +3,34 @@
 ## Class for robot and leg
 ## Indexing for leg starts with 0, 1 .... 5
 
-import os
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'class'))
-sys.dont_write_bytecode = True
-
-# import rospy 										# ROS dependent file
-# from sensor_msgs.msg import Imu 					# sub msg for IMU
-# from sensor_msgs.msg import JointState 				# sub msg for joint states
-# import tf as RTF 									# ROS transform library
+import sys; sys.dont_write_bytecode = True
+from traits import *
 
 import math
 import numpy as np
 
 from constant import * 								# constants used
-import TrajectoryPoints as TP						# class for 3D time array of points
-import Twist
-import State
-import declarations as cd 							# custom class for robot classes
+import robot_transforms
 from matrix_transforms import *						# SE(3) transformation library
-import gait_class as Gaitgen						# class for gait coordinator
-# import param_gait									# class for setting gait parameters in RT 
 import kdl 											# kinematic & dynamics library
 import path_generator
-import pspline_generator as Pspline 				# spline generator for body
-import bspline_generator as Bspline 				# spline generator for leg
+import gait_class as Gaitgen						# class for gait coordinator
+
 import plotgraph as Plot 							# plot library
-import robot_transforms
 
 class LegClass:
 	#common base class for Leg
 	def __init__(self, name):
 		self.number = name
-		self.Joint 	= cd.Joint_class(3)
+		self.Joint 	= Joint(3)
 
 		# library functions
-		self.KDL 	= kdl.KDL()
-		self.bspline = Bspline.SplineGenerator() 	# bSplineClass for leg transfer spline generation
+		self.KDL  = kdl.KDL()
 		self.Path = path_generator.PathGenerator()
 
 		# transfer phase variables - created in controller class and stored here
-		self.xspline = TP.TrajectoryPoints() 		# trajectory in cartesian position 
-		self.qspline = TP.JointTrajectoryPoints()	# trajectory in joint space
+		self.xspline = TrajectoryPoints() 		# trajectory in cartesian position 
+		self.qspline = JointTrajectoryPoints()	# trajectory in joint space
 		self.spline_counter = 1 		# counter to track execution of spline
 		self.spline_length  = 0			# spline length
 		self.feedback_state	= 0 		# 0 = idle, 1 = command received (executing), 2 = command completed
@@ -138,7 +124,7 @@ class LegClass:
 					f) ctime  -> time for trajectory						
 					g) tn 	  -> rate of trajectory 						"""
 
-		self.xspline = TP.TrajectoryPoints(self.Path.generate_leg_path(start.flatten(), end.flatten(), snorm, phase, reflex, ctime, tn))
+		self.xspline = TrajectoryPoints(self.Path.generate_leg_path(start.flatten(), end.flatten(), snorm, phase, reflex, ctime, tn))
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)
 
@@ -165,7 +151,7 @@ class LegClass:
 						err_str = 'Unknown error in Leg '
 						raise ValueError
 			
-			self.qspline = TP.JointTrajectoryPoints(18,(qt,qp,qv,qa))
+			self.qspline = JointTrajectoryPoints(18,(qt,qp,qv,qa))
 			return True
 
 		except ValueError:

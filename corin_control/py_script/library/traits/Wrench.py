@@ -4,6 +4,8 @@
 
 import numpy as np
 
+__all__ = ['WrenchClass']
+
 class WrenchClass:
 	def __init__(self):
 		# force components

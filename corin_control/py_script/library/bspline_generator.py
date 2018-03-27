@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 
-import os
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'class'))
+import sys; sys.dont_write_bytecode = True
 
 from constant import *
 import plotgraph as Plot
-from TrajectoryPoints import TrajectoryPoints
 import time
 import numpy as np
 from scipy import linalg
