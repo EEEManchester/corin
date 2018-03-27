@@ -4,24 +4,11 @@
 __version__ = '1.0'
 __author__  = 'Wei Cheah'
 
-import os
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'library'))
-sys.dont_write_bytecode = True
-
-import time
-import warnings
-import numpy as np 
+import sys; sys.dont_write_bytecode = True
 
 ## Personal libraries
-from constant import *
+from library import *
 import control_interface 					# action selection from ROS parameter server
-import robot_routines as Routine			# class for pre-defined routines to execute
-import robot_class 							# class for robot states and function
-import gait_class 							# class for gait coordinator
-import path_generator as Pathgenerator 		# generates path from via points
-from matrix_transforms 	import *			# SE(3) transformation library
-import plotgraph as Plot 					# library for plotting 
 
 ## ROS messages & libraries
 import rospy

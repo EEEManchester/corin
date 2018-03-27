@@ -2,9 +2,8 @@
 
 ## Control interface for tablet control of Corin
 import rospy
-import numpy as np
 
-from constant import *
+from library import *
 
 class control_interface:
 	def __init__(self):
