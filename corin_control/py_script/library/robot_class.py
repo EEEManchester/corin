@@ -73,6 +73,14 @@ class RobotState:
 			self.Leg[j].XHd.update_coxa_X_foot(self.KDL.leg_IK(LEG_STANCE[j]))
 			self.Leg[j].XHc.world_X_foot = mX(self.XHc.world_X_base, self.Leg[j].XHc.base_X_foot)
 			self.Leg[j].XHd.world_X_foot = mX(self.XHd.world_X_base, self.Leg[j].XHd.base_X_foot)
+			self.Leg[j].XHd.base_X_AEP = mX(v3_X_m(np.array([ STEP_STROKE/2,0,0])), self.Leg[j].XHd.base_X_NRP)
+			self.Leg[j].XHd.base_X_PEP = mX(v3_X_m(np.array([-STEP_STROKE/2,0,0])), self.Leg[j].XHd.base_X_NRP)
+			self.Leg[j].XHd.world_base_X_AEP = self.Leg[j].XHd.base_X_AEP.copy()
+			self.Leg[j].XHd.world_base_X_PEP = self.Leg[j].XHd.base_X_PEP.copy()
+			self.Leg[j].XHc.base_X_AEP = mX(v3_X_m(np.array([ STEP_STROKE/2,0,0])), self.Leg[j].XHc.base_X_NRP)
+			self.Leg[j].XHc.base_X_PEP = mX(v3_X_m(np.array([-STEP_STROKE/2,0,0])), self.Leg[j].XHc.base_X_NRP)
+			self.Leg[j].XHc.world_base_X_AEP = self.Leg[j].XHc.base_X_AEP.copy()
+			self.Leg[j].XHc.world_base_X_PEP = self.Leg[j].XHc.base_X_PEP.copy()
 
 		self.task_X_joint()
 		print ">> INITIALISED ROBOT CLASS"
@@ -109,7 +117,7 @@ class RobotState:
 		# update leg states and check if boundary exceeded
 		for j in range(0,self.active_legs):
 			
-			bstate = self.Leg[j].update_joint_state(wXb, qpc, reset)
+			bstate = self.Leg[j].update_joint_state(wXb, qpc[offset+j*3:offset+(j*3)+3], reset)
 			cstate = self.Leg[j].update_force_state(self.cstate[j], self.cforce[j*3:(j*3)+3])
 
 			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
@@ -177,8 +185,6 @@ class RobotState:
 				# self.Leg[j].XHc.update_world_X_foot(mx_world_X_base, q_compensated) 	# consider updating only once when contact is true
 
 		self.suspend = False
-		# print 'Gait phase changed!'
-		# raw_input('gait continue')
 
 	def task_X_joint(self,legs_phase=None): # TODO - to be revisited
 		""" Convert all leg task space to joint space 		"""								

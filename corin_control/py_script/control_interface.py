@@ -121,7 +121,7 @@ class control_interface:
 		self.reset_variables()
 		self.mode = 2
 
-		self.x_com = np.vstack((self.x_com,np.array([0.11, 0., BODY_HEIGHT])))
+		self.x_com = np.vstack((self.x_com,np.array([0.10, 0., BODY_HEIGHT])))
 		# self.w_com = np.vstack((self.w_com,np.array([0.3, 0., 0.])))
 
 	def WalkBack(self):

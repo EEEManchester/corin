@@ -81,15 +81,16 @@ class LegClass:
 		self.hip_X_ee.es.xp  = self.hip_X_ee.ds.xp  - self.hip_X_ee.cs.xp
 		self.base_X_ee.es.xp = self.base_X_ee.ds.xp - self.base_X_ee.cs.xp
 
-		## check work envelope
-		bound_exceed = self.check_boundary_limit()
-
+		
 		self.XHc.update_coxa_X_foot(q_compensated)
 		self.XHc.update_base_X_foot(q_compensated)
 
 		# self.XHc.update_world_X_foot(mx_world_X_base, q_compensated) 	# updating continuously results in drift
 		self.XHc.update_world_base_X_foot(mx_world_X_base, q_compensated)
 		self.XHc.update_world_base_X_NRP(mx_world_X_base)
+
+		## check work envelope
+		bound_exceed = self.check_boundary_limit(self.XHc.world_base_X_foot)
 
 		## state reset
 		if (resetState):
@@ -98,9 +99,10 @@ class LegClass:
 
 			self.XHd.coxa_X_foot = self.XHc.coxa_X_foot.copy()
 			self.XHd.base_X_foot = self.XHc.base_X_foot.copy()
-			print 'RESET TRUE'
-		# if (self.number == 0):
-		# 	print self.number, ' ', jointState
+			
+		# if (self.number == 5):
+		# 	print 'q: ', np.round(q_compensated,4)
+		# 	print 'bXf: ', np.round(self.XHc.base_X_foot[:3,3],4)
 		# 	print 'bXe_ds: ', np.round(self.base_X_ee.ds.xp.flatten(),4)
 		# 	print 'bXe_cs: ', np.round(self.base_X_ee.cs.xp.flatten(),4)
 		# 	print 'hXe_ds: ', np.round(self.hip_X_ee.ds.xp.flatten(),4)
@@ -187,7 +189,7 @@ class LegClass:
 		return error, self.Joint.qpd, self.Joint.qvd, self.Joint.qad 	# TEMP: change to normal (huh?)
 
 	
-	def check_boundary_limit(self):
+	def check_boundary_limit(self, world_base_X_foot):
 		""" leg boundary area projected to 2D space """
 
 		bound_violate = False
@@ -195,7 +197,14 @@ class LegClass:
 
 		# Vector to aep and current position wrt nominal point
 		v3_NRP_X_AEP  = self.XHd.world_base_X_AEP[:3,3:4]  - self.XHd.world_base_X_NRP[:3,3:4]
-		v3_NRP_X_foot = self.XHc.world_base_X_foot[:3,3:4] - self.XHd.world_base_X_NRP[:3,3:4]
+		v3_NRP_X_foot = world_base_X_foot[:3,3:4] - self.XHd.world_base_X_NRP[:3,3:4]
+
+		# if (self.number == 1):
+		# 	print 'bXA : ', np.round(self.XHd.world_base_X_AEP[:3,3:4].flatten(),4)
+		# 	print 'bXN : ', np.round(self.XHd.world_base_X_NRP[:3,3:4].flatten(),4)
+		# 	print 'bXf : ', np.round(self.XHc.world_base_X_foot[:3,3:4].flatten(),4)
+		# 	print 'NXA : ', np.round(v3_NRP_X_AEP.flatten(),4)
+		# 	print 'NXf : ', np.round(v3_NRP_X_foot.flatten(),4)
 
 		# Magnitude of current point
 		mag_nom_X_ee  = np.dot(v3_NRP_X_AEP.flatten(), v3_NRP_X_foot.flatten())
@@ -225,11 +234,13 @@ class LegClass:
 		## Circle boundary - for the back half: p_nom to PEP
 		else:
 			r_state = (v3_NRP_X_foot.item(0)**2 + v3_NRP_X_foot.item(1)**2)/(STEP_STROKE/2.)**2
-
+			
 			if (BOUND_FACTOR < r_state):
 				bound_violate = True
-				# print self.number, ' circle boundary violated ', r_state
-
+		
+		# if (self.number == 1):
+		# 	print 'check: ', r_state, BOUND_FACTOR
+		# 	print 'check: ', bound_violate
 		return bound_violate
 
 	## Kinematic functions

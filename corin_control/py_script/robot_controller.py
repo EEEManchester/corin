@@ -280,6 +280,89 @@ class CorinManager:
 
 		return True
 
+	def foothold_selection(self, base_path):
+		""" Computes foothold based on generated path 	"""
+		""" Input: 1) path -> linear and angular path 
+			Output: Foothold array 						"""
+
+		## Define Variables ##
+		i = 0
+		footholds = [[],[],[],[],[],[]]
+
+		## Append initial footholds
+		for j in range (0, self.Robot.active_legs):
+			footholds[j].append(self.Robot.Leg[j].XHd.world_X_foot[:3,3])
+		
+		while (i != len(base_path.X.t) and not rospy.is_shutdown()):
+			
+			bound_exceed = False
+
+			# cycles through one gait phase
+			for m in range(0,int(GAIT_PHASE*CTR_RATE)):
+				# print i, len(base_path.X.t)
+
+				## Variable mapping to R^(3x1) for base linear and angular time, position, velocity, acceleration
+				try:
+					v3cp = base_path.X.xp[i].reshape(3,1)
+					v3wp = base_path.W.xp[i].reshape(3,1)
+				except IndexError:
+					## Trajectory finished, break
+					break
+
+				## update robot's pose
+				self.Robot.XHd.update_world_X_base(np.vstack((v3cp,v3wp)))
+				temp_mx = self.Robot.XHd.world_X_base.copy()
+				temp_mx[:3,3:4] = np.zeros((3,1))
+
+				for j in range (0, self.Robot.active_legs):
+					## Legs in support phase:
+					if (self.Robot.Gait.cs[j] == 0):
+						self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHd.world_X_foot)
+						self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
+						self.Robot.Leg[j].XHd.world_base_X_foot = mX(temp_mx, self.Robot.Leg[j].XHd.base_X_foot)
+
+						bound_exceed = self.Robot.Leg[j].check_boundary_limit(self.Robot.Leg[j].XHd.world_base_X_foot)
+						# if (j==1):
+						# 	print i, np.round(self.Robot.Leg[j].XHd.world_base_X_foot[:3,3],4)
+						# 	print 'v3cp: ', np.round(v3cp.flatten(),4)
+
+						if (bound_exceed == True):
+							print 'bound exceed on ', j, ' at ', i
+							break
+
+				if (bound_exceed is True):
+					## To break through two layers of loops
+					break
+					
+				i += 1
+
+			## Set leg states
+			for j in range (0, self.Robot.active_legs):
+				## Legs in transfer phase
+				if (self.Robot.Gait.cs[j] == 1):
+					
+					## compute NRP
+
+					## compute AEP wrt base and world frame & update 'current' foot position
+					## to new position which is after transfer phase
+					self.Robot.Leg[j].XHd.world_X_foot = mX(self.Robot.XHd.world_X_base, self.Robot.Leg[j].XHd.world_base_X_AEP)
+
+					## stack to array
+					footholds[j].append(self.Robot.Leg[j].XHd.world_X_foot[:3,3])
+					
+					# if (j==1):
+					# 	print np.round(self.Robot.XHd.world_X_base[:3,3],4)
+					# 	print np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],4)
+
+			## Alternate gait phase
+			self.Robot.alternate_phase()
+			print 'Alternated gait phase'
+		
+		print np.round(footholds[0],4)
+		print np.round(footholds[1],4)
+		# print np.round(footholds[2],4)
+		return footholds
+
 	def trajectory_tracking(self, x_cob, w_cob=0):
 		""" Generates body trajectory from given via points and
 			cycles through the trajectory 							"""
@@ -296,12 +379,16 @@ class CorinManager:
 		# Trajectory for robot's base
 		base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV) 
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
-		
+
 		# Set all legs to support mode for bodyposing, prevent AEP from being set
 		if (self.Robot.support_mode == True):
 			for j in range(0,6):
 				self.Robot.Gait.cs[j] = 0
-				# self.Gait.cs[j] = 0
+		else:
+			# Plan foothold for robot
+			self.foothold_selection(base_path)
+			pass
+		raw_input('cont')
 		leg_sum_1 = np.zeros((3,1))
 		leg_sum_2 = np.zeros((3,1))
 		leg_sum_3 = np.zeros((3,1))
@@ -353,13 +440,6 @@ class CorinManager:
 			## update robot state
 			self.Robot.update_state(control_mode=self.control_mode)
 
-			## FOLLOWING 6 LINES TO BE REMOVED ##
-			for j in range(0,6):
-				self.Robot.Leg[j].hip_X_ee.cs.xp  = self.Robot.Leg[j].hip_X_ee.ds.xp.copy()  #
-				self.Robot.Leg[j].base_X_ee.cs.xp = self.Robot.Leg[j].base_X_ee.ds.xp.copy() #
-			self.Robot.world_X_base.cs.wp = self.Robot.world_X_base.ds.wp.copy() 	# TC: use IMU data
-			self.Robot.fr_world_X_base 	  = rotation_zyx(wp)
-			self.Robot.world_X_base.ds.wp = wp.copy()
 			###########################################################################################
 
 			## overwrite - TC: use IMU data
@@ -367,12 +447,11 @@ class CorinManager:
 			self.Robot.XHc.base_X_world = self.Robot.XHd.base_X_world.copy()
 
 			## Update robot's desired pose & twist
-			self.Robot.XHd.update_world_X_base(np.vstack((v3cp,v3wp))) 	# np.zeros((3,1))
+			self.Robot.XHd.update_world_X_base(np.vstack((v3cp,v3wp)))
 
 			self.Robot.V6d.world_X_base = np.vstack((v3cv,v3wv))
 			self.Robot.A6d.world_X_base = np.vstack((v3ca,v3wa))
-			# print 'first instance'
-			# print np.round(self.Robot.Leg[1].XHc.world_X_foot,4)
+			
 			## generate trajectory for leg in transfer phase
 			for j in range (0, self.Robot.active_legs):
 
@@ -392,7 +471,7 @@ class CorinManager:
 
 					# unstack next CoB location, determine foot z position in that CoB location
 					try:
-						v3np = (base_path.X.xp[int(i+TRAC_PERIOD/CTR_INTV)]).reshape(3,1)
+						v3np = (base_path.X.xp[int(i+GAIT_PHASE/CTR_INTV)]).reshape(3,1)
 					except:
 						v3np = (base_path.X.xp[-1]).reshape(3,1)
 
@@ -429,8 +508,14 @@ class CorinManager:
 
 					## generate spline for transfer phase leg - 
 					svalid = self.Robot.Leg[j].generate_spline(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3], self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],
-																self.Robot.Leg[j].qsurface, 1, False, TRAC_PERIOD, CTR_INTV)
-					
+																self.Robot.Leg[j].qsurface, 1, False, GAIT_PHASE, CTR_INTV)
+					# if (j==5):
+					# 	print np.round(self.Robot.XHc.base_X_world[:3,:3],4)
+					# 	print np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4].flatten(),4)
+					# 	print np.round(self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3:4].flatten(),4)
+					# 	print np.round(self.Robot.Leg[j].XHc.base_X_foot[0:3,3],4)
+					# 	print np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],4)
+					# 	raw_input('cont')
 					## TODO: update world_X_foot position?
 					self.Robot.Leg[j].XHd.world_X_foot[:3,3:4] = self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3:4] + v3np
 
@@ -460,47 +545,28 @@ class CorinManager:
 					## ================================================================================================================== ##
 					## OLD METHOD: determine foot velocity using CoB velocity; ERROR - LEG DOES NOT RETURN TO INITIAL POSITION
 
-					# v3_world_X_foot = ( mX(self.Robot.XHd.world_X_base[:3,:3] , self.Robot.Leg[j].XHd.base_X_foot[:3,3:4]) )
-					# self.Robot.Leg[j].V6d.world_X_foot[:3] 	= -( v3cv + mC(v3wv,v3_world_X_foot) )
-					# self.Robot.Leg[j].V6d.base_X_foot[:3]	= mX(self.Robot.XHd.base_X_world[:3,:3], self.Robot.Leg[j].V6d.world_X_foot[:3])
+					v3_world_X_foot = ( mX(self.Robot.XHd.world_X_base[:3,:3] , self.Robot.Leg[j].XHd.base_X_foot[:3,3:4]) )
+					self.Robot.Leg[j].V6d.world_X_foot[:3] 	= -( v3cv + mC(v3wv,v3_world_X_foot) )
+					self.Robot.Leg[j].V6d.base_X_foot[:3]	= mX(self.Robot.XHd.base_X_world[:3,:3], self.Robot.Leg[j].V6d.world_X_foot[:3])
 					# v3_world_X_foot = ( mX(self.Robot.XHd.base_X_world[:3,:3] , self.Robot.Leg[j].XHd.base_X_foot[:3,3:4]) )
 					# self.Robot.Leg[j].V6d.world_X_foot[:3] 	= ( v3cv - mC(v3_world_X_foot,v3wv) )
 					# self.Robot.Leg[j].V6d.base_X_foot[:3]	= mX(self.Robot.XHd.world_X_base[:3,:3], self.Robot.Leg[j].V6d.world_X_foot[:3])
 
-					## base_X_feet position: integrate base_X_feet velocity
-					# self.Robot.Leg[j].XHd.base_X_foot[:3,3:4] += self.Robot.Leg[j].V6d.base_X_foot[:3]*CTR_INTV
+					# base_X_feet position: integrate base_X_feet velocity
+					self.Robot.Leg[j].XHd.base_X_foot[:3,3:4] += self.Robot.Leg[j].V6d.base_X_foot[:3]*CTR_INTV
 
-					# ## base to hip transform
-					# self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHc.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
-					# self.Robot.Leg[j].V6d.coxa_X_foot[:3] = mX(self.Robot.Leg[j].XHc.coxa_X_base[:3,:3],self.Robot.Leg[j].V6d.base_X_foot[:3])
+					## base to hip transform
+					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHc.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
+					self.Robot.Leg[j].V6d.coxa_X_foot[:3] = mX(self.Robot.Leg[j].XHc.coxa_X_base[:3,:3],self.Robot.Leg[j].V6d.base_X_foot[:3])
 
 					## ================================================================================================================== ##
 					## determine foot position wrt base & coxa - REQ: world_X_foot position
 					## XHc.world_X_foot used as this may differ from XHd due to robot being suspended, but result in drift
 					## TODO: think how to deal with drift
 
-					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHd.world_X_foot)
-					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
-
-					if (j==1):
-						print 'DbXf: ',j, np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3:4].flatten(),4)						
-						
-						# print 'vwXf: ', np.round(v3_world_X_foot.flatten(),4)
-						leg_sum_1 += self.Robot.Leg[j].V6d.world_X_foot[:3]*CTR_INTV
-						leg_sum_2 += self.Robot.Leg[j].V6d.base_X_foot[:3]*CTR_INTV
-						# print 'cv:  ', np.round(v3cv.flatten(),4)
-						# print 'wXf: ', np.round(leg_sum_1.flatten(),4)
-						# print 'bXf: ', np.round(leg_sum_2.flatten(),4)
-						# print 'old: ', np.round(self.Robot.Leg[j].base_X_ee.ds.xp.flatten(),4)
-						# print 'cXf: ', j, ' ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3:4].flatten(),4)
-					# 	print 'DwXf: ', np.round(v3_world_X_foot.flatten(),5)
-						# print self.Robot.XHc.world_X_base[:3,:3]
-						
-						# print 'CbXf: ', np.round(self.Robot.Leg[j].XHc.base_X_foot[:3,3:4].flatten(),4)
-					# 	print 'CcXf: ', np.round(self.Robot.Leg[j].XHc.coxa_X_foot[:3,3:4].flatten(),4)
-					# 	print '------------------------------------------------------------------------'
-			if (i==1):
-				raw_input('continue')			
+					# self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHd.world_X_foot)
+					# self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
+		
 
 			## Task to joint space
 			qd = self.Robot.task_X_joint()	
@@ -536,7 +602,7 @@ class CorinManager:
 			i += 1
 
 		# Finish off transfer legs trajectory onto ground
-		# self.complete_transfer_trajectory()
+		self.complete_transfer_trajectory()
 
 		print 'Trajectory executed'
 		print 'Desired Goal: ', np.round(base_path.X.xp[-1],4), np.round(base_path.W.xp[-1],4)

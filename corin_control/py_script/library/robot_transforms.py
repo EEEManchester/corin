@@ -93,14 +93,9 @@ class ArrayHomogeneousTransform:
 	def _initialize_(self):
 		""" Set default values for robot's nominal stance """
 
-		## Define Variables ##
-		# qb  = np.zeros((6,1))
-		q   = np.zeros((3,1))
 		KDL = kdl.KDL()
 
-		# set base to be standing up height
-		# qb[2] = BODY_HEIGHT
-		# set legs to default standup position
+		## Set legs to default standup position
 		q = KDL.leg_IK([STANCE_WIDTH,0.,-BODY_HEIGHT])
 
 		self.update_base_X_coxa(ROT_BASE_X_LEG[self.n],TRN_BASE_X_LEG[self.n])
@@ -161,7 +156,9 @@ class ArrayHomogeneousTransform:
 		# create temp. matrix & overwrite linear components to ignore them
 		temp_mx = mx_world_X_base.copy()
 		temp_mx[:3,3:4] = np.zeros((3,1))
-		self.world_base_X_foot  = np.dot(self.world_X_foot, mx_world_X_base)
+
+		self.update_base_X_foot(q)
+		self.world_base_X_foot  = np.dot(temp_mx, self.base_X_foot)
 
 	def update_world_base_X_NRP(self, mx_world_X_base):
 		# create temp. matrix & overwrite linear components to ignore them
@@ -300,7 +297,9 @@ class ArrayHomogeneousTransform:
 		self.coxa_X_COM[2,3] = (L1_MASS*self.coxa_X_coxa_COM[2,3] + L2_MASS*self.coxa_X_femur_COM[2,3] + L3_MASS*self.coxa_X_tibia_COM[2,3])/LEG_MASS
 
 
-XH = ArrayHomogeneousTransform(1)
+XH = ArrayHomogeneousTransform(5)
+XH.update_base_X_foot(np.array([-0.13,0.34,-1.64]))
+
 # XH.update_coxa_COM(np.array([deg2rad(0),deg2rad(30),deg2rad(-120)]))
 # print XH.coxa_X_COM
 # print XH.base_X_foot
@@ -537,23 +536,12 @@ class HomogeneousTransform:
 		self.world_X_base[2,1] =  qy_cos*qx_sin
 		self.world_X_base[2,2] =  qy_cos*qx_cos
 		self.world_X_base[2,3] =  tz
-		# print 'old: '
-		# print self.world_X_base[:3,:3]
-		# self.world_X_base[:3,:3] = rotation_zyx(q[3:6])
-		# print 'new: '
-		# print self.world_X_base[:3,:3]
+		
 		self.update_base_X_world(q)
 		
 	def update_base_X_world(self, q=None):
 		self.base_X_world = np.linalg.inv(self.world_X_base)
 		
-		self.base_X_world[:3,:3] = self.world_X_base[:3,:3].transpose()
-		# if (q is not None):
-		# 	rzyx = np.array([q[5],q[4],q[3]])
-		# 	self.base_X_world[:3,:3] = rotation_xyz(rzyx)
-		# 	print 'new b: '
-		# 	print self.base_X_world[:3,:3]
-
 	def update_base_X_coxa(self, q, tx):
 		""" generic method for updating each leg """
 

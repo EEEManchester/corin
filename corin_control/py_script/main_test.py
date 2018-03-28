@@ -2,7 +2,7 @@
 
 from library import *
 
-print np.array([1,2])
-print np.arange(0,1,0.1)
+footholds = [[1],[2,3],[4],[None],[None],[None]]
 
-# print funky()
+print footholds[1][0]
+
