@@ -108,6 +108,7 @@ if __name__ == "__main__":
 		cy[i] = test[i][1] 
 		cz[i] = test[i][2] 
 	
-	x = np.arange(0,1.0,0.01)
-	print len(x)
-	# print len(test)
+	a = np.eye(3)
+	print a
+	a[1,1] = 5
+	print a

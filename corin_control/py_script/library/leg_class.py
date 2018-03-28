@@ -86,6 +86,8 @@ class LegClass:
 
 		self.XHc.update_coxa_X_foot(q_compensated)
 		self.XHc.update_base_X_foot(q_compensated)
+
+		# self.XHc.update_world_X_foot(mx_world_X_base, q_compensated) 	# updating continuously results in drift
 		self.XHc.update_world_base_X_foot(mx_world_X_base, q_compensated)
 		self.XHc.update_world_base_X_NRP(mx_world_X_base)
 
@@ -112,6 +114,7 @@ class LegClass:
 		self.cstate = cState
 		self.foot_XF_ee.cs = np.reshape(np.array(cForce),(3,1))
 
+		return None
 		## TODO: TRANSFORM FROM FOOT FRAME TO HIP, BASE, WORLD FRAME
 
 	def generate_spline(self, start, end, snorm, phase=1, reflex=False, ctime=2.0, tn=0.1):

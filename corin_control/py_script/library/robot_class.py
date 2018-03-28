@@ -71,8 +71,10 @@ class RobotState:
 			self.Leg[j].XHd.update_coxa_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
 			self.Leg[j].XHc.update_coxa_X_foot(self.KDL.leg_IK(LEG_STANCE[j]))
 			self.Leg[j].XHd.update_coxa_X_foot(self.KDL.leg_IK(LEG_STANCE[j]))
-		self.task_X_joint()
+			self.Leg[j].XHc.world_X_foot = mX(self.XHc.world_X_base, self.Leg[j].XHc.base_X_foot)
+			self.Leg[j].XHd.world_X_foot = mX(self.XHd.world_X_base, self.Leg[j].XHd.base_X_foot)
 
+		self.task_X_joint()
 		print ">> INITIALISED ROBOT CLASS"
 
 	def update_state(self,**options):
@@ -108,7 +110,7 @@ class RobotState:
 		for j in range(0,self.active_legs):
 			
 			bstate = self.Leg[j].update_joint_state(wXb, qpc, reset)
-			self.Leg[j].update_force_state(self.cstate[j], self.cforce[j*3:(j*3)+3])
+			cstate = self.Leg[j].update_force_state(self.cstate[j], self.cforce[j*3:(j*3)+3])
 
 			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
 				self.suspend = True
@@ -172,6 +174,7 @@ class RobotState:
 		for j in range(0,6):
 			if (self.Gait.cs[j] == 1):
 				self.Leg[j].phase_change = False
+				# self.Leg[j].XHc.update_world_X_foot(mx_world_X_base, q_compensated) 	# consider updating only once when contact is true
 
 		self.suspend = False
 		# print 'Gait phase changed!'

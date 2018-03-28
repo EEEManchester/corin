@@ -142,7 +142,7 @@ class ArrayHomogeneousTransform:
 		self.base_X_foot[2,1] =  0.
 		self.base_X_foot[2,3] =  (q2_sin*q3_cos + q2_cos*q3_sin)*L3 + q2_sin*L2
 
-	def update_world_base_X_foot(self, mx_world_X_base, q):
+	def update_world_X_foot(self, mx_world_X_base, q):
 		q1_sin = np.sin(q[0])
 		q2_sin = np.sin(q[1])
 		q3_sin = np.sin(q[2])
@@ -154,15 +154,20 @@ class ArrayHomogeneousTransform:
 		tX = TRN_BASE_X_LEG[self.n][0]
 		tY = TRN_BASE_X_LEG[self.n][1]
 
-		mx_world_X_base[:3,3:4] = np.zeros((3,1)) 	# overwrite linear components to ignore them
-		
 		self.world_X_foot = np.dot(mx_world_X_base, self.base_X_foot)
-		self.world_base_X_foot = np.dot(self.world_X_foot, mx_world_X_base)
+
+
+	def update_world_base_X_foot(self, mx_world_X_base, q):
+		# create temp. matrix & overwrite linear components to ignore them
+		temp_mx = mx_world_X_base.copy()
+		temp_mx[:3,3:4] = np.zeros((3,1))
+		self.world_base_X_foot  = np.dot(self.world_X_foot, mx_world_X_base)
 
 	def update_world_base_X_NRP(self, mx_world_X_base):
-		
-		mx_world_X_base[:3,3:4] = np.zeros((3,1)) 	# overwrite linear components to ignore them
-		
+		# create temp. matrix & overwrite linear components to ignore them
+		temp_mx = mx_world_X_base.copy()
+		temp_mx[:3,3:4] = np.zeros((3,1))
+
 		self.world_X_NRP = np.dot(mx_world_X_base, self.base_X_NRP)
 		self.world_base_X_NRP = np.dot(self.world_X_NRP, mx_world_X_base)
 
@@ -534,7 +539,7 @@ class HomogeneousTransform:
 		self.world_X_base[2,3] =  tz
 		# print 'old: '
 		# print self.world_X_base[:3,:3]
-		self.world_X_base[:3,:3] = rotation_zyx(q[3:6])
+		# self.world_X_base[:3,:3] = rotation_zyx(q[3:6])
 		# print 'new: '
 		# print self.world_X_base[:3,:3]
 		self.update_base_X_world(q)

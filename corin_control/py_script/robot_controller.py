@@ -7,8 +7,8 @@ __author__  = 'Wei Cheah'
 import sys; sys.dont_write_bytecode = True
 
 ## Personal libraries
-from library import *
-import control_interface 					# action selection from ROS parameter server
+from library import *			# library modules to include 
+import control_interface 		# action selection from ROS parameter server
 
 ## ROS messages & libraries
 import rospy
@@ -36,7 +36,7 @@ class CorinManager:
 		self.interface = None	# interface to control: simulation or Robotis hardware
 		self.resting   = False 	# Flag indicating robot standing or resting
 		self.on_start  = False 	# variable for resetting to leg suspended in air
-		self.control_mode = "simfast" # run controller in various mode: 1) normal, 2) fast, 3) simfast
+		self.control_mode = "normal" # run controller in various mode: 1) normal, 2) fast, 3) simfast
 
 		self.__initialise__()
 
@@ -118,8 +118,11 @@ class CorinManager:
 
 	def publish_topics(self, q, q_log=None):
 		""" Publish joint position to joint controller topics and
-			setpoint topic (for logging all setpoint states) 				"""
-		""" Input: q -> Joint setpoints (position, velocity, acceleration) 	"""
+			setpoint topic (for logging all setpoint states) 		"""
+		""" Input: 	1) q -> Joint setpoints (position, velocity, 
+							acceleration) 	
+					2) q_log -> JointState msg with base and joint
+								setpoints for logging purposes		"""
 
 		## Publish joint position to robot if valid
 		if (self.Robot.invalid is not True):
@@ -177,6 +180,44 @@ class CorinManager:
 			setpoints = (range(0,6), LEG_STANCE, [0]*6, 2)
 		self.leg_level_controller(setpoints)
 		rospy.set_param(ROBOT_NS + '/standing', True)
+
+	def complete_transfer_trajectory(self):
+		""" Executes remaining leg trajectories in transfer phase """
+		""" Checks remaining points on trajectory and finish off  """ 
+
+		## Define Variables ##
+		sc_new = 0	# current spline count for transfer phase legs
+		sc_max = 0	# maximum spline count among the transfer phase legs
+		dir_uv = np.array([0.,0.,0.]) 	# zero vector direction
+		self.Robot.suspend = True 		# suspend robot for zero trunk movement
+
+		# Check for legs that are in transfer phase
+		for j in range(0,6):
+			if (self.Robot.Gait.cs[j] == 1):
+				# get number of points yet to execute
+				sc_new = self.Robot.Leg[j].spline_length - self.Robot.Leg[j].spline_counter
+				sc_max = sc_new if (sc_new > sc_max) else sc_max
+
+		try:
+			# loop only required via points for legs in transfer phase
+			for sc in range(0, sc_max):
+				for j in range(0,6):
+					if (self.Robot.Gait.cs[j] == 1 and self.Robot.Leg[j].feedback_state==1):
+						try:
+							self.Robot.Leg[j].update_from_spline()
+						except:
+							self.Robot.Leg[j].feedback_state = 2
+							
+				## Task to joint space
+				qd = self.Robot.task_X_joint()
+				self.publish_topics(qd)
+				
+			return True
+		except Exception, e:
+			print "Error: ", e
+			print "Returning legs to ground failed"
+			return False
+
 
 	def leg_level_controller(self, setpoints):
 		""" Generates and execute trajectory by specified desired leg position 	"""
@@ -238,43 +279,6 @@ class CorinManager:
 			return False
 
 		return True
-
-	def complete_transfer_trajectory(self):
-		""" Executes remaining leg trajectories in transfer phase """
-		""" Checks remaining points on trajectory and finish off  """ 
-
-		## Define Variables ##
-		sc_new = 0	# current spline count for transfer phase legs
-		sc_max = 0	# maximum spline count among the transfer phase legs
-		dir_uv = np.array([0.,0.,0.]) 	# zero vector direction
-		self.Robot.suspend = True 		# suspend robot for zero trunk movement
-
-		# Check for legs that are in transfer phase
-		for j in range(0,6):
-			if (self.Robot.Gait.cs[j] == 1):
-				# get number of points yet to execute
-				sc_new = self.Robot.Leg[j].spline_length - self.Robot.Leg[j].spline_counter
-				sc_max = sc_new if (sc_new > sc_max) else sc_max
-
-		try:
-			# loop only required via points for legs in transfer phase
-			for sc in range(0, sc_max):
-				for j in range(0,6):
-					if (self.Robot.Gait.cs[j] == 1 and self.Robot.Leg[j].feedback_state==1):
-						try:
-							self.Robot.Leg[j].update_from_spline()
-						except:
-							self.Robot.Leg[j].feedback_state = 2
-							
-				## Task to joint space
-				qd = self.Robot.task_X_joint()
-				self.publish_topics(qd)
-				
-			return True
-		except Exception, e:
-			print "Error: ", e
-			print "Returning legs to ground failed"
-			return False
 
 	def trajectory_tracking(self, x_cob, w_cob=0):
 		""" Generates body trajectory from given via points and
@@ -364,9 +368,11 @@ class CorinManager:
 
 			## Update robot's desired pose & twist
 			self.Robot.XHd.update_world_X_base(np.vstack((v3cp,v3wp))) 	# np.zeros((3,1))
+
 			self.Robot.V6d.world_X_base = np.vstack((v3cv,v3wv))
 			self.Robot.A6d.world_X_base = np.vstack((v3ca,v3wa))
-			
+			# print 'first instance'
+			# print np.round(self.Robot.Leg[1].XHc.world_X_foot,4)
 			## generate trajectory for leg in transfer phase
 			for j in range (0, self.Robot.active_legs):
 
@@ -425,7 +431,11 @@ class CorinManager:
 					svalid = self.Robot.Leg[j].generate_spline(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3], self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],
 																self.Robot.Leg[j].qsurface, 1, False, TRAC_PERIOD, CTR_INTV)
 					
+					## TODO: update world_X_foot position?
+					self.Robot.Leg[j].XHd.world_X_foot[:3,3:4] = self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3:4] + v3np
+
 					if (svalid is False):
+						# set invalid if trajectory unfeasible for leg's kinematic
 						self.Robot.invalid = True
 					else:	
 						# set flag that phase has changed
@@ -447,46 +457,45 @@ class CorinManager:
 					# prob: IMU feedback would cause change here, increase leg height etc
 					# prob: use leg current state, but shouldn't drift
 
-					## determine foot velocity using CoB velocity; world_X_base cause rotation
-					self.Robot.Leg[j].base_X_ee.ds.xv = mX( rotation_zyx(self.Robot.world_X_base.cs.wp).transpose() , \
-										-( cv-np.cross((mX(rotation_zyx(self.Robot.world_X_base.cs.wp), self.Robot.Leg[j].base_X_ee.ds.xp)).transpose(),wv) ).transpose() )
-
-					## base_X_feet position: integrate base_X_feet velocity
-					self.Robot.Leg[j].base_X_ee.ds.xp = self.Robot.Leg[j].base_X_ee.ds.xv*CTR_INTV + self.Robot.Leg[j].base_X_ee.ds.xp
-					
-					## base to hip transform
-					self.Robot.Leg[j].hip_X_ee.ds.xp = self.Robot.Leg[j].base_X_hip_ee(self.Robot.Leg[j].base_X_ee.ds.xp)
-					self.Robot.Leg[j].hip_X_ee.ds.xv = np.dot(self.Robot.Leg[j].tf_base_X_hip, self.Robot.Leg[j].base_X_ee.ds.xv)
-
 					## ================================================================================================================== ##
-					## determine foot velocity using CoB velocity; world_X_base cause rotation
+					## OLD METHOD: determine foot velocity using CoB velocity; ERROR - LEG DOES NOT RETURN TO INITIAL POSITION
 
 					# v3_world_X_foot = ( mX(self.Robot.XHd.world_X_base[:3,:3] , self.Robot.Leg[j].XHd.base_X_foot[:3,3:4]) )
 					# self.Robot.Leg[j].V6d.world_X_foot[:3] 	= -( v3cv + mC(v3wv,v3_world_X_foot) )
 					# self.Robot.Leg[j].V6d.base_X_foot[:3]	= mX(self.Robot.XHd.base_X_world[:3,:3], self.Robot.Leg[j].V6d.world_X_foot[:3])
-					v3_world_X_foot = ( mX(self.Robot.XHd.base_X_world[:3,:3] , self.Robot.Leg[j].XHd.base_X_foot[:3,3:4]) )
-					self.Robot.Leg[j].V6d.world_X_foot[:3] 	= ( v3cv - mC(v3_world_X_foot,v3wv) )
-					self.Robot.Leg[j].V6d.base_X_foot[:3]	= mX(self.Robot.XHd.world_X_base[:3,:3], self.Robot.Leg[j].V6d.world_X_foot[:3])
+					# v3_world_X_foot = ( mX(self.Robot.XHd.base_X_world[:3,:3] , self.Robot.Leg[j].XHd.base_X_foot[:3,3:4]) )
+					# self.Robot.Leg[j].V6d.world_X_foot[:3] 	= ( v3cv - mC(v3_world_X_foot,v3wv) )
+					# self.Robot.Leg[j].V6d.base_X_foot[:3]	= mX(self.Robot.XHd.world_X_base[:3,:3], self.Robot.Leg[j].V6d.world_X_foot[:3])
 
 					## base_X_feet position: integrate base_X_feet velocity
-					self.Robot.Leg[j].XHd.base_X_foot[:3,3:4] += self.Robot.Leg[j].V6d.base_X_foot[:3]*CTR_INTV
+					# self.Robot.Leg[j].XHd.base_X_foot[:3,3:4] += self.Robot.Leg[j].V6d.base_X_foot[:3]*CTR_INTV
 
-					## base to hip transform
-					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHc.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
-					self.Robot.Leg[j].V6d.coxa_X_foot[:3] = mX(self.Robot.Leg[j].XHc.coxa_X_base[:3,:3],self.Robot.Leg[j].V6d.base_X_foot[:3])
+					# ## base to hip transform
+					# self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHc.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
+					# self.Robot.Leg[j].V6d.coxa_X_foot[:3] = mX(self.Robot.Leg[j].XHc.coxa_X_base[:3,:3],self.Robot.Leg[j].V6d.base_X_foot[:3])
+
+					## ================================================================================================================== ##
+					## determine foot position wrt base & coxa - REQ: world_X_foot position
+					## XHc.world_X_foot used as this may differ from XHd due to robot being suspended, but result in drift
+					## TODO: think how to deal with drift
+
+					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHd.world_X_foot)
+					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
 
 					if (j==1):
+						print 'DbXf: ',j, np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3:4].flatten(),4)						
+						
 						# print 'vwXf: ', np.round(v3_world_X_foot.flatten(),4)
 						leg_sum_1 += self.Robot.Leg[j].V6d.world_X_foot[:3]*CTR_INTV
 						leg_sum_2 += self.Robot.Leg[j].V6d.base_X_foot[:3]*CTR_INTV
-						print 'cv:  ', np.round(v3cv.flatten(),4)
-						print 'wXf: ', np.round(leg_sum_1.flatten(),4)
-						print 'bXf: ', np.round(leg_sum_2.flatten(),4)
+						# print 'cv:  ', np.round(v3cv.flatten(),4)
+						# print 'wXf: ', np.round(leg_sum_1.flatten(),4)
+						# print 'bXf: ', np.round(leg_sum_2.flatten(),4)
 						# print 'old: ', np.round(self.Robot.Leg[j].base_X_ee.ds.xp.flatten(),4)
 						# print 'cXf: ', j, ' ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3:4].flatten(),4)
 					# 	print 'DwXf: ', np.round(v3_world_X_foot.flatten(),5)
 						# print self.Robot.XHc.world_X_base[:3,:3]
-						print 'DbXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3:4].flatten(),4)
+						
 						# print 'CbXf: ', np.round(self.Robot.Leg[j].XHc.base_X_foot[:3,3:4].flatten(),4)
 					# 	print 'CcXf: ', np.round(self.Robot.Leg[j].XHc.coxa_X_foot[:3,3:4].flatten(),4)
 					# 	print '------------------------------------------------------------------------'
@@ -536,6 +545,7 @@ class CorinManager:
 
 	def action_interface(self):
 		""" Interface for commanding robot """
+		## TODO: alternative for this - using action server
 
 		## update robot state prior to starting action
 		self.Robot.update_state(control_mode=self.control_mode)
