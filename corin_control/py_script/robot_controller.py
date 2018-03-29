@@ -305,10 +305,6 @@ class CorinManager:
 		leg_sum_1 = np.zeros((3,1))
 		leg_sum_2 = np.zeros((3,1))
 		leg_sum_3 = np.zeros((3,1))
-		# self.Robot.XHd.update_world_X_base(np.vstack((np.array([[0.],[0.],[0.]]),np.array([[-0.4],[0.],[0.]]))))
-		# self.Robot.XHc.world_X_base = self.Robot.XHd.world_X_base.copy()
-		# self.Robot.XHc.base_X_world = self.Robot.XHd.base_X_world.copy()
-		# print self.Robot.XHc.base_X_world
 		
 		# cycle through trajectory points until complete
 		i = 1 	# skip first point since spline has zero initial differential conditions
@@ -318,12 +314,6 @@ class CorinManager:
 			## suppress trajectory counter as body support suspended
 			if (self.Robot.suspend == True):
 				i -= 1
-
-			## FOLLOWING 3 LINES TO BE REMOVED ##
-			cp = base_path.X.xp[i];	wp = base_path.W.xp[i]
-			cv = base_path.X.xv[i];	wv = base_path.W.xv[i]
-			ca = base_path.X.xa[i];	wa = base_path.W.xa[i]
-			########################################################
 			
 			## Variable mapping to R^(3x1) for base linear and angular time, position, velocity, acceleration
 			v3cp = base_path.X.xp[i].reshape(3,1);	v3wp = base_path.W.xp[i].reshape(3,1);
