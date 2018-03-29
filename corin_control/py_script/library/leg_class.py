@@ -62,7 +62,8 @@ class LegClass:
 		self.qsurface = np.array([0.,0.,0.]) 		# surface orientation in leg frame, (roll, pitch, yaw)
 		self.qsnorm   = np.array([[0.],[0.],[1.]]) 	# surface normal
 
-		self.phase_change = False 		# Flag for enabling trajectory to be generated at transfer
+		self.transfer_phase_change = False 		# Flag for enabling trajectory to be generated at transfer
+		self.support_phase_change  = False 		# Flag for enabling trajectory to be generated at transfer
 
 	## Update functions
 	def update_joint_state(self, mx_world_X_base, jointState, resetState):
@@ -71,7 +72,7 @@ class LegClass:
 					2) resetState -> flag to set desired state as current state 	""" 
 
 		## Error Compensation
-		q_compensated = (jointState[0], jointState[1]+QCOMPENSATION, jointState[2]) 		# offset q2 by 0.01 - gravity
+		q_compensated = (jointState[0], jointState[1]-QCOMPENSATION, jointState[2]) 		# offset q2 by 0.01 - gravity
 
 		## current
 		self.hip_X_ee.cs.xp  = self.KDL.leg_FK(q_compensated)
@@ -86,6 +87,7 @@ class LegClass:
 		self.XHc.update_base_X_foot(q_compensated)
 
 		# self.XHc.update_world_X_foot(mx_world_X_base, q_compensated) 	# updating continuously results in drift
+
 		self.XHc.update_world_base_X_foot(mx_world_X_base, q_compensated)
 		self.XHc.update_world_base_X_NRP(mx_world_X_base)
 
@@ -100,7 +102,8 @@ class LegClass:
 			self.XHd.coxa_X_foot = self.XHc.coxa_X_foot.copy()
 			self.XHd.base_X_foot = self.XHc.base_X_foot.copy()
 			
-		# if (self.number == 5):
+		# if (self.number == 2):
+		# 	print 'bXf: ', np.round(self.XHc.base_X_foot[:3,3],4)
 		# 	print 'q: ', np.round(q_compensated,4)
 		# 	print 'bXf: ', np.round(self.XHc.base_X_foot[:3,3],4)
 		# 	print 'bXe_ds: ', np.round(self.base_X_ee.ds.xp.flatten(),4)

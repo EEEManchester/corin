@@ -55,6 +55,9 @@ class KDL():
 
 			# Adding the square of element (1,4) & (2,4) in inv(H01)*Psym = T12*T23
 			c3  = ( (x*np.cos(q1) + y*np.sin(q1) - L1)**2 + z**2 -L3**2-L2**2 )/(2*L2*L3);
+			a3  = 1.0-c3**2
+			if (a3 < 0):
+				raise Exception, "Negative value encountered for ", p 
 			s3  = np.sqrt(1.0-c3**2);
 			q3t = [np.arctan2(s3,c3), np.arctan2(-s3,c3)];
 
@@ -76,6 +79,7 @@ class KDL():
 			return np.array([q1, q2, q3])
 		except Exception, e:
 			print 'IK: ', e
+			raw_input('cont')
 			return None
 
 	def check_singularity(self, q=None):

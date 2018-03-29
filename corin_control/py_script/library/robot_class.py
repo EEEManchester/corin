@@ -53,6 +53,7 @@ class RobotState:
 
 		self.XHc = robot_transforms.HomogeneousTransform() 	# position: current state
 		self.XHd = robot_transforms.HomogeneousTransform()	# position: desired state
+		self.P6c = robot_transforms.Vector6D()
 		self.V6c = robot_transforms.Vector6D() 				# velocity: current state
 		self.V6d = robot_transforms.Vector6D() 				# velocity: desired state
 		self.A6c = robot_transforms.Vector6D() 				# acceleration: current
@@ -62,6 +63,8 @@ class RobotState:
 
 	def _initialise(self):
 		""" Initialises robot class for setting up number of legs """
+
+		self.P6c[2] = BODY_HEIGHT
 
 		for j in range(6):
 			self.Leg.append(leg_class.LegClass(j))
@@ -181,10 +184,14 @@ class RobotState:
 		# update robot leg phase_change
 		for j in range(0,6):
 			if (self.Gait.cs[j] == 1):
-				self.Leg[j].phase_change = False
+				self.Leg[j].transfer_phase_change = False
 				# self.Leg[j].XHc.update_world_X_foot(mx_world_X_base, q_compensated) 	# consider updating only once when contact is true
-
+			elif (self.Gait.cs[j] == 0): 
+				if (self.Gait.cs[j] != self.Gait.ps[j]):
+					# print 'updating Leg ', j
+					self.Leg[j].XHc.update_world_X_foot(self.XHc.world_X_base) 	# updating continuously results in drift
 		self.suspend = False
+		# raw_input('cont')
 
 	def task_X_joint(self,legs_phase=None): # TODO - to be revisited
 		""" Convert all leg task space to joint space 		"""								

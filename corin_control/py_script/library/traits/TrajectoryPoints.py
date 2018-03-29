@@ -47,6 +47,3 @@ class TrajectoryPoints():
 
 	def append(self, x):
 		pass
-
-
-

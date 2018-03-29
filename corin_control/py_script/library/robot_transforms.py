@@ -102,6 +102,28 @@ class ArrayHomogeneousTransform:
 		self.update_base_X_foot(q)
 		self.update_coxa_X_foot(q)
 
+	def duplicate(self, obj):
+		""" duplicates similar instance of itself """
+		self.world_X_foot = obj.world_X_foot.copy()
+		self.world_base_X_foot = obj.world_base_X_foot.copy()
+		self.world_base_X_AEP  = obj.world_base_X_AEP.copy()
+		self.world_base_X_PEP  = obj.world_base_X_PEP.copy()
+		self.world_base_X_NRP  = obj.world_base_X_NRP.copy()
+		self.base_X_coxa = obj.base_X_coxa.copy()
+		self.base_X_foot = obj.base_X_foot.copy()
+		self.base_X_AEP  = obj.base_X_AEP.copy()
+		self.base_X_PEP  = obj.base_X_PEP.copy()
+		self.base_X_NRP  = obj.base_X_NRP.copy()
+		self.coxa_X_base = obj.coxa_X_base.copy()
+		self.coxa_X_foot = obj.coxa_X_foot.copy()
+		self.coxa_X_AEP  = obj.coxa_X_AEP.copy()
+		self.coxa_X_PEP  = obj.coxa_X_PEP.copy()
+		self.coxa_X_NRP  = obj.coxa_X_NRP.copy()
+		self.coxa_X_COM  = obj.coxa_X_COM.copy()
+		self.coxa_X_coxa_COM  = obj.coxa_X_coxa_COM.copy()
+		self.coxa_X_femur_COM = obj.coxa_X_femur_COM.copy()
+		self.coxa_X_tibia_COM = obj.coxa_X_tibia_COM.copy()
+
 	def update_base_X_coxa(self, q, tx):
 		self.base_X_coxa[0,0] =  np.cos(deg2rad(q))
 		self.base_X_coxa[0,1] = -np.sin(deg2rad(q))
@@ -137,18 +159,8 @@ class ArrayHomogeneousTransform:
 		self.base_X_foot[2,1] =  0.
 		self.base_X_foot[2,3] =  (q2_sin*q3_cos + q2_cos*q3_sin)*L3 + q2_sin*L2
 
-	def update_world_X_foot(self, mx_world_X_base, q):
-		q1_sin = np.sin(q[0])
-		q2_sin = np.sin(q[1])
-		q3_sin = np.sin(q[2])
-		q1_cos = np.cos(q[0])
-		q2_cos = np.cos(q[1])
-		q3_cos = np.cos(q[2])
-		rZ_sin = np.sin(deg2rad(ROT_BASE_X_LEG[self.n]))
-		rZ_cos = np.cos(deg2rad(ROT_BASE_X_LEG[self.n]))
-		tX = TRN_BASE_X_LEG[self.n][0]
-		tY = TRN_BASE_X_LEG[self.n][1]
-
+	def update_world_X_foot(self, mx_world_X_base):
+		
 		self.world_X_foot = np.dot(mx_world_X_base, self.base_X_foot)
 
 
