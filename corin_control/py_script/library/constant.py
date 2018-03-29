@@ -61,6 +61,13 @@ RF_Q1_JOINT = 9; 	RM_Q1_JOINT = 12;	RR_Q1_JOINT = 15;
 RF_Q2_JOINT = 10;	RM_Q2_JOINT = 13;	RR_Q2_JOINT = 16;
 RF_Q3_JOINT = 11;	RM_Q3_JOINT = 14;	RR_Q3_JOINT = 17;
 
+## ------------------------ ##
+## 		Motion Planning		##
+## ------------------------ ##
+# Foothold area (m) - MP
+LEG_AREA_LX = 0.15
+LEG_AREA_LY = 0.15
+
 ## ================================================================ ##
 ##                      Controller parameters 	 					##
 ## ================================================================ ##

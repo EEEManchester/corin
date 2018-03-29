@@ -1,0 +1,35 @@
+<?xml version="1.0" ?>
+<launch>
+
+	<arg name="sensors" default="true"/>
+	<arg name="gui" default="false"/> 		<!-- True: manual control   False: real sensor -->
+	<arg name="rviz_conf" default="$(find corin_control)/rviz/grid_map.rviz"/>
+
+	<!-- load robot -->
+	<!-- Load the URDF into the ROS Parameter Server -->
+  	<param name="robot_description"
+   	 command="$(find xacro)/xacro --inorder '$(find corin_description)/robots/Corin_fixed.urdf.xacro'"/>
+	<param name="publish_frequency" value="50" /> <!-- Hz -->
+
+	<!-- publish the joint and robot states -->
+	<group if="$(arg gui)">
+		<node name="joint_state_publisher" pkg="joint_state_publisher"
+			type="joint_state_publisher" respawn="true" />
+			<param name="use_gui" value="$(arg gui)"/>
+			<param name="rate" value="100"/>
+	</group>
+
+	<node name="robot_state_publisher" pkg="robot_state_publisher"
+		type="state_publisher" respawn="true">
+		<param name="publish_frequency" value="200" />
+		<!-- <param name="rate" value="200" /> -->
+		<remap from="/joint_states" to="/planner/joint_states" /> 	 <!--when running planner -->
+		<!--<remap from="/joint_states" to="/corin/joint_states" /> 	 when running gazebo -->
+		<!--<remap from="/joint_states" to="/robotis/present_joint_states" />-->
+	</node>
+
+	<!-- load displays -->
+	<param name="use_gui" value="true"/>
+	<node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(arg rviz_conf) -f world" />
+
+</launch>

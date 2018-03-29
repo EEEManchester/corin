@@ -269,13 +269,13 @@ class SplineGenerator:
 
 	def generate_spline(self, x, t=None, tn=0.1):
 		""" 	Compute spline using via points only	"""
-
+		
 		## Set t if undefined
 		if (t is None):
 			t = self.compute_time_intervals(x)
 
 		C = self.point_interpolation(x, t)		# determine C
-
+		
 		return self.spline_generation(C, t, tn)
 		
 
@@ -293,8 +293,9 @@ x_com = np.vstack((x_com,np.array([1.35, 0.05, 0.15])))
 x_com = np.vstack((x_com,np.array([1.0, 0.5, BODY_HEIGHT+0.05])))
 t_com = np.array([0.0,1,2,3,4,8,10]) 
 
-spliner = SplineGenerator()
-x_out  = spliner.generate_spline(x_com)
+# spliner = SplineGenerator()
+# x_out  = spliner.generate_spline(x_com)
+
 # Plot.plot_2d(x_out[0],x_out[1])
 
 
