@@ -160,7 +160,9 @@ class ArrayHomogeneousTransform:
 		self.base_X_foot[2,3] =  (q2_sin*q3_cos + q2_cos*q3_sin)*L3 + q2_sin*L2
 
 	def update_world_X_foot(self, mx_world_X_base):
-		
+		if (self.n==4):
+			print mx_world_X_base
+			print self.base_X_foot
 		self.world_X_foot = np.dot(mx_world_X_base, self.base_X_foot)
 
 

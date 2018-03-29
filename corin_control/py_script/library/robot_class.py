@@ -64,7 +64,7 @@ class RobotState:
 	def _initialise(self):
 		""" Initialises robot class for setting up number of legs """
 
-		self.P6c[2] = BODY_HEIGHT
+		self.P6c.world_X_base[2] = BODY_HEIGHT
 
 		for j in range(6):
 			self.Leg.append(leg_class.LegClass(j))
@@ -188,7 +188,7 @@ class RobotState:
 				# self.Leg[j].XHc.update_world_X_foot(mx_world_X_base, q_compensated) 	# consider updating only once when contact is true
 			elif (self.Gait.cs[j] == 0): 
 				if (self.Gait.cs[j] != self.Gait.ps[j]):
-					# print 'updating Leg ', j
+					print 'updating Leg ', j
 					self.Leg[j].XHc.update_world_X_foot(self.XHc.world_X_base) 	# updating continuously results in drift
 		self.suspend = False
 		# raw_input('cont')
