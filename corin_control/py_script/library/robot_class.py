@@ -220,9 +220,11 @@ class RobotState:
 						err_str = 'Error - joint limit exceeded in leg, '
 					elif (error == 2):
 						err_str = 'Error - singularity in leg, '
+					elif (error == 3):
+						err_str = 'Error - no kinematic solution in leg, '
 					raise ValueError, err_str
 			except Exception, e:
-				print e, j, err_str
+				print e, j
 
 		## check to ensure size is correct
 		# print 'length: ', len(qp)

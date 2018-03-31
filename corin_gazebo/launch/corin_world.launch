@@ -37,6 +37,6 @@
 	args="-urdf -model corin -param robot_description -z $(arg z) -x $(arg x) -y $(arg y)"/> <!-- 0.32 --> 
 
   <!-- Get robot to 0 position -->
-  <node name="goto0" pkg="corin_description" type="joint_default" args="8.0" />
+  <node name="goto0" pkg="corin_description" type="joint_default" args="5.0" />
 
 </launch>

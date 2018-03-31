@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-## Script to move robot joints into a position
-## the position is not held unless physics engine is paused
+""" Script to move robot joints into a pre-defined position
+	the position is not held unless physics engine is paused
+"""
 
 import rospy, sys, os, time
 import string
@@ -19,19 +20,6 @@ from std_msgs.msg import Float64
 
 def deg2rad(q):
 	return (q*pi/180)
-
-def unpause(gazebo_namespace):
-	rospy.loginfo("Waiting for service %s/unpause_physics"%gazebo_namespace)
-	rospy.wait_for_service(gazebo_namespace+'/unpause_physics')
-	rospy.loginfo("temporary hack to **fix** the -J joint position option (issue #93), sleeping for 1 second to avoid race condition.");
-	time.sleep(1)
-	try:
-		unpause_physics = rospy.ServiceProxy(gazebo_namespace+'/unpause_physics', Empty)
-		rospy.loginfo("Calling service %s/unpause_physics"%gazebo_namespace)
-		resp = unpause_physics()
-		return
-	except rospy.ServiceException, e:
-		print "Service call failed: %s"%e
 
 if __name__ == "__main__":
 	if len(sys.argv) < 2:
@@ -147,11 +135,3 @@ if __name__ == "__main__":
 		rospy.set_param(model_name + '/standing', True)
 	except rospy.ServiceException, e:
 		print "set model configuration service call failed: %s"%e
-
-
-	## Unpause physics
-	# rospy.wait_for_service('%s/unpause_physics'%(gazebo_namespace))
-	# try:
-	# 	success = unpause(gazebo_namespace)
-	# except rospy.ServiceException, e:
-	# 	print "unpause physics service call failed: %s"%e

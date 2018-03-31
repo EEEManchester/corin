@@ -61,6 +61,13 @@ RF_Q1_JOINT = 9; 	RM_Q1_JOINT = 12;	RR_Q1_JOINT = 15;
 RF_Q2_JOINT = 10;	RM_Q2_JOINT = 13;	RR_Q2_JOINT = 16;
 RF_Q3_JOINT = 11;	RM_Q3_JOINT = 14;	RR_Q3_JOINT = 17;
 
+## ------------------------ ##
+## 		Motion Planning		##
+## ------------------------ ##
+# Foothold area (m) - MP
+LEG_AREA_LX = 0.15
+LEG_AREA_LY = 0.15
+
 ## ================================================================ ##
 ##                      Controller parameters 	 					##
 ## ================================================================ ##
@@ -79,7 +86,7 @@ STEP_HEIGHT  = 0.1 			# step height, z 	default 0.05
 # TRAC_PERIOD	 = 2.0			# cycle time for movement
 GAIT_PHASE	 = 2.0
 
-BASE_MAX_LINEAR_VELOCITY  = 0.035		# maximum base velocity, m/s - walking: 0.025
+BASE_MAX_LINEAR_VELOCITY  = 0.35		# maximum base velocity, m/s - walking: 0.025
 BASE_MAX_ANGULAR_VELOCITY = 0.3		# maximum base velocity, rad/s
 
 # BASE_SPEED 			= 0.025 		# walking speed in m/s

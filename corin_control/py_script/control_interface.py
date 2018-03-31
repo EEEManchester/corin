@@ -56,9 +56,9 @@ class control_interface:
 		## Sideways Demo
 		elif (STANCE_TYPE == "sideways"):
 
-			self.x_com = np.vstack((self.x_com,np.array([ 0.025, 0., BODY_HEIGHT])))
-			self.x_com = np.vstack((self.x_com,np.array([-0.025, 0., BODY_HEIGHT])))
-			self.x_com = np.vstack((self.x_com,np.array([ 0.0  , 0., BODY_HEIGHT ])))
+			self.x_com = np.vstack((self.x_com,np.array([ 0.025, 0., 0.])))
+			self.x_com = np.vstack((self.x_com,np.array([-0.025, 0., 0.])))
+			self.x_com = np.vstack((self.x_com,np.array([ 0.0  , 0., 0. ])))
 
 			## 90 degrees
 			# self.x_com = np.vstack((self.x_com,np.array([0.0,-0.05, BODY_HEIGHT])))
@@ -69,13 +69,13 @@ class control_interface:
 			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT ])))
 
 			## 30 and 60 deg
-			self.x_com = np.vstack((self.x_com,np.array([0.0,-0.025, BODY_HEIGHT])))
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.025, BODY_HEIGHT])))
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0  , BODY_HEIGHT ])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0,-0.025, 0.])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.025, 0.])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0  , 0. ])))
 
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT+0.025])))
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT-0.025])))
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.+0.025])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.-0.025])))
+			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.])))
 
 			# left/right & up/down
 			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.025, BODY_HEIGHT+0.025])))
@@ -98,13 +98,13 @@ class control_interface:
 			# self.x_com = np.vstack((self.x_com,np.array([0. , 0., BODY_HEIGHT])))
 			# self.x_com = np.vstack((self.x_com,np.array([0. , 0., BODY_HEIGHT])))
 
-			self.x_com = np.vstack((self.x_com,np.array([0. , -0.04, BODY_HEIGHT])))
-			self.x_com = np.vstack((self.x_com,np.array([0.03,  0.04, BODY_HEIGHT])))
-			self.x_com = np.vstack((self.x_com,np.array([-0.03, 0.04, BODY_HEIGHT])))
-			self.x_com = np.vstack((self.x_com,np.array([-0.03, -0.04, BODY_HEIGHT])))
-			self.x_com = np.vstack((self.x_com,np.array([0.00, 0.00, BODY_HEIGHT])))
-			self.x_com = np.vstack((self.x_com,np.array([0.00, 0.0, 0.22])))
-			self.x_com = np.vstack((self.x_com,np.array([0.,  0.0, BODY_HEIGHT])))
+			self.x_com = np.vstack((self.x_com,np.array([0. , -0.04, 0.])))
+			self.x_com = np.vstack((self.x_com,np.array([0.03,  0.04, 0.])))
+			self.x_com = np.vstack((self.x_com,np.array([-0.03, 0.04, 0.])))
+			self.x_com = np.vstack((self.x_com,np.array([-0.03, -0.04, 0.])))
+			self.x_com = np.vstack((self.x_com,np.array([0.00, 0.00, 0.])))
+			self.x_com = np.vstack((self.x_com,np.array([0.00, 0.0, 0.15])))
+			self.x_com = np.vstack((self.x_com,np.array([0.,  0.0, 0.])))
 
 			self.w_com = np.vstack((self.w_com,np.array([-0.22, -0.075, 0.])))
 			self.w_com = np.vstack((self.w_com,np.array([0.22, -0.075, 0.])))
@@ -118,27 +118,27 @@ class control_interface:
 		self.reset_variables()
 		self.mode = 2
 
-		self.x_com = np.vstack((self.x_com,np.array([0.07, 0., 0.])))
+		self.x_com = np.vstack((self.x_com,np.array([0.17, 0., 0.])))
 		# self.w_com = np.vstack((self.w_com,np.array([0.3, 0., 0.])))
 
 	def WalkBack(self):
 		self.reset_variables()
 		self.mode = 2
 
-		self.x_com = np.vstack((self.x_com,np.array([-0.4, 0.0, BODY_HEIGHT])))
+		self.x_com = np.vstack((self.x_com,np.array([-0.4, 0.0, 0.])))
 
 	def WalkRight(self):
 		self.reset_variables()
 		self.mode = 2
 
-		self.x_com = np.vstack((self.x_com,np.array([0.0, -0.2, BODY_HEIGHT])))
+		self.x_com = np.vstack((self.x_com,np.array([0.0, -0.2, 0.])))
 		self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
 
 	def WalkLeft(self):
 		self.reset_variables()
 		self.mode = 2
 
-		self.x_com = np.vstack((self.x_com,np.array([0.0, 0.2, BODY_HEIGHT])))
+		self.x_com = np.vstack((self.x_com,np.array([0.0, 0.2, 0.])))
 		self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
 
 	def Rotate(self):

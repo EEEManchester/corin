@@ -78,8 +78,7 @@ class KDL():
 			#return q2
 			return np.array([q1, q2, q3])
 		except Exception, e:
-			print 'IK: ', e
-			raw_input('cont')
+			print 'KDL-IK(): ', e
 			return None
 
 	def check_singularity(self, q=None):

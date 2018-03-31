@@ -175,19 +175,22 @@ class LegClass:
 		error = 0 					# Error indicator
 
 		if (xp is None):
+			# Use previous known state
 			xp = self.XHd.coxa_X_foot[:3,3:4]
-			# xp = self.hip_X_ee.ds.xp.reshape(3,1) # TEMP: remove later
-			# print self.number, np.round( (xpn - xp).transpose(),4) 	# TODO: LEG 5 ERROR IS LARGE
+
 		self.Joint.qpd = self.KDL.leg_IK(xp)
 		
-		# checks if joint limit exceeded and singularity occurs
-		if (self.check_joint_limit(self.Joint.qpd) is True):
-			error = 1
-		else:
-			if (self.KDL.check_singularity(self.Joint.qpd) is False):
-				self.Joint.qvd, self.Joint.qad = self.KDL.joint_speed(self.Joint.qpd, self.V6d.coxa_X_foot, self.A6d.coxa_X_foot)
+		if (self.Joint.qpd is not None):
+			# checks if joint limit exceeded and singularity occurs
+			if (self.check_joint_limit(self.Joint.qpd) is True):
+				error = 1
 			else:
-				error = 2
+				if (self.KDL.check_singularity(self.Joint.qpd) is False):
+					self.Joint.qvd, self.Joint.qad = self.KDL.joint_speed(self.Joint.qpd, self.V6d.coxa_X_foot, self.A6d.coxa_X_foot)
+				else:
+					error = 2
+		else:
+			error = 3
 		
 		return error, self.Joint.qpd, self.Joint.qvd, self.Joint.qad 	# TEMP: change to normal (huh?)
 
