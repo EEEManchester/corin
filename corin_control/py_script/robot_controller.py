@@ -84,7 +84,7 @@ class CorinManager:
 
 		##***************** PUBLISHERS ***************##
 		self.setpoint_pub_ = rospy.Publisher('/corin/setpoint_states', JointState, queue_size=1)	# LOGGING publisher
-
+		
 		## Hardware Specific Publishers ##
 		if (ROBOT_NS == 'corin' and (self.interface == 'simulation' or self.interface == 'robotis')):
 			## Publish to Gazebo
