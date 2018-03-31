@@ -143,7 +143,7 @@
 		        	<sphere radius="${foot_r}"/>
 		      	</geometry>
 		      	<origin xyz="0 0 0" rpy="0 0 0"/>
-		      	<material name="blue"/>
+		      	<material name="black"/>
 		    </visual>
 
 		    <collision>

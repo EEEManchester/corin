@@ -53,7 +53,7 @@ class RobotState:
 
 		self.XHc = robot_transforms.HomogeneousTransform() 	# position: current state
 		self.XHd = robot_transforms.HomogeneousTransform()	# position: desired state
-		self.P6c = robot_transforms.Vector6D()
+		self.P6c = robot_transforms.Vector6D() 				# position: current state in Re6
 		self.V6c = robot_transforms.Vector6D() 				# velocity: current state
 		self.V6d = robot_transforms.Vector6D() 				# velocity: desired state
 		self.A6c = robot_transforms.Vector6D() 				# acceleration: current
@@ -67,6 +67,7 @@ class RobotState:
 		self.P6c.world_X_base[2] = BODY_HEIGHT
 
 		for j in range(6):
+			self.qd = self.KDL.leg_IK(LEG_STANCE[j])
 			self.Leg.append(leg_class.LegClass(j))
 			self.Leg[j].XHc.update_base_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
 			self.Leg[j].XHd.update_base_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
@@ -92,9 +93,9 @@ class RobotState:
 		""" update robot state using readings from topics """ 
 
 		reset = True if options.get("reset") == True else False
-		cmode = "simfast" if options.get("control_mode") == "simfast" else "normal"
+		cmode = "fast" if options.get("control_mode") == "fast" else "normal"
 
-		# self.update_Imu_state(cmode)
+		self.update_bodypose_state(cmode)
 		self.update_leg_state(reset, cmode)
 		# self.update_stability_margin()
 		
@@ -108,7 +109,7 @@ class RobotState:
 		## fixed_robot evaluation in Gazebo
 		offset = 0 if (len(self.qc.name)==18) else 1
 
-		if (cmode == "simfast"):
+		if (cmode == "fast"):
 			## Updates robot state using setpoints
 			wXb = self.XHd.world_X_base
 			qpc = self.qd
@@ -129,29 +130,35 @@ class RobotState:
 				
 		# print '-------------------------------------------------------'
 
-	def update_Imu_state(self, cmode):
+	def update_bodypose_state(self, cmode):
 		""" update imu state """
 		## TODO: INCLUDE STATE ESTIMATION
 
-		## quaternion to euler transformation
-		rpy = np.array(euler_from_quaternion([self.imu.orientation.w, self.imu.orientation.x,
-												 self.imu.orientation.y, self.imu.orientation.z], 'sxyz')).reshape(3,1)
-		wv  = np.array([ [self.imu.angular_velocity.x], 	[self.imu.angular_velocity.y], 	  [self.imu.angular_velocity.z] ])
-		ca  = np.array([ [self.imu.linear_acceleration.x], 	[self.imu.linear_acceleration.y], [self.imu.linear_acceleration.z] ])
-
-		## state estimation
-		xyz = np.zeros((3,1))
-
-		if (cmode == "simfast"):
+		if (cmode == "fast"):
 			## Updates robot state using setpoints
-			self.XHc.world_X_base = self.XHd.world_X_base
-			self.V6c.world_X_base = self.V6d.world_X_base
-			self.A6c.world_X_base = self.A6d.world_X_base
+			self.XHc.world_X_base = self.XHd.world_X_base.copy()
+			self.V6c.world_X_base = self.V6d.world_X_base.copy()
+			self.A6c.world_X_base = self.A6d.world_X_base.copy()
 		else:
-			## Updates robot state based on measured states
-			self.XHc.update_base(np.vstack([xyz,rpy]))
-			self.V6c.world_X_base[3:6] = wv
-			self.A6c.world_X_base[0:3] = ca
+			if (self.imu is not None):
+				## quaternion to euler transformation
+				rpy = np.array(euler_from_quaternion([self.imu.orientation.w, self.imu.orientation.x,
+														 self.imu.orientation.y, self.imu.orientation.z], 'sxyz')).reshape(3,1)
+				wv3 = np.array([ [self.imu.angular_velocity.x], 	[self.imu.angular_velocity.y], 	  [self.imu.angular_velocity.z] ])
+				ca3 = np.array([ [self.imu.linear_acceleration.x], 	[self.imu.linear_acceleration.y], [self.imu.linear_acceleration.z] ])
+			
+				## state estimation
+				xyz = np.zeros((3,1))
+				## Updates robot state based on measured states
+				self.XHc.update_base(p6c)
+				self.V6c.world_X_base[3:6] = wv3
+				self.A6c.world_X_base[0:3] = ca3
+
+			else:
+				## Updates robot state using setpoints
+				self.XHc.update_base(self.P6c.world_X_base)
+				self.V6c.world_X_base = self.V6d.world_X_base.copy()
+				self.A6c.world_X_base = self.A6d.world_X_base.copy()
 
 	def update_stability_margin(self):
 		""" updates the current stability margin """
@@ -229,7 +236,7 @@ class RobotState:
 		## check to ensure size is correct
 		# print 'length: ', len(qp)
 		if (len(qp)==18):
-			self.qd = qp 	# remap for "simfast"
+			self.qd = qp 	# remap for "fast"
 			return JointTrajectoryPoints(18,(qt,qp,qv,qa))
 		else:
 			self.invalid = True

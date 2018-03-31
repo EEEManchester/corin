@@ -78,15 +78,14 @@ CTR_INTV 	= 1./CTR_RATE 	# controller interval for robot, s
 ##                       Gait parameters 	 						##
 ## ================================================================ ##
 
-GAIT_TYPE 	 = 3 			# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
-BODY_HEIGHT  = 0.1          # ori: 0.10, chimney: 0.0
-STANCE_WIDTH = 0.21         # ori: 0.21, chimney: 0.27, 0.31 for tripod
-STEP_STROKE  = 0.08			# step size, x, 	default 0.07
-STEP_HEIGHT  = 0.1 			# step height, z 	default 0.05
-# TRAC_PERIOD	 = 2.0			# cycle time for movement
-GAIT_PHASE	 = 2.0
+GAIT_TYPE 	 = 3 		# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+BODY_HEIGHT  = 0.1		# ori: 0.10, chimney: 0.0
+STANCE_WIDTH = 0.21		# ori: 0.21, chimney: 0.27, 0.31 for tripod
+STEP_STROKE  = 0.08		# step size, x, 	default 0.07
+STEP_HEIGHT  = 0.1 		# step height, z 	default 0.05
+GAIT_TPHASE	 = 2.0 		# period per gait phase
 
-BASE_MAX_LINEAR_VELOCITY  = 0.35		# maximum base velocity, m/s - walking: 0.025
+BASE_MAX_LINEAR_VELOCITY  = 0.04	# maximum base velocity, m/s - walking: 0.025
 BASE_MAX_ANGULAR_VELOCITY = 0.3		# maximum base velocity, rad/s
 
 # BASE_SPEED 			= 0.025 		# walking speed in m/s

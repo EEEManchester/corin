@@ -15,6 +15,7 @@ from gazebo_msgs.msg import ModelState
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
+from sensor_msgs.msg import JointState
 
 def deg2rad(q):
 	return (q*pi/180)
@@ -105,10 +106,9 @@ if __name__ == "__main__":
 	model_state.reference_frame = reference_frame
 
 	gazebo_namespace = '/gazebo'
-	rospy.wait_for_service('%s/set_model_state'%(gazebo_namespace))
-	
 
 	try:
+		rospy.wait_for_service('%s/set_model_state'%(gazebo_namespace), 2)
 		set_model_state = rospy.ServiceProxy('%s/set_model_state'%(gazebo_namespace), SetModelState)
 		rospy.loginfo("Calling service %s/set_model_state"%gazebo_namespace)
 		resp = set_model_state(model_state)
@@ -116,6 +116,9 @@ if __name__ == "__main__":
 		print resp.status_message
 
 	except rospy.ServiceException as e:
+		print("Service call failed: %s" % e)
+	except rospy.ROSException as e:
+		# Gazebo inactive
 		print("Service call failed: %s" % e)
 
 	for i in range(0,5):

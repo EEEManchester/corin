@@ -34,10 +34,10 @@ class CorinManager:
 		self.Action	= control_interface.control_interface()	# control action class
 		# self.Gait = gait_class.GaitClass(GAIT_TYPE) 		# gait class
 
-		self.interface = None	# interface to control: simulation or Robotis hardware
 		self.resting   = False 	# Flag indicating robot standing or resting
 		self.on_start  = False 	# variable for resetting to leg suspended in air
-		self.control_mode = "normal" # run controller in various mode: 1) normal, 2) fast, 3) simfast
+		self.interface = "rviz"	# interface to control: gazebo, rviz or robotis hardware
+		self.control_mode = "fast" # run controller in various mode: 1) normal, 2) fast
 
 		self.__initialise__()
 
@@ -60,11 +60,22 @@ class CorinManager:
 	def __initialise__(self):
 		""" Initialises robot and classes """
 
-		## Identifies interface to control: simulation or robotis motors
-		self.interface = 'simulation' if rospy.has_param('/gazebo/auto_disable_bodies') else 'robotis'
+		## Identify interface automatically to control: simulation or robotis motors
+		# self.interface = 'gazebo' if rospy.has_param('/gazebo/auto_disable_bodies') else 'robotis'
 
 		## set up publisher and subscriber topics
 		self.__initialise_topics__()
+
+		## initialises robot transform
+		self.robot_broadcaster.sendTransform( (0.,0.,BODY_HEIGHT), (0.,0.,0.,1.), 
+													rospy.Time.now(), "trunk", "world");
+		## setup RVIZ JointState topic
+		if (self.interface == 'rviz'):
+			rospy.set_param(ROBOT_NS + '/standing', True)
+			qd = self.Robot.task_X_joint()
+			for i in range(0,5):
+				self.publish_topics(qd)
+				self.rate.sleep()
 
 		## moves robot to nominal position if haven't done so
 		try:
@@ -75,7 +86,7 @@ class CorinManager:
 
 		## update and reset robot states
 		self.Robot.suspend = False
-		self.Robot.update_state(reset=True)
+		self.Robot.update_state(reset=True,control_mode=self.control_mode)
 
 		for j in range(0,self.Robot.active_legs):
 			self.Robot.Leg[j].feedback_state = 2 	# trajectory completed
@@ -87,16 +98,22 @@ class CorinManager:
 		self.setpoint_pub_ = rospy.Publisher('/corin/setpoint_states', JointState, queue_size=1)	# LOGGING publisher
 		
 		## Hardware Specific Publishers ##
-		if (ROBOT_NS == 'corin' and (self.interface == 'simulation' or self.interface == 'robotis')):
+		if (ROBOT_NS == 'corin' and (self.interface == 'gazebo' or 
+									 self.interface == 'rviz' or
+									 self.interface == 'robotis')):
 			## Publish to Gazebo
-			if (self.interface == 'simulation'):
-				self.qpub_ = {}
+			if (self.interface == 'gazebo'):
+				self.joint_pub_ = {}
 				for i in range(0,18):
-					self.qpub_[i] = rospy.Publisher(ROBOT_NS + '/' + JOINT_NAME[i] + '/command', Float64, queue_size=1)
+					self.joint_pub_[i] = rospy.Publisher(ROBOT_NS + '/' + JOINT_NAME[i] + '/command', Float64, queue_size=1)
+
+			## Publish to RVIZ (JointState)
+			elif (self.interface == 'rviz'):
+				self.joint_pub_ = rospy.Publisher(ROBOT_NS + '/joint_states', JointState, queue_size=1)
 
 			## Publish to Dynamixel motors
 			elif (self.interface == 'robotis'):
-				self.sync_qpub_  = rospy.Publisher('/robotis/sync_write_multi_float', SyncWriteMultiFloat, queue_size=1)
+				self.joint_pub_  = rospy.Publisher('/robotis/sync_write_multi_float', SyncWriteMultiFloat, queue_size=1)
 
 			print ">> INITIALISED JOINT TOPICS"
 		else:
@@ -105,11 +122,9 @@ class CorinManager:
 			rospy.signal_shutdown("INVALID HARDWARE INTERFACE SELECTED - SHUTTING DOWN")
 
 		## Motion planning and preview for RVIZ ##
-		namespace = 'planner'
-		self.map_pub_  = rospy.Publisher(namespace + '/point_cloud', PointCloud2, queue_size=1)
-		self.path_pub_ = rospy.Publisher(namespace + '/path', Path, queue_size=1)
-		self.mark_pub_ = rospy.Publisher(namespace + '/footholds', MarkerArray, queue_size=1)	# marker array
-		self.joint_pub_= rospy.Publisher(namespace + '/joint_states', JointState, queue_size=1)
+		self.map_pub_  = rospy.Publisher(ROBOT_NS + '/point_cloud', PointCloud2, queue_size=1)
+		self.path_pub_ = rospy.Publisher(ROBOT_NS + '/path', Path, queue_size=1)
+		self.mark_pub_ = rospy.Publisher(ROBOT_NS + '/footholds', MarkerArray, queue_size=1)	# marker array
 		self.robot_broadcaster = tf.TransformBroadcaster()	# Transform for robot pose
 
 		##***************** SUBSCRIBERS ***************##
@@ -118,7 +133,7 @@ class CorinManager:
 		self.cforce_sub_ = rospy.Subscriber(ROBOT_NS + '/contact_force', Float32MultiArray, self.contact_force_callback, queue_size=1)
 
 		## Hardware Specific Subscribers ##
-		if (self.interface == 'simulation'):
+		if (self.interface == 'gazebo' or self.interface == 'rviz'):
 			self.joint_sub_  = rospy.Subscriber(ROBOT_NS + '/joint_states', JointState, self.joint_state_callback, queue_size=5)
 		elif (self.interface == 'robotis'):
 			self.joint_sub_  = rospy.Subscriber('robotis/present_joint_states', JointState, self.joint_state_callback, queue_size=5)
@@ -137,16 +152,24 @@ class CorinManager:
 		if (self.Robot.invalid is not True):
 			self.Robot.active_legs = 6
 
-			if (self.interface == 'simulation'):
+			if (self.interface == 'gazebo'):
 				for n in range(0,self.Robot.active_legs*3):
 					qp = Float64()
 					qp.data = q.xp[n]
 					# Publish joint angles individually
-					if (self.control_mode is "normal" or self.control_mode is "fast"):
-						self.qpub_[n].publish(qp)
-					elif (self.control_mode is "simfast"):
+					if (self.control_mode is "normal"):
+						self.joint_pub_[n].publish(qp)
+					elif (self.control_mode is "fast"):
 						pass
 
+			elif (self.interface == 'rviz'):
+				dqp = JointState()
+				dqp.header.stamp = rospy.Time.now()
+				for n in range(0,self.Robot.active_legs*3): 	# loop for each joint
+					dqp.name.append(str(JOINT_NAME[n])) 	# joint name
+					dqp.position.append(q.xp[n])			# joint angle
+				self.joint_pub_.publish(dqp)
+				
 			elif (self.interface == 'robotis'):
 				dqp = SyncWriteMultiFloat()
 				dqp.item_name 	= str("goal_position") 	# register to start first write
@@ -156,18 +179,19 @@ class CorinManager:
 					dqp.joint_name.append(str(JOINT_NAME[n])) 	# joint name
 					dqp.value.append(q.xp[n])					# joint angle
 
-				# Publish all joint angles together
-				if (self.control_mode is "normal" or self.control_mode is "fast"):
-					self.sync_qpub_.publish(dqp)
-				elif (self.control_mode is "simfast"):
-					pass
+				self.joint_pub_.publish(dqp)
+
+		qb = self.Robot.P6c.world_X_base
+		self.robot_broadcaster.sendTransform( (qb[0],qb[1],qb[2]), 
+												tf.transformations.quaternion_from_euler(qb[3],	qb[4], qb[5]), 
+												rospy.Time.now(), "trunk", "world");
 
 		## Publish setpoints to logging topic
 		if (q_log is not None):
 			self.setpoint_pub_.publish(q_log)
 
 		## Runs controller at desired rate for normal control mode
-		if (self.control_mode is "normal"):
+		if (self.control_mode is "normal" and self.interface is not 'robotis'):
 			self.rate.sleep()
 
 	def default_pose(self, stand_state=0):
@@ -327,7 +351,7 @@ class CorinManager:
 			bound_exceed = False
 			# n = i
 			# cycles through one gait phase
-			for m in range(0,int(GAIT_PHASE*CTR_RATE)):
+			for m in range(0,int(GAIT_TPHASE*CTR_RATE)):
 				# print i, len(base_path.X.t)
 
 				## Variable mapping to R^(3x1) for base linear and angular time, position, velocity, acceleration
@@ -413,8 +437,9 @@ class CorinManager:
 
 		# Set all legs to support mode for bodyposing, prevent AEP from being set
 		if (self.Robot.support_mode == True):
-			for j in range(0,6):
-				self.Robot.Gait.cs[j] = 0
+			self.Robot.Gait.support_mode()
+		else:
+			self.Robot.Gait.walk_mode()
 
 		## Plan foothold for robot
 		world_X_footholds, base_X_footholds = self.foothold_selection(base_path)
@@ -431,13 +456,13 @@ class CorinManager:
 													rospy.Time.now(), "trunk", "world") ;
 			self.path_pub_.publish(array_to_path(base_path, rospy.Time.now(), "world", wXbase_offset))
 			self.mark_pub_.publish(list_to_marker_array(world_X_footholds, rospy.Time.now(), "world"))
-			self.joint_pub_.publish(array_to_joint_states(self.Robot.qc.position, rospy.Time.now(), ""))
+			# self.joint_pub_.publish(array_to_joint_states(self.Robot.qc.position, rospy.Time.now(), ""))
 			rospy.sleep(0.2)
 
-		## Returns if path rejected
+		## User input: Returns if path rejected
 		key_input = raw_input('Execute Path? (Accept-y Reject-n) : ')
-		if (key_input.lower() != 'y'):
-			return
+		# if (key_input.lower() != 'y'):
+		# 	return
 		
 		# cycle through trajectory points until complete
 		i = 1 	# skip first point since spline has zero initial differential conditions
@@ -473,7 +498,7 @@ class CorinManager:
 
 			## Next CoB - fast forward one gait phase
 			try:
-				v3np = (base_path.X.xp[int(i+GAIT_PHASE*CTR_RATE)]).reshape(3,1)
+				v3np = (base_path.X.xp[int(i+GAIT_TPHASE*CTR_RATE)]).reshape(3,1)
 			except:
 				v3np = (base_path.X.xp[-1]).reshape(3,1)
 
@@ -529,7 +554,7 @@ class CorinManager:
 
 					## generate spline for transfer phase leg - 
 					svalid = self.Robot.Leg[j].generate_spline(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3], self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],
-																self.Robot.Leg[j].qsurface, 1, False, GAIT_PHASE, CTR_INTV)
+																self.Robot.Leg[j].qsurface, 1, False, GAIT_TPHASE, CTR_INTV)
 					if (j==0):
 					# 	print np.round(self.Robot.XHc.base_X_world[:3,:3],4)
 					# 	print np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4].flatten(),4)
@@ -608,7 +633,7 @@ class CorinManager:
 			# Finish off transfer legs trajectory onto ground
 			self.complete_transfer_trajectory()
 			self.Robot.update_state(control_mode=self.control_mode)
-			self.Robot.alternate_phase()
+			
 			print 'Trajectory executed'
 			print 'Desired Goal: ', np.round(base_path.X.xp[-1],4), np.round(base_path.W.xp[-1],4)
 			print 'Tracked Goal: ', np.round(cob_X_desired.flatten(),4), np.round(cob_W_desired.flatten(),4)
@@ -626,22 +651,34 @@ class CorinManager:
 		data = self.Action.action_to_take()
 
 		if (data is not None):
-			## data mapping - for convenience
+			## Clear visualization components ##
+			clear_marker = MarkerArray()
+			mark = Marker()
+			mark.action = 3
+			clear_marker.markers.append(mark)
+			clear_path = Path()
+			clear_path.header.frame_id = 'world'
+			self.mark_pub_.publish(clear_marker)
+			self.path_pub_.publish(clear_path)
+
+			## Data mapping - for convenience
 			x_cob, w_cob, mode = data
 
-			## stand up if at rest
+			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
 				print 'Going to standup'
 				self.default_pose()
 
 			## condition for support (1), walk (2), reset (3)
 			if (mode == 1):
-				print 'support mode'
+				print 'Support mode'
+
 				self.Robot.support_mode = True
 				# self.Robot.reset_state  = True 	# is this required?
 				self.Robot.suspend = False 		# clear suspension flag
 				
 				self.trajectory_tracking(x_cob, w_cob)
+
 				# self.default_pose()
 				# self.default_pose(1) 	# required for resetting stance for walking
 
@@ -650,6 +687,7 @@ class CorinManager:
 				self.Robot.support_mode = False
 
 				self.trajectory_tracking(x_cob, w_cob)
+				self.Robot.alternate_phase()
 
 			elif (mode == 3):
 				if (self.resting == False): 	# rest robot
@@ -662,14 +700,6 @@ class CorinManager:
 					self.resting = False
 
 		else:
-			## Standby - clear visualization components ##
-			clear_marker = MarkerArray()
-			mark = Marker()
-			mark.action = 3
-			clear_marker.markers.append(mark)
-			clear_path = Path()
-			clear_path.header.frame_id = 'world'
-			self.mark_pub_.publish(clear_marker)
-			self.path_pub_.publish(clear_path)
-			
+			# qd = self.Robot.task_X_joint()
+			# self.publish_topics(qd)
 			rospy.sleep(0.5)

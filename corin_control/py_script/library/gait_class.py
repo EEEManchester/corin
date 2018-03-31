@@ -64,6 +64,7 @@ class GaitClass:
 			self.gait_type = gait_selected
 			self.gait_dutyFactor()
 			self.change_phase()
+			self.ps = copy.deepcopy(self.cs)
 			print '>> INITIALISED GAIT CLASS - ', self.gdic['name']
 		else:
 			print 'Invalid gait selected'
@@ -120,18 +121,20 @@ class GaitClass:
 		else:
 			self.gphase -= 1
 
-	def full_support(self):
+	def support_mode(self):
 		self.update_phase()
 		self.cs = [0,0,0,0,0,0]
 
-	def resume_walk(self):
+	def walk_mode(self):
 		self.cs = copy.deepcopy(self.ps)
 
 
-# gclass = GaitClass()
-# gclass.initiate_gait(4)
+# gait = GaitClass(3)
+# print gait.cs, gait.ps
+
 # for z in range(0,3):
-# 	gclass.change_phase()
+# 	print gait.cs, gait.ps
+# 	gait.change_phase()
 # print '--------------'
 
 # gclass.direction = False 	# change gait direction

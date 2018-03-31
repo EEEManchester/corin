@@ -6,9 +6,8 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /Axes1
+        - /PointCloud21/Status1
         - /Path1
-        - /Path1/Status1
         - /MarkerArray1
       Splitter Ratio: 0.5
     Tree Height: 775
@@ -227,7 +226,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.0299999993
       Style: Boxes
-      Topic: /planner/point_cloud
+      Topic: /corin/point_cloud
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: false
@@ -259,15 +258,15 @@ Visualization Manager:
       Radius: 0.0299999993
       Shaft Diameter: 0.100000001
       Shaft Length: 0.100000001
-      Topic: /planner/path
+      Topic: /corin/path
       Unreliable: false
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /planner/footholds
+      Marker Topic: /corin/footholds
       Name: MarkerArray
       Namespaces:
-        "": true
+        {}
       Queue Size: 1
       Value: true
   Enabled: true

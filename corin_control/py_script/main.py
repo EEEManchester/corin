@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
 	raw_input('ROBOT READY!')
 	
-	# rospy.set_param('bodypose', True)
+	# rospy.set_param('walkforward', True)
 	while not rospy.is_shutdown():
 		
 		manager.action_interface()
