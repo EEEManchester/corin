@@ -349,7 +349,7 @@ class CorinManager:
 		while (i != len(base_path.X.t) and not rospy.is_shutdown()):
 			print i, ' Gait phase ', Gait.cs
 			bound_exceed = False
-			# n = i
+			
 			# cycles through one gait phase
 			for m in range(0,int(GAIT_TPHASE*CTR_RATE)):
 				# print i, len(base_path.X.t)
@@ -394,6 +394,9 @@ class CorinManager:
 				## Legs in transfer phase
 				if (Gait.cs[j] == 1 and i <= len(base_path.X.t)):
 					## compute NRP
+
+					## compute unit vector direction
+					
 
 					## compute AEP wrt base and world frame & update 'current' foot position
 					## to new position which is after transfer phase

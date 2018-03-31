@@ -11,7 +11,8 @@ if __name__ == "__main__":
 
 	manager = Control_Framework.CorinManager(True)
 
-	raw_input('ROBOT READY!')
+	# raw_input('ROBOT READY!')
+	rospy.loginfo('Robot Ready!')
 	
 	# rospy.set_param('walkforward', True)
 	while not rospy.is_shutdown():
