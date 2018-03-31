@@ -89,3 +89,8 @@ Legs = [BASE_X_LF_FOOT, BASE_X_LM_FOOT, BASE_X_LR_FOOT,
 leg_phase = [0,0,0,0,0,0]
 
 SM = StabilityMargin()
+
+x = np.array([[1],[2],[3]])
+mx = np.linalg.norm(x)
+ux = x/mx
+print ux

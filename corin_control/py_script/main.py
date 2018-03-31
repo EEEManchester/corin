@@ -14,7 +14,7 @@ if __name__ == "__main__":
 	# raw_input('ROBOT READY!')
 	rospy.loginfo('Robot Ready!')
 	
-	# rospy.set_param('walkforward', True)
+	rospy.set_param('walkleft', True)
 	while not rospy.is_shutdown():
 		
 		manager.action_interface()

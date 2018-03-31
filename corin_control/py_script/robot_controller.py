@@ -327,6 +327,8 @@ class CorinManager:
 
 		XHd = robot_transforms.HomogeneousTransform()
 		Leg = [None]*6
+		v3cp_prev = self.Robot.P6c.world_X_base[0:3].copy()	# previous CoB position
+		v3wp_prev = self.Robot.P6c.world_X_base[3:6].copy()	# previous CoB orientation
 
 		## Instantiate leg transformation class & append initial footholds
 		for j in range (0, self.Robot.active_legs):
@@ -395,8 +397,15 @@ class CorinManager:
 				if (Gait.cs[j] == 1 and i <= len(base_path.X.t)):
 					## compute NRP
 
-					## compute unit vector direction
-					
+					## compute magnitude
+					v3_dv = v3cp - v3cp_prev 		# direction vector from previous to current CoB
+					m1_dv = np.linalg.norm(v3_dv) 	# magnitude of direction vector
+					v3_uv = v3_dv/m1_dv 			# unit vector direction
+
+					# horizontal plane: unit vector
+					e_z = SO3_selection(np.array([0.,0.,1.]) , 'z')
+					v3_dh = mX(e_z, v3_dv)
+					Leg[j].world_base_X_AEP = mX( v3_X_m(v3_uv*STEP_STROKE/2. + v3_dh),	Leg[j].world_base_X_NRP)
 
 					## compute AEP wrt base and world frame & update 'current' foot position
 					## to new position which is after transfer phase
@@ -412,6 +421,8 @@ class CorinManager:
 
 			## Alternate gait phase
 			Gait.change_phase()
+			v3cp_prev = v3cp.copy()
+			v3wp_prev = v3wp.copy()
 			# print v3cp.flatten()
 		# print footholds[0].t
 		# print np.round(footholds[0].xp,4)

@@ -7,16 +7,16 @@ from library import *
 
 class control_interface:
 	def __init__(self):
-		self.x_com = np.array([.0,.0,BODY_HEIGHT])
-		self.w_com = np.array([.0,.0,.0])
+		x_cob = np.array([.0,.0,BODY_HEIGHT])
+		w_cob = np.array([.0,.0,.0])
 		self.mode  = 1 								# 1: pose, 2: walk
 		self.reset_flag = False
 
 		self.reset_parameters()
 
 	def reset_variables(self):
-		self.x_com = np.array([.0,.0,.0])
-		self.w_com = np.array([.0,.0,.0])
+		x_cob = np.array([.0,.0,.0])
+		w_cob = np.array([.0,.0,.0])
 
 	def reset_parameters(self):
 		rospy.set_param('stop_flag', False)		# emergency stop (working)
@@ -37,155 +37,147 @@ class control_interface:
 		## Chimney Demo
 		if (STANCE_TYPE == "chimney"):
 			# up/down
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.05])))
-			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
-			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.06])))
-			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
+			x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.05])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0, BODY_HEIGHT])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.06])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0, BODY_HEIGHT])))
 
 			# front/back
-			self.x_com = np.vstack((self.x_com,np.array([0.025, 0.0, 0.05])))
-			self.x_com = np.vstack((self.x_com,np.array([-0.025, 0.0, 0.05])))
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.05])))
+			x_cob = np.vstack((x_cob,np.array([0.025, 0.0, 0.05])))
+			x_cob = np.vstack((x_cob,np.array([-0.025, 0.0, 0.05])))
+			x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.05])))
 
 			# left/right
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.025, 0.05])))
-			self.x_com = np.vstack((self.x_com,np.array([0.0, -0.025, 0.05])))
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.05])))
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.0])))
+			x_cob = np.vstack((x_cob,np.array([0.0, 0.025, 0.05])))
+			x_cob = np.vstack((x_cob,np.array([0.0, -0.025, 0.05])))
+			x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.05])))
+			x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.0])))
 
 		## Sideways Demo
 		elif (STANCE_TYPE == "sideways"):
 
-			self.x_com = np.vstack((self.x_com,np.array([ 0.025, 0., 0.])))
-			self.x_com = np.vstack((self.x_com,np.array([-0.025, 0., 0.])))
-			self.x_com = np.vstack((self.x_com,np.array([ 0.0  , 0., 0. ])))
+			x_cob = np.vstack((x_cob,np.array([ 0.025, 0., 0.])))
+			x_cob = np.vstack((x_cob,np.array([-0.025, 0., 0.])))
+			x_cob = np.vstack((x_cob,np.array([ 0.0  , 0., 0. ])))
 
 			## 90 degrees
-			# self.x_com = np.vstack((self.x_com,np.array([0.0,-0.05, BODY_HEIGHT])))
-			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0  , BODY_HEIGHT ])))
+			# x_cob = np.vstack((x_cob,np.array([0.0,-0.05, BODY_HEIGHT])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0  , BODY_HEIGHT ])))
 			
-			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT+0.05])))
-			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT])))
-			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, BODY_HEIGHT ])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0, BODY_HEIGHT+0.05])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0, BODY_HEIGHT])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0, BODY_HEIGHT ])))
 
 			## 30 and 60 deg
-			self.x_com = np.vstack((self.x_com,np.array([0.0,-0.025, 0.])))
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.025, 0.])))
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0  , 0. ])))
+			x_cob = np.vstack((x_cob,np.array([0.0,-0.025, 0.])))
+			x_cob = np.vstack((x_cob,np.array([0.0, 0.025, 0.])))
+			x_cob = np.vstack((x_cob,np.array([0.0, 0.0  , 0. ])))
 
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.+0.025])))
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.-0.025])))
-			self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0, 0.])))
+			x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.+0.025])))
+			x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.-0.025])))
+			x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.])))
 
 			# left/right & up/down
-			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.025, BODY_HEIGHT+0.025])))
-			# self.x_com = np.vstack((self.x_com,np.array([0.0,-0.025, BODY_HEIGHT-0.025])))
-			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.025, BODY_HEIGHT+0.025])))
-			# self.x_com = np.vstack((self.x_com,np.array([0.0,-0.025, BODY_HEIGHT-0.025])))
-			# self.x_com = np.vstack((self.x_com,np.array([0.0, 0.0 , BODY_HEIGHT ])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.025, BODY_HEIGHT+0.025])))
+			# x_cob = np.vstack((x_cob,np.array([0.0,-0.025, BODY_HEIGHT-0.025])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.025, BODY_HEIGHT+0.025])))
+			# x_cob = np.vstack((x_cob,np.array([0.0,-0.025, BODY_HEIGHT-0.025])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0 , BODY_HEIGHT ])))
 			# # forward/backwards
-			# self.x_com = np.vstack((self.x_com,np.array([ 0.025, 0., BODY_HEIGHT])))
-			# self.x_com = np.vstack((self.x_com,np.array([-0.025, 0., BODY_HEIGHT])))
-			# self.x_com = np.vstack((self.x_com,np.array([ 0.025, 0., BODY_HEIGHT])))
-			# self.x_com = np.vstack((self.x_com,np.array([-0.025, 0., BODY_HEIGHT])))
-			# self.x_com = np.vstack((self.x_com,np.array([ 0.0, 0., BODY_HEIGHT])))
+			# x_cob = np.vstack((x_cob,np.array([ 0.025, 0., BODY_HEIGHT])))
+			# x_cob = np.vstack((x_cob,np.array([-0.025, 0., BODY_HEIGHT])))
+			# x_cob = np.vstack((x_cob,np.array([ 0.025, 0., BODY_HEIGHT])))
+			# x_cob = np.vstack((x_cob,np.array([-0.025, 0., BODY_HEIGHT])))
+			# x_cob = np.vstack((x_cob,np.array([ 0.0, 0., BODY_HEIGHT])))
 
 		## Full bodypose demo
 		elif (STANCE_TYPE == "flat"):
-			# self.x_com = np.vstack((self.x_com,np.array([0. , 0., BODY_HEIGHT])))
-			# self.x_com = np.vstack((self.x_com,np.array([0. , 0., BODY_HEIGHT])))
-			# self.x_com = np.vstack((self.x_com,np.array([0. , 0., BODY_HEIGHT])))
-			# self.x_com = np.vstack((self.x_com,np.array([0. , 0., BODY_HEIGHT])))
-			# self.x_com = np.vstack((self.x_com,np.array([0. , 0., BODY_HEIGHT])))
+			# x_cob = np.vstack((x_cob,np.array([0. , 0., BODY_HEIGHT])))
+			# x_cob = np.vstack((x_cob,np.array([0. , 0., BODY_HEIGHT])))
+			# x_cob = np.vstack((x_cob,np.array([0. , 0., BODY_HEIGHT])))
+			# x_cob = np.vstack((x_cob,np.array([0. , 0., BODY_HEIGHT])))
+			# x_cob = np.vstack((x_cob,np.array([0. , 0., BODY_HEIGHT])))
 
-			self.x_com = np.vstack((self.x_com,np.array([0. , -0.04, 0.])))
-			self.x_com = np.vstack((self.x_com,np.array([0.03,  0.04, 0.])))
-			self.x_com = np.vstack((self.x_com,np.array([-0.03, 0.04, 0.])))
-			self.x_com = np.vstack((self.x_com,np.array([-0.03, -0.04, 0.])))
-			self.x_com = np.vstack((self.x_com,np.array([0.00, 0.00, 0.])))
-			self.x_com = np.vstack((self.x_com,np.array([0.00, 0.0, 0.12])))
-			self.x_com = np.vstack((self.x_com,np.array([0.,  0.0, 0.])))
+			x_cob = np.vstack((x_cob,np.array([0. , -0.04, 0.])))
+			x_cob = np.vstack((x_cob,np.array([0.03,  0.04, 0.])))
+			x_cob = np.vstack((x_cob,np.array([-0.03, 0.04, 0.])))
+			x_cob = np.vstack((x_cob,np.array([-0.03, -0.04, 0.])))
+			x_cob = np.vstack((x_cob,np.array([0.00, 0.00, 0.])))
+			x_cob = np.vstack((x_cob,np.array([0.00, 0.0, 0.12])))
+			x_cob = np.vstack((x_cob,np.array([0.,  0.0, 0.])))
 
-			self.w_com = np.vstack((self.w_com,np.array([-0.22, -0.075, 0.])))
-			self.w_com = np.vstack((self.w_com,np.array([0.22, -0.075, 0.])))
-			self.w_com = np.vstack((self.w_com,np.array([0.22,  0.075, 0.])))
-			self.w_com = np.vstack((self.w_com,np.array([-0.22,  0.075, 0.])))
-			self.w_com = np.vstack((self.w_com,np.array([0.00, 0.00, -0.15])))
-			self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.12])))
-			self.w_com = np.vstack((self.w_com,np.array([0.,  0.0, 0.])))
+			w_cob = np.vstack((w_cob,np.array([-0.22, -0.075, 0.])))
+			w_cob = np.vstack((w_cob,np.array([0.22, -0.075, 0.])))
+			w_cob = np.vstack((w_cob,np.array([0.22,  0.075, 0.])))
+			w_cob = np.vstack((w_cob,np.array([-0.22,  0.075, 0.])))
+			w_cob = np.vstack((w_cob,np.array([0.00, 0.00, -0.15])))
+			w_cob = np.vstack((w_cob,np.array([0.,0.,0.12])))
+			w_cob = np.vstack((w_cob,np.array([0.,  0.0, 0.])))
 
-	def WalkForward(self):
-		self.reset_variables()
-		self.mode = 2
+	def WalkForward(self, x_cob, w_cob):
+		self.mode  = 2
+		x_cob = np.vstack((x_cob,np.array([0.1, 0.1, 0.])))
+		return x_cob, w_cob, self.mode
 
-		self.x_com = np.vstack((self.x_com,np.array([0.1, 0.1, 0.])))
-		# self.w_com = np.vstack((self.w_com,np.array([0.3, 0., 0.])))
+	def WalkBack(self, x_cob, w_cob):
+		self.mode  = 2
+		x_cob = np.vstack((x_cob,np.array([-0.4, 0.0, 0.])))
+		return x_cob, w_cob, self.mode
 
-	def WalkBack(self):
-		self.reset_variables()
-		self.mode = 2
+	def WalkRight(self, x_cob, w_cob):
+		self.mode  = 2
+		x_cob = np.vstack((x_cob,np.array([0.0, -0.4, 0.])))
+		return x_cob, w_cob, self.mode
 
-		self.x_com = np.vstack((self.x_com,np.array([-0.4, 0.0, 0.])))
+	def WalkLeft(self, x_cob, w_cob):
+		self.mode  = 2
+		x_cob = np.vstack((x_cob,np.array([0.0, 0.4, 0.])))
+		return x_cob, w_cob, self.mode
 
-	def WalkRight(self):
-		self.reset_variables()
-		self.mode = 2
-
-		self.x_com = np.vstack((self.x_com,np.array([0.0, -0.2, 0.])))
-		self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
-
-	def WalkLeft(self):
-		self.reset_variables()
-		self.mode = 2
-
-		self.x_com = np.vstack((self.x_com,np.array([0.0, 0.2, 0.])))
-		self.w_com = np.vstack((self.w_com,np.array([0.,0.,0.])))
-
-	def Rotate(self):
-		self.reset_variables
+	def Rotate(self, x_cob, w_cob):
 		self.mode = 1
+		w_cob = np.vstack((w_cob,np.array([0.,0.,1.52])))
+		return x_cob, w_cob, self.mode
 
-		self.w_com = np.vstack((self.w_com,np.array([0.,0.,1.52])))
-
-	def Reset(self):
+	def Reset(self, x_cob, w_cob):
 		self.reset_variables()
 		self.mode = 3
 		self.reset_flag = True
+		return x_cob, w_cob, self.mode
 
 	def action_to_take(self):
+		""" Checks parameter server to identify action to take """
+
+		## Define Variables ##
+		x_cob = np.array([.0,.0,.0])
+		w_cob = np.array([.0,.0,.0])
+
 		if (rospy.get_param('bodypose')==True):
 			rospy.set_param('bodypose',False)
-			self.Bodypose()
-			return (self.x_com, self.w_com, self.mode)
+			return self.Bodypose(x_cob, w_cob)
 
 		elif (rospy.get_param('walkforward')==True):
 			rospy.set_param('walkforward',False)
-			self.WalkForward()
-			return (self.x_com, self.w_com, self.mode)
+			return self.WalkForward(x_cob, w_cob)
 
-		elif (rospy.get_param('walkback')==True):	#command prompt: rosparam set walkback True
+		elif (rospy.get_param('walkback')==True):	
 			rospy.set_param('walkback',False)
-			self.WalkBack()
-			return (self.x_com, self.w_com, self.mode)
+			return self.WalkBack(x_cob, w_cob)
 
-		elif (rospy.get_param('walkleft')==True): 	#command: set rosparam walkleft True
+		elif (rospy.get_param('walkleft')==True): 	
 			rospy.set_param('walkleft',False)
-			self.WalkLeft()
-			return (self.x_com, self.w_com, self.mode)
+			return self.WalkLeft(x_cob, w_cob)
 
 		elif (rospy.get_param('walkright')==True):
 			rospy.set_param('walkright',False)
-			self.WalkRight()
-			return (self.x_com, self.w_com, self.mode)
+			return self.WalkRight(x_cob, w_cob)
 
 		elif (rospy.get_param('rotate')==True):
 			rospy.set_param('rotate',False)
-			self.Rotate()
-			return (self.x_com, self.w_com, self.mode)
+			return self.Rotate(x_cob, w_cob)
 
 		elif (rospy.get_param('reset')==True):		# Command Prompt: rosparam set reset True
 			rospy.set_param('reset',False)
-			self.Reset()
-			return (self.x_com, self.w_com, self.mode)
+			return self.Reset(x_cob, w_cob)
 		else:
 			return None
