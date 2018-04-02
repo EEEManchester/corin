@@ -119,7 +119,7 @@ class RobotState:
 
 			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
 				self.suspend = True
-				print 'Suspend ', j, bstate
+				# print 'Suspend ', j, bstate
 				
 		# print '-------------------------------------------------------'
 
@@ -187,8 +187,9 @@ class RobotState:
 				# self.Leg[j].XHc.update_world_X_foot(mx_world_X_base, q_compensated) 	# consider updating only once when contact is true
 			elif (self.Gait.cs[j] == 0): 
 				if (self.Gait.cs[j] != self.Gait.ps[j]):
-					print 'updating Leg ', j
+					# print 'updating Leg ', j
 					self.Leg[j].XHc.update_world_X_foot(self.XHc.world_X_base) 	# updating continuously results in drift
+					self.Leg[j].XHd.world_X_foot = self.Leg[j].XHc.world_X_foot.copy()
 		self.suspend = False
 		# raw_input('cont')
 

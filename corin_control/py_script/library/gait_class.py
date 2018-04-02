@@ -122,17 +122,24 @@ class GaitClass:
 			self.gphase -= 1
 
 	def support_mode(self):
+		""" Sets robot to full support mode and
+			updates previous state for continuation """
+
 		self.update_phase()
-		self.cs = [0,0,0,0,0,0]
+		self.cs = [0]*6
 
 	def walk_mode(self):
-		self.cs = copy.deepcopy(self.ps)
+		""" Restore gait to previous state if
+			robot was in full support mode 		"""
+
+		if (self.cs == [0]*6):
+			self.cs = copy.deepcopy(self.ps)
 
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
 
-# gait = GaitClass(3)
+gait = GaitClass(3)
 # print gait.cs, gait.ps
 
 # for z in range(0,3):

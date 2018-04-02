@@ -32,7 +32,7 @@ class control_interface:
 		rospy.set_param('rotate', False)
 
 	#corin performs bodypose
-	def Bodypose(self):
+	def Bodypose(self, x_cob, w_cob):
 		self.reset_variables()
 		self.mode = 1
 
@@ -103,19 +103,21 @@ class control_interface:
 			x_cob = np.vstack((x_cob,np.array([0. , -0.04, 0.])))
 			x_cob = np.vstack((x_cob,np.array([0.03,  0.04, 0.])))
 			x_cob = np.vstack((x_cob,np.array([-0.03, 0.04, 0.])))
-			x_cob = np.vstack((x_cob,np.array([-0.03, -0.04, 0.])))
-			x_cob = np.vstack((x_cob,np.array([0.00, 0.00, 0.])))
-			x_cob = np.vstack((x_cob,np.array([0.00, 0.0, 0.12])))
+			# x_cob = np.vstack((x_cob,np.array([-0.03, -0.04, 0.])))
+			# x_cob = np.vstack((x_cob,np.array([0.00, 0.00, 0.])))
+			# x_cob = np.vstack((x_cob,np.array([0.00, 0.0, 0.12])))
 			x_cob = np.vstack((x_cob,np.array([0.,  0.0, 0.])))
 
 			w_cob = np.vstack((w_cob,np.array([-0.22, -0.075, 0.])))
 			w_cob = np.vstack((w_cob,np.array([0.22, -0.075, 0.])))
 			w_cob = np.vstack((w_cob,np.array([0.22,  0.075, 0.])))
-			w_cob = np.vstack((w_cob,np.array([-0.22,  0.075, 0.])))
-			w_cob = np.vstack((w_cob,np.array([0.00, 0.00, -0.15])))
-			w_cob = np.vstack((w_cob,np.array([0.,0.,0.12])))
+			# w_cob = np.vstack((w_cob,np.array([-0.22,  0.075, 0.])))
+			# w_cob = np.vstack((w_cob,np.array([0.00, 0.00, -0.15])))
+			# w_cob = np.vstack((w_cob,np.array([0.,0.,0.12])))
 			w_cob = np.vstack((w_cob,np.array([0.,  0.0, 0.])))
 
+		return x_cob, w_cob, self.mode
+		
 	def WalkForward(self, x_cob, w_cob):
 		self.mode  = 2
 		x_cob = np.vstack((x_cob,np.array([0.1, 0.1, 0.])))
@@ -128,12 +130,12 @@ class control_interface:
 
 	def WalkRight(self, x_cob, w_cob):
 		self.mode  = 2
-		x_cob = np.vstack((x_cob,np.array([0.0, -0.4, 0.])))
+		x_cob = np.vstack((x_cob,np.array([0.0, -0.11, 0.])))
 		return x_cob, w_cob, self.mode
 
 	def WalkLeft(self, x_cob, w_cob):
 		self.mode  = 2
-		x_cob = np.vstack((x_cob,np.array([0.0, 0.4, 0.])))
+		x_cob = np.vstack((x_cob,np.array([0.0, 0.11, 0.])))
 		return x_cob, w_cob, self.mode
 
 	def Rotate(self, x_cob, w_cob):

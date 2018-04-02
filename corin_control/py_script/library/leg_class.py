@@ -78,7 +78,7 @@ class LegClass:
 
 			self.XHd.coxa_X_foot = self.XHc.coxa_X_foot.copy()
 			self.XHd.base_X_foot = self.XHc.base_X_foot.copy()
-			
+			# self.XHd.world_X_foot = self.XHc.world_X_foot.copy()
 		# if (self.number == 2):
 		# 	print 'bXf: ', np.round(self.XHc.base_X_foot[:3,3],4)
 		# 	print 'q: ', np.round(q_compensated,4)
