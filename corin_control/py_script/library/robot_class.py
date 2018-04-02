@@ -9,20 +9,16 @@ import sys; sys.dont_write_bytecode = True
 import math
 import numpy as np
 
+from traits import *
 from constant import * 					# constants used
 import leg_class 						# class for robot's leg
 import gait_class as Gaitgen			# class for gait coordinator
 import pspline_generator as Pspline 	# spline generator for body
 import bspline_generator as Bspline 	# spline generator for leg
 import stability_margin as SMargin 		# stability margin evaluation
-
 import kdl 								# kinematic & dynamics library
 import robot_transforms					# transformation and vector class for robot
 from matrix_transforms import *			# generic transformation library
-
-from traits import *
-# import TrajectoryPoints					# class for 3D time array of points
-# import State
 
 import plotgraph as Plot 				# plot library
 
@@ -36,9 +32,6 @@ class RobotState:
 		self.Gait = Gaitgen.GaitClass(GAIT_TYPE)	# gait class
 		self.KDL  = kdl.KDL()
 		self.SM   = SMargin.StabilityMargin() 		# stability margin class
-
-		# FOLLOWING SHOULD BE REMOVED
-		self.world_X_base = State.StateClass('Twist') 	# FrameClass for world to base transformation
 
 		self.invalid = False 						# robot state: invalid - do not do anything
 		self.suspend = False 						# robot state: suspend support (TODO)
@@ -172,7 +165,6 @@ class RobotState:
 		# compute Longitudinal Stability Margin
 		sm = self.SM.LSM(stack_base_X_world, self.Gait.cs)
 		try:
-			# print sm
 			if (sm[0]<=SM_MIN or sm[1]<=SM_MIN):
 				print 'Stability Violated!'
 				self.invalid = True
@@ -212,8 +204,7 @@ class RobotState:
 		
 		for j in range(0,6):
 			error, qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
-			# if (j==0 or j==2):
-			# print j, ' err: ', error, ' qpd ', qpd.flatten()
+
 			## append to list if valid, otherwise break and raise error
 			try:
 				err_str = 'Unknown error'

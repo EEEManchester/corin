@@ -11,14 +11,11 @@ c = np.array([0,0,0,0,0,0]).reshape(6,1)
 
 c = np.array([a,b]).reshape(6,1)
 
-def func(a,b=[0]*6):
-	print a
-	print a+b[0]
-	return
-
-# print func(1)
-# a = raw_input('Enter some value: ')
-# print a
-# if (a == 'Y'):
-# 	print 'Yes'
-
+# def func(a,b=[0]*6):
+# 	print a
+# 	print a+b[0]
+# 	return
+a = [[1,2,-7],[4,5,1]]
+v_max = np.amax(a)
+v_min = np.amin(a)
+v_max = v_max if (abs(v_max) > abs(v_min)) else abs(v_min)

@@ -391,9 +391,8 @@ class CorinManager:
 					print 'breaking now at ', i
 					break
 
-			## Set leg states
+			## Set foothold for legs in transfer phase
 			for j in range (0, self.Robot.active_legs):
-				## Legs in transfer phase
 				if (Gait.cs[j] == 1 and i <= len(base_path.X.t)):
 					## compute NRP
 
@@ -440,14 +439,13 @@ class CorinManager:
 
 		## Define Variables ##
 		PathGenerator = Pathgenerator.PathGenerator() 	# path generator for robot's base
-		# PathGenerator.gait = self.Robot.Gait.gdic
 		cob_X_desired = np.zeros((3,1)) 	# cob linear location
 		cob_W_desired = np.zeros((3,1)) 	# cob angular location
 		wXbase_offset = self.Robot.P6c.world_X_base.copy()
 		
 		# Trajectory for robot's base
 		base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV) 
-		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
+		# Plot.plot_2d(base_path.X.t, base_path.X.xv)
 
 		# Set all legs to support mode for bodyposing, prevent AEP from being set
 		if (self.Robot.support_mode == True):
@@ -475,8 +473,8 @@ class CorinManager:
 
 		## User input: Returns if path rejected
 		key_input = raw_input('Execute Path? (Accept-y Reject-n) : ')
-		# if (key_input.lower() != 'y'):
-		# 	return
+		if (key_input.lower() == 'n'):
+			return
 		
 		# cycle through trajectory points until complete
 		i = 1 	# skip first point since spline has zero initial differential conditions

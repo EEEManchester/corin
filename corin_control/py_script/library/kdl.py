@@ -209,11 +209,3 @@ qp = CK.leg_IK(cd)
 # print qp
 # if (not CK.check_singularity(qp)):
 # 	qd,qdd = CK.joint_speed(qp, v, a)
-
-
-#[1, 2, 4, 2, 3, 4]
-	#print qd, qdd
-# c_data = forwardkinematics(qs)
-# ang = inversekinematic(c_data)
-
-# task_to_joint_space(c_data)

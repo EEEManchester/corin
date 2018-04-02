@@ -297,27 +297,3 @@ t_com = np.array([0.0,1,2,3,4,8,10])
 # x_out  = spliner.generate_spline(x_com)
 
 # Plot.plot_2d(x_out[0],x_out[1])
-
-
-# Path3D_msg(com_path, com_time)
-# def Path3D_msg(linear, angular=0, t=0):
-# 	com_path = Path3D()
-
-# 	com_t = Point();	com_r = Quaternion();
-# 	com_t.x = 1.0;		com_r.x = 0.0;
-# 	com_t.y = 2.0;		com_r.y = 2.0;
-# 	com_t.z = 3.0;		com_r.z = 0.0;
-
-# 	g_poses  = Pose()
-# 	g_poses.position = com_t
-# 	com_path.poses.append(g_poses)
-# 	com_path.time_from_start.append(1.1)
-
-# 	g_poses  = Pose()
-# 	com_t = Point();com_t.x = 2.5
-# 	g_poses.position = com_t
-# 	com_path.poses.append(g_poses)
-# 	com_path.time_from_start.append(1.7)
-
-	# print com_path.poses[1]
-	# print com_path.time_from_start[1]

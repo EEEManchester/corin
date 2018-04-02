@@ -94,7 +94,9 @@ class PathGenerator():
 		w_out = SplineGenerator.generate_spline(w_cob, t_cob, tn)
 
 		# check if base linear velocity exceeds limit
-		v_max = np.amax(x_out[2]);
+		v_max = np.amax(x_out[2])
+		v_min = np.amin(x_out[2])
+		v_max = v_max if (abs(v_max) > abs(v_min)) else abs(v_min)
 		if (v_max > BASE_MAX_LINEAR_VELOCITY):
 			print 'max linear velocity exceeded'
 			ndiv  = v_max/BASE_MAX_LINEAR_VELOCITY	# determine number of divisions to reduce by
@@ -104,7 +106,9 @@ class PathGenerator():
 			w_out = SplineGenerator.generate_spline(w_cob, t_cob, tn)
 
 		# check if base angular velocity exceeds limit
-		w_max = np.amax(w_out[2]);
+		w_max = np.amax(w_out[2])
+		w_min = np.amin(w_out[2])
+		w_max = w_max if (abs(w_max) > abs(w_min)) else abs(w_min)
 		if (w_max > BASE_MAX_ANGULAR_VELOCITY):
 			print 'max angular velocity exceeded'
 			ndiv  = w_max/BASE_MAX_ANGULAR_VELOCITY	# determine number of divisions to reduce by
@@ -274,8 +278,3 @@ planner = PathGenerator()
 # planner.get_path_details()
 # Plot.plot_3d(nx,nv,na)
 # Plot.plot_2d_multiple(3,nt,nx,nv,na)
-
-# print planner.x_cob
-# print '======================'
-# print planner.w_cob
-# print planner.t_cob

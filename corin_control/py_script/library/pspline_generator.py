@@ -392,7 +392,7 @@ class SplineGenerator:
 	def compute_spline_extension(self, x, t):
 		""" extends the spline to four via points so that zero 
 			initial & final acceleration can be computated 		"""
-		print 'in extension'
+		
 		## Define variables ##
 		size = len(t)
 		xnew = np.zeros((4,3))

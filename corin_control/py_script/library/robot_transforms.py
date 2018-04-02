@@ -31,16 +31,17 @@ class Vector6D:
 		self.world_X_RM_foot = np.zeros(Column6D)
 		self.world_X_RR_foot = np.zeros(Column6D)
 
-		## TODO: following needs expanding if to be used
 		self.base_X_coxa  = np.zeros(Column6D)
 		self.base_X_foot  = np.zeros(Column6D)
 		self.base_X_AEP   = np.zeros(Column6D)
 		self.base_X_PEP   = np.zeros(Column6D)
 		self.base_X_NRP   = np.zeros(Column6D)
+		self.coxa_X_base  = np.zeros(Column6D)
 		self.coxa_X_foot  = np.zeros(Column6D)
 		self.coxa_X_AEP   = np.zeros(Column6D)
 		self.coxa_X_PEP   = np.zeros(Column6D)
 		self.coxa_X_NRP   = np.zeros(Column6D)
+		self.tibia_X_foot = np.zeros(Column6D)
 
 class ArrayVector6D:
 	""" 6D vector for robot's legs """ 
@@ -50,6 +51,10 @@ class ArrayVector6D:
 		self.base_X_foot  = np.zeros(Column6D)
 		self.coxa_X_base  = np.zeros(Column6D)
 		self.coxa_X_foot  = np.zeros(Column6D)
+		self.coxa_X_AEP   = np.zeros(Column6D)
+		self.coxa_X_PEP   = np.zeros(Column6D)
+		self.coxa_X_NRP   = np.zeros(Column6D)
+		self.tibia_X_foot = np.zeros(Column6D)
 		
 
 class ArrayHomogeneousTransform:
@@ -160,9 +165,9 @@ class ArrayHomogeneousTransform:
 		self.base_X_foot[2,3] =  (q2_sin*q3_cos + q2_cos*q3_sin)*L3 + q2_sin*L2
 
 	def update_world_X_foot(self, mx_world_X_base):
-		if (self.n==4):
-			print mx_world_X_base
-			print self.base_X_foot
+		# if (self.n==4):
+		# 	print mx_world_X_base
+		# 	print self.base_X_foot
 		self.world_X_foot = np.dot(mx_world_X_base, self.base_X_foot)
 
 
@@ -1071,6 +1076,6 @@ XH.update_robot(qb,q) 	# set initial stance of robot
 
 # q = np.array([0,0.5,1.1])
 # print len(q)
-XH.update_base_X_LF_foot(q)
+# XH.update_base_X_LF_foot(q)
 # print XH.base_X_LF_foot
 # print XH.base_X_LF_foot[:3,:3]

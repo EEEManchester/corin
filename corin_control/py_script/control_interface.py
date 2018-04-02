@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-## Control interface for tablet control of Corin
+""" Control interface for control of Corin 
+	TODO: use action server or rostopic inside of parameter server
+"""
 import rospy
 
 from library import *

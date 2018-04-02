@@ -44,19 +44,8 @@ class LegClass:
 		self.V6d = robot_transforms.ArrayVector6D() 							# velocity: desired
 		self.A6c = robot_transforms.ArrayVector6D() 							# acceleration: current
 		self.A6d = robot_transforms.ArrayVector6D() 							# acceleration: desired
-
-		## AIM: GET RID OF FOLLOWING
-		self.hip_X_ee 	= State.StateClass('Twist')
-		self.base_X_ee 	= State.StateClass('Twist')
-		self.foot_XF_ee = State.StateClass('Wrench')
-		self.hip_XF_ee 	= State.StateClass('Wrench')
-		self.base_XF_ee	= State.StateClass('Wrench')
-		self.tf_base_X_hip 	= rotation_matrix(TF_BASE_X_HIP[self.number],Z_AXIS)[:3, :3]
-		self.AEP = np.zeros((3,1)) 		# Anterior Extreme Position for leg wrt base frame
-		self.PEP = np.zeros((3,1))		# Posterior Extreme Position for leg wrt base frame
-		self.REP = np.zeros((3,1)) 		# nominal stance for leg wrt base frame
-		self.hip_AEP = np.zeros((3,1)) 	# for storing transfer AEP
-		self.SetLegREP() 				# set rest position of legs
+		self.F6c = robot_transforms.ArrayVector6D()
+		self.F6d = robot_transforms.ArrayVector6D()
 
 		## TODO: CHANGE TO HOMOGENOUS AND VECTOR FORM
 		self.qsurface = np.array([0.,0.,0.]) 		# surface orientation in leg frame, (roll, pitch, yaw)
@@ -75,18 +64,8 @@ class LegClass:
 		q_compensated = (jointState[0], jointState[1]-QCOMPENSATION, jointState[2]) 		# offset q2 by 0.01 - gravity
 
 		## current
-		self.hip_X_ee.cs.xp  = self.KDL.leg_FK(q_compensated)
-		self.base_X_ee.cs.xp = self.hip_X_base_ee(self.hip_X_ee.cs.xp)
-
-		## error
-		self.hip_X_ee.es.xp  = self.hip_X_ee.ds.xp  - self.hip_X_ee.cs.xp
-		self.base_X_ee.es.xp = self.base_X_ee.ds.xp - self.base_X_ee.cs.xp
-
-		
 		self.XHc.update_coxa_X_foot(q_compensated)
 		self.XHc.update_base_X_foot(q_compensated)
-
-		# self.XHc.update_world_X_foot(mx_world_X_base, q_compensated) 	# updating continuously results in drift
 
 		self.XHc.update_world_base_X_foot(mx_world_X_base, q_compensated)
 		self.XHc.update_world_base_X_NRP(mx_world_X_base)
@@ -96,8 +75,6 @@ class LegClass:
 
 		## state reset
 		if (resetState):
-			self.hip_X_ee.ds.xp  = self.hip_X_ee.cs.xp.copy()
-			self.base_X_ee.ds.xp = self.base_X_ee.cs.xp.copy()
 
 			self.XHd.coxa_X_foot = self.XHc.coxa_X_foot.copy()
 			self.XHd.base_X_foot = self.XHc.base_X_foot.copy()
@@ -106,18 +83,14 @@ class LegClass:
 		# 	print 'bXf: ', np.round(self.XHc.base_X_foot[:3,3],4)
 		# 	print 'q: ', np.round(q_compensated,4)
 		# 	print 'bXf: ', np.round(self.XHc.base_X_foot[:3,3],4)
-		# 	print 'bXe_ds: ', np.round(self.base_X_ee.ds.xp.flatten(),4)
-		# 	print 'bXe_cs: ', np.round(self.base_X_ee.cs.xp.flatten(),4)
-		# 	print 'hXe_ds: ', np.round(self.hip_X_ee.ds.xp.flatten(),4)
-		# 	print 'hXe_cs: ', np.round(self.hip_X_ee.cs.xp.flatten(),4)
-
+		
 		return bound_exceed
 
 	def update_force_state(self, cState, cForce):
 		""" contact force of leg """
-		## ********************************	Contact Force  ******************************** ##
+		
 		self.cstate = cState
-		self.foot_XF_ee.cs = np.reshape(np.array(cForce),(3,1))
+		self.F6c.tibia_X_foot[:3] = np.reshape(np.array(cForce),(3,1))
 
 		return None
 		## TODO: TRANSFORM FROM FOOT FRAME TO HIP, BASE, WORLD FRAME
@@ -233,7 +206,7 @@ class LegClass:
 
 				if (BOUND_FACTOR < r_state):
 					bound_violate = True
-					# print self.number, ' ellipse boundary violated ', r_state
+
 			except:
 				pass
 
@@ -244,9 +217,6 @@ class LegClass:
 			if (BOUND_FACTOR < r_state):
 				bound_violate = True
 		
-		# if (self.number == 1):
-		# 	print 'check: ', r_state, BOUND_FACTOR
-		# 	print 'check: ', bound_violate
 		return bound_violate
 
 	## Kinematic functions
@@ -283,9 +253,6 @@ class LegClass:
 		## Variable mapping ##
 		i = self.spline_counter
 		try:
-			self.hip_X_ee.ds.xp = self.xspline.xp[i]
-			self.hip_X_ee.ds.xv = self.xspline.xv[i]
-			self.hip_X_ee.ds.xa = self.xspline.xa[i]
 
 			self.XHd.update_coxa_X_foot(self.qspline.xp[i])
 			self.V6d.coxa_X_foot[:3]  = self.xspline.xv[i].reshape(3,1)
