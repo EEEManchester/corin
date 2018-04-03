@@ -133,6 +133,7 @@ class RobotState:
 			self.V6c.world_X_base = self.V6d.world_X_base.copy()
 			self.A6c.world_X_base = self.A6d.world_X_base.copy()
 		else:
+			self.imu = None
 			if (self.imu is not None):
 				## quaternion to euler transformation
 				rpy = np.array(euler_from_quaternion([self.imu.orientation.w, self.imu.orientation.x,

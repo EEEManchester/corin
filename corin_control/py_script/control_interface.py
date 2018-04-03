@@ -94,11 +94,8 @@ class control_interface:
 
 		## Full bodypose demo
 		elif (STANCE_TYPE == "flat"):
-			# x_cob = np.vstack((x_cob,np.array([0. , 0., BODY_HEIGHT])))
-			# x_cob = np.vstack((x_cob,np.array([0. , 0., BODY_HEIGHT])))
-			# x_cob = np.vstack((x_cob,np.array([0. , 0., BODY_HEIGHT])))
-			# x_cob = np.vstack((x_cob,np.array([0. , 0., BODY_HEIGHT])))
-			# x_cob = np.vstack((x_cob,np.array([0. , 0., BODY_HEIGHT])))
+			# for i in range(0,5):
+			# 	x_cob = np.vstack((x_cob,np.zeros(3,1)))
 
 			x_cob = np.vstack((x_cob,np.array([0. , -0.04, 0.])))
 			x_cob = np.vstack((x_cob,np.array([0.03,  0.04, 0.])))
@@ -120,7 +117,8 @@ class control_interface:
 		
 	def WalkForward(self, x_cob, w_cob):
 		self.mode  = 2
-		x_cob = np.vstack((x_cob,np.array([0.1, 0.1, 0.])))
+		x_cob = np.vstack((x_cob,np.array([0.2, 0., 0.1])))
+		w_cob = np.vstack((w_cob,np.array([0., 0., 0.0])))
 		return x_cob, w_cob, self.mode
 
 	def WalkBack(self, x_cob, w_cob):
@@ -139,8 +137,8 @@ class control_interface:
 		return x_cob, w_cob, self.mode
 
 	def Rotate(self, x_cob, w_cob):
-		self.mode = 1
-		w_cob = np.vstack((w_cob,np.array([0.,0.,1.52])))
+		self.mode = 2
+		w_cob = np.vstack((w_cob,np.array([0.,0.,0.3])))
 		return x_cob, w_cob, self.mode
 
 	def Reset(self, x_cob, w_cob):

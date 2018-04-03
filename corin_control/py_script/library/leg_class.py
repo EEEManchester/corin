@@ -159,7 +159,9 @@ class LegClass:
 				error = 1
 			else:
 				if (self.KDL.check_singularity(self.Joint.qpd) is False):
-					self.Joint.qvd, self.Joint.qad = self.KDL.joint_speed(self.Joint.qpd, self.V6d.coxa_X_foot, self.A6d.coxa_X_foot)
+					self.Joint.qvd, self.Joint.qad = self.KDL.joint_speed(self.Joint.qpd, 
+																			self.V6d.coxa_X_foot, 
+																			self.A6d.coxa_X_foot)
 				else:
 					error = 2
 		else:

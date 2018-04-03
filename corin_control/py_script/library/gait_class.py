@@ -139,7 +139,7 @@ class GaitClass:
 ## 												TESTING 											##
 ## ================================================================================================ ##
 
-gait = GaitClass(3)
+# gait = GaitClass(3)
 # print gait.cs, gait.ps
 
 # for z in range(0,3):
