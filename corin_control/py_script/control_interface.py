@@ -117,8 +117,8 @@ class control_interface:
 		
 	def WalkForward(self, x_cob, w_cob):
 		self.mode  = 2
-		x_cob = np.vstack((x_cob,np.array([0.2, 0., 0.1])))
-		w_cob = np.vstack((w_cob,np.array([0., 0., 0.0])))
+		x_cob = np.vstack((x_cob,np.array([0.15, 0., 0.])))
+		w_cob = np.vstack((w_cob,np.array([0.1, 0., 0.])))
 		return x_cob, w_cob, self.mode
 
 	def WalkBack(self, x_cob, w_cob):
@@ -138,7 +138,7 @@ class control_interface:
 
 	def Rotate(self, x_cob, w_cob):
 		self.mode = 2
-		w_cob = np.vstack((w_cob,np.array([0.,0.,0.3])))
+		w_cob = np.vstack((w_cob,np.array([0.,0.,1.])))
 		return x_cob, w_cob, self.mode
 
 	def Reset(self, x_cob, w_cob):

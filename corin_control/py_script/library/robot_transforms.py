@@ -107,6 +107,8 @@ class ArrayHomogeneousTransform:
 		self.update_base_X_foot(q)
 		self.update_coxa_X_foot(q)
 
+		self.base_X_NRP = mX(self.base_X_coxa, self.coxa_X_foot)
+
 	def duplicate(self, obj):
 		""" duplicates similar instance of itself """
 		self.world_X_foot = obj.world_X_foot.copy()
@@ -183,9 +185,12 @@ class ArrayHomogeneousTransform:
 		# create temp. matrix & overwrite linear components to ignore them
 		temp_mx = mx_world_X_base.copy()
 		temp_mx[:3,3:4] = np.zeros((3,1))
-
+		# print np.round(self.world_base_X_NRP[:3,3],4)
 		self.world_X_NRP = np.dot(mx_world_X_base, self.base_X_NRP)
-		self.world_base_X_NRP = np.dot(self.world_X_NRP, mx_world_X_base)
+		self.world_base_X_NRP[:3,3:4] = mX((mx_world_X_base[:3,:3]), self.base_X_NRP[:3,3:4])
+		# print np.round(mx_world_X_base[:3,:3],3)
+		# print np.round(mX((mx_world_X_base[:3,:3]), self.base_X_NRP[:3,3:4]),4) 			# world_X_NRP
+		# print np.round(mX(np.transpose(mx_world_X_base[:3,:3]), self.base_X_NRP[:3,3:4]),4)
 
 	def update_base_X_NRP(self, q):
 		self.update_coxa_X_NRP(q)
@@ -316,13 +321,11 @@ class ArrayHomogeneousTransform:
 		self.coxa_X_COM[2,3] = (L1_MASS*self.coxa_X_coxa_COM[2,3] + L2_MASS*self.coxa_X_femur_COM[2,3] + L3_MASS*self.coxa_X_tibia_COM[2,3])/LEG_MASS
 
 
-XH = ArrayHomogeneousTransform(5)
-XH.update_base_X_foot(np.array([-0.13,0.34,-1.64]))
+XH = ArrayHomogeneousTransform(0)
+# XH.update_base_X_foot(np.array([-0.13,0.34,-1.64]))
 
-# XH.update_coxa_COM(np.array([deg2rad(0),deg2rad(30),deg2rad(-120)]))
-# print XH.coxa_X_COM
-# print XH.base_X_foot
-# print XH.world_base_X_foot
+# world_X_base = mX(v3_X_m(np.array([0.,0.,0.1])),r3_X_m(np.array([0.,0.,0.1])))
+# XH.update_world_base_X_NRP( world_X_base )
 
 ## ============================================================================================================================= ##
 ## ============================================================================================================================= ##

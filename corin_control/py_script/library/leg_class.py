@@ -69,9 +69,11 @@ class LegClass:
 
 		self.XHc.update_world_base_X_foot(mx_world_X_base, q_compensated)
 		self.XHc.update_world_base_X_NRP(mx_world_X_base)
-
+		
+		self.XHd.update_world_base_X_NRP(mx_world_X_base)
+		
 		## check work envelope
-		bound_exceed = self.check_boundary_limit(self.XHc.world_base_X_foot)
+		bound_exceed = self.check_boundary_limit(self.XHc.world_base_X_foot, self.XHc.world_base_X_NRP)
 
 		## state reset
 		if (resetState):
@@ -79,7 +81,9 @@ class LegClass:
 			self.XHd.coxa_X_foot = self.XHc.coxa_X_foot.copy()
 			self.XHd.base_X_foot = self.XHc.base_X_foot.copy()
 			# self.XHd.world_X_foot = self.XHc.world_X_foot.copy()
-		# if (self.number == 2):
+		# if (self.number == 0):
+		# 	print 'c ', np.round(self.XHc.world_base_X_NRP[:3,3],4)
+		# 	print 'd ', np.round(self.XHd.world_base_X_NRP[:3,3],4)
 		# 	print 'bXf: ', np.round(self.XHc.base_X_foot[:3,3],4)
 		# 	print 'q: ', np.round(q_compensated,4)
 		# 	print 'bXf: ', np.round(self.XHc.base_X_foot[:3,3],4)
@@ -170,7 +174,7 @@ class LegClass:
 		return error, self.Joint.qpd, self.Joint.qvd, self.Joint.qad 	# TEMP: change to normal (huh?)
 
 	
-	def check_boundary_limit(self, world_base_X_foot):
+	def check_boundary_limit(self, world_base_X_foot, world_base_X_NRP):
 		""" leg boundary area projected to 2D space """
 
 		bound_violate = False
@@ -178,7 +182,7 @@ class LegClass:
 
 		# Vector to aep and current position wrt nominal point
 		v3_NRP_X_AEP  = self.XHd.world_base_X_AEP[:3,3:4]  - self.XHd.world_base_X_NRP[:3,3:4]
-		v3_NRP_X_foot = world_base_X_foot[:3,3:4] - self.XHd.world_base_X_NRP[:3,3:4]
+		v3_NRP_X_foot = world_base_X_foot[:3,3:4] - world_base_X_NRP[:3,3:4]
 
 		# if (self.number == 1):
 		# 	print 'bXA : ', np.round(self.XHd.world_base_X_AEP[:3,3:4].flatten(),4)
@@ -206,8 +210,8 @@ class LegClass:
 
 				r_state = ((x*np.cos(qr)+y*np.sin(qr))**2)/(a**2) + ((x*np.sin(qr)-y*np.cos(qr))**2)/(b**2)
 
-				if (BOUND_FACTOR < r_state):
-					bound_violate = True
+				# if (BOUND_FACTOR < r_state):
+				# 	bound_violate = True
 
 			except:
 				pass

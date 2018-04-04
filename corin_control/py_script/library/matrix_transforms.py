@@ -46,7 +46,7 @@ def r3_X_m(r3a):
 	""" convert 3D angular vector in R^(3x1) to SE(3) """
 
 	out = np.eye(4)
-	out[0:3,0:3] = rotation_xyz(r3a)
+	out[0:3,0:3] = rotation_zyx(r3a)
 	return out
 
 def v3_X_m(v3a):
