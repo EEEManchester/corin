@@ -7,20 +7,14 @@ import rospy
 
 from library import *
 
-class control_interface:
+class ControlInterface:
 	def __init__(self):
-		x_cob = np.array([.0,.0,BODY_HEIGHT])
-		w_cob = np.array([.0,.0,.0])
 		self.mode  = 1 								# 1: pose, 2: walk
 		self.reset_flag = False
 
-		self.reset_parameters()
+		self.__initialise__()
 
-	def reset_variables(self):
-		x_cob = np.array([.0,.0,.0])
-		w_cob = np.array([.0,.0,.0])
-
-	def reset_parameters(self):
+	def __initialise__(self):
 		rospy.set_param('stop_flag', False)		# emergency stop (working)
 		rospy.set_param('reset',False)			# move to ground position with legs up (working)
 		rospy.set_param('gaitdemo',False)		# to implement gait demo later
@@ -30,10 +24,10 @@ class control_interface:
 		rospy.set_param('walkback', False)		# Walk backwards ~0.4 metres (Working)
 		rospy.set_param('walkleft', False)		# walk left ~0.4 metres (working)
 		rospy.set_param('rotate', False)
+		rospy.set_param('transition', False)
 
 	#corin performs bodypose
-	def Bodypose(self, x_cob, w_cob):
-		self.reset_variables()
+	def bodypose(self, x_cob, w_cob):
 		self.mode = 1
 
 		## Chimney Demo
@@ -115,34 +109,33 @@ class control_interface:
 
 		return x_cob, w_cob, self.mode
 		
-	def WalkForward(self, x_cob, w_cob):
+	def walk_front(self, x_cob, w_cob):
 		self.mode  = 2
 		x_cob = np.vstack((x_cob,np.array([0.15, 0., 0.])))
 		w_cob = np.vstack((w_cob,np.array([0.1, 0., 0.])))
 		return x_cob, w_cob, self.mode
 
-	def WalkBack(self, x_cob, w_cob):
+	def walk_back(self, x_cob, w_cob):
 		self.mode  = 2
 		x_cob = np.vstack((x_cob,np.array([-0.4, 0.0, 0.])))
 		return x_cob, w_cob, self.mode
 
-	def WalkRight(self, x_cob, w_cob):
+	def walk_right(self, x_cob, w_cob):
 		self.mode  = 2
 		x_cob = np.vstack((x_cob,np.array([0.0, -0.11, 0.])))
 		return x_cob, w_cob, self.mode
 
-	def WalkLeft(self, x_cob, w_cob):
+	def walk_left(self, x_cob, w_cob):
 		self.mode  = 2
 		x_cob = np.vstack((x_cob,np.array([0.0, 0.11, 0.])))
 		return x_cob, w_cob, self.mode
 
-	def Rotate(self, x_cob, w_cob):
+	def rotate(self, x_cob, w_cob):
 		self.mode = 2
 		w_cob = np.vstack((w_cob,np.array([0.,0.,1.])))
 		return x_cob, w_cob, self.mode
 
-	def Reset(self, x_cob, w_cob):
-		self.reset_variables()
+	def reset(self, x_cob, w_cob):
 		self.mode = 3
 		self.reset_flag = True
 		return x_cob, w_cob, self.mode
@@ -156,30 +149,48 @@ class control_interface:
 
 		if (rospy.get_param('bodypose')==True):
 			rospy.set_param('bodypose',False)
-			return self.Bodypose(x_cob, w_cob)
+			return self.bodypose(x_cob, w_cob)
 
 		elif (rospy.get_param('walkforward')==True):
 			rospy.set_param('walkforward',False)
-			return self.WalkForward(x_cob, w_cob)
+			return self.walk_front(x_cob, w_cob)
 
 		elif (rospy.get_param('walkback')==True):	
 			rospy.set_param('walkback',False)
-			return self.WalkBack(x_cob, w_cob)
+			return self.walk_back(x_cob, w_cob)
 
 		elif (rospy.get_param('walkleft')==True): 	
 			rospy.set_param('walkleft',False)
-			return self.WalkLeft(x_cob, w_cob)
+			return self.walk_left(x_cob, w_cob)
 
 		elif (rospy.get_param('walkright')==True):
 			rospy.set_param('walkright',False)
-			return self.WalkRight(x_cob, w_cob)
+			return self.walk_right(x_cob, w_cob)
 
 		elif (rospy.get_param('rotate')==True):
 			rospy.set_param('rotate',False)
-			return self.Rotate(x_cob, w_cob)
+			return self.rotate(x_cob, w_cob)
+
+		elif (rospy.get_param('transition')==True):
+			rospy.set_param('transition',False)
+			return self.wall_transition(x_cob, w_cob)
 
 		elif (rospy.get_param('reset')==True):		# Command Prompt: rosparam set reset True
 			rospy.set_param('reset',False)
-			return self.Reset(x_cob, w_cob)
+			return self.reset(x_cob, w_cob)
 		else:
 			return None
+
+	def wall_transition(self, x_cob, w_cob):
+		""" wall transition base trajectory """
+		## TODO: set somewhere else
+		self.mode = 2
+		
+		for q in range(0,91,10):
+			qr = np.deg2rad(q)
+			xd = np.array([0.0, (1-np.cos(qr))*COXA_Y, (np.sin(qr))*COXA_Y])
+			
+			x_cob = np.vstack(( x_cob, xd ))
+			w_cob = np.vstack(( w_cob, np.array([qr,0.0,0.0]) ))
+		# Plot.plot_3d(x_cob[:,0],x_cob[:,1],x_cob[:,2])
+		return x_cob, w_cob, self.mode

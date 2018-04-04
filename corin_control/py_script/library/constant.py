@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-# constant file for mcorin robot
+
+""" Constants for Corin robot
+"""
 
 import sys; sys.dont_write_bytecode = True
 

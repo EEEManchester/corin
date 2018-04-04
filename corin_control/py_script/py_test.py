@@ -20,4 +20,15 @@ v_max = np.amax(a)
 v_min = np.amin(a)
 v_max = v_max if (abs(v_max) > abs(v_min)) else abs(v_min)
 
-print np.array([1,2,3]).reshape(3,1)
+x_cob = np.array([.0,.0,.0])
+w_cob = np.array([.0,.0,.0])
+
+for q in range(0,91,10):
+	qr = np.deg2rad(q)
+	xd = np.array([0.0, (1-np.cos(qr))*COXA_Y, (np.sin(qr))*COXA_Y])
+	
+	x_cob = np.vstack(( x_cob, xd ))
+	w_cob = np.vstack(( w_cob, np.array([qr,0.0,0.0]) ))
+
+Plot.plot_3d(x_cob[:,0],x_cob[:,1],x_cob[:,2])
+# Plot.plot_2d(x_cob[1],x_cob[2])

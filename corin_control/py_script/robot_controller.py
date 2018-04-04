@@ -13,12 +13,12 @@ import control_interface 		# action selection from ROS parameter server
 
 ## ROS messages & libraries
 import rospy
-from sensor_msgs.msg import Imu 						# sub msg for IMU
-from sensor_msgs.msg import JointState 					# sub msg for joint states
-from std_msgs.msg import Float64 						# pub msg for Gazebo joints
-from std_msgs.msg import ByteMultiArray 				# foot contact state
-from std_msgs.msg import Float32MultiArray				# foot contact force
-# import tf as RTF 										# ROS transform library
+from sensor_msgs.msg import Imu 			# sub msg for IMU
+from sensor_msgs.msg import JointState 		# sub msg for joint states
+from std_msgs.msg import Float64 			# pub msg for Gazebo joints
+from std_msgs.msg import ByteMultiArray 	# foot contact state
+from std_msgs.msg import Float32MultiArray	# foot contact force
+import tf 		 							# ROS transform library
 
 ## Robotis ROS msgs for joint control
 from robotis_controller_msgs.msg import SyncWriteMultiFloat
@@ -31,7 +31,7 @@ class CorinManager:
 		self.rate 	  = rospy.Rate(CTR_RATE)	# Controller rate
 
 		self.Robot 	= robot_class.RobotState() 				# robot class
-		self.Action	= control_interface.control_interface()	# control action class
+		self.Action	= control_interface.ControlInterface()	# control action class
 		# self.Gait = gait_class.GaitClass(GAIT_TYPE) 		# gait class
 
 		self.resting   = False 	# Flag indicating robot standing or resting
@@ -145,8 +145,8 @@ class CorinManager:
 			setpoint topic (for logging all setpoint states) 		"""
 		""" Input: 	1) q -> Joint setpoints (position, velocity, 
 							acceleration) 	
-					2) q_log -> JointState msg with base and joint
-								setpoints for logging purposes		"""
+					2) q_log -> JointState msg with base and
+								joint setpoints for logging			"""
 
 		## Publish joint position to robot if valid
 		if (self.Robot.invalid is not True):
@@ -182,7 +182,6 @@ class CorinManager:
 				self.joint_pub_.publish(dqp)
 
 		qb = self.Robot.P6c.world_X_base.copy()
-		
 		self.robot_broadcaster.sendTransform( (qb[0],qb[1],qb[2]), 
 												tf.transformations.quaternion_from_euler(qb[3],	qb[4], qb[5]), 
 												rospy.Time.now(), "trunk", "world");
@@ -222,7 +221,6 @@ class CorinManager:
 		## Define Variables ##
 		sc_new = 0	# current spline count for transfer phase legs
 		sc_max = 0	# maximum spline count among the transfer phase legs
-		dir_uv = np.array([0.,0.,0.]) 	# zero vector direction
 		self.Robot.suspend = True 		# suspend robot for zero trunk movement
 
 		# Check for legs that are in transfer phase
@@ -399,10 +397,8 @@ class CorinManager:
 			## Set foothold for legs in transfer phase
 			for j in range (0, self.Robot.active_legs):
 				if (Gait.cs[j] == 1 and i <= len(base_path.X.t)):
-					## compute NRP
+					## update NRP
 					Leg[j].update_world_base_X_NRP(XHd.world_X_base)
-					# print j, ' wXNRP: '
-					# Leg[j].world_base_X_NRP = 
 
 					## compute magnitude & vector direction
 					v3_dv = v3cp - v3cp_prev 			# direction vector from previous to current CoB
