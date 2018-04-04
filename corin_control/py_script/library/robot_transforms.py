@@ -74,6 +74,7 @@ class ArrayHomogeneousTransform:
 
 		# Transformations wrt base frame: base to parts
 		self.base_X_coxa = np.identity(4)
+		self.base_X_femur= np.identity(4)
 		self.base_X_foot = np.identity(4)
 		self.base_X_AEP  = np.identity(4)
 		self.base_X_PEP  = np.identity(4)
@@ -81,6 +82,7 @@ class ArrayHomogeneousTransform:
 
 		# Transformations wrt leg frame: leg to parts
 		self.coxa_X_base = np.identity(4)
+		self.coxa_X_femur= np.identity(4)
 		self.coxa_X_foot = np.identity(4)
 		self.coxa_X_AEP  = np.identity(4)
 		self.coxa_X_PEP  = np.identity(4)
@@ -105,6 +107,7 @@ class ArrayHomogeneousTransform:
 
 		self.update_base_X_coxa(ROT_BASE_X_LEG[self.n],TRN_BASE_X_LEG[self.n])
 		self.update_base_X_foot(q)
+		self.update_base_X_femur(q)
 		self.update_coxa_X_foot(q)
 
 		self.base_X_NRP = mX(self.base_X_coxa, self.coxa_X_foot)
@@ -117,6 +120,7 @@ class ArrayHomogeneousTransform:
 		self.world_base_X_PEP  = obj.world_base_X_PEP.copy()
 		self.world_base_X_NRP  = obj.world_base_X_NRP.copy()
 		self.base_X_coxa = obj.base_X_coxa.copy()
+		self.base_X_femur= obj.base_X_femur.copy()
 		self.base_X_foot = obj.base_X_foot.copy()
 		self.base_X_AEP  = obj.base_X_AEP.copy()
 		self.base_X_PEP  = obj.base_X_PEP.copy()
@@ -140,6 +144,11 @@ class ArrayHomogeneousTransform:
 		self.base_X_coxa[1,3] =  tx[1]
 
 		self.coxa_X_base = np.linalg.inv(self.base_X_coxa)
+
+	def update_base_X_femur(self, q):
+		# self.update_coxa_X_femur(q)
+		self.coxa_X_femur[0,3] = L1
+		self.base_X_femur = mX(self.base_X_coxa, self.coxa_X_femur)
 
 	def update_base_X_foot(self,q):	
 		q1_sin = np.sin(q[0])

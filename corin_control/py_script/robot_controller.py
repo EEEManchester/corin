@@ -391,14 +391,30 @@ class CorinManager:
 					## Trajectory finished, skip support
 					print 'Finishing foothold planning at ', i
 					break
-			## Update world_X_base
+			## Stack to array next CoB location
 			world_X_base.append(np.array([v3cp,v3wp]).reshape(1,6))
 
+			transition = True
 			## Set foothold for legs in transfer phase
 			for j in range (0, self.Robot.active_legs):
 				if (Gait.cs[j] == 1 and i <= len(base_path.X.t)):
 					## update NRP
-					Leg[j].update_world_base_X_NRP(XHd.world_X_base)
+					if (transition is False):
+						Leg[j].update_world_base_X_NRP(XHd.world_X_base)
+					else:
+						# f_world_X_wall_foothold = np.array([])
+						# f_world_X_ground_foothold = np.array([])
+
+						world_ground_X_base = XHd.world_X_base.copy()
+						world_ground_X_base[:2,3:4] = np.zeros((2,1))
+						world_ground_X_femur = mX(world_ground_X_base, Leg[j].base_X_femur)
+
+						hy = world_ground_X_femur[2,3] - L3 - 0.
+						yy = np.sqrt(L2**2 - hy**2)
+						py = (COXA_Y + L1 + yy)*np.sin(ROT_BASE_X_LEG[j])
+						print 'yy: ', yy
+						print 'py: ', py
+						Leg[j].world_base_X_NRP[1,3] = py
 
 					## compute magnitude & vector direction
 					v3_dv = v3cp - v3cp_prev 			# direction vector from previous to current CoB

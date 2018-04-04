@@ -122,8 +122,9 @@ def bodypose_table():
 		POSE_TABLE[i] = {'footprint':wR, "bodypose":np.array([0.,0.,bn,qr,0.,0.]),"ground":np.array([gcx,0.,-gch]),"wall":np.array([wcx,0.,-wch])}
 		# print np.round([np.round(wR/0.03),wR,bn,qr*180/np.pi],3)
 	return POSE_TABLE
-# print bodypose_table()
-
+x = bodypose_table()
+# print len(x)
+# print x[50]
 class GridPlanner:
 	def __init__(self,size):
 		self.resolution	= 0.03			# size of cell, (m) - TARGET: 0.03
