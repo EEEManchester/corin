@@ -185,11 +185,12 @@ class ControlInterface:
 		""" wall transition base trajectory """
 		## TODO: set somewhere else
 		self.mode = 2
-		tran_y = 0.1
+		tran_y = 0.2
+		tran_z = 0.2
 
-		for q in range(0,91,10):
+		for q in range(10,91,10):
 			qr = np.deg2rad(q)
-			xd = np.array([0.0, (1.-np.cos(qr))*tran_y, (np.sin(qr))*tran_y])
+			xd = np.array([0.0, (1.-np.cos(qr))*tran_y, (np.sin(qr))*tran_z])
 			
 			x_cob = np.vstack(( x_cob, xd ))
 			w_cob = np.vstack(( w_cob, np.array([qr,0.0,0.0]) ))

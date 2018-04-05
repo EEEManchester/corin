@@ -120,7 +120,7 @@ class RobotState:
 			cstate = self.Leg[j].update_force_state(self.cstate[j], self.cforce[j*3:(j*3)+3])
 
 			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
-				self.suspend = False
+				self.suspend = True
 				# print 'Suspend ', j, bstate
 				
 		# print '-------------------------------------------------------'

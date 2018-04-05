@@ -1433,4 +1433,3 @@ gmap = GridPlanner((0.1,0.1))
 snorm_1 = gmap.get_cell_snorm(np.array([0.,1.,0.]))
 snorm_2 = gmap.get_cell_snorm(np.array([0.,2.,0.]))
 avg_norm= (snorm_1 + snorm_2)/2
-print avg_norm

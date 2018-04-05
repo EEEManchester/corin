@@ -350,9 +350,9 @@ class CorinManager:
 			initial_foothold  = [np.zeros(3)]*3
 			final_foothold 	  = [np.zeros(3)]*3
 
-			final_foothold[0] = np.array([ 0.25, d_wall, 0.2+0.28])
-			final_foothold[1] = np.array([ 0.,   d_wall, 0.2+0.28])
-			final_foothold[2] = np.array([-0.25, d_wall, 0.2+0.28])
+			final_foothold[0] = np.array([ 0.25, d_wall, 0.2+0.38])
+			final_foothold[1] = np.array([ 0.,   d_wall, 0.2+0.38])
+			final_foothold[2] = np.array([-0.25, d_wall, 0.2+0.38])
 			
 			for ji in range(0,3):
 				# set initial foothold and overwrite y & z-component
@@ -412,7 +412,6 @@ class CorinManager:
 			
 			# cycles through one gait phase
 			for m in range(0,int(GAIT_TPHASE*CTR_RATE)+1):
-
 				## Variable mapping to R^(3x1) for base linear and angular time, position, velocity, acceleration
 				try:
 					v3cp = self.Robot.P6c.world_X_base[0:3] + base_path.X.xp[i].reshape(3,1)
@@ -447,10 +446,12 @@ class CorinManager:
 					## Trajectory finished, skip support
 					print 'Finishing foothold planning at ', i
 					break
+
 			## Stack to array next CoB location
 			world_X_base.append(np.array([v3cp,v3wp]).reshape(1,6))
 
-			transition = True
+			## TODO: this set somewhere
+			transition = False
 			## Set foothold for legs in transfer phase
 			for j in range (0, self.Robot.active_legs):
 				if (Gait.cs[j] == 1 and i <= len(base_path.X.t)):
@@ -474,16 +475,18 @@ class CorinManager:
 								compute_ground_footholds()
 
 					## compute magnitude & vector direction
-					v3_dv = v3cp - v3cp_prev 			# direction vector from previous to current CoB
-					m1_dv = np.linalg.norm(v3_dv) 		# magnitude of direction vector
-					v3_uv = np.nan_to_num(v3_dv/m1_dv) 	# unit vector direction
-					
+					snorm = self.Map.get_cell_snorm(Leg[j].world_base_X_NRP[0:3,3]) 	# get surface normal
+					v3_dv = (v3cp - v3cp_prev).flatten() 			# direction vector from previous to current CoB
+					v3_pv = v3_dv - (np.dot(v3_dv,snorm))*snorm 	# project direction vector onto plane
+					m1_dv = np.linalg.norm(v3_pv) 					# magnitude of direction vector
+					v3_uv = np.nan_to_num(v3_pv/m1_dv) 				# unit vector direction
+
 					## TEMP: overwrite last transfer phase on base spline
 					if (i == len(base_path.X.t)):
-						v3_uv = np.zeros((3,1))
+						v3_uv = np.zeros(3)
 
 					## compute AEP wrt base and world frame					
-					Leg[j].world_base_X_AEP[:3,3:4] = Leg[j].world_base_X_NRP[:3,3:4] + (v3_uv*STEP_STROKE/2.)
+					Leg[j].world_base_X_AEP[:3,3] = Leg[j].world_base_X_NRP[:3,3] + (v3_uv*STEP_STROKE/2.)
 					Leg[j].base_X_AEP[:3,3:4] = mX(XHd.base_X_world[:3,:3], Leg[j].world_base_X_AEP[:3,3:4])
 
 					Leg[j].world_X_foot = mX(XHd.world_X_base, Leg[j].base_X_AEP)
@@ -510,13 +513,16 @@ class CorinManager:
 					base_X_footholds[j].t.append(i*CTR_INTV)
 					base_X_footholds[j].xp.append(Leg[j].base_X_AEP[:3,3:4].copy())
 					
-					if (j==1):
+					if (j==5):
 						print '--------------------------------------------'
-						# print 'v3_uv: ', (v3_uv*STEP_STROKE/2.).flatten()
+						print 'snorm ', snorm
+						print 'v3pv: ', v3_pv.flatten()
+						print 'v3uv: ', v3_uv.flatten()
 						print 'wbXN:  ', np.round(Leg[j].world_base_X_NRP[:3,3],4)
+						print 'wbXA: ', np.round(Leg[j].world_base_X_AEP[:3,3],4)
 						# print 'wXb:  ', np.round(XHd.base_X_world,4)
 						# print 'wXf:  ', np.round(Leg[j].world_X_foot[:3,3], 4)
-						print 'wbXA: ', np.round(Leg[j].world_base_X_AEP[:3,3],4)
+						
 						# print 'nbXA: ', np.round(new_base_X_aep[:3,3],4)
 
 			## Alternate gait phase
@@ -525,7 +531,7 @@ class CorinManager:
 			v3wp_prev = v3wp.copy()
 
 			# raw_input('cont')
-		print np.round(world_X_footholds[1].xp,4)
+		print np.round(world_X_footholds[5].xp,4)
 		return world_X_base, world_X_footholds, base_X_footholds
 
 	def trajectory_tracking(self, x_cob, w_cob=0):
@@ -543,6 +549,7 @@ class CorinManager:
 
 		# Trajectory for robot's base
 		base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV) 
+		# Plot.plot_2d(base_path.X.xp[:,0],base_path.X.xp[:,1])
 		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 

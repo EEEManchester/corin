@@ -59,5 +59,13 @@ initial_foothold  = [np.zeros(3)]*3
 initial_foothold[0] = a.copy()
 # print initial_foothold[0]
 initial_foothold[0][0] = 6
-print initial_foothold
-print a
+
+v3_dv = np.array([0.5,0.2,0.1])
+surface_normal = np.array([0.,-1.,0.])
+
+plane_vector = np.dot(rot_X(np.deg2rad(90)), surface_normal)
+# vector projection
+v3_pv = ( np.dot(v3_dv,plane_vector)/np.linalg.norm(plane_vector)**2 )*plane_vector
+# print np.round(v3_pv,4)
+
+print v3_dv - (np.dot(v3_dv,surface_normal))*surface_normal

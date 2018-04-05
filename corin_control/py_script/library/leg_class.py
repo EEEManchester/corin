@@ -69,7 +69,6 @@ class LegClass:
 
 		self.XHc.update_world_base_X_foot(mx_world_X_base, q_compensated)
 		self.XHc.update_world_base_X_NRP(mx_world_X_base)
-		
 		self.XHd.update_world_base_X_NRP(mx_world_X_base)
 		
 		## check work envelope

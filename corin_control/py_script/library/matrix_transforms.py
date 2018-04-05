@@ -85,6 +85,31 @@ def mC(a, b):
 ## 						Rotation Operations 						##
 ######################################################################
 
+def rot_X(q):
+    ei = np.eye(3);
+    ei[1,1] =  np.cos(q)
+    ei[1,2] = -np.sin(q)
+    ei[2,1] =  np.sin(q)
+    ei[2,2] =  np.cos(q)
+    return ei
+
+def rot_Y(q):
+    ei = np.eye(3);
+    ei[0,0] =  np.cos(q)
+    ei[0,2] =  np.sin(q)
+    ei[2,0] = -np.sin(q)
+    ei[2,2] =  np.cos(q)
+    return ei
+
+def rot_Z(q):
+    ei = np.eye(3);
+    ei[0,0] =  np.cos(q)
+    ei[0,1] = -np.sin(q)
+    ei[1,0] =  np.sin(q)
+    ei[1,1] =  np.cos(q)
+    return ei
+# print rot_Y(np.deg2rad(30))
+
 def SO3_selection(qsnorm, axis):
     """Return SO3 matrix with only one non-zero component, or close to it"""
     ei = np.zeros((3,3));
@@ -238,7 +263,7 @@ def rotation_matrix(angle, direction, point=None):
         M[:3, 3] = point - np.dot(R, point)
     return M
 
-
+# print rotation_matrix(np.deg2rad(30),[0, 1, 0])
 ######################################################################
 ##                      Constant Parameters                         ##
 ######################################################################

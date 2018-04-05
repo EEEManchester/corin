@@ -211,8 +211,8 @@ ep = np.array([0.11  , 0.,     0.2219])
 sn = np.array([-0.9997,  0.,   0.0255])
 
 ### Test scripts
-spliner = PathGenerator()
-xout = spliner.generate_leg_path(sp, ep, sn, phase)
+# spliner = PathGenerator()
+# xout = spliner.generate_leg_path(sp, ep, sn, phase)
 # Plot.plot_2d(xout[0],xout[1])
 # cx = np.zeros(len(xout[0]))
 # cy = np.zeros(len(xout[0]))
@@ -264,6 +264,18 @@ planner = PathGenerator()
 ## wall transition
 # cq = 0.
 # t_cob = np.array([0.0])
+
+x_cob  = np.array([.0,.0,.0])
+w_cob  = np.array([.0,.0,.0])
+tran_y = 0.1
+for q in range(5,91,5):
+	qr = np.deg2rad(q)
+	xd = np.array([0.0, (1.-np.cos(qr))*tran_y, (np.sin(qr))*tran_y])
+	
+	x_cob = np.vstack(( x_cob, xd ))
+	w_cob = np.vstack(( w_cob, np.array([qr,0.0,0.0]) ))
+path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
+# Plot.plot_2d(path_n.X.t,path_n.X.xp)
 
 # for q in range(0,91,15):
 # 	qr = q*np.pi/180
