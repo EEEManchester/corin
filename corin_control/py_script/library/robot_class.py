@@ -62,12 +62,14 @@ class RobotState:
 		for j in range(6):
 			self.qd = self.KDL.leg_IK(LEG_STANCE[j])
 			self.Leg.append(leg_class.LegClass(j))
+			self.Leg[j].XHc.update_base_X_foot(self.KDL.leg_IK(LEG_STANCE[j]))
+			self.Leg[j].XHd.update_base_X_foot(self.KDL.leg_IK(LEG_STANCE[j]))
 			self.Leg[j].XHc.update_base_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
 			self.Leg[j].XHd.update_base_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
-			self.Leg[j].XHc.update_coxa_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
-			self.Leg[j].XHd.update_coxa_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
 			self.Leg[j].XHc.update_coxa_X_foot(self.KDL.leg_IK(LEG_STANCE[j]))
 			self.Leg[j].XHd.update_coxa_X_foot(self.KDL.leg_IK(LEG_STANCE[j]))
+			self.Leg[j].XHc.update_coxa_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
+			self.Leg[j].XHd.update_coxa_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
 			self.Leg[j].XHc.world_X_foot = mX(self.XHc.world_X_base, self.Leg[j].XHc.base_X_foot)
 			self.Leg[j].XHd.world_X_foot = mX(self.XHd.world_X_base, self.Leg[j].XHd.base_X_foot)
 			self.Leg[j].XHd.base_X_AEP = mX(v3_X_m(np.array([ STEP_STROKE/2,0,0])), self.Leg[j].XHd.base_X_NRP)
@@ -118,7 +120,7 @@ class RobotState:
 			cstate = self.Leg[j].update_force_state(self.cstate[j], self.cforce[j*3:(j*3)+3])
 
 			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
-				self.suspend = True
+				self.suspend = False
 				# print 'Suspend ', j, bstate
 				
 		# print '-------------------------------------------------------'

@@ -49,7 +49,7 @@ class LegClass:
 
 		## TODO: CHANGE TO HOMOGENOUS AND VECTOR FORM
 		self.qsurface = np.array([0.,0.,0.]) 		# surface orientation in leg frame, (roll, pitch, yaw)
-		self.qsnorm   = np.array([[0.],[0.],[1.]]) 	# surface normal
+		self.qsnorm   = np.array([[0., 0., 1.]]) 	# surface normal
 
 		self.transfer_phase_change = False 		# Flag for enabling trajectory to be generated at transfer
 		self.support_phase_change  = False 		# Flag for enabling trajectory to be generated at transfer

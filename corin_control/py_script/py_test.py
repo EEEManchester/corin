@@ -30,5 +30,34 @@ for q in range(0,91,10):
 	x_cob = np.vstack(( x_cob, xd ))
 	w_cob = np.vstack(( w_cob, np.array([qr,0.0,0.0]) ))
 
-Plot.plot_3d(x_cob[:,0],x_cob[:,1],x_cob[:,2])
+# Plot.plot_3d(x_cob[:,0],x_cob[:,1],x_cob[:,2])
 # Plot.plot_2d(x_cob[1],x_cob[2])
+
+def func1(a, xlist):
+	def in_func1():
+		print 'nested function'
+		print a, xlist[a]
+
+	print 'in func 1'
+	if (a == 1):
+		in_func1()
+	else:
+		print 'returning'
+
+a = np.array([0.2,-0.1,-0.1])
+b = np.array([0.2, 0.1,-0.1])
+
+initial_foothold  = [np.zeros(3)]*3
+# initial_foothold[0] = np.array([1,2,3])
+# initial_foothold[1] = np.array([4,5,6])
+# initial_foothold[2] = np.array([7,8,9])
+
+# initial_foothold[0][0] = 2
+# initial_foothold[1][2] = 15
+# initial_foothold[0][0] = 6
+
+initial_foothold[0] = a.copy()
+# print initial_foothold[0]
+initial_foothold[0][0] = 6
+print initial_foothold
+print a

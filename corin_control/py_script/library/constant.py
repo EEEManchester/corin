@@ -47,7 +47,8 @@ ROT_BASE_X_RF = -50.
 ROT_BASE_X_RM = -90.
 ROT_BASE_X_RR = -130.
 
-ROT_BASE_X_LEG = [50.,90.,130.,-50.,-90.,-130]
+ROT_BASE_X_LEG = [ROT_BASE_X_LF, ROT_BASE_X_LM, ROT_BASE_X_LR,
+				 	ROT_BASE_X_RF,ROT_BASE_X_RM,ROT_BASE_X_RR]
 TRN_BASE_X_LEG = [	(COXA_X,COXA_Y) ,(0.,COXA_Y) ,(-COXA_X,COXA_Y),\
 					(COXA_X,-COXA_Y),(0.,-COXA_Y),(-COXA_X,-COXA_Y)]
 
@@ -117,12 +118,12 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 ## ================================================================ ##
 ##                       Stance parameters 	 						##
 ## ================================================================ ##
-
+# Offset for front and rear legs
+TETA_F = 0.;	
+TETA_R = -TETA_F;
 ### Leg default position, SCS
-TETA_F = 0;	TETA_R = -TETA_F;
 STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
-
-LEG_STANCE = stance_selection.initial_stance(STANCE_WIDTH,BODY_HEIGHT, STANCE_TYPE, TETA_F, TETA_R)
+LEG_STANCE  = stance_selection.initial_stance(STANCE_WIDTH,BODY_HEIGHT, STANCE_TYPE, TETA_F, TETA_R)
 
 ##########################################################################################################################################
 

@@ -112,7 +112,7 @@ class ControlInterface:
 	def walk_front(self, x_cob, w_cob):
 		self.mode  = 2
 		x_cob = np.vstack((x_cob,np.array([0.15, 0., 0.])))
-		w_cob = np.vstack((w_cob,np.array([0.1, 0., 0.])))
+		w_cob = np.vstack((w_cob,np.array([0., 0., 0.])))
 		return x_cob, w_cob, self.mode
 
 	def walk_back(self, x_cob, w_cob):
@@ -185,12 +185,14 @@ class ControlInterface:
 		""" wall transition base trajectory """
 		## TODO: set somewhere else
 		self.mode = 2
-		
+		tran_y = 0.1
+
 		for q in range(0,91,10):
 			qr = np.deg2rad(q)
-			xd = np.array([0.0, (1-np.cos(qr))*COXA_Y, (np.sin(qr))*COXA_Y])
+			xd = np.array([0.0, (1.-np.cos(qr))*tran_y, (np.sin(qr))*tran_y])
 			
 			x_cob = np.vstack(( x_cob, xd ))
 			w_cob = np.vstack(( w_cob, np.array([qr,0.0,0.0]) ))
+			
 		# Plot.plot_3d(x_cob[:,0],x_cob[:,1],x_cob[:,2])
 		return x_cob, w_cob, self.mode

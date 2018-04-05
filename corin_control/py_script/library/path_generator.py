@@ -121,13 +121,14 @@ class PathGenerator():
 		# return TrajectoryPoints(x_out), TrajectoryPoints(w_out)	# convert to TrajectoryPoints format
 		return Trajectory6D((x_out,w_out))
 
-	def generate_leg_path(self, sp, ep, snorm, phase=1, reflex=False, ctime=2.0, tn=0.1, type='trapezoidal'):
+	def generate_leg_path(self, sp, ep, snorm, phase=1, reflex=False, ctime=2.0, tn=0.1, type='parabolic'):
 		""" Generate leg trajectory (Re^3) based on phase and type 			"""
 		""" First:  introduce via points for transfer phase trajectory
 			Second: generate the spline based on the new array of points 	"""
 		""" Input: 	1) sp -> starting position (Re^3)
 					2) ep -> end position (Re^3)
-					3) snorm -> surface normal in unit vector (Re^3)
+					3) snorm -> surface normal in unit vector (Re^3) 
+								wrt to leg frame
 					4) phase -> leg phase: 1 = transfer, 0 = support
 					5) reflex -> boolean for triggering reflex
 					6) ctime -> duration of trajectory
@@ -188,7 +189,7 @@ class PathGenerator():
 
 		else:
 			print "No phase" 	# have a way to exit function if no phase selected
-		
+		# print np.round(cpx,4)
 		## 2) Generate spline
 		# SpGen = Pspline.SplineGenerator()
 		SpGen = Bspline.SplineGenerator()
@@ -202,13 +203,17 @@ class PathGenerator():
 ## Test leg path generation ##
 sp = np.array([0.50, -0.10, -0.05])
 ep = np.array([0.50,  0.10, -0.05])
-snorm = np.array([0., 0., 0.])
+sn = np.array([0., 0., 0.])
 phase = 1
+
+sp = np.array([0.1169, 0.,     0.252 ])
+ep = np.array([0.11  , 0.,     0.2219])
+sn = np.array([-0.9997,  0.,   0.0255])
 
 ### Test scripts
 spliner = PathGenerator()
-# xout = spliner.generate_leg_path(sp, ep, snorm, phase)
-
+xout = spliner.generate_leg_path(sp, ep, sn, phase)
+# Plot.plot_2d(xout[0],xout[1])
 # cx = np.zeros(len(xout[0]))
 # cy = np.zeros(len(xout[0]))
 # cz = np.zeros(len(xout[0]))

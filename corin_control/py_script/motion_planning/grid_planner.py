@@ -123,6 +123,7 @@ def bodypose_table():
 		# print np.round([np.round(wR/0.03),wR,bn,qr*180/np.pi],3)
 	return POSE_TABLE
 x = bodypose_table()
+# print x
 # print len(x)
 # print x[50]
 class GridPlanner:
@@ -181,7 +182,7 @@ class GridPlanner:
 		nx.set_node_attributes(self.Gbody, {e: 0 for e in self.Gbody.nodes()}, 'width') 	# footprint lateral width
 		nx.set_node_attributes(self.Gbody, {e: [0.,0.,0.,0.] for e in self.Gbody.nodes()}, 'pose')	# robot bodypose - height, roll, pitch, yaw
 
-		self.map_cell_cost()		# assign cost based on free=0 or obstacle=1
+		# self.map_cell_cost()		# assign cost based on free=0 or obstacle=1
 
 		print 'Initialised - '
 		print 'Map Grid  : ', gridx, ' by ', gridy
@@ -1402,6 +1403,16 @@ class GridPlanner:
 
 		sz = len(qlist)
 
+	def get_cell_snorm(self, p):
+		""" Returns the surface normal of 
+			cell located at point p (in m) """
+
+		if (p[1] < 0):
+			snorm = np.array([0.,0.,1.])
+		else:
+			snorm = np.array([0.,-1,0.])
+		return snorm
+
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
@@ -1418,3 +1429,8 @@ class GridPlanner:
 # # pp.graph_representation(True,bpath)
 
 # plt.show()
+gmap = GridPlanner((0.1,0.1))
+snorm_1 = gmap.get_cell_snorm(np.array([0.,1.,0.]))
+snorm_2 = gmap.get_cell_snorm(np.array([0.,2.,0.]))
+avg_norm= (snorm_1 + snorm_2)/2
+print avg_norm
