@@ -107,7 +107,7 @@ class ArrayHomogeneousTransform:
 
 		self.update_base_X_coxa(ROT_BASE_X_LEG[self.n],TRN_BASE_X_LEG[self.n])
 		self.update_base_X_foot(q)
-		self.update_base_X_femur(q)
+		# self.update_base_X_femur(q)
 		self.update_coxa_X_foot(q)
 
 		self.base_X_NRP = mX(self.base_X_coxa, self.coxa_X_foot)
@@ -145,9 +145,25 @@ class ArrayHomogeneousTransform:
 
 		self.coxa_X_base = np.linalg.inv(self.base_X_coxa)
 
+	def update_coxa_X_femur(self, q):
+		q1_sin = np.sin(q[0])
+		q1_cos = np.cos(q[0])
+		
+		self.coxa_X_femur[0,0] =  q1_cos
+		self.coxa_X_femur[0,1] =  0.
+		self.coxa_X_femur[0,2] =  q1_sin
+		self.coxa_X_femur[0,3] =  L1*q1_cos
+		self.coxa_X_femur[1,0] =  q1_sin
+		self.coxa_X_femur[1,1] =  0.
+		self.coxa_X_femur[1,2] = -q1_cos
+		self.coxa_X_femur[1,3] =  L1*q1_sin
+		self.coxa_X_femur[2,1] =  1.
+		self.coxa_X_femur[2,2] =  0.
+
+		self.femur_X_coxa = np.linalg.inv(self.coxa_X_femur)
+
 	def update_base_X_femur(self, q):
-		# self.update_coxa_X_femur(q)
-		self.coxa_X_femur[0,3] = L1
+		self.update_coxa_X_femur(q)
 		self.base_X_femur = mX(self.base_X_coxa, self.coxa_X_femur)
 
 	def update_base_X_foot(self,q):	

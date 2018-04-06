@@ -121,6 +121,66 @@ class PathGenerator():
 		# return TrajectoryPoints(x_out), TrajectoryPoints(w_out)	# convert to TrajectoryPoints format
 		return Trajectory6D((x_out,w_out))
 
+	def interpolate_leg_path(self, sp, ep, snorm, phase=1, reflex=False, ctime=2.0, tn=0.1, type='parabolic'):
+		## Define Variables ##
+		cpx = np.zeros((1,3))	# cartesian position in matrix
+		sh  = STEP_HEIGHT  		# step height for transfer phase
+		
+		## 1) Set via points according to phase
+		if (phase==1):						
+			## Transfer phase 
+
+			# vector from origin to travel path midpoint
+			if (type=='parabolic'):
+				pdiv = np.array([0.125, 0.5, 0.875]) 		# time division
+				sdiv = np.array([0.6*sh, sh, 0.6*sh])
+				td   = np.array([0, 0.25*ctime, 0.5*ctime, 0.75*ctime, ctime ])
+			elif (type == 'trapezoidal'):
+				pdiv = np.array([0., 0.12, 0.5, 0.88, 1.])
+				sdiv = np.array([0.9*sh, sh, sh, sh, 0.9*sh])
+				td   = np.array([0, 0.3*ctime, 0.4*ctime, 0.5*ctime, 0.6*ctime, 0.7*ctime, ctime ])
+
+			A = np.zeros((1,3))
+
+			for i in range(0,len(pdiv)):
+				if (reflex and i==0):
+					print 'TRIGGER REFLEX'
+					ch = np.array([0.0, +0.03, 0.0])
+					m3 = v3_X_m(sp + (ep - sp)*pdiv[i] + ch)	# via point 
+				else:
+					m3 = v3_X_m(sp + (ep - sp)*pdiv[i]) 		# via point
+
+				# surface orientation; offset due to surface orientation = Rot(x,theta)*[0, 0, z]'
+				nm = rotation_matrix(snorm[0],[1, 0, 0])
+				zh = v3_X_m(np.array([0.,0.,sdiv[i]]))
+
+				# compute clearance point in SCS, SE(3) & stack into array
+				mp = mX(m3,nm,zh)
+				A  = np.vstack( (A, np.array([ mp[0,3],mp[1,3],mp[2,3] ]) ) )
+				# print nm
+
+			A  = np.delete(A, 0, 0) # clean up first row of matrix
+
+			cpx = sp
+			cpx = np.vstack( (cpx, A ))
+			cpx = np.vstack( (cpx, ep ))
+			
+		elif (phase==0):
+			## support phase - direct interpolation NOT USED ACTUALLY
+			td  = np.array( [0, ctime] )
+			cpx = np.array([ sp, ep])
+
+		else:
+			print "No phase" 	# have a way to exit function if no phase selected
+
+		return cpx, td
+
+	def generate_new_leg_path(self, cpx, td, tn):
+		SpGen = Bspline.SplineGenerator()
+		x_out = SpGen.generate_spline(cpx, td, tn)
+
+		return x_out
+
 	def generate_leg_path(self, sp, ep, snorm, phase=1, reflex=False, ctime=2.0, tn=0.1, type='parabolic'):
 		""" Generate leg trajectory (Re^3) based on phase and type 			"""
 		""" First:  introduce via points for transfer phase trajectory
@@ -181,7 +241,7 @@ class PathGenerator():
 			cpx = sp
 			cpx = np.vstack( (cpx, A ))
 			cpx = np.vstack( (cpx, ep ))
-
+			
 		elif (phase==0):
 			## support phase - direct interpolation NOT USED ACTUALLY
 			td  = np.array( [0, ctime] )
@@ -206,13 +266,18 @@ ep = np.array([0.50,  0.10, -0.05])
 sn = np.array([0., 0., 0.])
 phase = 1
 
-sp = np.array([0.1169, 0.,     0.252 ])
-ep = np.array([0.11  , 0.,     0.2219])
-sn = np.array([-0.9997,  0.,   0.0255])
+sp = np.array([-0.115,  -0.3027, -0.068 ])
+ep = np.array([-0.115,  -0.3368, -0.0666])
+sn = np.array([0.,     0.0998, 0.995])
 
 ### Test scripts
-# spliner = PathGenerator()
-# xout = spliner.generate_leg_path(sp, ep, sn, phase)
+planner = PathGenerator()
+cxp, td = planner.interpolate_leg_path(sp, ep, sn, phase)
+print np.round(cxp,4)
+# for bp in cxp:
+# 	print bp
+for i in range (4):
+	print i
 # Plot.plot_2d(xout[0],xout[1])
 # cx = np.zeros(len(xout[0]))
 # cy = np.zeros(len(xout[0]))
@@ -252,7 +317,7 @@ w_cob = np.vstack((w_cob,np.array([-0.2, -0.1, 0.])))
 # x_cob = np.vstack((x_cob,np.array([.0,.0,BODY_HEIGHT])))
 # w_cob = np.vstack((w_cob,np.array([0., 0., 0.])))
 
-planner = PathGenerator()
+# planner = PathGenerator()
 # planner.gait = gait
 # path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
 # print type(path_n.X.t)
@@ -274,7 +339,7 @@ for q in range(5,91,5):
 	
 	x_cob = np.vstack(( x_cob, xd ))
 	w_cob = np.vstack(( w_cob, np.array([qr,0.0,0.0]) ))
-path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
+# path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
 # Plot.plot_2d(path_n.X.t,path_n.X.xp)
 
 # for q in range(0,91,15):

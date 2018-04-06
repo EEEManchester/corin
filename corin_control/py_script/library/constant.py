@@ -11,6 +11,9 @@ import stance_selection
 # Main name
 ROBOT_NS = "corin"
 
+## TEMPORARY VARIABLES ##
+TRANSITION = True
+
 ## ================================================================ ##
 ##                       Robot parameters 	 						##
 ## ================================================================ ##
@@ -119,8 +122,9 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 ##                       Stance parameters 	 						##
 ## ================================================================ ##
 # Offset for front and rear legs
-TETA_F = 0.;	
+TETA_F = 40.;	
 TETA_R = -TETA_F;
+LEG_OFFSET = [TETA_F, 0., TETA_R, -TETA_F, 0., -TETA_R]
 ### Leg default position, SCS
 STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
 LEG_STANCE  = stance_selection.initial_stance(STANCE_WIDTH,BODY_HEIGHT, STANCE_TYPE, TETA_F, TETA_R)

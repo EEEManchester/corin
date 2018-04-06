@@ -122,7 +122,10 @@ class ControlInterface:
 
 	def walk_right(self, x_cob, w_cob):
 		self.mode  = 2
-		x_cob = np.vstack((x_cob,np.array([0.0, -0.11, 0.])))
+		x_cob = np.vstack((x_cob,np.array([0.0, -0.25, 0.])))
+		w_cob = np.vstack((w_cob,np.array([0.1, 0., 0.])))
+		x_cob = np.vstack((x_cob,np.array([0.0, -0.5, 0.])))
+		w_cob = np.vstack((w_cob,np.array([0.1, 0., 0.])))
 		return x_cob, w_cob, self.mode
 
 	def walk_left(self, x_cob, w_cob):

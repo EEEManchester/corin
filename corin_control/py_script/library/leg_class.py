@@ -54,6 +54,8 @@ class LegClass:
 		self.transfer_phase_change = False 		# Flag for enabling trajectory to be generated at transfer
 		self.support_phase_change  = False 		# Flag for enabling trajectory to be generated at transfer
 
+		self.d_world_X_base = np.eye(3)
+
 	## Update functions
 	def update_joint_state(self, mx_world_X_base, jointState, resetState):
 		""" Update current joint state of legs and forward transformations 			"""
@@ -107,11 +109,43 @@ class LegClass:
 					e) reflex -> boolen for reflex trajectory
 					f) ctime  -> time for trajectory						
 					g) tn 	  -> rate of trajectory 						"""
+		
+		## Interpolate via points in base frame
+		# bpx, td = self.Path.interpolate_leg_path(self.XHc.base_X_foot[:3,3].flatten(), self.XHd.base_X_foot[:3,3].flatten(), snorm, phase, reflex, ctime, tn)
+		
+		## Interpolate via points in world frame
+		XC_world_base_X_foot = self.XHc.world_base_X_foot[:3,3].copy()
+		XD_world_base_X_foot = mX(self.d_world_X_base[:3,:3], self.XHd.base_X_foot[:3,3])
+		wpx, td = self.Path.interpolate_leg_path(XC_world_base_X_foot, XD_world_base_X_foot, snorm, phase, reflex, ctime, tn)
+		
+		# Transform each point from base to leg frame
+		bcp = np.zeros((len(wpx),3))
+		wcp = np.zeros((len(wpx),3))
 
-		self.xspline = TrajectoryPoints(self.Path.generate_leg_path(start.flatten(), end.flatten(), snorm, phase, reflex, ctime, tn))
+		for i in range (1, len(wpx)):
+			bcp[i] = mX(np.transpose(self.d_world_X_base[:3,:3]), wpx[i])
+			wtempm = mX(self.XHc.coxa_X_base, v3_X_m(bcp[i]))
+			wcp[i] = wtempm[:3,3]
+		wcp[0] = self.XHc.coxa_X_foot[0:3,3].copy()
+
+		self.xspline = TrajectoryPoints(self.Path.generate_new_leg_path(wcp, td, tn))
+		# self.xspline = TrajectoryPoints(self.Path.generate_leg_path(start.flatten(), end.flatten(), snorm, phase, reflex, ctime, tn))
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)
+		if (self.number==4):
+			# print 'sn: ', snorm
+			print 'cwXb: ', np.round(self.c_world_X_base[:3,3],4)
+			print 'dwXb: ', np.round(self.d_world_X_base[:3,3],4)
+			# print 'cwXf: ', np.round(XC_world_base_X_foot,4)
+			# print 'dwXf: ', np.round(XD_world_base_X_foot,4)
+			print np.round(wpx,4)
+			print np.round(bcp,4)
+			print np.round(wcp,4)
+			
+			# print np.round(wwf,4)
 
+			# print np.round(wp,4)
+			print '==============================================================='
 		## checks spline for kinematic constraint
 		qt = [];	qp = [];	qv = [];	qa = [];
 
@@ -238,13 +272,13 @@ class LegClass:
 			q1_lim = Q1_M_LIM
 
 		if (abs(self.Joint.qpd[0])>q1_lim):
-			print 'Leg ', self.number, ' q1 limit exceeded'
+			print 'Leg ', self.number, ' q1 limit exceeded ', np.round(self.Joint.qpd[0],4)
 			exceeded = True
 		if (abs(self.Joint.qpd[1])>Q2_A_LIM):
-			print 'Leg ', self.number, ' q2 limit exceeded'
+			print 'Leg ', self.number, ' q2 limit exceeded ', np.round(self.Joint.qpd[1],4)
 			exceeded = True
 		if (abs(self.Joint.qpd[2])>Q3_A_LIM):
-			print 'Leg ', self.number, ' q3 limit exceeded'
+			print 'Leg ', self.number, ' q3 limit exceeded ', np.round(self.Joint.qpd[2],4)
 			exceeded = True
 
 		return False

@@ -8,7 +8,7 @@ from grid_planner import * 	# grid based planner
 if __name__ == "__main__":
 
 	rospy.init_node('grid_motion_planner') 		#Initialises node
-	namespace = 'planner'
+	namespace = 'corin'
 	map_pub_  = rospy.Publisher(namespace + '/point_cloud', PointCloud2, queue_size=1)
 	path_pub_ = rospy.Publisher(namespace + '/path', Path, queue_size=1)
 	mark_pub_ = rospy.Publisher(namespace + '/footholds', MarkerArray, queue_size=1)	# marker array
@@ -23,7 +23,7 @@ if __name__ == "__main__":
 	# pp.graph_representation(False, grid_path)
 
 	# GridPlanner = GridPlanner((1.27,5.48)) 	# map size, [x,y] (m,m)
-	GridPlanner.advance_capable = False 		# disable advanced motions
+	# GridPlanner.advance_capable = False 		# disable advanced motions
 	grid_path = GridPlanner.find_path((15, 10),(10,150))	# define start and end points
 	footholds = GridPlanner.find_foothold(grid_path)
 	print type(footholds[0])

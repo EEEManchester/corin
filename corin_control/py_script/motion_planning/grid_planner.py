@@ -1168,7 +1168,7 @@ class GridPlanner:
 
 		## declare variables ##
 		cpath = []
-		base_path = BaseTrajectory()
+		base_path = Trajectory6D()
 		x_cob = TrajectoryPoints()
 		w_cob = TrajectoryPoints()
 		m = np.zeros(3)
@@ -1406,11 +1406,11 @@ class GridPlanner:
 	def get_cell_snorm(self, p):
 		""" Returns the surface normal of 
 			cell located at point p (in m) """
-
-		if (p[1] < 0):
+		# print p
+		if (p[1] < 0.1):
 			snorm = np.array([0.,0.,1.])
 		else:
-			snorm = np.array([0.,-1,0.])
+			snorm = np.array([0.,0.,1.]) if (TRANSITION is False) else np.array([0.,-1,0.])
 		return snorm
 
 ## ================================================================================================ ##
@@ -1429,7 +1429,7 @@ class GridPlanner:
 # # pp.graph_representation(True,bpath)
 
 # plt.show()
-gmap = GridPlanner((0.1,0.1))
-snorm_1 = gmap.get_cell_snorm(np.array([0.,1.,0.]))
-snorm_2 = gmap.get_cell_snorm(np.array([0.,2.,0.]))
-avg_norm= (snorm_1 + snorm_2)/2
+# gmap = GridPlanner((0.1,0.1))
+# snorm_1 = gmap.get_cell_snorm(np.array([0.,1.,0.]))
+# snorm_2 = gmap.get_cell_snorm(np.array([0.,2.,0.]))
+# avg_norm= (snorm_1 + snorm_2)/2

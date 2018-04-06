@@ -62,6 +62,8 @@ class RobotState:
 		for j in range(6):
 			self.qd = self.KDL.leg_IK(LEG_STANCE[j])
 			self.Leg.append(leg_class.LegClass(j))
+			self.Leg[j].XHc.update_base_X_femur(self.KDL.leg_IK(LEG_STANCE[j]))
+			self.Leg[j].XHd.update_base_X_femur(self.KDL.leg_IK(LEG_STANCE[j]))
 			self.Leg[j].XHc.update_base_X_foot(self.KDL.leg_IK(LEG_STANCE[j]))
 			self.Leg[j].XHd.update_base_X_foot(self.KDL.leg_IK(LEG_STANCE[j]))
 			self.Leg[j].XHc.update_base_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
@@ -208,7 +210,8 @@ class RobotState:
 		
 		for j in range(0,6):
 			error, qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
-
+			# if (j==5):
+			# 	print np.round(qpd.flatten(),4)
 			## append to list if valid, otherwise break and raise error
 			try:
 				err_str = 'Unknown error'
