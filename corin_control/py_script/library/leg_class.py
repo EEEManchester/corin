@@ -113,39 +113,27 @@ class LegClass:
 		## Interpolate via points in base frame
 		# bpx, td = self.Path.interpolate_leg_path(self.XHc.base_X_foot[:3,3].flatten(), self.XHd.base_X_foot[:3,3].flatten(), snorm, phase, reflex, ctime, tn)
 		
-		## Interpolate via points in world frame
-		XC_world_base_X_foot = self.XHc.world_base_X_foot[:3,3].copy()
-		XD_world_base_X_foot = mX(self.d_world_X_base[:3,:3], self.XHd.base_X_foot[:3,3])
-		wpx, td = self.Path.interpolate_leg_path(XC_world_base_X_foot, XD_world_base_X_foot, snorm, phase, reflex, ctime, tn)
+		## Interpolate via points in world frame from base to foot
+		start = self.XHc.world_base_X_foot[:3,3].copy()
+		end   = mX(self.d_world_X_base[:3,:3], self.XHd.base_X_foot[:3,3])
+		wpx, td = self.Path.interpolate_leg_path(start, end, snorm, phase, reflex, ctime)
 		
-		# Transform each point from base to leg frame
-		bcp = np.zeros((len(wpx),3))
+		# Transform each via point from world to leg frame
 		wcp = np.zeros((len(wpx),3))
-
-		for i in range (1, len(wpx)):
-			bcp[i] = mX(np.transpose(self.d_world_X_base[:3,:3]), wpx[i])
-			wtempm = mX(self.XHc.coxa_X_base, v3_X_m(bcp[i]))
-			wcp[i] = wtempm[:3,3]
 		wcp[0] = self.XHc.coxa_X_foot[0:3,3].copy()
 
+		for i in range (1, len(wpx)):
+			basXft = mX(np.transpose(self.d_world_X_base[:3,:3]), wpx[i]) 	# transfrom from world to base frame
+			wcp[i] = mX(self.XHc.coxa_X_base, v3_X_m(basXft))[:3,3] 		# transform from base to leg frame
+
 		self.xspline = TrajectoryPoints(self.Path.generate_new_leg_path(wcp, td, tn))
-		# self.xspline = TrajectoryPoints(self.Path.generate_leg_path(start.flatten(), end.flatten(), snorm, phase, reflex, ctime, tn))
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)
-		if (self.number==4):
-			# print 'sn: ', snorm
-			print 'cwXb: ', np.round(self.c_world_X_base[:3,3],4)
-			print 'dwXb: ', np.round(self.d_world_X_base[:3,3],4)
-			# print 'cwXf: ', np.round(XC_world_base_X_foot,4)
-			# print 'dwXf: ', np.round(XD_world_base_X_foot,4)
-			print np.round(wpx,4)
-			print np.round(bcp,4)
-			print np.round(wcp,4)
+		# if (self.number==1):
+			# print 'cwXb: ', np.round(XC_world_base_X_foot,4)#self.c_world_X_base[:3,3],4)
+			# print 'dwXb: ', np.round(XD_world_base_X_foot,4)#self.d_world_X_base[:3,3],4)
+			# print 'cp: ', np.round(wcp,4)
 			
-			# print np.round(wwf,4)
-
-			# print np.round(wp,4)
-			print '==============================================================='
 		## checks spline for kinematic constraint
 		qt = [];	qp = [];	qv = [];	qa = [];
 

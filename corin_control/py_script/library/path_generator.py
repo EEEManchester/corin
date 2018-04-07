@@ -121,10 +121,21 @@ class PathGenerator():
 		# return TrajectoryPoints(x_out), TrajectoryPoints(w_out)	# convert to TrajectoryPoints format
 		return Trajectory6D((x_out,w_out))
 
-	def interpolate_leg_path(self, sp, ep, snorm, phase=1, reflex=False, ctime=2.0, tn=0.1, type='parabolic'):
+	def interpolate_leg_path(self, sp, ep, snorm, phase=1, reflex=False, ctime=2.0, type='parabolic'):
+		""" Generate via points for leg trajectory (Re^3) 				"""
+		""" Input: 	1) sp -> starting position (Re^3)
+					2) ep -> end position (Re^3)
+					3) snorm -> surface normal in unit vector (Re^3) 
+								wrt to leg frame
+					4) phase -> leg phase: 1 = transfer, 0 = support
+					5) reflex -> boolean for triggering reflex
+					6) ctime -> duration of trajectory
+					7) type -> spline shape 
+			Output:	Array of via points and time intervals				"""
+
 		## Define Variables ##
-		cpx = np.zeros((1,3))	# cartesian position in matrix
-		sh  = STEP_HEIGHT  		# step height for transfer phase
+		cpx = sp.copy()		# cartesian position
+		sh  = STEP_HEIGHT  	# step height for transfer phase
 		
 		## 1) Set via points according to phase
 		if (phase==1):						
@@ -132,52 +143,47 @@ class PathGenerator():
 
 			# vector from origin to travel path midpoint
 			if (type=='parabolic'):
-				pdiv = np.array([0.125, 0.5, 0.875]) 		# time division
-				sdiv = np.array([0.6*sh, sh, 0.6*sh])
-				td   = np.array([0, 0.25*ctime, 0.5*ctime, 0.75*ctime, ctime ])
+				pdiv = np.array([0.125, 0.5, 0.875]) 		# point division
+				hdiv = np.array([0.6*sh, sh, 0.6*sh]) 		# height division
+				tdiv = np.array([0., 0.25*ctime, 0.5*ctime, 0.75*ctime, ctime ])
 			elif (type == 'trapezoidal'):
 				pdiv = np.array([0., 0.12, 0.5, 0.88, 1.])
-				sdiv = np.array([0.9*sh, sh, sh, sh, 0.9*sh])
-				td   = np.array([0, 0.3*ctime, 0.4*ctime, 0.5*ctime, 0.6*ctime, 0.7*ctime, ctime ])
+				hdiv = np.array([0.9*sh, sh, sh, sh, 0.9*sh])
+				tdiv = np.array([0., 0.3*ctime, 0.4*ctime, 0.5*ctime, 0.6*ctime, 0.7*ctime, ctime ])
 
 			A = np.zeros((1,3))
 
 			for i in range(0,len(pdiv)):
+				## Compute via points along the vector from the start to end point
 				if (reflex and i==0):
 					print 'TRIGGER REFLEX'
-					ch = np.array([0.0, +0.03, 0.0])
-					m3 = v3_X_m(sp + (ep - sp)*pdiv[i] + ch)	# via point 
+					m3 = sp + (ep - sp)*pdiv[i] + np.array([0., 0.03, 0.])
 				else:
-					m3 = v3_X_m(sp + (ep - sp)*pdiv[i]) 		# via point
+					v3 = sp + (ep - sp)*pdiv[i]
 
-				# surface orientation; offset due to surface orientation = Rot(x,theta)*[0, 0, z]'
-				nm = rotation_matrix(snorm[0],[1, 0, 0])
-				zh = v3_X_m(np.array([0.,0.,sdiv[i]]))
+				# Compute the height clearance in surface normal direction
+				h3 = snorm*hdiv[i]
 
-				# compute clearance point in SCS, SE(3) & stack into array
-				mp = mX(m3,nm,zh)
-				A  = np.vstack( (A, np.array([ mp[0,3],mp[1,3],mp[2,3] ]) ) )
-				# print nm
+				# Compute the via point with height clearance and stack into array
+				vn  = v3 + h3
+				cpx = np.vstack((cpx, vn))
 
-			A  = np.delete(A, 0, 0) # clean up first row of matrix
-
-			cpx = sp
-			cpx = np.vstack( (cpx, A ))
-			cpx = np.vstack( (cpx, ep ))
+			# stack final point into array
+			cpx = np.vstack((cpx, ep))
 			
 		elif (phase==0):
-			## support phase - direct interpolation NOT USED ACTUALLY
-			td  = np.array( [0, ctime] )
-			cpx = np.array([ sp, ep])
+			## Support phase - direct interpolation
+			tdiv = np.array([0, ctime])
+			cpx  = np.array([sp, ep])
 
 		else:
 			print "No phase" 	# have a way to exit function if no phase selected
 
-		return cpx, td
+		return cpx, tdiv
 
-	def generate_new_leg_path(self, cpx, td, tn):
+	def generate_new_leg_path(self, cpx, tdiv, tn):
 		SpGen = Bspline.SplineGenerator()
-		x_out = SpGen.generate_spline(cpx, td, tn)
+		x_out = SpGen.generate_spline(cpx, tdiv, tn)
 
 		return x_out
 
@@ -207,12 +213,12 @@ class PathGenerator():
 			# vector from origin to travel path midpoint
 			if (type=='parabolic'):
 				pdiv = np.array([0.125, 0.5, 0.875]) 		# time division
-				sdiv = np.array([0.6*sh, sh, 0.6*sh])
-				td   = np.array([0, 0.25*ctime, 0.5*ctime, 0.75*ctime, ctime ])
+				hdiv = np.array([0.6*sh, sh, 0.6*sh])
+				tdiv   = np.array([0, 0.25*ctime, 0.5*ctime, 0.75*ctime, ctime ])
 			elif (type == 'trapezoidal'):
 				pdiv = np.array([0., 0.12, 0.5, 0.88, 1.])
-				sdiv = np.array([0.9*sh, sh, sh, sh, 0.9*sh])
-				td   = np.array([0, 0.3*ctime, 0.4*ctime, 0.5*ctime, 0.6*ctime, 0.7*ctime, ctime ])
+				hdiv = np.array([0.9*sh, sh, sh, sh, 0.9*sh])
+				tdiv   = np.array([0, 0.3*ctime, 0.4*ctime, 0.5*ctime, 0.6*ctime, 0.7*ctime, ctime ])
 
 			A = np.zeros((1,3))
 
@@ -230,7 +236,7 @@ class PathGenerator():
 				ry = snorm.item(1) 	# rotation about y (leg frame pitch, world frame roll)
 				nm = np.matrix([ [np.cos(ry), 0., np.sin(ry), 0.],[0., 1., 0., 0.],
 								 [-np.sin(ry), 0., np.cos(ry), 0.],[0.,0.,0.,1.] ])
-				zh = np.matrix([ [1, 0, 0, 0.], [0, 1, 0, 0], [0, 0, 1, sdiv.item(i)], [0, 0, 0, 1] ]) 	
+				zh = np.matrix([ [1, 0, 0, 0.], [0, 1, 0, 0], [0, 0, 1, hdiv.item(i)], [0, 0, 0, 1] ]) 	
 				
 				# compute clearance point in SCS, SE(3) & stack into array
 				mp = m3*nm*zh
@@ -244,7 +250,7 @@ class PathGenerator():
 			
 		elif (phase==0):
 			## support phase - direct interpolation NOT USED ACTUALLY
-			td  = np.array( [0, ctime] )
+			tdiv  = np.array( [0, ctime] )
 			cpx = np.array([ sp, ep])
 
 		else:
@@ -253,7 +259,7 @@ class PathGenerator():
 		## 2) Generate spline
 		# SpGen = Pspline.SplineGenerator()
 		SpGen = Bspline.SplineGenerator()
-		x_out = SpGen.generate_spline(cpx, td, tn)
+		x_out = SpGen.generate_spline(cpx, tdiv, tn)
 
 		return x_out
 
@@ -261,23 +267,27 @@ class PathGenerator():
 ## 												TESTING 											##
 ## ================================================================================================ ##
 ## Test leg path generation ##
-sp = np.array([0.50, -0.10, -0.05])
-ep = np.array([0.50,  0.10, -0.05])
-sn = np.array([0., 0., 0.])
+# sp = np.array([0.50, -0.10, -0.05])
+# ep = np.array([0.50,  0.10, -0.05])
+# sn = np.array([0., 0., 0.])
+
+# sp = np.array([-0.115,  -0.3027, -0.068 ])
+# ep = np.array([-0.115,  -0.3368, -0.0666])
+# sn = np.array([0.,     0.0998, 0.995])
+
+# sp = np.array([0., 0.1661,  0.2352])
+# ep = np.array([0., 0.1269,  0.3437])
+sn = np.array([0,-1.,0,])
+
+sp = np.array([0.115,  0.12,  0.27])
+ep = np.array([0.115,  0.12,  0.33 ])
+
 phase = 1
-
-sp = np.array([-0.115,  -0.3027, -0.068 ])
-ep = np.array([-0.115,  -0.3368, -0.0666])
-sn = np.array([0.,     0.0998, 0.995])
-
 ### Test scripts
 planner = PathGenerator()
-cxp, td = planner.interpolate_leg_path(sp, ep, sn, phase)
+cxp, tdiv = planner.interpolate_leg_path(sp, ep, sn, phase)
 print np.round(cxp,4)
-# for bp in cxp:
-# 	print bp
-for i in range (4):
-	print i
+
 # Plot.plot_2d(xout[0],xout[1])
 # cx = np.zeros(len(xout[0]))
 # cy = np.zeros(len(xout[0]))

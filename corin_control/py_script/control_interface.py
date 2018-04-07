@@ -189,7 +189,7 @@ class ControlInterface:
 		## TODO: set somewhere else
 		self.mode = 2
 		tran_y = 0.2
-		tran_z = 0.2
+		tran_z = 0.3
 
 		for q in range(10,91,10):
 			qr = np.deg2rad(q)

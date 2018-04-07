@@ -35,15 +35,12 @@ class CorinManager:
 		self.Map 	= grid_planner.GridPlanner((0.1,0.1))	# map class 
 		# self.Gait = gait_class.GaitClass(GAIT_TYPE) 		# gait class
 
-		self.resting   = False 	# Flag indicating robot standing or resting
-		self.on_start  = False 	# variable for resetting to leg suspended in air
-		self.interface = "rviz"	# interface to control: gazebo, rviz or robotis hardware
-		self.control_mode = "normal" # run controller in various mode: 1) normal, 2) fast
+		self.resting   = False 			# Flag indicating robot standing or resting
+		self.on_start  = False 			# variable for resetting to leg suspended in air
+		self.interface = "rviz"			# interface to control: gazebo, rviz or robotis hardware
+		self.control_mode = "fast" 	# run controller in various mode: 1) normal, 2) fast
 
 		self.__initialise__()
-
-		# print '3 bXf ', np.round(self.Robot.Leg[3].XHd.base_X_femur[:3,3],4)
-		# print '4 bXf ', np.round(self.Robot.Leg[4].XHd.base_X_femur[:3,3],4)
 
 	def joint_state_callback(self, msg):
 		""" robot joint state callback """
@@ -354,9 +351,9 @@ class CorinManager:
 			initial_foothold  = [np.zeros(3)]*3
 			final_foothold 	  = [np.zeros(3)]*3
 
-			final_foothold[0] = np.array([ 0.15, d_wall, 0.25+0.38])
+			final_foothold[0] = np.array([ 0.115, d_wall, 0.25+0.38])
 			final_foothold[1] = np.array([ 0.,   d_wall, 0.25+0.38])
-			final_foothold[2] = np.array([-0.15, d_wall, 0.25+0.38])
+			final_foothold[2] = np.array([-0.115, d_wall, 0.25+0.38])
 			
 			for ji in range(0,3):
 				# set initial foothold and overwrite y & z-component
@@ -519,9 +516,9 @@ class CorinManager:
 					base_X_footholds[j].t.append(i*CTR_INTV)
 					base_X_footholds[j].xp.append(Leg[j].base_X_AEP[:3,3:4].copy())
 					
-					if (j==0):
-						print '--------------------------------------------'
-						print 'snorm ', snorm
+					# if (j==1):
+					# 	print '--------------------------------------------'
+					# 	print 'snorm ', snorm
 						# print 'v3pv: ', v3_pv.flatten()
 						# print 'v3uv: ', v3_uv.flatten()
 						# print 'wbXN: ', np.round(Leg[j].world_base_X_NRP[:3,3],4)
@@ -539,7 +536,7 @@ class CorinManager:
 			v3wp_prev = v3wp.copy()
 
 			# raw_input('cont')
-		print np.round(world_X_footholds[3].xp,4)
+		print np.round(world_X_footholds[0].xp,4)
 		return world_X_base, world_X_footholds, base_X_footholds
 
 	def trajectory_tracking(self, x_cob, w_cob=0):
@@ -668,7 +665,7 @@ class CorinManager:
 					world_norm = (snorm_1 + snorm_2)/2.
 					base_X_norm = mX(self.Robot.XHd.base_X_world[:3,:3], world_norm)
 					leg_X_norm  = mX(np.transpose(mX(self.Robot.XHd.world_X_base[:3,:3], self.Robot.Leg[j].XHd.base_X_coxa[:3,:3])), world_norm)
-					self.Robot.Leg[j].qsurface = base_X_norm#leg_X_norm
+					self.Robot.Leg[j].qsurface = world_norm#base_X_norm#leg_X_norm
 					self.Robot.Leg[j].d_world_X_base = self.Robot.XHd.world_X_base.copy()
 					self.Robot.Leg[j].c_world_X_base = self.Robot.XHc.world_X_base.copy()
 
