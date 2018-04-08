@@ -14,13 +14,13 @@ if __name__ == "__main__":
 	rospy.loginfo('Robot Ready!')
 	# raw_input('ROBOT READY!')
 	
-	# rospy.set_param('bodypose', True)
+	rospy.set_param('bodypose', True)
 	# rospy.set_param('walkleft', True)
 	# rospy.set_param('walkright', True)
 	# rospy.set_param('walkback', True)
 	# rospy.set_param('walkforward', True)
 	# rospy.set_param('rotate', True)
-	rospy.set_param('transition', True)
+	# rospy.set_param('transition', True)
 	while not rospy.is_shutdown():
 		
 		manager.action_interface()

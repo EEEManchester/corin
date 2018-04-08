@@ -1,0 +1,9 @@
+<library path="lib/libcorin_rviz_plugin">
+  <class name="corin_rviz_plugin/ControlInterface"
+         type="corin_rviz_plugin::TeleopPanel"
+         base_class_type="rviz::Panel">
+    <description>
+      A panel widget for selection of control interface parameters.
+    </description>
+  </class>
+</library>

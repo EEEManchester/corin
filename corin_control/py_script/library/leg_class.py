@@ -65,7 +65,7 @@ class LegClass:
 		## Error Compensation
 		q_compensated = (jointState[0], jointState[1]-QCOMPENSATION, jointState[2]) 		# offset q2 by 0.01 - gravity
 
-		## current
+		## Updates current state
 		self.XHc.update_coxa_X_foot(q_compensated)
 		self.XHc.update_base_X_foot(q_compensated)
 
@@ -73,22 +73,14 @@ class LegClass:
 		self.XHc.update_world_base_X_NRP(mx_world_X_base)
 		self.XHd.update_world_base_X_NRP(mx_world_X_base)
 		
-		## check work envelope
+		## Check work envelope
 		bound_exceed = self.check_boundary_limit(self.XHc.world_base_X_foot, self.XHc.world_base_X_NRP)
 
-		## state reset
+		## Resets state
 		if (resetState):
-
 			self.XHd.coxa_X_foot = self.XHc.coxa_X_foot.copy()
 			self.XHd.base_X_foot = self.XHc.base_X_foot.copy()
-			# self.XHd.world_X_foot = self.XHc.world_X_foot.copy()
-		# if (self.number == 0):
-		# 	print 'c ', np.round(self.XHc.world_base_X_NRP[:3,3],4)
-		# 	print 'd ', np.round(self.XHd.world_base_X_NRP[:3,3],4)
-		# 	print 'bXf: ', np.round(self.XHc.base_X_foot[:3,3],4)
-		# 	print 'q: ', np.round(q_compensated,4)
-		# 	print 'bXf: ', np.round(self.XHc.base_X_foot[:3,3],4)
-		
+
 		return bound_exceed
 
 	def update_force_state(self, cState, cForce):
@@ -126,7 +118,7 @@ class LegClass:
 			basXft = mX(np.transpose(self.d_world_X_base[:3,:3]), wpx[i]) 	# transfrom from world to base frame
 			wcp[i] = mX(self.XHc.coxa_X_base, v3_X_m(basXft))[:3,3] 		# transform from base to leg frame
 
-		self.xspline = TrajectoryPoints(self.Path.generate_new_leg_path(wcp, td, tn))
+		self.xspline = TrajectoryPoints(self.Path.generate_leg_path(wcp, td, tn))
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)
 		# if (self.number==1):

@@ -552,17 +552,18 @@ class CorinManager:
 		cob_W_desired = np.zeros((3,1)) 	# cob angular location
 		wXbase_offset = self.Robot.P6c.world_X_base.copy()
 
-		# Trajectory for robot's base
-		base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV) 
-		# Plot.plot_2d(base_path.X.xp[:,0],base_path.X.xp[:,1])
-		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
-		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
-
 		# Set all legs to support mode for bodyposing, prevent AEP from being set
 		if (self.Robot.support_mode == True):
 			self.Robot.Gait.support_mode()
+			PathGenerator.V_MAX = PathGenerator.W_MAX = 0.4
 		else:
 			self.Robot.Gait.walk_mode()
+			print PathGenerator.V_MAX
+
+		# Trajectory for robot's base
+		base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV) 
+		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
+		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 
 		## Plan foothold for robot
 		world_X_base, world_X_footholds, base_X_footholds = self.foothold_selection(base_path)
