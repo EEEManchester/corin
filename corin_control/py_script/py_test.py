@@ -68,4 +68,10 @@ plane_vector = np.dot(rot_X(np.deg2rad(90)), surface_normal)
 v3_pv = ( np.dot(v3_dv,plane_vector)/np.linalg.norm(plane_vector)**2 )*plane_vector
 # print np.round(v3_pv,4)
 
-print v3_dv - (np.dot(v3_dv,surface_normal))*surface_normal
+# print v3_dv - (np.dot(v3_dv,surface_normal))*surface_normal
+a = np.array([1,2])
+b = np.array([3,4])
+c = np.array([a,b])
+print c
+b[0] = 10
+print c

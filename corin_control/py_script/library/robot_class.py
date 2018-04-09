@@ -47,6 +47,7 @@ class RobotState:
 		self.XHc = robot_transforms.HomogeneousTransform() 	# position: current state
 		self.XHd = robot_transforms.HomogeneousTransform()	# position: desired state
 		self.P6c = robot_transforms.Vector6D() 				# position: current state in Re6
+		self.P6d = robot_transforms.Vector6D() 				# position: current state in Re6
 		self.V6c = robot_transforms.Vector6D() 				# velocity: current state
 		self.V6d = robot_transforms.Vector6D() 				# velocity: desired state
 		self.A6c = robot_transforms.Vector6D() 				# acceleration: current

@@ -16,15 +16,14 @@ class ControlInterface:
 
 	def __initialise__(self):
 		rospy.set_param('stop_flag', False)		# emergency stop (working)
-		rospy.set_param('reset',False)			# move to ground position with legs up (working)
-		rospy.set_param('gaitdemo',False)		# to implement gait demo later
-		rospy.set_param('bodypose', False)		# perform the bodypose movement (working)
-		rospy.set_param('walkforward', False)	# walk forward ~0. 4 metres (working)
-		rospy.set_param('walkright', False)		# walk right ~0.4 metres (working)
-		rospy.set_param('walkback', False)		# Walk backwards ~0.4 metres (Working)
-		rospy.set_param('walkleft', False)		# walk left ~0.4 metres (working)
-		rospy.set_param('rotate', False)
-		rospy.set_param('transition', False)
+		rospy.set_param('/corin/reset',False)			# move to ground position with legs up (working)
+		rospy.set_param('/corin/bodypose', False)		# perform the bodypose movement (working)
+		rospy.set_param('/corin/walk_front', False)	# walk forward ~0. 4 metres (working)
+		rospy.set_param('/corin/walk_right', False)		# walk right ~0.4 metres (working)
+		rospy.set_param('/corin/walk_back', False)		# Walk backwards ~0.4 metres (Working)
+		rospy.set_param('/corin/walk_left', False)		# walk left ~0.4 metres (working)
+		rospy.set_param('/corin/rotate', False)
+		rospy.set_param('/corin/wall_transition', False)
 
 	#corin performs bodypose
 	def bodypose(self, x_cob, w_cob):
@@ -91,28 +90,30 @@ class ControlInterface:
 			# for i in range(0,5):
 			# 	x_cob = np.vstack((x_cob,np.zeros(3,1)))
 
-			x_cob = np.vstack((x_cob,np.array([0. , -0.04, 0.])))
-			x_cob = np.vstack((x_cob,np.array([0.03,  0.04, 0.])))
-			x_cob = np.vstack((x_cob,np.array([-0.03, 0.04, 0.])))
+			# x_cob = np.vstack((x_cob,np.array([0. , -0.04, 0.])))
+			# x_cob = np.vstack((x_cob,np.array([0.03,  0.04, 0.])))
+			# x_cob = np.vstack((x_cob,np.array([-0.03, 0.04, 0.])))
 			# x_cob = np.vstack((x_cob,np.array([-0.03, -0.04, 0.])))
 			# x_cob = np.vstack((x_cob,np.array([0.00, 0.00, 0.])))
 			# x_cob = np.vstack((x_cob,np.array([0.00, 0.0, 0.12])))
 			x_cob = np.vstack((x_cob,np.array([0.,  0.0, 0.])))
 
-			w_cob = np.vstack((w_cob,np.array([-0.22, -0.075, 0.])))
-			w_cob = np.vstack((w_cob,np.array([0.22, -0.075, 0.])))
-			w_cob = np.vstack((w_cob,np.array([0.22,  0.075, 0.])))
+			# w_cob = np.vstack((w_cob,np.array([-0.22, -0.075, 0.])))
+			# w_cob = np.vstack((w_cob,np.array([0.22, -0.075, 0.])))
+			# w_cob = np.vstack((w_cob,np.array([0.22,  0.075, 0.])))
 			# w_cob = np.vstack((w_cob,np.array([-0.22,  0.075, 0.])))
 			# w_cob = np.vstack((w_cob,np.array([0.00, 0.00, -0.15])))
 			# w_cob = np.vstack((w_cob,np.array([0.,0.,0.12])))
-			w_cob = np.vstack((w_cob,np.array([0.,  0.0, 0.])))
+			w_cob = np.vstack((w_cob,np.array([0.2,  0.0, 0.])))
 
 		return x_cob, w_cob, self.mode
 		
 	def walk_front(self, x_cob, w_cob):
 		self.mode  = 2
 		x_cob = np.vstack((x_cob,np.array([0.15, 0., 0.])))
-		w_cob = np.vstack((w_cob,np.array([0., 0., 0.])))
+		# x_cob = np.vstack((x_cob,np.array([0.3, 0., 0.])))
+		# w_cob = np.vstack((w_cob,np.array([0.15, 0., 0.])))
+		# w_cob = np.vstack((w_cob,np.array([0.15, 0., 0.])))
 		return x_cob, w_cob, self.mode
 
 	def walk_back(self, x_cob, w_cob):
@@ -150,36 +151,36 @@ class ControlInterface:
 		x_cob = np.array([.0,.0,.0])
 		w_cob = np.array([.0,.0,.0])
 
-		if (rospy.get_param('bodypose')==True):
-			rospy.set_param('bodypose',False)
+		if (rospy.get_param('/corin/bodypose')==True):
+			rospy.set_param('/corin/bodypose',False)
 			return self.bodypose(x_cob, w_cob)
 
-		elif (rospy.get_param('walkforward')==True):
-			rospy.set_param('walkforward',False)
+		elif (rospy.get_param('/corin/walk_front')==True):
+			rospy.set_param('/corin/walk_front',False)
 			return self.walk_front(x_cob, w_cob)
 
-		elif (rospy.get_param('walkback')==True):	
-			rospy.set_param('walkback',False)
+		elif (rospy.get_param('/corin/walk_back')==True):	
+			rospy.set_param('/corin/walk_back',False)
 			return self.walk_back(x_cob, w_cob)
 
-		elif (rospy.get_param('walkleft')==True): 	
-			rospy.set_param('walkleft',False)
+		elif (rospy.get_param('/corin/walk_left')==True): 	
+			rospy.set_param('/corin/walk_left',False)
 			return self.walk_left(x_cob, w_cob)
 
-		elif (rospy.get_param('walkright')==True):
-			rospy.set_param('walkright',False)
+		elif (rospy.get_param('/corin/walk_right')==True):
+			rospy.set_param('/corin/walk_right',False)
 			return self.walk_right(x_cob, w_cob)
 
-		elif (rospy.get_param('rotate')==True):
-			rospy.set_param('rotate',False)
+		elif (rospy.get_param('/corin/rotate')==True):
+			rospy.set_param('/corin/rotate',False)
 			return self.rotate(x_cob, w_cob)
 
-		elif (rospy.get_param('transition')==True):
-			rospy.set_param('transition',False)
+		elif (rospy.get_param('/corin/wall_transition')==True):
+			rospy.set_param('/corin/wall_transition',False)
 			return self.wall_transition(x_cob, w_cob)
 
-		elif (rospy.get_param('reset')==True):		# Command Prompt: rosparam set reset True
-			rospy.set_param('reset',False)
+		elif (rospy.get_param('/corin/reset')==True):		# Command Prompt: rosparam set reset True
+			rospy.set_param('/corin/reset',False)
 			return self.reset(x_cob, w_cob)
 		else:
 			return None

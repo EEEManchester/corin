@@ -214,7 +214,7 @@ ep = np.array([0.115,  0.12,  0.33 ])
 phase = 1
 ### Test scripts
 planner = PathGenerator()
-cxp, tdiv = planner.interpolate_leg_path(sp, ep, sn, phase)
+# cxp, tdiv = planner.interpolate_leg_path(sp, ep, sn, phase)
 # print np.round(cxp,4)	
 
 x_cob = np.array([.0,.0,BODY_HEIGHT])
@@ -235,7 +235,7 @@ w_cob = np.vstack((w_cob,np.array([-0.2, -0.1, 0.])))
 # x_cob = np.vstack((x_cob,np.array([.0,.0,BODY_HEIGHT])))
 # w_cob = np.vstack((w_cob,np.array([0., 0., 0.])))
 
-path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
+# path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
 # print type(path_n.X.t)
 # path_o = planner.generate_base_path_old(x_cob, w_cob, 0.1)
 # Plot.plot_2d(path_o.W.t,path_o.W.xp,False)
