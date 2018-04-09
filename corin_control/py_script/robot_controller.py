@@ -418,8 +418,10 @@ class CorinManager:
 					v3cp = self.Robot.P6c.world_X_base[0:3] + base_path.X.xp[i].reshape(3,1)
 					v3wp = self.Robot.P6c.world_X_base[3:6] + base_path.W.xp[i].reshape(3,1)
 
+					P6d_world_X_base = np.vstack((v3cp,v3wp))
+
 					## update robot's pose
-					XHd.update_world_X_base(np.vstack((v3cp,v3wp)))
+					XHd.update_world_X_base(P6d_world_X_base)
 					world_X_base_rot = XHd.world_X_base.copy()
 					world_X_base_rot[:3,3:4] = np.zeros((3,1))
 
@@ -449,14 +451,16 @@ class CorinManager:
 					break
 
 			## Stack to array next CoB location
-			world_X_base.append(np.array([v3cp,v3wp]).reshape(1,6))
+			world_X_base.append(P6d_world_X_base.reshape(1,6))
 
 			## Set foothold for legs in transfer phase
 			for j in range (0, self.Robot.active_legs):
 				if (Gait.cs[j] == 1 and i <= len(base_path.X.t)):
+					if (j==3):
+						print np.round(P6d_world_X_base.flatten(),4)
 					## update NRP
 					if (TRANSITION is False):
-						Leg[j].update_world_base_X_NRP(XHd.world_X_base)
+						Leg[j].update_world_base_X_NRP(P6d_world_X_base)
 					else:
 						## Identify sides for ground or wall contact based on body roll
 						delta_w = base_path.W.xp[-1] - base_path.W.xp[0]
@@ -536,7 +540,7 @@ class CorinManager:
 			v3wp_prev = v3wp.copy()
 
 			# raw_input('cont')
-		print np.round(world_X_footholds[0].xp,4)
+		# print np.round(world_X_footholds[0].xp,4)
 		return world_X_base, world_X_footholds, base_X_footholds
 
 	def trajectory_tracking(self, x_cob, w_cob=0):
@@ -633,13 +637,17 @@ class CorinManager:
 			## overwrite - TC: use IMU data
 			self.Robot.XHc.world_X_base = self.Robot.XHd.world_X_base.copy()
 			self.Robot.XHc.base_X_world = self.Robot.XHd.base_X_world.copy()
-			self.Robot.P6c.world_X_base = np.array([v3cp,v3wp]).reshape(6,1).copy()
+			self.Robot.P6c.world_X_base = self.Robot.P6d.world_X_base.copy()
+			for j in range(0, self.Robot.active_legs):
+				self.Robot.Leg[j].P6_world_X_base = self.Robot.P6c.world_X_base.copy()
+
 			#########################################################################
 
 			## Update robot's desired position, velocity & acceleration to next point on spline
-			self.Robot.XHd.update_world_X_base(np.vstack((v3cp_n,v3wp_n)))
-			self.Robot.V6d.world_X_base = np.vstack((v3cv,v3wv)) 	# not used atm
-			self.Robot.A6d.world_X_base = np.vstack((v3ca,v3wa)) 	# not used atm
+			self.Robot.P6d.world_X_base = np.vstack((v3cp,v3wp))
+			self.Robot.V6d.world_X_base = np.vstack((v3cv,v3wv)) 			# not used atm
+			self.Robot.A6d.world_X_base = np.vstack((v3ca,v3wa)) 			# not used atm
+			self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
 
 			## Generate trajectory for legs in transfer phase
 			for j in range (0, self.Robot.active_legs):
@@ -661,19 +669,18 @@ class CorinManager:
 					self.Robot.Leg[j].XHd.coxa_X_AEP  = self.Robot.Leg[j].XHd.coxa_X_foot.copy()
 
 					## Compute average surface normal from cell surface normal at both footholds
-					snorm_1  = self.Map.get_cell_snorm(self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
-					snorm_2  = self.Map.get_cell_snorm(self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
-					world_norm = (snorm_1 + snorm_2)/2.
-					base_X_norm = mX(self.Robot.XHd.base_X_world[:3,:3], world_norm)
-					leg_X_norm  = mX(np.transpose(mX(self.Robot.XHd.world_X_base[:3,:3], self.Robot.Leg[j].XHd.base_X_coxa[:3,:3])), world_norm)
-					self.Robot.Leg[j].qsurface = world_norm#base_X_norm#leg_X_norm
-					self.Robot.Leg[j].d_world_X_base = self.Robot.XHd.world_X_base.copy()
-					self.Robot.Leg[j].c_world_X_base = self.Robot.XHc.world_X_base.copy()
+					snorm_1 = self.Map.get_cell_snorm(self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+					snorm_2 = self.Map.get_cell_snorm(self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
+					w_snorm = (snorm_1 + snorm_2)/2.
+
+					self.Robot.Leg[j].XH_world_X_base = self.Robot.XHd.world_X_base.copy()
+					# self.Robot.Leg[j].c_world_X_base = self.Robot.XHc.world_X_base.copy()
 
 					# print 'Leg j: ', j, ' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 					## generate transfer spline
+					## TODO: modify here
 					svalid = self.Robot.Leg[j].generate_spline(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3], self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],
-																self.Robot.Leg[j].qsurface, 1, False, GAIT_TPHASE, CTR_INTV)
+																w_snorm, 1, False, GAIT_TPHASE, CTR_INTV)
 					
 					# if (j == 5):
 						# print j, ' Xc: ', np.round(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3],4)
@@ -732,7 +739,7 @@ class CorinManager:
 				# > 0: prevents trigger during all leg support
 				if (transfer_total == leg_complete and transfer_total > 0 and leg_complete > 0):
 					self.Robot.alternate_phase()
-					print self.Robot.Gait.cs, i
+					# print self.Robot.Gait.cs, i
 
 				## LOGGING: initialise variable and set respective data ##
 				qlog 		  = JointState()

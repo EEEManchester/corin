@@ -110,9 +110,9 @@ class ControlInterface:
 		
 	def walk_front(self, x_cob, w_cob):
 		self.mode  = 2
-		x_cob = np.vstack((x_cob,np.array([0.15, 0., 0.])))
+		x_cob = np.vstack((x_cob,np.array([0.4, 0., 0.])))
 		# x_cob = np.vstack((x_cob,np.array([0.3, 0., 0.])))
-		# w_cob = np.vstack((w_cob,np.array([0.15, 0., 0.])))
+		w_cob = np.vstack((w_cob,np.array([0.15, 0., 0.])))
 		# w_cob = np.vstack((w_cob,np.array([0.15, 0., 0.])))
 		return x_cob, w_cob, self.mode
 

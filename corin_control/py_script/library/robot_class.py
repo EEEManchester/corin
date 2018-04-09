@@ -109,11 +109,13 @@ class RobotState:
 
 		if (cmode == "fast"):
 			## Updates robot state using setpoints
-			wXb = self.XHd.world_X_base
+			# wXb = self.XHd.world_X_base
+			wXb = self.P6d.world_X_base
 			qpc = self.qd
 		else:
 			## Updates robot state based on measured states
-			wXb = self.XHc.world_X_base
+			# wXb = self.XHc.world_X_base
+			wXb = self.P6c.world_X_base
 			qpc = self.qc.position
 
 		# update leg states and check if boundary exceeded
@@ -124,7 +126,7 @@ class RobotState:
 
 			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
 				self.suspend = True
-				# print 'Suspend ', j, bstate
+				print 'Suspend ', j
 				
 		# print '-------------------------------------------------------'
 
@@ -196,6 +198,11 @@ class RobotState:
 					# print 'updating Leg ', j
 					self.Leg[j].XHc.update_world_X_foot(self.XHc.world_X_base) 	# updating continuously results in drift
 					self.Leg[j].XHd.world_X_foot = self.Leg[j].XHc.world_X_foot.copy()
+				if (self.Gait.ps[j] == 1):
+					self.Leg[j].update_NRP()
+					if (j == 3):
+						print np.round(self.Leg[j].P6_world_X_base.flatten(),4)
+
 		self.suspend = False
 		# raw_input('cont')
 

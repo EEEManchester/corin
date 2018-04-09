@@ -47,17 +47,14 @@ class LegClass:
 		self.F6c = robot_transforms.ArrayVector6D()
 		self.F6d = robot_transforms.ArrayVector6D()
 
-		## TODO: CHANGE TO HOMOGENOUS AND VECTOR FORM
-		self.qsurface = np.array([0.,0.,0.]) 		# surface orientation in leg frame, (roll, pitch, yaw)
-		self.qsnorm   = np.array([[0., 0., 1.]]) 	# surface normal
-
 		self.transfer_phase_change = False 		# Flag for enabling trajectory to be generated at transfer
 		self.support_phase_change  = False 		# Flag for enabling trajectory to be generated at transfer
 
-		self.d_world_X_base = np.eye(3)
+		self.XH_world_X_base = np.eye(4)
+		self.P6_world_X_base = np.zeros((6,1))
 
 	## Update functions
-	def update_joint_state(self, mx_world_X_base, jointState, resetState):
+	def update_joint_state(self, P6_world_X_base, jointState, resetState):
 		""" Update current joint state of legs and forward transformations 			"""
 		""" Input: 	1) jointState -> joint angles 
 					2) resetState -> flag to set desired state as current state 	""" 
@@ -69,9 +66,9 @@ class LegClass:
 		self.XHc.update_coxa_X_foot(q_compensated)
 		self.XHc.update_base_X_foot(q_compensated)
 
-		self.XHc.update_world_base_X_foot(mx_world_X_base, q_compensated)
-		self.XHc.update_world_base_X_NRP(mx_world_X_base)
-		self.XHd.update_world_base_X_NRP(mx_world_X_base)
+		self.XHc.update_world_base_X_foot(P6_world_X_base, q_compensated)
+		# self.XHc.update_world_base_X_NRP(P6_world_X_base)
+		# self.XHd.update_world_base_X_NRP(P6_world_X_base)
 		
 		## Check work envelope
 		bound_exceed = self.check_boundary_limit(self.XHc.world_base_X_foot, self.XHc.world_base_X_NRP)
@@ -107,7 +104,7 @@ class LegClass:
 		
 		## Interpolate via points in world frame from base to foot
 		start = self.XHc.world_base_X_foot[:3,3].copy()
-		end   = mX(self.d_world_X_base[:3,:3], self.XHd.base_X_foot[:3,3])
+		end   = mX(self.XH_world_X_base[:3,:3], self.XHd.base_X_foot[:3,3])
 		wpx, td = self.Path.interpolate_leg_path(start, end, snorm, phase, reflex, ctime)
 		
 		# Transform each via point from world to leg frame
@@ -115,15 +112,14 @@ class LegClass:
 		wcp[0] = self.XHc.coxa_X_foot[0:3,3].copy()
 
 		for i in range (1, len(wpx)):
-			basXft = mX(np.transpose(self.d_world_X_base[:3,:3]), wpx[i]) 	# transfrom from world to base frame
+			basXft = mX(np.transpose(self.XH_world_X_base[:3,:3]), wpx[i]) 	# transfrom from world to base frame
 			wcp[i] = mX(self.XHc.coxa_X_base, v3_X_m(basXft))[:3,3] 		# transform from base to leg frame
 
 		self.xspline = TrajectoryPoints(self.Path.generate_leg_path(wcp, td, tn))
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)
 		# if (self.number==1):
-			# print 'cwXb: ', np.round(XC_world_base_X_foot,4)#self.c_world_X_base[:3,3],4)
-			# print 'dwXb: ', np.round(XD_world_base_X_foot,4)#self.d_world_X_base[:3,3],4)
+			# print 'dwXb: ', np.round(XD_world_base_X_foot,4)#self.XH_world_X_base[:3,3],4)
 			# print 'cp: ', np.round(wcp,4)
 			
 		## checks spline for kinematic constraint
@@ -197,12 +193,11 @@ class LegClass:
 		v3_NRP_X_AEP  = self.XHd.world_base_X_AEP[:3,3:4]  - self.XHd.world_base_X_NRP[:3,3:4]
 		v3_NRP_X_foot = world_base_X_foot[:3,3:4] - world_base_X_NRP[:3,3:4]
 
-		# if (self.number == 1):
-		# 	print 'bXA : ', np.round(self.XHd.world_base_X_AEP[:3,3:4].flatten(),4)
-		# 	print 'bXN : ', np.round(self.XHd.world_base_X_NRP[:3,3:4].flatten(),4)
-		# 	print 'bXf : ', np.round(self.XHc.world_base_X_foot[:3,3:4].flatten(),4)
-		# 	print 'NXA : ', np.round(v3_NRP_X_AEP.flatten(),4)
+		# if (self.number == 0):
+		# 	print 'bXN : ', np.round(world_base_X_NRP[:3,3].flatten(),4)
+		# 	print 'bXf : ', np.round(world_base_X_foot[:3,3].flatten(),4)
 		# 	print 'NXf : ', np.round(v3_NRP_X_foot.flatten(),4)
+		# 	print 'rst : ', np.round((v3_NRP_X_foot.item(0)**2 + v3_NRP_X_foot.item(1)**2)/(STEP_STROKE/2.)**2,4)
 
 		# Magnitude of current point
 		mag_nom_X_ee  = np.dot(v3_NRP_X_AEP.flatten(), v3_NRP_X_foot.flatten())
@@ -212,22 +207,23 @@ class LegClass:
 
 		## Ellipse boundary - for the front half: p_nom to AEP
 		if (mag_nom_X_ee > 0.):
-			# print self.number, ' ellipse boundary'
-			try:
-				# ellipse major, minor radius, rotation
-				a  = np.sqrt(v3_NRP_X_AEP.item(0)**2 + v3_NRP_X_AEP.item(1)**2)
-				b  = STEP_STROKE/2.
-				qr = vec_ang
-				x  = v3_NRP_X_foot.item(0)
-				y  = v3_NRP_X_foot.item(1)
+			# if (self.number == 0):
+			# 	print self.number, ' ellipse boundary'
+			# try:
+			# 	# ellipse major, minor radius, rotation
+			# 	a  = np.sqrt(v3_NRP_X_AEP.item(0)**2 + v3_NRP_X_AEP.item(1)**2)
+			# 	b  = STEP_STROKE/2.
+			# 	qr = vec_ang
+			# 	x  = v3_NRP_X_foot.item(0)
+			# 	y  = v3_NRP_X_foot.item(1)
 
-				r_state = ((x*np.cos(qr)+y*np.sin(qr))**2)/(a**2) + ((x*np.sin(qr)-y*np.cos(qr))**2)/(b**2)
+			# 	r_state = ((x*np.cos(qr)+y*np.sin(qr))**2)/(a**2) + ((x*np.sin(qr)-y*np.cos(qr))**2)/(b**2)
 
-				# if (BOUND_FACTOR < r_state):
-				# 	bound_violate = True
+			# 	# if (BOUND_FACTOR < r_state):
+			# 	# 	bound_violate = True
 
-			except:
-				pass
+			# except:
+			pass
 
 		## Circle boundary - for the back half: p_nom to PEP
 		else:
@@ -252,13 +248,13 @@ class LegClass:
 			q1_lim = Q1_M_LIM
 
 		if (abs(self.Joint.qpd[0])>q1_lim):
-			print 'Leg ', self.number, ' q1 limit exceeded ', np.round(self.Joint.qpd[0],4)
+			# print 'Leg ', self.number, ' q1 limit exceeded ', np.round(self.Joint.qpd[0],4)
 			exceeded = True
 		if (abs(self.Joint.qpd[1])>Q2_A_LIM):
-			print 'Leg ', self.number, ' q2 limit exceeded ', np.round(self.Joint.qpd[1],4)
+			# print 'Leg ', self.number, ' q2 limit exceeded ', np.round(self.Joint.qpd[1],4)
 			exceeded = True
 		if (abs(self.Joint.qpd[2])>Q3_A_LIM):
-			print 'Leg ', self.number, ' q3 limit exceeded ', np.round(self.Joint.qpd[2],4)
+			# print 'Leg ', self.number, ' q3 limit exceeded ', np.round(self.Joint.qpd[2],4)
 			exceeded = True
 
 		return False
@@ -284,26 +280,7 @@ class LegClass:
 			self.feedback_state = 2
 			return False
 
-	def update_NRP(self, bodypose, base_X_surface):
-		""" updates nominal stance of robot """
-
-		# update only if surface orientation above deadzone
-		if (abs(self.qsurface.item(0)) > QDEADZONE or abs(self.qsurface.item(1)) > QDEADZONE):
-			# self.REP = FR_base_X_hip[self.number] + self.KDL.update_nominal_stance(bodypose, base_X_surface, self.qsurface)
-			# TODO: this needs checking
-			self.XHc.coxa_X_NRP[:3,3:4] = (self.KDL.update_nominal_stance(bodypose, base_X_surface, self.qsurface)).reshape(3,1)
-			self.XHc.base_X_NRP[:3,3:4] = np.dot(self.base_X_coxa, self.XHc.coxa_X_NRP)
-			# print 'updating REP for leg ', self.number
-			# if (self.number == 0):
-	
-	## TODO: FOLLOWING SHOULD NOT BE REQUIRED ANYMORE
-	def base_X_hip_ee(self, base_X_ee_xp):
-		return np.dot( rotation_matrix(TF_BASE_X_HIP[self.number],Z_AXIS)[:3, :3], (-FR_base_X_hip[self.number] + base_X_ee_xp))
-
-	def hip_X_base_ee(self, hip_X_ee_xp):
-		return (FR_base_X_hip[self.number] + np.dot( rotation_matrix(TF_HIP_X_BASE[self.number],Z_AXIS)[:3, :3], hip_X_ee_xp))
-
-	def SetLegREP(self):
-		self.REP = FR_base_X_hip[self.number] + np.dot( rotation_matrix(TF_HIP_X_BASE[self.number],Z_AXIS)[:3, :3], np.reshape(LEG_STANCE[self.number],(3,1)) )
-
-	
+	def update_NRP(self):
+		# print self.number, ' updating NRP'
+		self.XHc.update_world_base_X_NRP(self.P6_world_X_base)
+		self.XHd.update_world_base_X_NRP(self.P6_world_X_base)

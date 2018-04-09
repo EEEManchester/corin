@@ -197,25 +197,19 @@ class ArrayHomogeneousTransform:
 		# 	print self.base_X_foot
 		self.world_X_foot = np.dot(mx_world_X_base, self.base_X_foot)
 
-
-	def update_world_base_X_foot(self, mx_world_X_base, q):
-		# create temp. matrix & overwrite linear components to ignore them
-		temp_mx = mx_world_X_base.copy()
-		temp_mx[:3,3:4] = np.zeros((3,1))
-
+	def update_world_base_X_foot(self, P6_wXb, q):
 		self.update_base_X_foot(q)
-		self.world_base_X_foot  = np.dot(temp_mx, self.base_X_foot)
+		self.world_base_X_foot = np.dot(r3_X_m(P6_wXb[3:6]), self.base_X_foot)
 
-	def update_world_base_X_NRP(self, mx_world_X_base):
-		# create temp. matrix & overwrite linear components to ignore them
-		temp_mx = mx_world_X_base.copy()
-		temp_mx[:3,3:4] = np.zeros((3,1))
-		# print np.round(self.world_base_X_NRP[:3,3],4)
-		self.world_X_NRP = np.dot(mx_world_X_base, self.base_X_NRP)
-		self.world_base_X_NRP[:3,3:4] = mX((mx_world_X_base[:3,:3]), self.base_X_NRP[:3,3:4])
-		# print np.round(mx_world_X_base[:3,:3],3)
-		# print np.round(mX((mx_world_X_base[:3,:3]), self.base_X_NRP[:3,3:4]),4) 			# world_X_NRP
-		# print np.round(mX(np.transpose(mx_world_X_base[:3,:3]), self.base_X_NRP[:3,3:4]),4)
+	def update_world_base_X_NRP(self, P6_wXb):
+		# SE(3) with linear components and only yaw rotation
+		# XHy_world_X_base = mX(v3_X_m(P6_wXb[:3]), r3_X_m(np.array([0.,0.,P6_wXb[5]])))
+		XHy_world_X_base = mX(v3_X_m(P6_wXb[:3]), r3_X_m(P6_wXb[3:6]))
+
+		self.world_X_NRP = np.dot(XHy_world_X_base, self.base_X_NRP)
+		self.world_base_X_NRP[:3,3:4] = mX((XHy_world_X_base[:3,:3]), self.base_X_NRP[:3,3:4])
+		# if (self.n==4):
+		# 	print np.round(self.base_X_NRP[:3,3],4)
 
 	def update_base_X_NRP(self, q):
 		self.update_coxa_X_NRP(q)
