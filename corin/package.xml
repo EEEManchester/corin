@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package>
+  <name>corin</name>
+  <version>0.0.1</version>
+  <description>Metapackage for all corin development files</description>
+  <maintainer email="cheahwilson91@gmail.com">Wilson Cheah</maintainer>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  
+  <run_depend>corin_rviz_plugin</run_depend>
+  <run_depend>corin_control</run_depend>
+  <run_depend>corin_description</run_depend>
+  <run_depend>corin_gazebo</run_depend>
+  <run_depend>corin_manager</run_depend>
+
+  <export>
+    <metapackage/>
+  </export>
+</package>

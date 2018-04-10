@@ -4,7 +4,9 @@
 
 #ifndef Q_MOC_RUN
 # include <ros/ros.h>
-#include <QPushButton>
+# include <QPushButton>
+# include <QFrame>
+# include <QGroupBox>
 # include <rviz/panel.h>
 #endif
 
@@ -47,7 +49,13 @@ public Q_SLOTS:
   void handleButtonLeft();
   void handleButtonRight();
   void handleButtonBodypose();
+  void handleButtonRotate();
   void handleButtonWallTransition();
+  void handleButtonChimneyTransition();
+
+  void handleButtonExecute();
+  void handleButtonCancel();
+  void enableExecButtons(bool mselect);
 
   // In this example setTopic() does not get connected to any signal
   // (it is called directly), but it is easy to define it as a public
@@ -65,8 +73,20 @@ protected:
   QPushButton* button_left_;
   QPushButton* button_right_;
   QPushButton* button_bodypose_;
+  QPushButton* button_rotate_;
   QPushButton* button_w_transition_;
+  QPushButton* button_c_transition_;
 
+  QPushButton* button_execute_;
+  QPushButton* button_cancel_;
+
+  QGroupBox* exec_group_;
+
+  QFrame* hline1_;
+  QFrame* hline2_;
+  QFrame* hline3_;
+
+  QGroupBox* ExecutionGroup();
   // The ROS publisher for the command velocity.
   // ros::Publisher velocity_publisher_;
 
@@ -76,7 +96,7 @@ protected:
   // The latest velocity values from the drive widget.
   // float linear_velocity_;
   // float angular_velocity_;
-  // bool forward_;
+  // bool motion_selected_;
 
 };
 

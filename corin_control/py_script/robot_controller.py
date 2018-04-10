@@ -26,6 +26,10 @@ from robotis_controller_msgs.msg import SyncWriteMultiFloat
 #####################################################################
 
 class CorinManager:
+	## TEMP VARIABLES
+	WALL_TRANSITION = False
+	CHIM_TRANSITION = False
+	
 	def __init__(self, initialise=False):
 		rospy.init_node('CorinController') 		# Initialises node
 		self.rate 	  = rospy.Rate(CTR_RATE)	# Controller rate
@@ -320,7 +324,7 @@ class CorinManager:
 
 		def compute_ground_footholds():
 			""" Computes NRP position for ground footholds """
-
+			## TODO: this should also hold for normal ground walking
 			world_ground_X_base = XHd.world_X_base.copy()
 			world_ground_X_base[:2,3:4] = np.zeros((2,1))
 			world_ground_X_femur = mX(world_ground_X_base, Leg[j].base_X_femur)
@@ -347,18 +351,27 @@ class CorinManager:
 			""" Computes NRP position for wall footholds """ 
 			
 			h_init = 0.15 	# initial height for wall contact foothold
-			d_wall = 0.32 	# initial distance from base to wall 
-			initial_foothold  = [np.zeros(3)]*3
-			final_foothold 	  = [np.zeros(3)]*3
+			d_wall = 0.32 	# initial distance from base to wall
+			initial_foothold = [np.zeros(3)]*6
+			final_foothold 	 = [np.zeros(3)]*6
 
-			final_foothold[0] = np.array([ 0.115, d_wall, 0.25+0.38])
-			final_foothold[1] = np.array([ 0.,   d_wall, 0.25+0.38])
-			final_foothold[2] = np.array([-0.115, d_wall, 0.25+0.38])
-			
-			for ji in range(0,3):
+			if (self.WALL_TRANSITION is True):
+				final_foothold[0] = np.array([ 0.115, d_wall, 0.25+0.38])
+				final_foothold[1] = np.array([ 0.,   d_wall, 0.25+0.38])
+				final_foothold[2] = np.array([-0.115, d_wall, 0.25+0.38])
+
+			elif (self.CHIM_TRANSITION is True):
+				final_foothold[0] = np.array([ 0.115, d_wall, h_init])
+				final_foothold[1] = np.array([ 0.,   d_wall,  h_init])
+				final_foothold[2] = np.array([-0.115, d_wall, h_init])
+				final_foothold[3] = np.array([ 0.115, -d_wall, h_init])
+				final_foothold[4] = np.array([ 0.,    -d_wall, h_init])
+				final_foothold[5] = np.array([-0.115, -d_wall, h_init])
+
+			for ji in range(0,6):
 				# set initial foothold and overwrite y & z-component
 				initial_foothold[ji] = self.Robot.Leg[ji].XHc.world_X_foot[:3,3].copy()
-				initial_foothold[ji][1] = d_wall
+				initial_foothold[ji][1] = final_foothold[ji][1]
 				initial_foothold[ji][2] = h_init
 
 			delta_foothold   = final_foothold[j] - initial_foothold[j] 	# difference
@@ -372,7 +385,7 @@ class CorinManager:
 			# 	print 'if : ', np.round(initial_foothold[j],6)
 			# 	print 'ff : ', np.round(final_foothold[1],4)
 			# 	print 'd  : ', np.round(delta_foothold,4)
-			# 	print 'wXN: ', np.round(world_X_NRP,4)
+				# print 'wXN: ', np.round(world_X_NRP,4)
 				
 		## Define Variables ##
 		i = 0
@@ -461,12 +474,9 @@ class CorinManager:
 			## Set foothold for legs in transfer phase
 			for j in range (0, self.Robot.active_legs):
 				if (Gait.cs[j] == 1 and i <= len(base_path.X.t)):
-					if (j==5):
-						print np.round(Leg[j].world_base_X_NRP[:3,3],4)
+
 					## update NRP
-					if (WALL_TRANSITION is False):
-						Leg[j].update_world_base_X_NRP(P6d_world_X_base)
-					else:
+					if (self.WALL_TRANSITION is True):
 						## Identify sides for ground or wall contact based on body roll
 						delta_w = base_path.W.xp[-1] - base_path.W.xp[0]
 						if (delta_w[0] > 0.):
@@ -481,9 +491,21 @@ class CorinManager:
 								compute_wall_footholds()
 							else:
 								compute_ground_footholds()
+						
+					elif (self.CHIM_TRANSITION is True):
+						compute_wall_footholds()
+
+					else:
+						Leg[j].update_world_base_X_NRP(P6d_world_X_base)
 
 					## compute magnitude & vector direction
-					snorm = self.Map.get_cell_snorm(Leg[j].world_base_X_NRP[0:3,3]) 	# get surface normal
+					snorm = self.Map.get_cell_snorm(Leg[j].world_base_X_NRP[0:3,3], 
+													self.WALL_TRANSITION, 
+													self.CHIM_TRANSITION) # get surface normal
+					## FOLLOWING TEMP: for POC ====================================================================== ##
+					
+					## ============================================================================================== ##
+
 					v3_dv = (v3cp - v3cp_prev).flatten() 			# direction vector from previous to current CoB
 					v3_pv = v3_dv - (np.dot(v3_dv,snorm))*snorm 	# project direction vector onto plane
 					m1_dv = np.linalg.norm(v3_pv) 					# magnitude of direction vector
@@ -502,12 +524,14 @@ class CorinManager:
 					
 					## Get cell height in (x,y) location of world_X_foot
 					cell_h = np.array([0.,0.,0.])			# TODO: unstack height from map
-					if (WALL_TRANSITION is False):
-						cell_h = np.array([0.,0.,0.])
-					else:
+					if (self.WALL_TRANSITION is True):
 						## TODO: temporary setting this side height to be equiv. of wall
 						if (j < 3):
 							cell_h = np.array([0.,0.,1.])
+					elif (self.CHIM_TRANSITION is True):
+						cell_h = np.array([0.,0.,0.1])
+					else:
+						cell_h = np.array([0.,0.,0.])
 
 					## Cell height above threshold gets ignored as this requires advanced motions
 					if (cell_h.item(2) < 0.1):
@@ -527,13 +551,13 @@ class CorinManager:
 					
 					world_base_X_NRP[j].t.append(i*CTR_INTV)
 					world_base_X_NRP[j].xp.append(Leg[j].world_base_X_NRP[:3,3:4].copy())
-					# if (j==1):
+					if (j==4):
 					# 	print '--------------------------------------------'
 					# 	print 'snorm ', snorm
 						# print 'v3pv: ', v3_pv.flatten()
 						# print 'v3uv: ', v3_uv.flatten()
-						# print 'wbXN: ', np.round(Leg[j].world_base_X_NRP[:3,3],4)
-						# print 'wbXA: ', np.round(Leg[j].world_base_X_AEP[:3,3],4)
+						print 'wbXN: ', np.round(Leg[j].world_base_X_NRP[:3,3],4)
+						print 'wbXA: ', np.round(Leg[j].world_base_X_AEP[:3,3],4)
 						# print 'wXN:  ', XHd.world_X_base[:3,3] + Leg[j].world_base_X_NRP[:3,3]
 						# print 'wXA:  ', XHd.world_X_base[:3,3] + Leg[j].world_base_X_AEP[:3,3]
 						# print 'wXb:  ', np.round(XHd.base_X_world,4)
@@ -593,10 +617,23 @@ class CorinManager:
 
 		## User input: Returns if path rejected
 		print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
-		key_input = raw_input('Execute Path? (Accept-y Reject-n) : ')
-		if (key_input.lower() == 'n'):
-			return
-		
+		print 'Execute Path? '
+		# key_input = raw_input('Execute Path? (Accept-y Reject-n) : ')
+		# if (key_input.lower() == 'n'):
+		# 	return
+		while (not rospy.is_shutdown()):
+			if rospy.has_param('/corin/execute'):
+				ex_status = rospy.get_param('/corin/execute')
+				if (ex_status == 1):
+					print 'Executing motion!'
+					rospy.set_param('/corin/execute', 0)
+					break
+				elif(ex_status == 2):
+					print 'Cancelling!'
+					rospy.set_param('/corin/execute', 0)
+					return
+			rospy.sleep(0.1)
+
 		# cycle through trajectory points until complete
 		i = 1 	# skip first point since spline has zero initial differential conditions
 		while (i != len(base_path.X.t) and not rospy.is_shutdown()):
@@ -677,8 +714,8 @@ class CorinManager:
 					self.Robot.Leg[j].XHd.coxa_X_AEP  = self.Robot.Leg[j].XHd.coxa_X_foot.copy()
 
 					## Compute average surface normal from cell surface normal at both footholds
-					snorm_1 = self.Map.get_cell_snorm(self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
-					snorm_2 = self.Map.get_cell_snorm(self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
+					snorm_1 = self.Map.get_cell_snorm(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],self.WALL_TRANSITION, self.CHIM_TRANSITION)
+					snorm_2 = self.Map.get_cell_snorm(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],self.WALL_TRANSITION, self.CHIM_TRANSITION)
 					w_snorm = (snorm_1 + snorm_2)/2.
 
 					## Set spline required parameters
@@ -778,6 +815,7 @@ class CorinManager:
 		data = self.Action.action_to_take()
 
 		if (data is not None):
+			print data
 			## Clear visualization components ##
 			clear_marker = MarkerArray()
 			mark = Marker()
@@ -789,7 +827,14 @@ class CorinManager:
 			self.path_pub_.publish(clear_path)
 
 			## Data mapping - for convenience
-			x_cob, w_cob, mode = data
+			x_cob, w_cob, mode, motion_prim = data
+
+			## TEMP: Check motion primitive
+			self.CHIM_TRANSITION = self.WALL_TRANSITION = False
+			if (motion_prim == 'wall_transition'):
+				self.WALL_TRANSITION = True
+			elif (motion_prim == 'chimney_transition'):
+				self.CHIM_TRANSITION = True
 
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):

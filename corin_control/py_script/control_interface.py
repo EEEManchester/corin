@@ -15,6 +15,8 @@ class ControlInterface:
 		self.__initialise__()
 
 	def __initialise__(self):
+		rospy.set_param('/corin/execute', 0) 		# execute motion selected
+
 		rospy.set_param('stop_flag', False)			# emergency stop (working)
 		rospy.set_param('/corin/reset',False)		# move to ground position with legs up (working)
 		rospy.set_param('/corin/bodypose', False)	# perform the bodypose movement (working)
@@ -107,7 +109,7 @@ class ControlInterface:
 			# w_cob = np.vstack((w_cob,np.array([0.,0.,0.12])))
 			w_cob = np.vstack((w_cob,np.array([0.2,  0.0, 0.])))
 
-		return x_cob, w_cob, self.mode
+		return x_cob, w_cob, self.mode, 'walk'
 		
 	def walk_front(self, x_cob, w_cob):
 		self.mode  = 2
@@ -115,12 +117,12 @@ class ControlInterface:
 		# x_cob = np.vstack((x_cob,np.array([0.3, 0., 0.])))
 		w_cob = np.vstack((w_cob,np.array([0.25, 0., 0.])))
 		# w_cob = np.vstack((w_cob,np.array([0.15, 0., 0.])))
-		return x_cob, w_cob, self.mode
+		return x_cob, w_cob, self.mode, 'walk'
 
 	def walk_back(self, x_cob, w_cob):
 		self.mode  = 2
 		x_cob = np.vstack((x_cob,np.array([-0.4, 0.0, 0.])))
-		return x_cob, w_cob, self.mode
+		return x_cob, w_cob, self.mode, 'walk'
 
 	def walk_right(self, x_cob, w_cob):
 		self.mode  = 2
@@ -128,22 +130,22 @@ class ControlInterface:
 		w_cob = np.vstack((w_cob,np.array([0.1, 0., 0.])))
 		x_cob = np.vstack((x_cob,np.array([0.0, -0.5, 0.])))
 		w_cob = np.vstack((w_cob,np.array([0.1, 0., 0.])))
-		return x_cob, w_cob, self.mode
+		return x_cob, w_cob, self.mode, 'walk'
 
 	def walk_left(self, x_cob, w_cob):
 		self.mode  = 2
 		x_cob = np.vstack((x_cob,np.array([0.0, 0.11, 0.])))
-		return x_cob, w_cob, self.mode
+		return x_cob, w_cob, self.mode, 'walk'
 
 	def rotate(self, x_cob, w_cob):
 		self.mode = 2
 		w_cob = np.vstack((w_cob,np.array([0.,0.,1.])))
-		return x_cob, w_cob, self.mode
+		return x_cob, w_cob, self.mode, 'walk'
 
 	def reset(self, x_cob, w_cob):
 		self.mode = 3
 		self.reset_flag = True
-		return x_cob, w_cob, self.mode
+		return x_cob, w_cob, self.mode, 'walk'
 
 	def action_to_take(self):
 		""" Checks parameter server to identify action to take """
@@ -205,7 +207,7 @@ class ControlInterface:
 			w_cob = np.vstack(( w_cob, np.array([qr,0.0,0.0]) ))
 			
 		# Plot.plot_3d(x_cob[:,0],x_cob[:,1],x_cob[:,2])
-		return x_cob, w_cob, self.mode
+		return x_cob, w_cob, self.mode, 'wall_transition'
 
 	def chimney_transition(self, x_cob, w_cob):
 		self.mode  = 2
@@ -213,4 +215,4 @@ class ControlInterface:
 		for i in range(0,6):
 			x_cob = np.vstack((x_cob,np.array([0., 0., 0.])))
 		
-		return x_cob, w_cob, self.mode
+		return x_cob, w_cob, self.mode, 'chimney_transition'

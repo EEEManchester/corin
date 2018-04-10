@@ -5,6 +5,7 @@
 #include <QLineEdit>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QGridLayout>
 #include <QLabel>
 #include <QTimer>
 #include <QPushButton>
@@ -26,7 +27,7 @@ namespace corin_rviz_plugin
 // publishing.
 TeleopPanel::TeleopPanel( QWidget* parent )
   : rviz::Panel( parent )
-  // , linear_velocity_( 0 )
+  // , motion_selected_( false )
   // , angular_velocity_( 0 )
 {
   button_front_ = new QPushButton("Forward", this);
@@ -34,20 +35,42 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   button_left_ = new QPushButton("Left", this);
   button_right_ = new QPushButton("Right", this);
   button_bodypose_ = new QPushButton("Bodypose", this);
+  button_rotate_ = new QPushButton("Rotate", this);
   button_w_transition_ = new QPushButton("Wall Transition", this);
+  button_c_transition_ = new QPushButton("Chimney Transition", this);
+
+  exec_group_ = ExecutionGroup();
+
+  hline1_ = new QFrame;
+  hline1_ -> setFrameShape(QFrame::HLine);
+  hline2_ = new QFrame;
+  hline2_ -> setFrameShape(QFrame::HLine);
+  hline3_ = new QFrame;
+  hline3_ -> setFrameShape(QFrame::HLine);
 
   // Then create the control widget.
   // drive_widget_ = new DriveWidget;
 
   // Lay out the topic field above the control widget.
-  QVBoxLayout* layout = new QVBoxLayout;
-  layout->addWidget( button_front_ );
-  layout->addWidget( button_back_ );
-  layout->addWidget( button_left_ );
-  layout->addWidget( button_right_ );
-  layout->addWidget( button_bodypose_ );
-  layout->addWidget( button_w_transition_ );
-  setLayout( layout );
+  QVBoxLayout* main_layout  = new QVBoxLayout;
+  QVBoxLayout* param_layout = new QVBoxLayout;
+
+  param_layout->addWidget( button_bodypose_ );
+  param_layout->addWidget( button_rotate_ );
+  param_layout->addWidget( hline1_ );
+  param_layout->addWidget( button_front_ );
+  param_layout->addWidget( button_back_ );
+  param_layout->addWidget( button_left_ );
+  param_layout->addWidget( button_right_ );
+  param_layout->addWidget( hline2_ );
+  param_layout->addWidget( button_w_transition_ );
+  param_layout->addWidget( button_c_transition_ );
+
+  main_layout->addLayout(param_layout);
+  main_layout->addWidget( hline3_ );
+  main_layout->addWidget(exec_group_);
+  
+  setLayout( main_layout );
 
   // Create a timer for sending the output.  Motor controllers want to
   // be reassured frequently that they are doing the right thing, so
@@ -67,41 +90,99 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   connect( button_left_, SIGNAL (released()), this, SLOT (handleButtonLeft()));
   connect( button_right_, SIGNAL (released()), this, SLOT (handleButtonRight()));
   connect( button_bodypose_, SIGNAL (released()), this, SLOT (handleButtonBodypose()));
+  connect( button_rotate_, SIGNAL (released()), this, SLOT (handleButtonRotate()));
   connect( button_w_transition_, SIGNAL (released()), this, SLOT (handleButtonWallTransition()));
+  connect( button_c_transition_, SIGNAL (released()), this, SLOT (handleButtonChimneyTransition()));
+
+  connect( button_execute_, SIGNAL (released()), this, SLOT (handleButtonExecute()));
+  connect( button_cancel_, SIGNAL (released()), this, SLOT (handleButtonCancel()));
 
   // Start the timer.
   output_timer->start( 100 );
 
 }
+QGroupBox *TeleopPanel::ExecutionGroup()
+{
+    QGroupBox *groupBox = new QGroupBox(tr(""));
+
+    // groupBox->setStyleSheet("margin: 1px solid black");
+
+    button_execute_ = new QPushButton("Execute", this);
+    button_cancel_  = new QPushButton("Cancel", this);
+    
+    QGridLayout* grid_layout  = new QGridLayout;
+    grid_layout->addWidget( button_execute_, 0, 0);
+    grid_layout->addWidget( button_cancel_, 0, 1);
+
+    groupBox->setLayout(grid_layout);
+    // groupBox->setFlat(false);
+    return groupBox;
+}
+
 void TeleopPanel::handleButtonFront()
  {
-    // set parameter
+    enableExecButtons(true);
     nh_.setParam("corin/walk_front", true);
  }
 void TeleopPanel::handleButtonBack()
  {
-    // set parameter
+    enableExecButtons(true);
     nh_.setParam("corin/walk_back", true);
  }
  void TeleopPanel::handleButtonLeft()
  {
-    // set parameter
+    enableExecButtons(true);
     nh_.setParam("corin/walk_left", true);
  }
  void TeleopPanel::handleButtonRight()
  {
-    // set parameter
+    enableExecButtons(true);
     nh_.setParam("corin/walk_right", true);
  }
  void TeleopPanel::handleButtonBodypose()
  {
-    // set parameter
+    enableExecButtons(true);
     nh_.setParam("corin/bodypose", true);
+ }
+ void TeleopPanel::handleButtonRotate()
+ {
+    enableExecButtons(true);
+    nh_.setParam("corin/rotate", true);
  }
  void TeleopPanel::handleButtonWallTransition()
  {
-    // set parameter
+    enableExecButtons(true);
     nh_.setParam("corin/wall_transition", true);
+ }
+ void TeleopPanel::handleButtonChimneyTransition()
+ {
+    enableExecButtons(true);
+    nh_.setParam("corin/chimney_transition", true);
+ }
+// ====================================================== //
+// ====================================================== //
+ void TeleopPanel::handleButtonExecute()
+ {
+    nh_.setParam("corin/execute", 1);
+    enableExecButtons(false);
+ }
+ void TeleopPanel::handleButtonCancel()
+ {
+    nh_.setParam("corin/execute", 2);
+    enableExecButtons(false);
+ }
+ void TeleopPanel::enableExecButtons(bool mselect)
+ {
+  if (mselect == false)
+  {
+    button_execute_->setEnabled(false);
+    button_cancel_->setEnabled(false);
+  }
+  else if (mselect == true)
+  {
+    button_execute_->setEnabled(true);
+    button_cancel_->setEnabled(true);
+  }
  }
 // Publish the control velocities if ROS is not shutting down and the
 // publisher is ready with a valid topic name.
