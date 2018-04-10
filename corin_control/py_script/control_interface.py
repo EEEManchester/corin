@@ -15,15 +15,16 @@ class ControlInterface:
 		self.__initialise__()
 
 	def __initialise__(self):
-		rospy.set_param('stop_flag', False)		# emergency stop (working)
-		rospy.set_param('/corin/reset',False)			# move to ground position with legs up (working)
-		rospy.set_param('/corin/bodypose', False)		# perform the bodypose movement (working)
+		rospy.set_param('stop_flag', False)			# emergency stop (working)
+		rospy.set_param('/corin/reset',False)		# move to ground position with legs up (working)
+		rospy.set_param('/corin/bodypose', False)	# perform the bodypose movement (working)
 		rospy.set_param('/corin/walk_front', False)	# walk forward ~0. 4 metres (working)
-		rospy.set_param('/corin/walk_right', False)		# walk right ~0.4 metres (working)
-		rospy.set_param('/corin/walk_back', False)		# Walk backwards ~0.4 metres (Working)
-		rospy.set_param('/corin/walk_left', False)		# walk left ~0.4 metres (working)
+		rospy.set_param('/corin/walk_right', False)	# walk right ~0.4 metres (working)
+		rospy.set_param('/corin/walk_back', False)	# Walk backwards ~0.4 metres (Working)
+		rospy.set_param('/corin/walk_left', False)	# walk left ~0.4 metres (working)
 		rospy.set_param('/corin/rotate', False)
 		rospy.set_param('/corin/wall_transition', False)
+		rospy.set_param('/corin/chimney_transition', False)
 
 	#corin performs bodypose
 	def bodypose(self, x_cob, w_cob):
@@ -112,7 +113,7 @@ class ControlInterface:
 		self.mode  = 2
 		x_cob = np.vstack((x_cob,np.array([0.4, 0., 0.])))
 		# x_cob = np.vstack((x_cob,np.array([0.3, 0., 0.])))
-		w_cob = np.vstack((w_cob,np.array([0.15, 0., 0.])))
+		w_cob = np.vstack((w_cob,np.array([0.25, 0., 0.])))
 		# w_cob = np.vstack((w_cob,np.array([0.15, 0., 0.])))
 		return x_cob, w_cob, self.mode
 
@@ -179,6 +180,10 @@ class ControlInterface:
 			rospy.set_param('/corin/wall_transition',False)
 			return self.wall_transition(x_cob, w_cob)
 
+		elif (rospy.get_param('/corin/chimney_transition')==True):
+			rospy.set_param('/corin/chimney_transition',False)
+			return self.chimney_transition(x_cob, w_cob)
+
 		elif (rospy.get_param('/corin/reset')==True):		# Command Prompt: rosparam set reset True
 			rospy.set_param('/corin/reset',False)
 			return self.reset(x_cob, w_cob)
@@ -200,4 +205,12 @@ class ControlInterface:
 			w_cob = np.vstack(( w_cob, np.array([qr,0.0,0.0]) ))
 			
 		# Plot.plot_3d(x_cob[:,0],x_cob[:,1],x_cob[:,2])
+		return x_cob, w_cob, self.mode
+
+	def chimney_transition(self, x_cob, w_cob):
+		self.mode  = 2
+		## TODO: set somewhere else
+		for i in range(0,6):
+			x_cob = np.vstack((x_cob,np.array([0., 0., 0.])))
+		
 		return x_cob, w_cob, self.mode

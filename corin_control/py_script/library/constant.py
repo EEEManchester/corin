@@ -12,7 +12,8 @@ import stance_selection
 ROBOT_NS = "corin"
 
 ## TEMPORARY VARIABLES ##
-TRANSITION = True#False
+WALL_TRANSITION = True#False
+CHIM_TRANSITION = False
 
 ## ================================================================ ##
 ##                       Robot parameters 	 						##

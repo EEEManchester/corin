@@ -89,7 +89,7 @@ class LegClass:
 		return None
 		## TODO: TRANSFORM FROM FOOT FRAME TO HIP, BASE, WORLD FRAME
 
-	def generate_spline(self, start, end, snorm, phase=1, reflex=False, ctime=2.0, tn=0.1):
+	def generate_spline(self, snorm, phase=1, reflex=False, ctime=2.0, tn=0.1):
 		""" generate leg trajectory using bspline and check for kinematic constraints 	"""
 		""" Input:  a) nLeg   -> Leg number
 			 		b) start  -> start position in 3D space wrt base frame

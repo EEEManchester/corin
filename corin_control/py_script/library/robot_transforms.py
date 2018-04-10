@@ -203,8 +203,8 @@ class ArrayHomogeneousTransform:
 
 	def update_world_base_X_NRP(self, P6_wXb):
 		# SE(3) with linear components and only yaw rotation
-		# XHy_world_X_base = mX(v3_X_m(P6_wXb[:3]), r3_X_m(np.array([0.,0.,P6_wXb[5]])))
-		XHy_world_X_base = mX(v3_X_m(P6_wXb[:3]), r3_X_m(P6_wXb[3:6]))
+		XHy_world_X_base = mX(v3_X_m(P6_wXb[:3]), r3_X_m(np.array([0.,0.,P6_wXb[5]])))
+		# XHy_world_X_base = mX(v3_X_m(P6_wXb[:3]), r3_X_m(P6_wXb[3:6]))
 
 		self.world_X_NRP = np.dot(XHy_world_X_base, self.base_X_NRP)
 		self.world_base_X_NRP[:3,3:4] = mX((XHy_world_X_base[:3,:3]), self.base_X_NRP[:3,3:4])

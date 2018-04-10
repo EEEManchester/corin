@@ -109,12 +109,10 @@ class RobotState:
 
 		if (cmode == "fast"):
 			## Updates robot state using setpoints
-			# wXb = self.XHd.world_X_base
 			wXb = self.P6d.world_X_base
 			qpc = self.qd
 		else:
 			## Updates robot state based on measured states
-			# wXb = self.XHc.world_X_base
 			wXb = self.P6c.world_X_base
 			qpc = self.qc.position
 
@@ -192,16 +190,11 @@ class RobotState:
 		for j in range(0,6):
 			if (self.Gait.cs[j] == 1):
 				self.Leg[j].transfer_phase_change = False
-				# self.Leg[j].XHc.update_world_X_foot(mx_world_X_base, q_compensated) 	# consider updating only once when contact is true
-			elif (self.Gait.cs[j] == 0): 
-				if (self.Gait.cs[j] != self.Gait.ps[j]):
-					# print 'updating Leg ', j
-					self.Leg[j].XHc.update_world_X_foot(self.XHc.world_X_base) 	# updating continuously results in drift
-					self.Leg[j].XHd.world_X_foot = self.Leg[j].XHc.world_X_foot.copy()
-				if (self.Gait.ps[j] == 1):
-					self.Leg[j].update_NRP()
-					if (j == 3):
-						print np.round(self.Leg[j].P6_world_X_base.flatten(),4)
+
+			elif (self.Gait.cs[j] == 0 and self.Gait.cs[j] != self.Gait.ps[j]): 
+				# Update world_X_foot when phase changes from transfer to support to avoid drifting
+				self.Leg[j].XHc.update_world_X_foot(self.XHc.world_X_base) 			
+				self.Leg[j].XHd.world_X_foot = self.Leg[j].XHc.world_X_foot.copy()
 
 		self.suspend = False
 		# raw_input('cont')

@@ -382,6 +382,7 @@ class CorinManager:
 		world_X_base = []
 		world_X_footholds = [None]*6
 		base_X_footholds  = [None]*6
+		world_base_X_NRP  = [None]*6
 
 		Gait.cs = list(self.Robot.Gait.cs) 	# update local gait current state 
 		Gait.gphase = self.Robot.Gait.gphase
@@ -401,6 +402,10 @@ class CorinManager:
 			base_X_footholds[j] = MarkerList()
 			base_X_footholds[j].t.append(0.)
 			base_X_footholds[j].xp.append(self.Robot.Leg[j].XHc.base_X_foot[:3,3:4])
+
+			world_base_X_NRP[j] = MarkerList()
+			world_base_X_NRP[j].t.append(0.)
+			world_base_X_NRP[j].xp.append(self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3:4])
 
 		## Returns as footholds remain fixed for full support mode
 		if (self.Robot.support_mode is True):
@@ -456,10 +461,10 @@ class CorinManager:
 			## Set foothold for legs in transfer phase
 			for j in range (0, self.Robot.active_legs):
 				if (Gait.cs[j] == 1 and i <= len(base_path.X.t)):
-					if (j==3):
-						print np.round(P6d_world_X_base.flatten(),4)
+					if (j==5):
+						print np.round(Leg[j].world_base_X_NRP[:3,3],4)
 					## update NRP
-					if (TRANSITION is False):
+					if (WALL_TRANSITION is False):
 						Leg[j].update_world_base_X_NRP(P6d_world_X_base)
 					else:
 						## Identify sides for ground or wall contact based on body roll
@@ -497,7 +502,7 @@ class CorinManager:
 					
 					## Get cell height in (x,y) location of world_X_foot
 					cell_h = np.array([0.,0.,0.])			# TODO: unstack height from map
-					if (TRANSITION is False):
+					if (WALL_TRANSITION is False):
 						cell_h = np.array([0.,0.,0.])
 					else:
 						## TODO: temporary setting this side height to be equiv. of wall
@@ -520,6 +525,8 @@ class CorinManager:
 					base_X_footholds[j].t.append(i*CTR_INTV)
 					base_X_footholds[j].xp.append(Leg[j].base_X_AEP[:3,3:4].copy())
 					
+					world_base_X_NRP[j].t.append(i*CTR_INTV)
+					world_base_X_NRP[j].xp.append(Leg[j].world_base_X_NRP[:3,3:4].copy())
 					# if (j==1):
 					# 	print '--------------------------------------------'
 					# 	print 'snorm ', snorm
@@ -531,8 +538,6 @@ class CorinManager:
 						# print 'wXA:  ', XHd.world_X_base[:3,3] + Leg[j].world_base_X_AEP[:3,3]
 						# print 'wXb:  ', np.round(XHd.base_X_world,4)
 						# print 'wXf:  ', np.round(Leg[j].world_X_foot[:3,3], 4)
-						
-						# print 'nbXA: ', np.round(new_base_X_aep[:3,3],4)
 
 			## Alternate gait phase
 			Gait.change_phase()
@@ -541,7 +546,7 @@ class CorinManager:
 
 			# raw_input('cont')
 		# print np.round(world_X_footholds[0].xp,4)
-		return world_X_base, world_X_footholds, base_X_footholds
+		return world_X_base, world_X_footholds, base_X_footholds, world_base_X_NRP
 
 	def trajectory_tracking(self, x_cob, w_cob=0):
 		""" Generates body trajectory from given via points and
@@ -570,8 +575,8 @@ class CorinManager:
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 
 		## Plan foothold for robot
-		world_X_base, world_X_footholds, base_X_footholds = self.foothold_selection(base_path)
-		
+		world_X_base, world_X_footholds, base_X_footholds, w_base_X_NRP = self.foothold_selection(base_path)
+
 		## TODO: add preview of motion here
 
 		## publish multiple times to ensure it is published 
@@ -613,13 +618,14 @@ class CorinManager:
 			v3wv = base_path.W.xv[i].reshape(3,1);
 			v3wa = base_path.W.xa[i].reshape(3,1);
 
-			try:
-				v3cp_n = wXbase_offset[0:3] + base_path.X.xp[i+int(CTR_RATE*GAIT_TPHASE)].reshape(3,1);
-				v3wp_n = wXbase_offset[3:6] + base_path.W.xp[i+int(CTR_RATE*GAIT_TPHASE)].reshape(3,1);
+			## Next CoB location - NOT USED ATM
+			# try:
+			# 	v3cp_n = wXbase_offset[0:3] + base_path.X.xp[i+int(CTR_RATE*GAIT_TPHASE)].reshape(3,1);
+			# 	v3wp_n = wXbase_offset[3:6] + base_path.W.xp[i+int(CTR_RATE*GAIT_TPHASE)].reshape(3,1);
 				
-			except:
-				v3cp_n = wXbase_offset[0:3] + base_path.X.xp[-1].reshape(3,1);
-				v3wp_n = wXbase_offset[3:6] + base_path.W.xp[-1].reshape(3,1);
+			# except:
+			# 	v3cp_n = wXbase_offset[0:3] + base_path.X.xp[-1].reshape(3,1);
+			# 	v3wp_n = wXbase_offset[3:6] + base_path.W.xp[-1].reshape(3,1);
 
 			## Tracking desired translations
 			if (self.Robot.suspend != True):
@@ -659,6 +665,8 @@ class CorinManager:
 					try:
 						self.Robot.Leg[j].XHd.world_X_foot = v3_X_m(world_X_footholds[j].xp.pop(1))
 						self.Robot.Leg[j].XHd.base_X_foot  = v3_X_m(base_X_footholds[j].xp.pop(1))
+						self.Robot.Leg[j].XHd.world_base_X_NRP = v3_X_m(w_base_X_NRP[j].xp.pop(1))
+						self.Robot.Leg[j].XHc.world_base_X_NRP = self.Robot.Leg[j].XHd.world_base_X_NRP.copy()
 					except IndexError:
 						## TODO: plan on the fly. Currently set to default position
 						print 'Leg: ', j, ' No further foothold planned!'
@@ -673,24 +681,19 @@ class CorinManager:
 					snorm_2 = self.Map.get_cell_snorm(self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
 					w_snorm = (snorm_1 + snorm_2)/2.
 
+					## Set spline required parameters
 					self.Robot.Leg[j].XH_world_X_base = self.Robot.XHd.world_X_base.copy()
-					# self.Robot.Leg[j].c_world_X_base = self.Robot.XHc.world_X_base.copy()
-
 					# print 'Leg j: ', j, ' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+					
 					## generate transfer spline
-					## TODO: modify here
-					svalid = self.Robot.Leg[j].generate_spline(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3], self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],
-																w_snorm, 1, False, GAIT_TPHASE, CTR_INTV)
+					svalid = self.Robot.Leg[j].generate_spline(w_snorm, 1, False, GAIT_TPHASE, CTR_INTV)
 					
 					# if (j == 5):
 						# print j, ' Xc: ', np.round(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3],4)
 						# print j, ' Xd: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],4)
 						# print j, ' Wn: ', np.round(world_norm,4)
 						# print j, ' Ln: ', np.round(self.Robot.Leg[j].qsurface,4)
-						# print j, ' Fn: ', np.round(mX(self.Robot.XHd.base_X_world[:3,:3], world_norm),4)
 						# print 'wXf: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],4)
-					# 	print 'c cXf: ', np.round(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3],4)
-					# 	print 'd cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],4)
 
 					if (svalid is False):
 						# set invalid if trajectory unfeasible for leg's kinematic
@@ -699,7 +702,7 @@ class CorinManager:
 						# set flag that phase has changed
 						self.Robot.Leg[j].transfer_phase_change = True
 
-			self.Robot.XHd.update_world_X_base(np.vstack((v3cp,v3wp)))
+			# self.Robot.XHd.update_world_X_base(np.vstack((v3cp,v3wp)))
 
 			## Compute task space foot position for all legs
 			for j in range (0, self.Robot.active_legs):

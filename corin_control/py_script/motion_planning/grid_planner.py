@@ -1410,7 +1410,7 @@ class GridPlanner:
 		if (p[1] < 0.1):
 			snorm = np.array([0.,0.,1.])
 		else:
-			snorm = np.array([0.,0.,1.]) if (TRANSITION is False) else np.array([0.,-1,0.])
+			snorm = np.array([0.,0.,1.]) if (WALL_TRANSITION is False) else np.array([0.,-1,0.])
 		return snorm
 
 ## ================================================================================================ ##

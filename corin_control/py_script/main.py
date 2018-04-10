@@ -21,6 +21,8 @@ if __name__ == "__main__":
 	# rospy.set_param('/corin/walk_back', True)
 	# rospy.set_param('/corin/rotate', True)
 	rospy.set_param('/corin/wall_transition', True)
+	# rospy.set_param('/corin/chimney_transition', True)
+	
 	while not rospy.is_shutdown():
 		
 		manager.action_interface()
