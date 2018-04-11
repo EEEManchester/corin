@@ -69,9 +69,8 @@ v3_pv = ( np.dot(v3_dv,plane_vector)/np.linalg.norm(plane_vector)**2 )*plane_vec
 # print np.round(v3_pv,4)
 
 # print v3_dv - (np.dot(v3_dv,surface_normal))*surface_normal
-a = np.array([1,2])
+al = []
+a = np.array([1,2,3,4,5,])
 b = np.array([3,4])
-c = np.array([a,b])
-print c
-b[0] = 10
-print c
+al.append(a)
+print type(al[0])

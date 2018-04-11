@@ -235,11 +235,14 @@ w_cob = np.vstack((w_cob,np.array([-0.2, -0.1, 0.])))
 # x_cob = np.vstack((x_cob,np.array([.0,.0,BODY_HEIGHT])))
 # w_cob = np.vstack((w_cob,np.array([0., 0., 0.])))
 
-# path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
-# print type(path_n.X.t)
+path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
+# Plot.plot_2d(path_n.X.t,path_n.X.xp)
+# path_n.reverse()
+# Plot.plot_2d(path_n.X.t,path_n.X.xp)
 # path_o = planner.generate_base_path_old(x_cob, w_cob, 0.1)
 # Plot.plot_2d(path_o.W.t,path_o.W.xp,False)
-# Plot.plot_2d(path_n.X.t,path_n.X.xp)
+
+# Plot.plot_2d(new_path.X.t,new_path.X.xp)
 # plt.show()
 # Plot.plot_2d_multiple(2,x_out[0],x_out[1],x_out[3])
 

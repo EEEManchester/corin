@@ -562,7 +562,7 @@ class GridPlanner:
 
 		## Define Variables ##
 		gait = gait_class.GaitClass(1) 	# gait class - wave
-		BASE_X_FOOT = [] 	# array of gait phased foot position for each leg
+		base_X_foot = [] 	# array of gait phased foot position for each leg
 		LF_foothold = [] 	# list for foothold nodes
 		LM_foothold = [] 	# list for foothold nodes
 		LR_foothold = [] 	# list for foothold nodes
@@ -584,7 +584,7 @@ class GridPlanner:
 		div = np.round(STEP_STROKE/gait.gdic['beta'].numerator,3)
 		EP  = STEP_STROKE/2
 
-		# cycle through each gait phase
+		# Compute default stance for gait selected
 		for i in range(0,gait.gdic['beta'].denominator):
 			# cycle through each leg
 			for j in range(0,6):
@@ -596,7 +596,7 @@ class GridPlanner:
 					# compute gait phased stance based on grid cells
 					px = int(np.round( (np.cos(np.pi/2)*(p_leg[i][0])-np.sin(np.pi/2)*(p_leg[i][1]))/self.resolution))
 					py = int(np.round( (np.sin(np.pi/2)*(p_leg[i][0])+np.cos(np.pi/2)*(p_leg[i][1]))/self.resolution))
-					BASE_X_FOOT.append((px,py))
+					base_X_foot.append((px,py))
 
 			gait.change_phase() 	# change to next gait phase
 		
@@ -607,7 +607,7 @@ class GridPlanner:
 			# cycle through all legs at each stance
 			for leg in range(0,6):
 				# new foothold after displaced by d in world frame - e[ncount is base position]
-				new_foothold = tuple(map(lambda x,y: y+x, p[ncount], BASE_X_FOOT[leg]))
+				new_foothold = tuple(map(lambda x,y: y+x, p[ncount], base_X_foot[leg]))
 
 				try:
 					# search neighbouring cells within area
@@ -719,14 +719,14 @@ class GridPlanner:
 								LA_2 = -1;
 								break
 							else:
-								LA_2 += self.G.nodes[pf_2]['cost'] 	# middle leg
+								LA_2 += self.G.nodes[pf_2]['cost']
 							
 							# LEG 3
 							if (self.G.nodes[pf_3]['cost']==1 and self.G.nodes[pf_3n]['cost']==1):
 								LA_3 = -1;
 								break
 							else:
-								LA_3 += self.G.nodes[pf_3]['cost'] 	# middle leg
+								LA_3 += self.G.nodes[pf_3]['cost']
 
 							# LEG 4
 							if (self.G.nodes[pf_4]['cost']==1 and self.G.nodes[pf_4n]['cost']==1):
@@ -1100,10 +1100,10 @@ class GridPlanner:
 			
 		return inst_path
 
-	def spline_interpolation(self,path, tint=None):
+	def spline_interpolation(self, path, tn=0.1):
 		""" interpolate cells using cubic spline """
 
-		## define variables ##
+		## Define Variables ##
 		x_com = np.array([.0,.0,.0])
 		w_com = np.array([.0,.0,.0])
 
@@ -1117,14 +1117,7 @@ class GridPlanner:
 		w_com = np.delete(w_com,0,0)
 		
 		PathGenerator = path_generator.PathGenerator()
-		# PathGenerator.gait = {	'name': "wave",
-		# 						'beta': Fraction(5, 6),
-		# 						'dphase': Fraction(1, 5),
-		# 						'phase':np.matrix([ Fraction(6, 6), Fraction(5, 6), Fraction(4, 6), Fraction(3, 6), Fraction(2, 6), Fraction(1, 6) ])}
-		
-		if (tint is None):
-			tint = 0.1
-		base_path = PathGenerator.generate_base_path(x_com, w_com, tint)
+		base_path = PathGenerator.generate_base_path(x_com, w_com, tn)
 
 		# Plot.plot_2d_multiple(1,wn_com.t,wn_com.xp*180/np.pi)
 		# Plot.plot_2d_multiple(1,xn_com.t,xn_com.xp)
@@ -1164,18 +1157,16 @@ class GridPlanner:
 
 	def post_process_path(self,path):
 		""" Introduce transition routines into body spline """
-		## TODO: CHANGE TO USE LATEST PATH GENERATOR
 
-		## declare variables ##
-		cpath = []
+		## Define Variables ##
+		temp_path = []
 		base_path = Trajectory6D()
-		x_cob = TrajectoryPoints()
-		w_cob = TrajectoryPoints()
-		m = np.zeros(3)
+		motion_pm = np.zeros(3) 	# motion primitive for next 3 steps
+
 		## cycle through path
 		for i in range(0,len(path)-1):
 			# print i, path[i]
-			cpath.append(path[i])
+			temp_path.append(path[i])
 			## check transition
 			m[0] = self.Gbody.nodes[path[i]]['motion']
 			m[1] = self.Gbody.nodes[path[i+1]]['motion']
@@ -1187,12 +1178,12 @@ class GridPlanner:
 			if (m[0]==0 and m[1]==2):
 				## Walk to Wall ##
 				# print path[i-1], path[i], 'walk to wall'
-				inst_path = self.spline_interpolation(cpath)
+				inst_path = self.spline_interpolation(temp_path)
 				tran_path = self.transition_routine('Gnd_X_Wall',path[i],path[i+1])
 				
 				base_path.append(inst_path)
 				base_path.append(tran_path)
-				cpath = []
+				temp_path = []
 
 			elif (m[0]==2 and m[1]==0):
 				## Wall to Walk ##
@@ -1201,19 +1192,19 @@ class GridPlanner:
 					# force motion to walling for gap of one
 					self.Gbody.nodes[path[i+1]]['motion'] = 1
 					self.GM_chim.add_node(path[i+1])
-					cpath.append(path[i])
+					temp_path.append(path[i])
 				else:
-					inst_path = self.spline_interpolation(cpath)
+					inst_path = self.spline_interpolation(temp_path)
 					tran_path = self.transition_routine('Wall_X_Gnd',path[i],path[i+1])
 					
 					base_path.append(inst_path)
 					base_path.append(tran_path)
-					cpath = []
+					temp_path = []
 
 			elif (m[0]==0 and m[1]==1):
 				## Walk to Chimney ##
 				# print path[i], path[i+1], 'walk to chimney'
-				inst_path = self.spline_interpolation(cpath)
+				inst_path = self.spline_interpolation(temp_path)
 				# TODO: plan foothold for above
 				tran_path = self.transition_routine('Gnd_X_Chim',path[i],path[i+1])
 				# TODO: plan foothold for above
@@ -1221,8 +1212,8 @@ class GridPlanner:
 				base_path.append(inst_path)
 				base_path.append(tran_path)
 				# Append footholds:
-				# append(cpath, shuffle, transition)
-				cpath = []
+				# append(temp_path, shuffle, transition)
+				temp_path = []
 
 			elif (m[0]==1 and m[1]==0):
 				## Chimney to Walk ##
@@ -1231,9 +1222,9 @@ class GridPlanner:
 					# force motion to chimney for gap of one
 					self.Gbody.nodes[path[i+1]]['motion'] = 1
 					self.GM_chim.add_node(path[i+1])
-					cpath.append(path[i])
+					temp_path.append(path[i])
 				else:
-					inst_path = self.spline_interpolation(cpath)
+					inst_path = self.spline_interpolation(temp_path)
 					# TODO: plan foothold for above
 					tran_path = self.transition_routine('Chim_X_Gnd',path[i],path[i+1])
 					# TODO: plan foothold for above
@@ -1241,11 +1232,11 @@ class GridPlanner:
 					base_path.append(inst_path)
 					base_path.append(tran_path)
 					# Append footholds:
-					# append(cpath, shuffle, transition)
-					cpath = []
+					# append(temp_path, shuffle, transition)
+					temp_path = []
 
 		# interpolate final sub-division
-		inst_path = self.spline_interpolation(cpath)
+		inst_path = self.spline_interpolation(temp_path)
 		base_path.append(inst_path)
 
 		## generate path without segmenting them
@@ -1387,16 +1378,16 @@ class GridPlanner:
 		""" converts grid based path to cartesian path """
 
 		## Define Variables ##
-		cpath = np.zeros((len(path),3))
+		temp_path = np.zeros((len(path),3))
 
 		i = 0
 		for p in path:
-			cpath[i][0] = p[0]*self.resolution
-			cpath[i][1] = p[1]*self.resolution
-			cpath[i][2] = 0.1
+			temp_path[i][0] = p[0]*self.resolution
+			temp_path[i][1] = p[1]*self.resolution
+			temp_path[i][2] = 0.1
 			i += 1
 
-		return cpath
+		return temp_path
 
 	def list_to_nparray(self, qlist):
 		""" converts from list to 2D array """

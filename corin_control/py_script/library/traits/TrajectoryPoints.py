@@ -46,6 +46,10 @@ class Trajectory6D():
 		self.W.xv = np.vstack((self.W.xv, data.W.xv))
 		self.W.xa = np.vstack((self.W.xa, data.W.xa))
 
+	def reverse(self):
+		self.X.reverse()
+		self.W.reverse()
+
 class TrajectoryPoints():
 	def __init__(self,data=None):
 		if data is None:
@@ -64,3 +68,8 @@ class TrajectoryPoints():
 		self.xp = np.vstack((self.xp, data.xp))
 		self.xv = np.vstack((self.xv, data.xv))
 		self.xa = np.vstack((self.xa, data.xa))
+
+	def reverse(self):
+		self.xp = self.xp[::-1]
+		self.xv = self.xv[::-1]
+		self.xa = self.xa[::-1]
