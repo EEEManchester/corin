@@ -101,12 +101,14 @@ class LegClass:
 		
 		## Interpolate via points in base frame
 		# bpx, td = self.Path.interpolate_leg_path(self.XHc.base_X_foot[:3,3].flatten(), self.XHd.base_X_foot[:3,3].flatten(), snorm, phase, reflex, ctime, tn)
-		
+
 		## Interpolate via points in world frame from base to foot
 		start = self.XHc.world_base_X_foot[:3,3].copy()
 		end   = mX(self.XH_world_X_base[:3,:3], self.XHd.base_X_foot[:3,3])
 		wpx, td = self.Path.interpolate_leg_path(start, end, snorm, phase, reflex, ctime)
-		
+		if (self.number == 2):
+			print 'st :', np.round(start,4)
+			print 'ed :', np.round(end,4)
 		# Transform each via point from world to leg frame
 		wcp = np.zeros((len(wpx),3))
 		wcp[0] = self.XHc.coxa_X_foot[0:3,3].copy()
@@ -163,9 +165,13 @@ class LegClass:
 		if (xp is None):
 			# Use previous known state
 			xp = self.XHd.coxa_X_foot[:3,3:4]
-
+		if (self.number==2):
+			print 'bf: ', np.round(self.XHd.base_X_foot[:3,3],4)
+			print 'cf: ', np.round(xp,4)
+			# print 'qp: ', np.round(self.Joint.qpd,4)
 		self.Joint.qpd = self.KDL.leg_IK(xp)
 		
+
 		if (self.Joint.qpd is not None):
 			# checks if joint limit exceeded and singularity occurs
 			if (self.check_joint_limit(self.Joint.qpd) is True):

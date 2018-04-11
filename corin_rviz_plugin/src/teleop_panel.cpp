@@ -36,7 +36,8 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   button_right_ = new QPushButton("Right", this);
   button_bodypose_ = new QPushButton("Bodypose", this);
   button_rotate_ = new QPushButton("Rotate", this);
-  button_w_transition_ = new QPushButton("Wall Transition", this);
+  button_g2w_transition_ = new QPushButton("Gnd to Wall Transition", this);
+  button_w2g_transition_ = new QPushButton("Wall to Gnd Transition", this);
   button_c_transition_ = new QPushButton("Chimney Transition", this);
 
   exec_group_ = ExecutionGroup();
@@ -63,7 +64,8 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   param_layout->addWidget( button_left_ );
   param_layout->addWidget( button_right_ );
   param_layout->addWidget( hline2_ );
-  param_layout->addWidget( button_w_transition_ );
+  param_layout->addWidget( button_g2w_transition_ );
+  param_layout->addWidget( button_w2g_transition_ );
   param_layout->addWidget( button_c_transition_ );
 
   main_layout->addLayout(param_layout);
@@ -91,7 +93,8 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   connect( button_right_, SIGNAL (released()), this, SLOT (handleButtonRight()));
   connect( button_bodypose_, SIGNAL (released()), this, SLOT (handleButtonBodypose()));
   connect( button_rotate_, SIGNAL (released()), this, SLOT (handleButtonRotate()));
-  connect( button_w_transition_, SIGNAL (released()), this, SLOT (handleButtonWallTransition()));
+  connect( button_g2w_transition_, SIGNAL (released()), this, SLOT (handleButtonGnd2WallTransition()));
+  connect( button_w2g_transition_, SIGNAL (released()), this, SLOT (handleButtonWall2GndTransition()));
   connect( button_c_transition_, SIGNAL (released()), this, SLOT (handleButtonChimneyTransition()));
 
   connect( button_execute_, SIGNAL (released()), this, SLOT (handleButtonExecute()));
@@ -149,10 +152,15 @@ void TeleopPanel::handleButtonBack()
     enableExecButtons(true);
     nh_.setParam("corin/rotate", true);
  }
- void TeleopPanel::handleButtonWallTransition()
+ void TeleopPanel::handleButtonGnd2WallTransition()
  {
     enableExecButtons(true);
-    nh_.setParam("corin/wall_transition", true);
+    nh_.setParam("corin/g2w_transition", true);
+ }
+ void TeleopPanel::handleButtonWall2GndTransition()
+ {
+    enableExecButtons(true);
+    nh_.setParam("corin/w2g_transition", true);
  }
  void TeleopPanel::handleButtonChimneyTransition()
  {

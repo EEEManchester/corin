@@ -50,7 +50,8 @@ public Q_SLOTS:
   void handleButtonRight();
   void handleButtonBodypose();
   void handleButtonRotate();
-  void handleButtonWallTransition();
+  void handleButtonGnd2WallTransition();
+  void handleButtonWall2GndTransition();
   void handleButtonChimneyTransition();
 
   void handleButtonExecute();
@@ -74,7 +75,8 @@ protected:
   QPushButton* button_right_;
   QPushButton* button_bodypose_;
   QPushButton* button_rotate_;
-  QPushButton* button_w_transition_;
+  QPushButton* button_w2g_transition_;
+  QPushButton* button_g2w_transition_;
   QPushButton* button_c_transition_;
 
   QPushButton* button_execute_;

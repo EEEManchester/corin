@@ -116,6 +116,7 @@ class PathGenerator():
 
 		self.base_path = Trajectory6D((x_out,w_out))
 		# return TrajectoryPoints(x_out), TrajectoryPoints(w_out)	# convert to TrajectoryPoints format
+
 		return Trajectory6D((x_out,w_out))
 
 	def interpolate_leg_path(self, sp, ep, snorm, phase=1, reflex=False, ctime=2.0, type='parabolic'):
@@ -235,7 +236,7 @@ w_cob = np.vstack((w_cob,np.array([-0.2, -0.1, 0.])))
 # x_cob = np.vstack((x_cob,np.array([.0,.0,BODY_HEIGHT])))
 # w_cob = np.vstack((w_cob,np.array([0., 0., 0.])))
 
-path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
+# path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
 # Plot.plot_2d(path_n.X.t,path_n.X.xp)
 # path_n.reverse()
 # Plot.plot_2d(path_n.X.t,path_n.X.xp)
@@ -246,17 +247,38 @@ path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
 # plt.show()
 # Plot.plot_2d_multiple(2,x_out[0],x_out[1],x_out[3])
 
-## wall transition
+## Wall Transition =============================================================
+tran_y = 0.1
+tran_z = 0.3
+
+## Ground to Wall
 x_cob  = np.array([.0,.0,.0])
 w_cob  = np.array([.0,.0,.0])
-tran_y = 0.1
-for q in range(5,91,5):
+
+for q in range(10,91,10):
 	qr = np.deg2rad(q)
-	xd = np.array([0.0, (1.-np.cos(qr))*tran_y, (np.sin(qr))*tran_y])
+	xd = np.array([0.0, (1.-np.cos(qr))*tran_y, (np.sin(qr))*tran_z])
 	
 	x_cob = np.vstack(( x_cob, xd ))
 	w_cob = np.vstack(( w_cob, np.array([qr,0.0,0.0]) ))
+
 # path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
 # Plot.plot_2d(path_n.X.t,path_n.X.xp)
 
+## ----------------------------------------------------------------------- ##
+## Wall to Ground
+x_cob = np.zeros(3)# np.array([0.,tran_y,tran_z])
+w_cob = np.array([np.pi/2, 0., 0.])
 
+for q in range(80,-1,-10):
+	qr = np.deg2rad(q)
+	# xd = np.array([0.0, (1.-np.cos(qr))*tran_y, (np.sin(qr))*tran_z])
+	xd = np.array([0.0, (np.cos(qr))*tran_y, (1-np.sin(qr))*tran_z])
+
+	x_cob = np.vstack(( x_cob, xd ))
+	w_cob = np.vstack(( w_cob, np.array([qr,0.0,0.0]) ))
+
+path_n = planner.generate_base_path(-x_cob, w_cob, 0.1)
+# Plot.plot_2d(path_n.X.t,path_n.X.xp)
+# Plot.plot_3d(path_n.X.xp[:,0], path_n.X.xp[:,1], path_n.X.xp[:,2])
+# Plot.plot_3d(path_n.X.xp[:,0], tran_y+path_n.X.xp[:,1], tran_z+path_n.X.xp[:,2])

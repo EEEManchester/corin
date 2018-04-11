@@ -25,8 +25,12 @@ class ControlInterface:
 		rospy.set_param('/corin/walk_back', False)	# Walk backwards ~0.4 metres (Working)
 		rospy.set_param('/corin/walk_left', False)	# walk left ~0.4 metres (working)
 		rospy.set_param('/corin/rotate', False)
-		rospy.set_param('/corin/wall_transition', False)
-		rospy.set_param('/corin/chimney_transition', False)
+		
+		rospy.set_param('/corin/g2w_transition', False)
+		rospy.set_param('/corin/w2g_transition', False)
+		
+		rospy.set_param('/corin/g2c_transition', False)
+		rospy.set_param('/corin/c2g_transition', False)
 
 	#corin performs bodypose
 	def bodypose(self, x_cob, w_cob):
@@ -178,13 +182,21 @@ class ControlInterface:
 			rospy.set_param('/corin/rotate',False)
 			return self.rotate(x_cob, w_cob)
 
-		elif (rospy.get_param('/corin/wall_transition')==True):
-			rospy.set_param('/corin/wall_transition',False)
-			return self.wall_transition(x_cob, w_cob)
+		elif (rospy.get_param('/corin/g2w_transition')==True):
+			rospy.set_param('/corin/g2w_transition',False)
+			return self.gnd_X_wall_transition(x_cob, w_cob)
 
-		elif (rospy.get_param('/corin/chimney_transition')==True):
-			rospy.set_param('/corin/chimney_transition',False)
-			return self.chimney_transition(x_cob, w_cob)
+		elif (rospy.get_param('/corin/w2g_transition')==True):
+			rospy.set_param('/corin/w2g_transition',False)
+			return self.wall_X_gnd_transition(x_cob, w_cob)
+
+		elif (rospy.get_param('/corin/g2c_transition')==True):
+			rospy.set_param('/corin/g2c_transition',False)
+			return self.gnd_X_chimney_transition(x_cob, w_cob)
+
+		elif (rospy.get_param('/corin/c2g_transition')==True):
+			rospy.set_param('/corin/c2g_transition',False)
+			return self.gnd_X_chimney_transition(x_cob, w_cob)
 
 		elif (rospy.get_param('/corin/reset')==True):		# Command Prompt: rosparam set reset True
 			rospy.set_param('/corin/reset',False)
@@ -192,7 +204,7 @@ class ControlInterface:
 		else:
 			return None
 
-	def wall_transition(self, x_cob, w_cob):
+	def gnd_X_wall_transition(self, x_cob, w_cob):
 		""" wall transition base trajectory """
 		## TODO: set somewhere else
 		self.mode = 2
@@ -207,12 +219,34 @@ class ControlInterface:
 			w_cob = np.vstack(( w_cob, np.array([qr,0.0,0.0]) ))
 			
 		# Plot.plot_3d(x_cob[:,0],x_cob[:,1],x_cob[:,2])
-		return x_cob, w_cob, self.mode, 'wall_transition'
+		return x_cob, w_cob, self.mode, 'g2w_transition'
 
-	def chimney_transition(self, x_cob, w_cob):
+	def wall_X_gnd_transition(self, x_cob, w_cob):
+		""" wall transition base trajectory """
+		## TODO: set somewhere else
+		self.mode = 2
+		tran_y = 0.2
+		tran_z = 0.3
+
+		# overwrite initial robot position
+		x_cob = np.zeros(3)# np.array([0.,tran_y,tran_z])
+		w_cob = np.array([np.pi/2, 0., 0.])
+
+		for q in range(80,-1,-10):
+			qr = np.deg2rad(q)
+			# xd = np.array([0.0, (1-np.cos(qr))*tran_y, (np.sin(qr))*tran_z])
+			xd = np.array([0.0, (np.cos(qr))*tran_y, (1-np.sin(qr))*tran_z])
+			
+			x_cob = np.vstack(( x_cob, xd ))
+			w_cob = np.vstack(( w_cob, np.array([qr,0.0,0.0]) ))
+			
+		# Plot.plot_3d(x_cob[:,0],x_cob[:,1],x_cob[:,2])
+		return -x_cob, w_cob, self.mode, 'w2g_transition'
+
+	def gnd_X_chimney_transition(self, x_cob, w_cob):
 		self.mode  = 2
 		## TODO: set somewhere else
 		for i in range(0,6):
 			x_cob = np.vstack((x_cob,np.array([0., 0., 0.])))
 		
-		return x_cob, w_cob, self.mode, 'chimney_transition'
+		return x_cob, w_cob, self.mode, 'g2c_transition'

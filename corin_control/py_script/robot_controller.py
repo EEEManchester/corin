@@ -338,16 +338,16 @@ class CorinManager:
 			py = sy*np.sin(np.deg2rad(ROT_BASE_X_LEG[j]+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
 
 			Leg[j].world_base_X_NRP[1,3] = py
-			# if (j==4 or j==3):
-			# 	print 'cp : ', np.round(v3cp.flatten(),4)
-			# 	print 'wp : ', np.round(v3wp.flatten(),4)
-				# print j, ' hy: ', np.round(hy,4)
-				# print j, 'bXF: ', np.round(Leg[j].base_X_femur[:3,3],4)
-			# 	print 'yy: ', np.round(yy,4)
-			# 	print 'by: ', np.round(by,4)
-				# print j, ' sy:  ', np.round(sy,4)
-				# print j, ' py:  ', np.round(py,4)
-				# print j, ' bXN: ', np.round(Leg[j].world_base_X_NRP[:3,3],4)
+			# if (j==4):
+			# 	print j, ' cp : ', np.round(v3cp.flatten(),4)
+			# 	print j, ' wp : ', np.round(v3wp.flatten(),4)
+			# 	print j, ' hy : ', np.round(hy,4)
+			# 	print j, 'bXF : ', np.round(Leg[j].base_X_femur[:3,3],4)
+			# 	print j, ' yy : ', np.round(yy,4)
+			# 	print j, ' by : ', np.round(by,4)
+			# 	print j, ' sy : ', np.round(sy,4)
+			# 	print j, ' py : ', np.round(py,4)
+			# 	print j, ' bXN: ', np.round(Leg[j].world_base_X_NRP[:3,3],4)
 
 		def compute_wall_footholds():
 			""" Computes NRP position for wall footholds """ 
@@ -362,6 +362,11 @@ class CorinManager:
 				final_foothold[1] = np.array([ 0.,   d_wall, 0.25+0.38])
 				final_foothold[2] = np.array([-0.115, d_wall, 0.25+0.38])
 
+			elif (self.T_WALL_X_GND is True):
+				final_foothold[0] = np.array([ 0.115, d_wall, h_init])
+				final_foothold[1] = np.array([ 0.,    d_wall, h_init])
+				final_foothold[2] = np.array([-0.115, d_wall, h_init])
+
 			elif (self.T_GND_X_CHIM is True):
 				final_foothold[0] = np.array([ 0.115, d_wall, h_init])
 				final_foothold[1] = np.array([ 0.,   d_wall,  h_init])
@@ -374,7 +379,9 @@ class CorinManager:
 				# set initial foothold and overwrite y & z-component
 				initial_foothold[ji] = self.Robot.Leg[ji].XHc.world_X_foot[:3,3].copy()
 				initial_foothold[ji][1] = final_foothold[ji][1]
-				initial_foothold[ji][2] = h_init
+
+				if (self.T_WALL_X_GND is not True):
+					initial_foothold[ji][2] = h_init
 
 			delta_foothold   = final_foothold[j] - initial_foothold[j] 	# difference
 			delta_foothold_n = delta_foothold/len(base_path.X.t) 		# change per interval
@@ -387,7 +394,7 @@ class CorinManager:
 			# 	print 'if : ', np.round(initial_foothold[j],6)
 			# 	print 'ff : ', np.round(final_foothold[1],4)
 			# 	print 'd  : ', np.round(delta_foothold,4)
-				# print 'wXN: ', np.round(world_X_NRP,4)
+			# 	print 'wXN: ', np.round(world_X_NRP,4)
 				
 		## Define Variables ##
 		i = 0
@@ -436,7 +443,8 @@ class CorinManager:
 				## Variable mapping to R^(3x1) for base linear and angular time, position, velocity, acceleration
 				try:
 					v3cp = self.Robot.P6c.world_X_base[0:3] + base_path.X.xp[i].reshape(3,1)
-					v3wp = self.Robot.P6c.world_X_base[3:6] + base_path.W.xp[i].reshape(3,1)
+					# v3wp = self.Robot.P6c.world_X_base[3:6] + base_path.W.xp[i].reshape(3,1)
+					v3wp = base_path.W.xp[i].reshape(3,1)
 
 					P6d_world_X_base = np.vstack((v3cp,v3wp))
 
@@ -493,7 +501,13 @@ class CorinManager:
 								compute_wall_footholds()
 							else:
 								compute_ground_footholds()
-						
+					
+					elif (self.T_WALL_X_GND is True):
+						if (j >= 3):
+							compute_ground_footholds()
+						else:
+							compute_wall_footholds()
+
 					elif (self.T_GND_X_CHIM is True):
 						compute_wall_footholds()
 
@@ -501,8 +515,9 @@ class CorinManager:
 						Leg[j].update_world_base_X_NRP(P6d_world_X_base)
 
 					## Compute magnitude & vector direction
+					wall_trans = True if (self.T_GND_X_WALL is True or self.T_WALL_X_GND is True) else False
 					snorm = self.Map.get_cell_snorm(Leg[j].world_base_X_NRP[0:3,3], 
-													self.T_GND_X_WALL, 
+													wall_trans,
 													self.T_GND_X_CHIM) # get surface normal
 
 					v3_dv = (v3cp - v3cp_prev).flatten() 			# direction vector from previous to current CoB
@@ -523,7 +538,7 @@ class CorinManager:
 					
 					## Get cell height in (x,y) location of world_X_foot
 					cell_h = np.array([0.,0.,0.])			# TODO: unstack height from map
-					if (self.T_GND_X_WALL is True):
+					if (self.T_GND_X_WALL is True or self.T_WALL_X_GND is True):
 						## TODO: temporary setting this side height to be equiv. of wall
 						if (j < 3):
 							cell_h = np.array([0.,0.,1.])
@@ -550,25 +565,37 @@ class CorinManager:
 					
 					world_base_X_NRP[j].t.append(i*CTR_INTV)
 					world_base_X_NRP[j].xp.append(Leg[j].world_base_X_NRP[:3,3:4].copy())
-					if (j==4):
+
+					if (j==1):
 					# 	print '--------------------------------------------'
 					# 	print 'snorm ', snorm
 						# print 'v3pv: ', v3_pv.flatten()
 						# print 'v3uv: ', v3_uv.flatten()
+						print 'wXf:  ', np.round(Leg[j].world_X_foot[:3,3], 4)
 						print 'wbXN: ', np.round(Leg[j].world_base_X_NRP[:3,3],4)
 						print 'wbXA: ', np.round(Leg[j].world_base_X_AEP[:3,3],4)
 						# print 'wXN:  ', XHd.world_X_base[:3,3] + Leg[j].world_base_X_NRP[:3,3]
 						# print 'wXA:  ', XHd.world_X_base[:3,3] + Leg[j].world_base_X_AEP[:3,3]
 						# print 'wXb:  ', np.round(XHd.base_X_world,4)
-						# print 'wXf:  ', np.round(Leg[j].world_X_foot[:3,3], 4)
+						
 
 			## Alternate gait phase
 			Gait.change_phase()
 			v3cp_prev = v3cp.copy()
 			v3wp_prev = v3wp.copy()
 
+		# Replace last footholds with default ground NRP
+		if (self.T_WALL_X_GND is True):
+			KDL = kdl.KDL()
+			for j in range(0,6):
+				Leg[j].update_base_X_NRP(KDL.leg_IK(LEG_STANCE[j]))
+				base_X_footholds[j].xp[-1] = Leg[j].base_X_NRP[:3,3:4].copy()
+				world_base_X_NRP[j].xp[-1] = Leg[j].base_X_NRP[:3,3:4].copy()
+				world_X_footholds[j].xp[-1] = mX(XHd.world_X_base, Leg[j].base_X_NRP)[:3,3:4]
+
 			# raw_input('cont')
-		# print np.round(world_X_footholds[0].xp,4)
+		print np.round(base_X_footholds[2].xp,4)
+
 		return world_X_base, world_X_footholds, base_X_footholds, world_base_X_NRP
 
 	def trajectory_tracking(self, x_cob, w_cob=0):
@@ -600,18 +627,7 @@ class CorinManager:
 		## Plan foothold for robot - world_X_base, world_X_footholds not used
 		world_X_base, world_X_footholds, base_X_footholds, w_base_X_NRP = self.foothold_selection(base_path)
 
-		## Reverse transition
-		base_path.reverse()
-		world_X_base = world_X_base[::-1]
-		w_base_X_NRP = w_base_X_NRP[::-1]
-		world_X_footholds = world_X_footholds[::-1]
-		base_X_footholds  = base_X_footholds[::-1]
-		
-		wXbase_offset = world_X_base.pop(0).flatten()
-		print type(wXbase_offset), len(wXbase_offset)
-		## TODO: add preview of motion here
-
-		## publish multiple times to ensure it is published 
+		## Publish multiple times to ensure it is published 
 		for c in range(0,3):
 			self.robot_broadcaster.sendTransform( (wXbase_offset[0],wXbase_offset[1],wXbase_offset[2]), 
 													tf.transformations.quaternion_from_euler(wXbase_offset[3].copy(), 
@@ -646,7 +662,7 @@ class CorinManager:
 		i = 1 	# skip first point since spline has zero initial differential conditions
 		while (i != len(base_path.X.t) and not rospy.is_shutdown()):
 			# print 'counting: ', i, len(base_path.X.t)
-			
+			print self.Robot.Gait.cs, i
 			## suppress trajectory counter as body support suspended
 			if (self.Robot.suspend == True):
 				i -= 1
@@ -659,7 +675,8 @@ class CorinManager:
 			v3cv = base_path.X.xv[i].reshape(3,1);
 			v3ca = base_path.X.xa[i].reshape(3,1);
 
-			v3wp = wXbase_offset[3:6] + base_path.W.xp[i].reshape(3,1);
+			# v3wp = wXbase_offset[3:6] + base_path.W.xp[i].reshape(3,1);
+			v3wp = base_path.W.xp[i].reshape(3,1);
 			v3wv = base_path.W.xv[i].reshape(3,1);
 			v3wa = base_path.W.xa[i].reshape(3,1);
 
@@ -722,8 +739,9 @@ class CorinManager:
 					self.Robot.Leg[j].XHd.coxa_X_AEP  = self.Robot.Leg[j].XHd.coxa_X_foot.copy()
 
 					## Compute average surface normal from cell surface normal at both footholds
-					snorm_1 = self.Map.get_cell_snorm(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],self.T_GND_X_WALL, self.T_GND_X_CHIM)
-					snorm_2 = self.Map.get_cell_snorm(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],self.T_GND_X_WALL, self.T_GND_X_CHIM)
+					wall_trans = True if (self.T_GND_X_WALL is True or self.T_WALL_X_GND is True) else False
+					snorm_1 = self.Map.get_cell_snorm(self.Robot.Leg[j].XHc.world_X_foot[0:3,3], wall_trans, self.T_GND_X_CHIM)
+					snorm_2 = self.Map.get_cell_snorm(self.Robot.Leg[j].XHd.world_X_foot[0:3,3], wall_trans, self.T_GND_X_CHIM)
 					w_snorm = (snorm_1 + snorm_2)/2.
 
 					## Set spline required parameters
@@ -787,7 +805,7 @@ class CorinManager:
 				# > 0: prevents trigger during all leg support
 				if (transfer_total == leg_complete and transfer_total > 0 and leg_complete > 0):
 					self.Robot.alternate_phase()
-					# print self.Robot.Gait.cs, i
+					
 
 				## LOGGING: initialise variable and set respective data ##
 				qlog 		  = JointState()
@@ -823,7 +841,7 @@ class CorinManager:
 		data = self.Action.action_to_take()
 
 		if (data is not None):
-			print data
+			
 			## Clear visualization components ##
 			clear_marker = MarkerArray()
 			mark = Marker()
@@ -838,11 +856,17 @@ class CorinManager:
 			x_cob, w_cob, mode, motion_prim = data
 
 			## TEMP: Check motion primitive
-			self.T_GND_X_CHIM = self.T_GND_X_WALL = False
-			if (motion_prim == 'wall_transition'):
+			self.T_GND_X_CHIM = self.T_CHIM_X_GND = False
+			self.T_GND_X_WALL = self.T_WALL_X_GND = False
+
+			if (motion_prim == 'g2w_transition'):
 				self.T_GND_X_WALL = True
-			elif (motion_prim == 'chimney_transition'):
+			elif (motion_prim == 'w2g_transition'):
+				self.T_WALL_X_GND = True
+			elif (motion_prim == 'g2c_transition'):
 				self.T_GND_X_CHIM = True
+			elif (motion_prim == 'c2g_transition'):
+				self.T_CHIM_X_GND = True
 
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
