@@ -117,7 +117,7 @@ class ControlInterface:
 		
 	def walk_front(self, x_cob, w_cob):
 		self.mode  = 2
-		x_cob = np.vstack((x_cob,np.array([0.4, 0., 0.])))
+		x_cob = np.vstack((x_cob,np.array([0.1, 0., 0.])))
 		# x_cob = np.vstack((x_cob,np.array([0.3, 0., 0.])))
 		# w_cob = np.vstack((w_cob,np.array([0.25, 0., 0.])))
 		# w_cob = np.vstack((w_cob,np.array([0.15, 0., 0.])))
@@ -196,7 +196,7 @@ class ControlInterface:
 
 		elif (rospy.get_param('/corin/c2g_transition')==True):
 			rospy.set_param('/corin/c2g_transition',False)
-			return self.gnd_X_chimney_transition(x_cob, w_cob)
+			return self.chimney_X_gnd_transition(x_cob, w_cob)
 
 		elif (rospy.get_param('/corin/reset')==True):		# Command Prompt: rosparam set reset True
 			rospy.set_param('/corin/reset',False)
@@ -250,3 +250,11 @@ class ControlInterface:
 			x_cob = np.vstack((x_cob,np.array([0., 0., 0.])))
 		
 		return x_cob, w_cob, self.mode, 'g2c_transition'
+
+	def chimney_X_gnd_transition(self, x_cob, w_cob):
+		self.mode  = 2
+		## TODO: set somewhere else
+		for i in range(0,6):
+			x_cob = np.vstack((x_cob,np.array([0., 0., 0.])))
+		
+		return x_cob, w_cob, self.mode, 'c2g_transition'

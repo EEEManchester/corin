@@ -9,6 +9,8 @@
 #include <QLabel>
 #include <QTimer>
 #include <QPushButton>
+#include <QString>
+#include <QIcon>
 
 #include "teleop_panel.h"
 
@@ -30,16 +32,20 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   // , motion_selected_( false )
   // , angular_velocity_( 0 )
 {
-  button_front_ = new QPushButton("Forward", this);
+  button_front_ = new QPushButton("Forwards", this);
   button_back_ = new QPushButton("Backwards", this);
   button_left_ = new QPushButton("Left", this);
   button_right_ = new QPushButton("Right", this);
   button_bodypose_ = new QPushButton("Bodypose", this);
   button_rotate_ = new QPushButton("Rotate", this);
-  button_g2w_transition_ = new QPushButton("Gnd to Wall Transition", this);
-  button_w2g_transition_ = new QPushButton("Wall to Gnd Transition", this);
-  button_c_transition_ = new QPushButton("Chimney Transition", this);
+  button_reset_ = new QPushButton("Reset", this);
+  
+  button_front_->setIcon(QIcon("package://icons/classes/uparrow.png"));
+  // QString buttonStyle = "QPushButton{border:none;background-color:rgba(255, 255, 255,100);}";
+  // button_front_->setStyleSheet(buttonStyle); // Style sheet
+  // button_front_->setIconSize(QSize(50,50));
 
+  tran_group_ = TransitionGroup();
   exec_group_ = ExecutionGroup();
 
   hline1_ = new QFrame;
@@ -54,22 +60,38 @@ TeleopPanel::TeleopPanel( QWidget* parent )
 
   // Lay out the topic field above the control widget.
   QVBoxLayout* main_layout  = new QVBoxLayout;
-  QVBoxLayout* param_layout = new QVBoxLayout;
+  // QVBoxLayout* param_layout = new QVBoxLayout;
+  
+  // param_layout->addWidget( button_bodypose_ );
+  // param_layout->addWidget( button_rotate_ );
+  // param_layout->addWidget( hline1_ );
+  // param_layout->addWidget( button_front_ );
+  // param_layout->addWidget( button_back_ );
+  // param_layout->addWidget( button_left_ );
+  // param_layout->addWidget( button_right_ );
+  // param_layout->addWidget( hline2_ );
+  // param_layout->addWidget( button_g2w_transition_ );
+  // param_layout->addWidget( button_w2g_transition_ );
+  // param_layout->addWidget( button_g2c_transition_ );
+  // param_layout->addWidget( button_c2g_transition_ );
+  
+  QGridLayout *poses_layout = new QGridLayout;
+  poses_layout->addWidget( button_bodypose_, 0, 0 );
+  poses_layout->addWidget( button_rotate_ , 0, 1);
 
-  param_layout->addWidget( button_bodypose_ );
-  param_layout->addWidget( button_rotate_ );
-  param_layout->addWidget( hline1_ );
-  param_layout->addWidget( button_front_ );
-  param_layout->addWidget( button_back_ );
-  param_layout->addWidget( button_left_ );
-  param_layout->addWidget( button_right_ );
-  param_layout->addWidget( hline2_ );
-  param_layout->addWidget( button_g2w_transition_ );
-  param_layout->addWidget( button_w2g_transition_ );
-  param_layout->addWidget( button_c_transition_ );
-
-  main_layout->addLayout(param_layout);
-  main_layout->addWidget( hline3_ );
+  QGridLayout *direction_layout = new QGridLayout;
+  direction_layout->addWidget( button_front_, 0, 1 );
+  direction_layout->addWidget( button_back_, 2, 1 );
+  direction_layout->addWidget( button_left_, 1, 0 );
+  direction_layout->addWidget( button_reset_, 1, 1 );
+  direction_layout->addWidget( button_right_, 1, 2 );
+  
+  main_layout->addLayout(poses_layout);
+  main_layout->addWidget(hline1_ );
+  main_layout->addLayout(direction_layout);
+  main_layout->addWidget(hline2_ );
+  main_layout->addWidget(tran_group_);
+  main_layout->addWidget(hline3_ );
   main_layout->addWidget(exec_group_);
   
   setLayout( main_layout );
@@ -95,7 +117,8 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   connect( button_rotate_, SIGNAL (released()), this, SLOT (handleButtonRotate()));
   connect( button_g2w_transition_, SIGNAL (released()), this, SLOT (handleButtonGnd2WallTransition()));
   connect( button_w2g_transition_, SIGNAL (released()), this, SLOT (handleButtonWall2GndTransition()));
-  connect( button_c_transition_, SIGNAL (released()), this, SLOT (handleButtonChimneyTransition()));
+  connect( button_g2c_transition_, SIGNAL (released()), this, SLOT (handleButtonGnd2ChimneyTransition()));
+  connect( button_c2g_transition_, SIGNAL (released()), this, SLOT (handleButtonChimney2GndTransition()));
 
   connect( button_execute_, SIGNAL (released()), this, SLOT (handleButtonExecute()));
   connect( button_cancel_, SIGNAL (released()), this, SLOT (handleButtonCancel()));
@@ -104,6 +127,27 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   output_timer->start( 100 );
 
 }
+QGroupBox *TeleopPanel::TransitionGroup()
+{
+    QGroupBox *groupBox = new QGroupBox(tr("Transitions"));
+
+    // groupBox->setStyleSheet("margin: 1px solid black");
+    button_g2w_transition_ = new QPushButton("Gnd to Wall", this);
+    button_w2g_transition_ = new QPushButton("Wall to Gnd", this);
+    button_g2c_transition_ = new QPushButton("Gnd to Chimney", this);
+    button_c2g_transition_ = new QPushButton("Chimney to Gnd", this);
+
+    QGridLayout *transition_layout = new QGridLayout;
+    transition_layout->addWidget( button_g2w_transition_,0 ,1 );
+    transition_layout->addWidget( button_w2g_transition_,0 ,2 );
+    transition_layout->addWidget( button_g2c_transition_,1 ,1 );
+    transition_layout->addWidget( button_c2g_transition_,1 ,2 );
+
+    groupBox->setLayout(transition_layout);
+    // groupBox->setFlat(false);
+    return groupBox;
+}
+
 QGroupBox *TeleopPanel::ExecutionGroup()
 {
     QGroupBox *groupBox = new QGroupBox(tr(""));
@@ -162,10 +206,15 @@ void TeleopPanel::handleButtonBack()
     enableExecButtons(true);
     nh_.setParam("corin/w2g_transition", true);
  }
- void TeleopPanel::handleButtonChimneyTransition()
+ void TeleopPanel::handleButtonGnd2ChimneyTransition()
  {
     enableExecButtons(true);
-    nh_.setParam("corin/chimney_transition", true);
+    nh_.setParam("corin/g2c_transition", true);
+ }
+ void TeleopPanel::handleButtonChimney2GndTransition()
+ {
+    enableExecButtons(true);
+    nh_.setParam("corin/c2g_transition", true);
  }
 // ====================================================== //
 // ====================================================== //

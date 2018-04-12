@@ -89,7 +89,7 @@ class LegClass:
 		return None
 		## TODO: TRANSFORM FROM FOOT FRAME TO HIP, BASE, WORLD FRAME
 
-	def generate_spline(self, snorm, phase=1, reflex=False, ctime=2.0, tn=0.1):
+	def generate_spline(self, frame, snorm, phase=1, reflex=False, ctime=2.0, tn=0.1):
 		""" generate leg trajectory using bspline and check for kinematic constraints 	"""
 		""" Input:  a) nLeg   -> Leg number
 			 		b) start  -> start position in 3D space wrt base frame
@@ -102,21 +102,23 @@ class LegClass:
 		## Interpolate via points in base frame
 		# bpx, td = self.Path.interpolate_leg_path(self.XHc.base_X_foot[:3,3].flatten(), self.XHd.base_X_foot[:3,3].flatten(), snorm, phase, reflex, ctime, tn)
 
-		## Interpolate via points in world frame from base to foot
-		start = self.XHc.world_base_X_foot[:3,3].copy()
-		end   = mX(self.XH_world_X_base[:3,:3], self.XHd.base_X_foot[:3,3])
-		wpx, td = self.Path.interpolate_leg_path(start, end, snorm, phase, reflex, ctime)
-		# if (self.number == 2):
-		# 	print 'st :', np.round(start,4)
-		# 	print 'ed :', np.round(end,4)
-		# Transform each via point from world to leg frame
-		wcp = np.zeros((len(wpx),3))
-		wcp[0] = self.XHc.coxa_X_foot[0:3,3].copy()
+		if (frame is 'world'):
+			## Interpolate via points in world frame from base to foot
+			start = self.XHc.world_base_X_foot[:3,3].copy()
+			end   = mX(self.XH_world_X_base[:3,:3], self.XHd.base_X_foot[:3,3])
+			wpx, td = self.Path.interpolate_leg_path(start, end, snorm, phase, reflex, ctime)
+			
+			# Transform each via point from world to leg frame
+			wcp = np.zeros((len(wpx),3))
+			wcp[0] = self.XHc.coxa_X_foot[0:3,3].copy()
 
-		for i in range (1, len(wpx)):
-			basXft = mX(np.transpose(self.XH_world_X_base[:3,:3]), wpx[i]) 	# transfrom from world to base frame
-			wcp[i] = mX(self.XHc.coxa_X_base, v3_X_m(basXft))[:3,3] 		# transform from base to leg frame
-
+			for i in range (1, len(wpx)):
+				basXft = mX(np.transpose(self.XH_world_X_base[:3,:3]), wpx[i]) 	# transfrom from world to base frame
+				wcp[i] = mX(self.XHc.coxa_X_base, v3_X_m(basXft))[:3,3] 		# transform from base to leg frame
+		elif (frame is 'leg'):
+			wcp, td = self.Path.interpolate_leg_path(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3], 
+														self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3], 
+														snorm, phase, reflex, ctime)
 		self.xspline = TrajectoryPoints(self.Path.generate_leg_path(wcp, td, tn))
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)

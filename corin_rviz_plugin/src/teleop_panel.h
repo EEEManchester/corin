@@ -52,7 +52,8 @@ public Q_SLOTS:
   void handleButtonRotate();
   void handleButtonGnd2WallTransition();
   void handleButtonWall2GndTransition();
-  void handleButtonChimneyTransition();
+  void handleButtonGnd2ChimneyTransition();
+  void handleButtonChimney2GndTransition();
 
   void handleButtonExecute();
   void handleButtonCancel();
@@ -75,20 +76,24 @@ protected:
   QPushButton* button_right_;
   QPushButton* button_bodypose_;
   QPushButton* button_rotate_;
+  QPushButton* button_reset_;
   QPushButton* button_w2g_transition_;
   QPushButton* button_g2w_transition_;
-  QPushButton* button_c_transition_;
+  QPushButton* button_g2c_transition_;
+  QPushButton* button_c2g_transition_;
 
   QPushButton* button_execute_;
   QPushButton* button_cancel_;
 
   QGroupBox* exec_group_;
+  QGroupBox* tran_group_;
 
   QFrame* hline1_;
   QFrame* hline2_;
   QFrame* hline3_;
 
   QGroupBox* ExecutionGroup();
+  QGroupBox* TransitionGroup();
   // The ROS publisher for the command velocity.
   // ros::Publisher velocity_publisher_;
 
