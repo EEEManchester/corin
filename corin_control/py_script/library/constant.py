@@ -90,7 +90,7 @@ CTR_INTV 	= 1./CTR_RATE 	# controller interval for robot, s
 ##                       Gait parameters 	 						##
 ## ================================================================ ##
 
-GAIT_TYPE 	 = 3 		# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+GAIT_TYPE 	 = 1 		# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 BODY_HEIGHT  = 0.1		# ori: 0.10, chimney: 0.0
 STANCE_WIDTH = 0.21		# ori: 0.21, chimney: 0.27, 0.31 for tripod
 STEP_STROKE  = 0.08		# step size, x, 	default 0.07
@@ -123,7 +123,7 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 ##                       Stance parameters 	 						##
 ## ================================================================ ##
 # Offset for front and rear legs
-TETA_F = 0.;	
+TETA_F = 40.;	
 TETA_R = -TETA_F;
 LEG_OFFSET = [TETA_F, 0., TETA_R, -TETA_F, 0., -TETA_R]
 ### Leg default position, SCS
