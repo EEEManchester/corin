@@ -182,7 +182,7 @@ class GridPlanner:
 		nx.set_node_attributes(self.Gbody, {e: 0 for e in self.Gbody.nodes()}, 'width') 	# footprint lateral width
 		nx.set_node_attributes(self.Gbody, {e: [0.,0.,0.,0.] for e in self.Gbody.nodes()}, 'pose')	# robot bodypose - height, roll, pitch, yaw
 
-		# self.map_cell_cost()		# assign cost based on free=0 or obstacle=1
+		self.map_cell_cost()		# assign cost based on free=0 or obstacle=1
 
 		print 'Initialised - '
 		print 'Map Grid  : ', gridx, ' by ', gridy
@@ -1161,7 +1161,7 @@ class GridPlanner:
 		## Define Variables ##
 		temp_path = []
 		base_path = Trajectory6D()
-		motion_pm = np.zeros(3) 	# motion primitive for next 3 steps
+		m = np.zeros(3) 	# motion primitive for next 3 steps
 
 		## cycle through path
 		for i in range(0,len(path)-1):

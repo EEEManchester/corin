@@ -97,8 +97,8 @@ STEP_STROKE  = 0.08		# step size, x, 	default 0.07
 STEP_HEIGHT  = 0.05		# step height, z 	default 0.05
 GAIT_TPHASE	 = 2.0 		# period per gait phase
 
-BASE_MAX_LINEAR_VELOCITY  = 0.04	# maximum base velocity, m/s - walking: 0.025
-BASE_MAX_ANGULAR_VELOCITY = 0.02	# maximum base velocity, rad/s
+BASE_MAX_LINEAR_VELOCITY  = 0.404	# maximum base velocity, m/s - walking: 0.025
+BASE_MAX_ANGULAR_VELOCITY = 0.402	# maximum base velocity, rad/s
 
 # BASE_SPEED 			= 0.025 		# walking speed in m/s
 # DUTY_FACTOR = {'tripod':0.5, 'tetrapod':2./3., 'ripple':3./4., 'wave':5./6. }
