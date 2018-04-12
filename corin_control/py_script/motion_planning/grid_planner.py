@@ -182,7 +182,7 @@ class GridPlanner:
 		nx.set_node_attributes(self.Gbody, {e: 0 for e in self.Gbody.nodes()}, 'width') 	# footprint lateral width
 		nx.set_node_attributes(self.Gbody, {e: [0.,0.,0.,0.] for e in self.Gbody.nodes()}, 'pose')	# robot bodypose - height, roll, pitch, yaw
 
-		self.map_cell_cost()		# assign cost based on free=0 or obstacle=1
+		# self.map_cell_cost()		# assign cost based on free=0 or obstacle=1
 
 		print 'Initialised - '
 		print 'Map Grid  : ', gridx, ' by ', gridy
