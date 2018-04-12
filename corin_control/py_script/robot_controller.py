@@ -31,6 +31,9 @@ class CorinManager:
 	T_GND_X_CHIM = False
 	T_WALL_X_GND = False
 	T_CHIM_X_GND = False
+	W_GND 	= False
+	W_WALL = False
+	W_CHIM = False
 
 	def __init__(self, initialise=False):
 		rospy.init_node('CorinController') 		# Initialises node
@@ -363,9 +366,9 @@ class CorinManager:
 				final_foothold[2] = np.array([-0.115, d_wall, 0.25+0.38])
 
 			elif (self.T_WALL_X_GND is True):
-				final_foothold[0] = np.array([ 0.115, d_wall, h_init])
-				final_foothold[1] = np.array([ 0.,    d_wall, h_init])
-				final_foothold[2] = np.array([-0.115, d_wall, h_init])
+				final_foothold[0] = np.array([v3cp_prev[0]+ 0.115, d_wall, h_init])
+				final_foothold[1] = np.array([v3cp_prev[0]+ 0.,    d_wall, h_init])
+				final_foothold[2] = np.array([v3cp_prev[0]+-0.115, d_wall, h_init])
 
 			elif (self.T_GND_X_CHIM is True):
 				final_foothold[0] = np.array([ 0.115, d_wall, h_init])
@@ -432,7 +435,8 @@ class CorinManager:
 		## Returns as footholds remain fixed for full support mode
 		if (self.Robot.support_mode is True):
 			return world_X_base, world_X_footholds, base_X_footholds
-		
+		print '1 bXN:  ', np.round(Leg[1].base_X_NRP[:3,3],4)
+		print '1wbXN:  ', np.round(Leg[1].world_base_X_NRP[:3,3],4)
 		## Cycle through trajectory
 		while (i != len(base_path.X.t) and not rospy.is_shutdown()):
 			# print i, ' Gait phase ', Gait.cs
@@ -443,8 +447,8 @@ class CorinManager:
 				## Variable mapping to R^(3x1) for base linear and angular time, position, velocity, acceleration
 				try:
 					v3cp = self.Robot.P6c.world_X_base[0:3] + base_path.X.xp[i].reshape(3,1)
-					# v3wp = self.Robot.P6c.world_X_base[3:6] + base_path.W.xp[i].reshape(3,1)
-					v3wp = base_path.W.xp[i].reshape(3,1)
+					v3wp = self.Robot.P6c.world_X_base[3:6] + base_path.W.xp[i].reshape(3,1)
+					# v3wp = base_path.W.xp[i].reshape(3,1)
 
 					P6d_world_X_base = np.vstack((v3cp,v3wp))
 
@@ -511,9 +515,23 @@ class CorinManager:
 					elif (self.T_GND_X_CHIM is True):
 						compute_wall_footholds()
 
+					elif (self.W_WALL is True):
+						if (j==1):
+							print '2 bXN:  ', np.round(Leg[j].base_X_NRP[:3,3],4)
+							print '2wbXN:  ', np.round(Leg[j].world_base_X_NRP[:3,3],4)
+						# SE(3) with linear components and only yaw rotation
+						XHy_world_X_base = mX(v3_X_m(P6d_world_X_base[:3]), r3_X_m(np.array([P6d_world_X_base[3],
+																					0.,P6d_world_X_base[5]])))
+
+						Leg[j].world_X_NRP = np.dot(XHy_world_X_base, Leg[j].base_X_NRP)
+						Leg[j].world_base_X_NRP[:3,3:4] = mX((XHy_world_X_base[:3,:3]), Leg[j].base_X_NRP[:3,3:4])
+						if (j==1):
+							print '3 bXN:  ', np.round(Leg[j].base_X_NRP[:3,3],4)
+							print '3wbXN:  ', np.round(Leg[j].world_base_X_NRP[:3,3],4)
+
 					else:
 						Leg[j].update_world_base_X_NRP(P6d_world_X_base)
-
+						
 					## Compute magnitude & vector direction
 					wall_trans = True if (self.T_GND_X_WALL is True or self.T_WALL_X_GND is True) else False
 					snorm = self.Map.get_cell_snorm(Leg[j].world_base_X_NRP[0:3,3], 
@@ -533,16 +551,17 @@ class CorinManager:
 					## compute AEP wrt base and world frame					
 					Leg[j].world_base_X_AEP[:3,3] = Leg[j].world_base_X_NRP[:3,3] + (v3_uv*STEP_STROKE/2.)
 					Leg[j].base_X_AEP[:3,3:4] = mX(XHd.base_X_world[:3,:3], Leg[j].world_base_X_AEP[:3,3:4])
+					Leg[j].base_X_NRP[:3,3:4] = mX(XHd.base_X_world[:3,:3], Leg[j].world_base_X_NRP[:3,3:4])
 
 					Leg[j].world_X_foot = mX(XHd.world_X_base, Leg[j].base_X_AEP)
 					
 					## Get cell height in (x,y) location of world_X_foot
 					cell_h = np.array([0.,0.,0.])			# TODO: unstack height from map
-					if (self.T_GND_X_WALL is True or self.T_WALL_X_GND is True):
+					if (self.T_GND_X_WALL is True or self.T_WALL_X_GND is True or self.W_WALL is True):
 						## TODO: temporary setting this side height to be equiv. of wall
 						if (j < 3):
 							cell_h = np.array([0.,0.,1.])
-					elif (self.T_GND_X_CHIM is True):
+					elif (self.T_GND_X_CHIM is True or self.W_CHIM is True):
 						cell_h = np.array([0.,0.,0.1])
 					else:
 						cell_h = np.array([0.,0.,0.])
@@ -571,9 +590,10 @@ class CorinManager:
 					# 	print 'snorm ', snorm
 						# print 'v3pv: ', v3_pv.flatten()
 						# print 'v3uv: ', v3_uv.flatten()
-						print 'wXf:  ', np.round(Leg[j].world_X_foot[:3,3], 4)
-						print 'wbXN: ', np.round(Leg[j].world_base_X_NRP[:3,3],4)
-						print 'wbXA: ', np.round(Leg[j].world_base_X_AEP[:3,3],4)
+						print 'bXN:  ', np.round(Leg[j].base_X_NRP[:3,3],4)
+						# print 'wXf:  ', np.round(Leg[j].world_X_foot[:3,3], 4)
+						# print 'wbXN: ', np.round(Leg[j].world_base_X_NRP[:3,3],4)
+						# print 'wbXA: ', np.round(Leg[j].world_base_X_AEP[:3,3],4)
 						# print 'wXN:  ', XHd.world_X_base[:3,3] + Leg[j].world_base_X_NRP[:3,3]
 						# print 'wXA:  ', XHd.world_X_base[:3,3] + Leg[j].world_base_X_AEP[:3,3]
 						# print 'wXb:  ', np.round(XHd.base_X_world,4)
@@ -594,7 +614,7 @@ class CorinManager:
 				world_X_footholds[j].xp[-1] = mX(XHd.world_X_base, Leg[j].base_X_NRP)[:3,3:4]
 
 			# raw_input('cont')
-		print np.round(base_X_footholds[2].xp,4)
+		print np.round(base_X_footholds[1].xp,4)
 
 		return world_X_base, world_X_footholds, base_X_footholds, world_base_X_NRP
 
@@ -662,7 +682,7 @@ class CorinManager:
 		i = 1 	# skip first point since spline has zero initial differential conditions
 		while (i != len(base_path.X.t) and not rospy.is_shutdown()):
 			# print 'counting: ', i, len(base_path.X.t)
-			print self.Robot.Gait.cs, i
+			# print self.Robot.Gait.cs, i
 			## suppress trajectory counter as body support suspended
 			if (self.Robot.suspend == True):
 				i -= 1
@@ -675,8 +695,7 @@ class CorinManager:
 			v3cv = base_path.X.xv[i].reshape(3,1);
 			v3ca = base_path.X.xa[i].reshape(3,1);
 
-			# v3wp = wXbase_offset[3:6] + base_path.W.xp[i].reshape(3,1);
-			v3wp = base_path.W.xp[i].reshape(3,1);
+			v3wp = wXbase_offset[3:6] + base_path.W.xp[i].reshape(3,1);
 			v3wv = base_path.W.xv[i].reshape(3,1);
 			v3wa = base_path.W.xa[i].reshape(3,1);
 
@@ -734,24 +753,24 @@ class CorinManager:
 						print 'Leg: ', j, ' No further foothold planned!'
 						self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP.copy()
 
-					# Base to hip frame conversion
-					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHc.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
-					self.Robot.Leg[j].XHd.coxa_X_AEP  = self.Robot.Leg[j].XHd.coxa_X_foot.copy()
-
 					## Compute average surface normal from cell surface normal at both footholds
 					wall_trans = True if (self.T_GND_X_WALL is True or self.T_WALL_X_GND is True) else False
 					snorm_1 = self.Map.get_cell_snorm(self.Robot.Leg[j].XHc.world_X_foot[0:3,3], wall_trans, self.T_GND_X_CHIM)
 					snorm_2 = self.Map.get_cell_snorm(self.Robot.Leg[j].XHd.world_X_foot[0:3,3], wall_trans, self.T_GND_X_CHIM)
 					w_snorm = (snorm_1 + snorm_2)/2.
 
-					## Set spline required parameters
+					## Set bodypose in leg class
 					self.Robot.Leg[j].XH_world_X_base = self.Robot.XHd.world_X_base.copy()
-					# print 'Leg j: ', j, ' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 					
-					## generate transfer spline
+					## Generate transfer spline
 					svalid = self.Robot.Leg[j].generate_spline(w_snorm, 1, False, GAIT_TPHASE, CTR_INTV)
 					
-					# if (j == 5):
+					## Update NRP
+					self.Robot.Leg[j].XHd.base_X_NRP[:3,3] = mX(self.Robot.XHd.base_X_world[:3,:3], 
+																self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3])
+					if (j == 1):
+						print 'bXN: ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],4)
+						print 'wXN: ', np.round(self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3],4)
 						# print j, ' Xc: ', np.round(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3],4)
 						# print j, ' Xd: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],4)
 						# print j, ' Wn: ', np.round(world_norm,4)
@@ -861,12 +880,20 @@ class CorinManager:
 
 			if (motion_prim == 'g2w_transition'):
 				self.T_GND_X_WALL = True
+				self.W_WALL = True
+				self.W_GND  = False
 			elif (motion_prim == 'w2g_transition'):
 				self.T_WALL_X_GND = True
+				self.W_WALL = False
+				self.W_GND  = True
 			elif (motion_prim == 'g2c_transition'):
 				self.T_GND_X_CHIM = True
+				self.W_CHIM = True
+				self.W_GND  = False
 			elif (motion_prim == 'c2g_transition'):
 				self.T_CHIM_X_GND = True
+				self.W_CHIM = False
+				self.W_GND  = True
 
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):

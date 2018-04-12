@@ -267,18 +267,18 @@ for q in range(10,91,10):
 
 ## ----------------------------------------------------------------------- ##
 ## Wall to Ground
-x_cob = np.zeros(3)# np.array([0.,tran_y,tran_z])
-w_cob = np.array([np.pi/2, 0., 0.])
+x_cob = np.array([0.,tran_y,tran_z])
+w_cob = np.array([0., 0., 0.])
 
 for q in range(80,-1,-10):
 	qr = np.deg2rad(q)
-	# xd = np.array([0.0, (1.-np.cos(qr))*tran_y, (np.sin(qr))*tran_z])
-	xd = np.array([0.0, (np.cos(qr))*tran_y, (1-np.sin(qr))*tran_z])
+	xd = np.array([0.0, tran_y-(np.cos(qr))*tran_y, tran_z-(1-np.sin(qr))*tran_z])
 
 	x_cob = np.vstack(( x_cob, xd ))
-	w_cob = np.vstack(( w_cob, np.array([qr,0.0,0.0]) ))
+	w_cob = np.vstack(( w_cob, np.array([qr-np.pi/2,0.0,0.0]) ))
 
-path_n = planner.generate_base_path(-x_cob, w_cob, 0.1)
+# path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
+
 # Plot.plot_2d(path_n.X.t,path_n.X.xp)
 # Plot.plot_3d(path_n.X.xp[:,0], path_n.X.xp[:,1], path_n.X.xp[:,2])
 # Plot.plot_3d(path_n.X.xp[:,0], tran_y+path_n.X.xp[:,1], tran_z+path_n.X.xp[:,2])

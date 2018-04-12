@@ -106,9 +106,9 @@ class LegClass:
 		start = self.XHc.world_base_X_foot[:3,3].copy()
 		end   = mX(self.XH_world_X_base[:3,:3], self.XHd.base_X_foot[:3,3])
 		wpx, td = self.Path.interpolate_leg_path(start, end, snorm, phase, reflex, ctime)
-		if (self.number == 2):
-			print 'st :', np.round(start,4)
-			print 'ed :', np.round(end,4)
+		# if (self.number == 2):
+		# 	print 'st :', np.round(start,4)
+		# 	print 'ed :', np.round(end,4)
 		# Transform each via point from world to leg frame
 		wcp = np.zeros((len(wpx),3))
 		wcp[0] = self.XHc.coxa_X_foot[0:3,3].copy()
@@ -165,9 +165,9 @@ class LegClass:
 		if (xp is None):
 			# Use previous known state
 			xp = self.XHd.coxa_X_foot[:3,3:4]
-		if (self.number==2):
-			print 'bf: ', np.round(self.XHd.base_X_foot[:3,3],4)
-			print 'cf: ', np.round(xp,4)
+		# if (self.number==2):
+		# 	print 'bf: ', np.round(self.XHd.base_X_foot[:3,3],4)
+		# 	print 'cf: ', np.round(xp,4)
 			# print 'qp: ', np.round(self.Joint.qpd,4)
 		self.Joint.qpd = self.KDL.leg_IK(xp)
 		
@@ -286,7 +286,7 @@ class LegClass:
 			self.feedback_state = 2
 			return False
 
-	def update_NRP(self):
-		# print self.number, ' updating NRP'
-		self.XHc.update_world_base_X_NRP(self.P6_world_X_base)
-		self.XHd.update_world_base_X_NRP(self.P6_world_X_base)
+	# def update_NRP(self):
+	# 	# print self.number, ' updating NRP'
+	# 	self.XHc.update_world_base_X_NRP(self.P6_world_X_base)
+	# 	self.XHd.update_world_base_X_NRP(self.P6_world_X_base)

@@ -119,7 +119,7 @@ class ControlInterface:
 		self.mode  = 2
 		x_cob = np.vstack((x_cob,np.array([0.4, 0., 0.])))
 		# x_cob = np.vstack((x_cob,np.array([0.3, 0., 0.])))
-		w_cob = np.vstack((w_cob,np.array([0.25, 0., 0.])))
+		# w_cob = np.vstack((w_cob,np.array([0.25, 0., 0.])))
 		# w_cob = np.vstack((w_cob,np.array([0.15, 0., 0.])))
 		return x_cob, w_cob, self.mode, 'walk'
 
@@ -230,7 +230,7 @@ class ControlInterface:
 
 		# overwrite initial robot position
 		x_cob = np.zeros(3)# np.array([0.,tran_y,tran_z])
-		w_cob = np.array([np.pi/2, 0., 0.])
+		w_cob = np.zeros(3)#np.array([np.pi/2, 0., 0.])
 
 		for q in range(80,-1,-10):
 			qr = np.deg2rad(q)
@@ -238,7 +238,7 @@ class ControlInterface:
 			xd = np.array([0.0, (np.cos(qr))*tran_y, (1-np.sin(qr))*tran_z])
 			
 			x_cob = np.vstack(( x_cob, xd ))
-			w_cob = np.vstack(( w_cob, np.array([qr,0.0,0.0]) ))
+			w_cob = np.vstack(( w_cob, np.array([qr-np.pi/2,0.0,0.0]) ))
 			
 		# Plot.plot_3d(x_cob[:,0],x_cob[:,1],x_cob[:,2])
 		return -x_cob, w_cob, self.mode, 'w2g_transition'
