@@ -32,8 +32,8 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   // , motion_selected_( false )
   // , angular_velocity_( 0 )
 {
-  button_front_ = new QPushButton("Forwards", this);
-  button_back_ = new QPushButton("Backwards", this);
+  button_front_ = new QPushButton("Forward", this);
+  button_back_ = new QPushButton("Backward", this);
   button_left_ = new QPushButton("Left", this);
   button_right_ = new QPushButton("Right", this);
   button_bodypose_ = new QPushButton("Bodypose", this);
@@ -178,13 +178,25 @@ void TeleopPanel::handleButtonBack()
  }
  void TeleopPanel::handleButtonLeft()
  {
+    QString utext = button_left_->text();
+
+    if (utext == "Left")
+      nh_.setParam("corin/walk_left", true);
+    else if (utext == "Upward")
+      nh_.setParam("corin/walk_up", true);
+
     enableExecButtons(true);
-    nh_.setParam("corin/walk_left", true);
  }
  void TeleopPanel::handleButtonRight()
  {
+    QString utext = button_right_->text();
+    
+    if (utext == "Right")
+      nh_.setParam("corin/walk_right", true);
+    else if (utext == "Downward")
+      nh_.setParam("corin/walk_down", true);
+
     enableExecButtons(true);
-    nh_.setParam("corin/walk_right", true);
  }
  void TeleopPanel::handleButtonBodypose()
  {
@@ -210,11 +222,15 @@ void TeleopPanel::handleButtonBack()
  {
     enableExecButtons(true);
     nh_.setParam("corin/g2c_transition", true);
+    button_left_->setText("Upward");
+    button_right_->setText("Downward");
  }
  void TeleopPanel::handleButtonChimney2GndTransition()
  {
     enableExecButtons(true);
     nh_.setParam("corin/c2g_transition", true);
+    button_left_->setText("Left");
+    button_right_->setText("Right");
  }
 // ====================================================== //
 // ====================================================== //

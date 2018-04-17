@@ -87,11 +87,13 @@ def compute_wall_bodypose(POSE_TABLE,fwidth):
 def bodypose_table():
 	""" computes bodypose lookup table for footprint sizing """
 
-	## define variables
+	## Define Variables ##
+	dhi = 0.12	# initial wall contact height (from coxa wrt world frame)
+	dhf = 0.18 	# final wall contact height (from coxa wrt world frame)
 	bh  = 0.1	# base height (m)
 	bhm = 0.42	# max. base height
 	qr  = 0.0	# base roll (rad)
-	ns  = 50 	# samping size of table - above this resolution no further observable change 
+	ns  = 20 	# samping size of table - above this resolution no further observable change 
 	POSE_TABLE = {}
 
 	for i in range(0,ns+1):
@@ -99,33 +101,37 @@ def bodypose_table():
 		qr = i*np.pi/(2*ns) 		# update base roll
 		bn = bh + i*(bhm-bh)/ns 	# update base height
 		# Transform from world to leg frame (both located at leg frame)
+		world_X_base = np.array([ [ np.cos(qr),  -np.sin(qr)],[ np.sin(qr),  np.cos(qr)] ])
+
 		world_X_leg = np.array([ [np.cos(-qr), -np.sin(-qr)],[np.sin(-qr), np.cos(-qr)] ])
 		leg_X_world = np.array([ [ np.cos(qr),  -np.sin(qr)],[ np.sin(qr),  np.cos(qr)] ])
 
 		# leg on ground contact - distances in world frame
 		gch = bn - (COXA_Y+L1)*np.sin(qr)			# height of femur joint from ground
 		gcx = np.sqrt(abs((L2**2 - (gch - L3)**2)))	# horizontal distance of femur joint from foot
-		gpW = np.array([[gcx],[gch]])				# foot position in located at coxa joint
+		gpW = np.array([[gcx],[gch]])				# foot position from coxa wrt world frame
 
-		gpL = np.dot(leg_X_world,gpW)				# foot position in joint frame located at coxa joint
+		gpL = np.dot(leg_X_world,gpW)				# foot position wrt leg frame
 		
 		# leg on wall contact - distances in world frame
-		wch = 0
-		wcx = (ns-i)*(STANCE_WIDTH-0.1)/ns + 0.1
-		wpW = np.array([[wcx],[wch]])				# foot position in located at coxa joint
+		wch = i*(dhf-dhi)/ns + dhi
+		wcx = (ns-i)*(STANCE_WIDTH-0.1)/ns + 0.1 	# horizontal distance of femur joint from foot
+		wpW = np.array([[wcx],[wch]])				# foot position from coxa wrt world frame
 		
-		wpL = np.dot(leg_X_world,wpW)				# foot position in joint frame located at coxa joint
+		wpL = np.dot(leg_X_world,wpW)				# foot position wrt leg frame
+		
+		# foot position wrt world frame
+		wpB = np.array([0.,bn]) + np.dot(world_X_base,np.array([COXA_Y,0.])) + wpW.flatten()
 		
 		## robot footprint
 		wR = ((COXA_Y+L1)*np.cos(qr)+gcx) + (COXA_Y*np.cos(qr)+wcx)
+		
 		## write to dictionary
 		POSE_TABLE[i] = {'footprint':wR, "bodypose":np.array([0.,0.,bn,qr,0.,0.]),"ground":np.array([gcx,0.,-gch]),"wall":np.array([wcx,0.,-wch])}
-		# print np.round([np.round(wR/0.03),wR,bn,qr*180/np.pi],3)
+		
 	return POSE_TABLE
-x = bodypose_table()
-# print x
-# print len(x)
-# print x[50]
+
+
 class GridPlanner:
 	def __init__(self,size):
 		self.resolution	= 0.03			# size of cell, (m) - TARGET: 0.03
@@ -182,7 +188,8 @@ class GridPlanner:
 		nx.set_node_attributes(self.Gbody, {e: 0 for e in self.Gbody.nodes()}, 'width') 	# footprint lateral width
 		nx.set_node_attributes(self.Gbody, {e: [0.,0.,0.,0.] for e in self.Gbody.nodes()}, 'pose')	# robot bodypose - height, roll, pitch, yaw
 
-		# self.map_cell_cost()		# assign cost based on free=0 or obstacle=1
+		# self.set_map01()	# assign cost for map used for IROS paper
+		self.set_map02() 	# simple test map
 
 		print 'Initialised - '
 		print 'Map Grid  : ', gridx, ' by ', gridy
@@ -304,8 +311,8 @@ class GridPlanner:
 
 		return (lw_dist,lw_len), (rw_dist, rw_len)
 
-	def map_cell_cost(self):
-		""" Set obstacle area and cost """
+	def set_map01(self):
+		""" Set obstacle area and cost - map for IROS submission """
 
 		## Obstacle boxes - bottom left and upper right [TODO:set start point, size in (m)]
 		#  Chimney demonstration
@@ -341,7 +348,17 @@ class GridPlanner:
 				i_hole.append(e)
 
 		self.G_wall = nx.path_graph(i_wall) 	
-		self.G_hole = nx.path_graph(i_hole) 	
+		self.G_hole = nx.path_graph(i_hole)
+
+	def set_map02(self):
+		""" Simple map with walls on both sides and hole in front
+			Wall distance from world centre: 0.32 m
+			Hole distance from world centre: 1.00 m  """
+
+		self.obstacle_area([ (4,0),( 6,33)], 'wall')
+		self.obstacle_area([(28,0),(30,33)], 'wall')
+
+		self.obstacle_area([(7,25),(27,33)], 'hole')
 
 	def edge_removal(self, G):
 		""" remove edges with obstacles """
@@ -1394,7 +1411,7 @@ class GridPlanner:
 
 		sz = len(qlist)
 
-	def get_cell_snorm(self, p, wall_transition, chimney_transition):
+	def get_cell_snorm(self, p, wall_transition, chimney_transition, w_wall, w_chim):
 		""" Returns the surface normal of 
 			cell located at point p (in m) """
 		# print p
@@ -1405,16 +1422,16 @@ class GridPlanner:
 
 		# if (CHIM_TRANSITION is True):
 		# 	snorm = np.array([0.,-1.,0.]) if (p[1] > 0.) else np.array([0.,1.,0.])
-		if (wall_transition is True):
+		if (wall_transition is True or w_wall is True):
 			## Right side on ground
 			snorm = np.array([0.,0.,1.]) if (p[1] < 0.1) else np.array([0.,-1,0.])
 			
-		elif (chimney_transition is True):
+		elif (chimney_transition is True or w_chim is True):
 			snorm = np.array([0.,-1.,0.]) if (p[1] > 0.) else np.array([0.,1.,0.])
 
 		else:
 			snorm = np.array([0.,0.,1.])
-		
+		print w_wall, snorm
 		return snorm
 
 ## ================================================================================================ ##

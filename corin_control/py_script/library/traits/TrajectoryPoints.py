@@ -3,6 +3,7 @@
 ## Class for 2D arrays for trajectory points
 
 import numpy as np
+import copy
 
 __all__ = ['JointTrajectoryPoints','Trajectory6D','TrajectoryPoints']
 
@@ -50,6 +51,14 @@ class Trajectory6D():
 		self.X.reverse()
 		self.W.reverse()
 
+	def insert(self,start,end,data):
+		""" Removes items between start to end,
+			replacing the items with data 		"""
+
+		self.X.insert(start,end,data.X)
+		self.W.insert(start,end,data.W)
+
+
 class TrajectoryPoints():
 	def __init__(self,data=None):
 		if data is None:
@@ -64,12 +73,47 @@ class TrajectoryPoints():
 			self.xa = np.array(data[3])
 
 	def append(self, data):
-		self.t = self.X.t + data.t
+		""" Stack data onto array assuming
+			it is of the same data type 	"""
+
+		self.t = self.t + data.t
 		self.xp = np.vstack((self.xp, data.xp))
 		self.xv = np.vstack((self.xv, data.xv))
 		self.xa = np.vstack((self.xa, data.xa))
 
 	def reverse(self):
+		""" Reverses the sequence of the array """
+
 		self.xp = self.xp[::-1]
 		self.xv = self.xv[::-1]
 		self.xa = self.xa[::-1]
+
+	def insert(self,start,end,data):
+		""" Removes items between start to end,
+			replacing the items with data 		"""
+
+		# Store back end of data
+		temp = TrajectoryPoints()
+		temp.t  = list(self.t[end:])
+		temp.xp = self.xp[end:].copy()
+		temp.xv = self.xv[end:].copy()
+		temp.xa = self.xa[end:].copy()
+
+		self.t  = self.t[0:start]
+		self.xp = self.xp[0:start]
+		self.xv = self.xv[0:start]
+		self.xa = self.xa[0:start]
+		
+		self.append(data)
+		self.append(temp)
+
+		self.timing_correction()
+
+	def timing_correction(self):
+		""" Corrects the timing based on the intervals
+			of the first and second items  				"""
+
+		intv = self.t[1] - self.t[0]
+		lent = len(self.t)
+
+		self.t = np.arange(0., lent*intv, intv).tolist()

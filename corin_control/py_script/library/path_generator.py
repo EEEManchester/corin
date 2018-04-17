@@ -44,7 +44,7 @@ class PathGenerator():
 			time_array[i] = i
 		return time_array
 
-	def auto_generate_points(self, x_cob, w_cob):
+	def auto_generate_points(self, x_cob, w_cob, t_cob):
 		""" generate linear or angular points if unspecified """
 
 		## no. of items in array
@@ -63,18 +63,22 @@ class PathGenerator():
 			x_cob = np.array([.0,.0,.0])
 			for i in range(0,wsize/3-1):
 				x_cob = np.vstack((x_cob,np.array([0., 0., 0.])))
-
-		# create array of time for via points
-		t_cob = self.compute_no_via_points(x_cob)
 		
+		# create array of time for via points
+		if (t_cob is None):
+			t_cob = self.compute_no_via_points(x_cob)
+		elif (len(t_cob) != len(x_cob)):
+			t_cob = self.compute_no_via_points(x_cob)
+
 		return x_cob, w_cob, t_cob
 
-	def generate_base_path(self, x_cob, w_cob, tn):
+	def generate_base_path(self, x_cob, w_cob, tn, t_cob=None):
 		""" Generate body trajectory (Re^6) and modify to be within velocity limit 	"""
 		""" Size of x_cob & w_cob needs to be the same otherwise the array with 
 			the smaller size will be ignored and set to zero 						"""
 		""" Input: 	1) x_cob -> array of via points for linear translation
-					2) w_cob -> array of via points for angular rotations 	
+					2) w_cob -> array of via points for angular rotations 
+					3) tn -> path sampling rate	
 			Output:	BaseTrajectory() array of linear translation and angular
 					rotation points 												"""
 
@@ -82,7 +86,7 @@ class PathGenerator():
 		# SplineGenerator = Pspline.SplineGenerator() # cubic polynomial spline generator 
 
 		# generate linear or angular via points if size mismatch
-		x_cob, w_cob, t_cob = self.auto_generate_points(x_cob, w_cob)
+		x_cob, w_cob, t_cob = self.auto_generate_points(x_cob, w_cob, t_cob)
 		
 		# generate spline based on unit time interval between via points
 		x_out = SplineGenerator.generate_spline(x_cob, t_cob, tn)
@@ -230,13 +234,17 @@ w_cob = np.array([.0,.0,.0])
 # w_cob = np.vstack((w_cob,np.array([1.0,.0,.0])))
 
 x_cob = np.vstack((x_cob,np.array([0. , -0.04, BODY_HEIGHT])))
-w_cob = np.vstack((w_cob,np.array([-0.2, -0.1, 0.])))
+# w_cob = np.vstack((w_cob,np.array([-0.2, -0.1, 0.])))
 # x_cob = np.vstack((x_cob,np.array([0.03,  0.04, BODY_HEIGHT])))
 # w_cob = np.vstack((w_cob,np.array([0.2, -0.1, 0.])))
 # x_cob = np.vstack((x_cob,np.array([.0,.0,BODY_HEIGHT])))
 # w_cob = np.vstack((w_cob,np.array([0., 0., 0.])))
-
-# path_n = planner.generate_base_path(x_cob, w_cob, 0.1)
+t_cob = np.array([0.,2.])
+path_n = planner.generate_base_path(x_cob, w_cob, 0.04, t_cob)
+path_m = planner.generate_base_path(x_cob, w_cob, 0.04, t_cob)
+path_n.insert(6,10,path_m)
+# print type(path_n.X.t)
+# print np.round(path_n.X.xp,3)
 # Plot.plot_2d(path_n.X.t,path_n.X.xp)
 # path_n.reverse()
 # Plot.plot_2d(path_n.X.t,path_n.X.xp)

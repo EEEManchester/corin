@@ -17,13 +17,15 @@ class ControlInterface:
 	def __initialise__(self):
 		rospy.set_param('/corin/execute', 0) 		# execute motion selected
 
-		rospy.set_param('stop_flag', False)			# emergency stop (working)
-		rospy.set_param('/corin/reset',False)		# move to ground position with legs up (working)
-		rospy.set_param('/corin/bodypose', False)	# perform the bodypose movement (working)
-		rospy.set_param('/corin/walk_front', False)	# walk forward ~0. 4 metres (working)
-		rospy.set_param('/corin/walk_right', False)	# walk right ~0.4 metres (working)
-		rospy.set_param('/corin/walk_back', False)	# Walk backwards ~0.4 metres (Working)
-		rospy.set_param('/corin/walk_left', False)	# walk left ~0.4 metres (working)
+		rospy.set_param('stop_flag', False)			# emergency stop
+		rospy.set_param('/corin/reset',False)		# move to ground position with legs up
+		rospy.set_param('/corin/bodypose', False)	# perform the bodypose movement
+		rospy.set_param('/corin/walk_front', False)	# walk forward
+		rospy.set_param('/corin/walk_right', False)	# walk right 
+		rospy.set_param('/corin/walk_back', False)	# Walk backwards
+		rospy.set_param('/corin/walk_left', False)	# walk left 
+		rospy.set_param('/corin/walk_up', False)	# walk up
+		rospy.set_param('/corin/walk_down', False)	# walk down
 		rospy.set_param('/corin/rotate', False)
 		
 		rospy.set_param('/corin/g2w_transition', False)
@@ -117,7 +119,7 @@ class ControlInterface:
 		
 	def walk_front(self, x_cob, w_cob):
 		self.mode  = 2
-		x_cob = np.vstack((x_cob,np.array([0.1, 0., 0.])))
+		x_cob = np.vstack((x_cob,np.array([0.2, 0., 0.])))
 		# x_cob = np.vstack((x_cob,np.array([0.3, 0., 0.])))
 		# w_cob = np.vstack((w_cob,np.array([0.25, 0., 0.])))
 		# w_cob = np.vstack((w_cob,np.array([0.15, 0., 0.])))
@@ -139,6 +141,16 @@ class ControlInterface:
 	def walk_left(self, x_cob, w_cob):
 		self.mode  = 2
 		x_cob = np.vstack((x_cob,np.array([0.0, 0.11, 0.])))
+		return x_cob, w_cob, self.mode, 'walk'
+
+	def walk_up(self, x_cob, w_cob):
+		self.mode  = 2
+		x_cob = np.vstack((x_cob,np.array([0., 0., 0.2])))
+		return x_cob, w_cob, self.mode, 'walk'
+
+	def walk_down(self, x_cob, w_cob):
+		self.mode  = 2
+		x_cob = np.vstack((x_cob,np.array([0., 0., -0.2])))
 		return x_cob, w_cob, self.mode, 'walk'
 
 	def rotate(self, x_cob, w_cob):
@@ -177,6 +189,14 @@ class ControlInterface:
 		elif (rospy.get_param('/corin/walk_right')==True):
 			rospy.set_param('/corin/walk_right',False)
 			return self.walk_right(x_cob, w_cob)
+
+		elif (rospy.get_param('/corin/walk_up')==True): 	
+			rospy.set_param('/corin/walk_up',False)
+			return self.walk_up(x_cob, w_cob)
+
+		elif (rospy.get_param('/corin/walk_down')==True):
+			rospy.set_param('/corin/walk_down',False)
+			return self.walk_down(x_cob, w_cob)
 
 		elif (rospy.get_param('/corin/rotate')==True):
 			rospy.set_param('/corin/rotate',False)
@@ -229,8 +249,8 @@ class ControlInterface:
 		tran_z = 0.3
 
 		# overwrite initial robot position
-		x_cob = np.zeros(3)# np.array([0.,tran_y,tran_z])
-		w_cob = np.zeros(3)#np.array([np.pi/2, 0., 0.])
+		x_cob = np.zeros(3)
+		w_cob = np.zeros(3)
 
 		for q in range(80,-1,-10):
 			qr = np.deg2rad(q)
@@ -247,7 +267,7 @@ class ControlInterface:
 		self.mode  = 2
 		## TODO: set somewhere else
 		for i in range(0,6):
-			x_cob = np.vstack((x_cob,np.array([0., 0., 0.])))
+			x_cob = np.vstack((x_cob,np.array([0., 0., i*0.001/6])))
 		
 		return x_cob, w_cob, self.mode, 'g2c_transition'
 

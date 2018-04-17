@@ -6,6 +6,7 @@
 from fractions import Fraction
 import numpy as np
 import copy
+from constant import *
 
 class GaitClass:
 	def __init__(self, gselect):
@@ -13,6 +14,7 @@ class GaitClass:
 		self.gait = [] 				# matrix for gait phases
 		self.gdic = {} 				# dictionary for gait: 'beta'-duty factor, 'dphase'-fraction for displacement per phase i.e. distance = Stroke/dphase
 		self.gphase = 0 			# counter for gait phases
+		self.tphase = GAIT_TPHASE	# timing per gait phase
 		self.phase_trans = 0 		# distance travelled in each phase
 
 		self.direction 	= True 		# True: forward, False: reversed

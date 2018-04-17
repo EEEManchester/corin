@@ -69,8 +69,19 @@ v3_pv = ( np.dot(v3_dv,plane_vector)/np.linalg.norm(plane_vector)**2 )*plane_vec
 # print np.round(v3_pv,4)
 
 # print v3_dv - (np.dot(v3_dv,surface_normal))*surface_normal
-al = []
+al = [1,2,3]
 a = np.array([1,2,3,4,5,])
 b = np.array([3,4])
-al.append(a)
-print type(al[0])
+
+
+arr = np.arange(6) #.reshape(2, 3)
+print arr
+# np.place(arr, arr>2, [44, 55])
+arr = np.insert(arr,2,np.array([0,1,0]))
+print (arr)
+
+a = True
+b = True
+c = True
+if (a==b==c is True):
+	print 'wo'
