@@ -1414,24 +1414,24 @@ class GridPlanner:
 	def get_cell_snorm(self, p, wall_transition, chimney_transition, w_wall, w_chim):
 		""" Returns the surface normal of 
 			cell located at point p (in m) """
-		# print p
-		# if (p[1] < 0.1):
-		# 	snorm = np.array([0.,0.,1.])
-		# else:
-		# 	snorm = np.array([0.,0.,1.]) if (WALL_TRANSITION is False) else np.array([0.,-1,0.])
-
-		# if (CHIM_TRANSITION is True):
-		# 	snorm = np.array([0.,-1.,0.]) if (p[1] > 0.) else np.array([0.,1.,0.])
+		
 		if (wall_transition is True or w_wall is True):
 			## Right side on ground
 			snorm = np.array([0.,0.,1.]) if (p[1] < 0.1) else np.array([0.,-1,0.])
-			
-		elif (chimney_transition is True or w_chim is True):
+		
+		elif (chimney_transition is True):
+			if (p[0]>0.26):
+				snorm = np.array([0.,-1.,0.]) if (p[1] > 0.) else np.array([0.,1.,0.])
+			else:
+				snorm = np.array([0.,0.,1.])
+
+		# elif (chimney_transition is True or w_chim is True):
+		elif (w_chim is True):
 			snorm = np.array([0.,-1.,0.]) if (p[1] > 0.) else np.array([0.,1.,0.])
 
 		else:
 			snorm = np.array([0.,0.,1.])
-		print w_wall, snorm
+		
 		return snorm
 
 ## ================================================================================================ ##

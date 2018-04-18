@@ -83,5 +83,6 @@ print (arr)
 a = True
 b = True
 c = True
-if (a==b==c is True):
-	print 'wo'
+a = np.array([1.11,2.321])
+a[0] = 3
+print a

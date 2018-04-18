@@ -374,12 +374,14 @@ class CorinManager:
 				final_foothold[2] = np.array([v3cp_base[0]+-0.115, v3cp_base[1]+d_wall, h_init])
 
 			elif (self.T_GND_X_CHIM is True):
-				final_foothold[0] = np.array([v3cp_base[0]+ 0.115, v3cp_base[1]+ d_chim, BODY_HEIGHT])
-				final_foothold[1] = np.array([v3cp_base[0]+ 0.,    v3cp_base[1]+ d_chim, BODY_HEIGHT])
-				final_foothold[2] = np.array([v3cp_base[0]+-0.115, v3cp_base[1]+ d_chim, BODY_HEIGHT])
-				final_foothold[3] = np.array([v3cp_base[0]+ 0.115, v3cp_base[1]+-d_chim, BODY_HEIGHT])
-				final_foothold[4] = np.array([v3cp_base[0]+ 0.,    v3cp_base[1]+-d_chim, BODY_HEIGHT])
-				final_foothold[5] = np.array([v3cp_base[0]+-0.115, v3cp_base[1]+-d_chim, BODY_HEIGHT])
+				if (j==0):
+					print j, np.round(v3cp_base.flatten(),3)
+				final_foothold[0] = np.array([v3cp[0]+ Leg[j].base_X_NRP[0,3], v3cp_base[1]+ d_chim, BODY_HEIGHT])
+				final_foothold[1] = np.array([v3cp[0]+ 0.,    v3cp_base[1]+ d_chim, BODY_HEIGHT])
+				final_foothold[2] = np.array([v3cp[0]+-0.115, v3cp_base[1]+ d_chim, BODY_HEIGHT])
+				final_foothold[3] = np.array([v3cp[0]+ 0.155, v3cp_base[1]+-d_chim, BODY_HEIGHT])
+				final_foothold[4] = np.array([v3cp[0]+ 0.,    v3cp_base[1]+-d_chim, BODY_HEIGHT])
+				final_foothold[5] = np.array([v3cp[0]+-0.115, v3cp_base[1]+-d_chim, BODY_HEIGHT])
 
 			for ji in range(0,6):
 				# set initial foothold and overwrite y & z-component
@@ -541,6 +543,7 @@ class CorinManager:
 					chim_trans = True if (self.T_GND_X_CHIM is True or self.T_CHIM_X_GND is True) else False
 
 					# get surface normal
+					## TODO: Change to world_X_NRP
 					snorm = self.Map.get_cell_snorm(Leg[j].world_base_X_NRP[0:3,3], 
 													wall_trans,
 													chim_trans,
@@ -570,8 +573,7 @@ class CorinManager:
 						## TODO: temporary setting this side height to be equiv. of wall
 						if (j < 3):
 							cell_h = np.array([0.,0.,1.])
-					# elif (self.W_CHIM is True):
-					# 	cell_h = np.array([0.,0.,0.1])
+					
 					else:
 						cell_h = np.array([0.,0.,0.])
 
@@ -582,16 +584,21 @@ class CorinManager:
 					## Check if foothold valid for chimney transition
 					elif (self.T_GND_X_CHIM is True):
 						# print j, '  ', Leg[j].world_X_foot[2,3], cell_h.item(2)
+						## SIM DATA
+						if (Leg[j].world_X_foot[0,3]>0.26):
+							# print j, Leg[j].world_X_foot[0,3]
+							cell_h[2] = -0.1
+
 						dh = Leg[j].world_X_foot[2,3] - cell_h.item(2)
-						if (dh > 0.):
+						if (dh > 0.001):
 							# print j, ' dh ', dh
-							print 'Recompute NRP!'
+							print j, ' Recompute NRP!'
 							compute_wall_footholds()
-							## ReCompute AEP wrt base and world frame					
+							## Recompute AEP wrt base and world frame					
 							Leg[j].world_base_X_AEP[:3,3] = Leg[j].world_base_X_NRP[:3,3].copy()
 							Leg[j].base_X_AEP[:3,3:4] = mX(XHd.base_X_world[:3,:3], Leg[j].world_base_X_AEP[:3,3:4])
 							Leg[j].base_X_NRP[:3,3:4] = mX(XHd.base_X_world[:3,:3], Leg[j].world_base_X_NRP[:3,3:4])
-							# print j, '  ', np.round(Leg[j].base_X_NRP[:3,3],4)
+							
 							Leg[j].world_X_foot = mX(XHd.world_X_base, Leg[j].base_X_AEP)
 					else:
 						pass
@@ -603,12 +610,12 @@ class CorinManager:
 					world_X_footholds[j].t.append(i*CTR_INTV)
 					world_X_footholds[j].xp.append(Leg[j].world_X_foot[:3,3:4].copy())
 					
-					base_X_footholds[j].t.append(i*CTR_INTV)
-					base_X_footholds[j].xp.append(Leg[j].base_X_AEP[:3,3:4].copy())
-					
 					world_base_X_NRP[j].t.append(i*CTR_INTV)
 					world_base_X_NRP[j].xp.append(Leg[j].world_base_X_NRP[:3,3:4].copy())
 
+					base_X_footholds[j].t.append(i*CTR_INTV)
+					base_X_footholds[j].xp.append(Leg[j].base_X_AEP[:3,3:4].copy())
+					
 					if (j==1):
 					# 	print '--------------------------------------------'
 					# 	print 'snorm ', snorm
@@ -647,6 +654,7 @@ class CorinManager:
 			if (gphase_intv[i] - gphase_intv[i-1] - glength < 0):
 				# print 'Extend', gphase_intv[i]*CTR_INTV, gphase_intv[i-1]*CTR_INTV
 				## Set initial and final position/orientation
+				## TODO: INCLUDE VELOCITY N ACCELERATION IN INTERPOLATION
 				xn_cob = base_path.X.xp[gphase_intv[i-1]]
 				xn_cob = np.vstack((xn_cob, base_path.X.xp[gphase_intv[i]]))
 
@@ -657,9 +665,10 @@ class CorinManager:
 				new_segment = PathGenerator.generate_base_path(xn_cob, wn_cob, CTR_INTV, np.array([0.,GAIT_TPHASE]))
 				
 				## Append into existing trajectory
-				base_path.insert(gphase_intv[i-1],gphase_intv[i],new_segment)
+				# base_path.insert(gphase_intv[i-1],gphase_intv[i],new_segment)
 
 		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
+		# print np.round(world_X_footholds[0].xp,3)
 		return world_X_base, world_X_footholds, base_X_footholds, world_base_X_NRP
 
 	def trajectory_tracking(self, x_cob, w_cob=0):
