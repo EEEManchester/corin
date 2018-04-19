@@ -1420,7 +1420,8 @@ class GridPlanner:
 			snorm = np.array([0.,0.,1.]) if (p[1] < 0.1) else np.array([0.,-1,0.])
 		
 		elif (chimney_transition is True):
-			if (p[0]>0.26):
+			# if (p[0]>0.3):
+			if (p[0]<0.32):
 				snorm = np.array([0.,-1.,0.]) if (p[1] > 0.) else np.array([0.,1.,0.])
 			else:
 				snorm = np.array([0.,0.,1.])

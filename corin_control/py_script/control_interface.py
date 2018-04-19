@@ -268,17 +268,19 @@ class ControlInterface:
 		## TODO: set somewhere else
 
 		## Forward translation
-		x_cob = np.vstack((x_cob,np.array([0.7, 0., 0.])))
+		# x_cob = np.vstack((x_cob,np.array([0.5, 0., 0.])))
 		## Vertical translation
-		# for i in range(0,6):
-		# 	x_cob = np.vstack((x_cob,np.array([0., 0., i*0.001/6])))
+		for i in range(0,6):
+			x_cob = np.vstack((x_cob,np.array([0., 0., i*0.001/6])))
 		
 		return x_cob, w_cob, self.mode, 'g2c_transition'
 
 	def chimney_X_gnd_transition(self, x_cob, w_cob):
 		self.mode  = 2
 		## TODO: set somewhere else
-		for i in range(0,6):
-			x_cob = np.vstack((x_cob,np.array([0., 0., 0.])))
+		x_cob = np.vstack((x_cob,np.array([0.7, 0., 0.])))
+
+		# for i in range(0,6):
+		# 	x_cob = np.vstack((x_cob,np.array([0., 0., 0.])))
 		
 		return x_cob, w_cob, self.mode, 'c2g_transition'

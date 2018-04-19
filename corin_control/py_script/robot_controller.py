@@ -374,14 +374,14 @@ class CorinManager:
 				final_foothold[2] = np.array([v3cp_base[0]+-0.115, v3cp_base[1]+d_wall, h_init])
 
 			elif (self.T_GND_X_CHIM is True):
-				if (j==0):
-					print j, np.round(v3cp_base.flatten(),3)
+				# if (j==0):
+				# 	print j, np.round(v3cp_base.flatten(),3)
 				final_foothold[0] = np.array([v3cp[0]+ Leg[j].base_X_NRP[0,3], v3cp_base[1]+ d_chim, BODY_HEIGHT])
-				final_foothold[1] = np.array([v3cp[0]+ 0.,    v3cp_base[1]+ d_chim, BODY_HEIGHT])
-				final_foothold[2] = np.array([v3cp[0]+-0.115, v3cp_base[1]+ d_chim, BODY_HEIGHT])
-				final_foothold[3] = np.array([v3cp[0]+ 0.155, v3cp_base[1]+-d_chim, BODY_HEIGHT])
-				final_foothold[4] = np.array([v3cp[0]+ 0.,    v3cp_base[1]+-d_chim, BODY_HEIGHT])
-				final_foothold[5] = np.array([v3cp[0]+-0.115, v3cp_base[1]+-d_chim, BODY_HEIGHT])
+				final_foothold[1] = np.array([v3cp[0]+ Leg[j].base_X_NRP[0,3], v3cp_base[1]+ d_chim, BODY_HEIGHT])
+				final_foothold[2] = np.array([v3cp[0]+ Leg[j].base_X_NRP[0,3], v3cp_base[1]+ d_chim, BODY_HEIGHT])
+				final_foothold[3] = np.array([v3cp[0]+ Leg[j].base_X_NRP[0,3], v3cp_base[1]+-d_chim, BODY_HEIGHT])
+				final_foothold[4] = np.array([v3cp[0]+ Leg[j].base_X_NRP[0,3], v3cp_base[1]+-d_chim, BODY_HEIGHT])
+				final_foothold[5] = np.array([v3cp[0]+ Leg[j].base_X_NRP[0,3], v3cp_base[1]+-d_chim, BODY_HEIGHT])
 
 			for ji in range(0,6):
 				# set initial foothold and overwrite y & z-component
@@ -478,7 +478,7 @@ class CorinManager:
 																					Leg[j].world_base_X_NRP)
 							
 							if (bound_exceed == True):
-								print 'bound exceed on ', j, ' at ', i, i*CTR_INTV
+								# print 'bound exceed on ', j, ' at ', i, i*CTR_INTV
 								break
 
 					if (bound_exceed is True):
@@ -523,10 +523,6 @@ class CorinManager:
 						else:
 							compute_wall_footholds()
 
-					elif (self.T_GND_X_CHIM is True):
-						# compute_wall_footholds()
-						Leg[j].update_world_base_X_NRP(P6d_world_X_base)
-
 					elif (self.W_WALL is True):
 						# SE(3) with linear components and only yaw rotation
 						XHy_world_X_base = mX(v3_X_m(P6d_world_X_base[:3]), r3_X_m(np.array([P6d_world_X_base[3],
@@ -534,6 +530,10 @@ class CorinManager:
 
 						Leg[j].world_X_NRP = np.dot(XHy_world_X_base, Leg[j].base_X_NRP)
 						Leg[j].world_base_X_NRP[:3,3:4] = mX((XHy_world_X_base[:3,:3]), Leg[j].base_X_NRP[:3,3:4])
+
+					# elif (self.T_GND_X_CHIM is True):
+					# 	# compute_wall_footholds()
+					# 	Leg[j].update_world_base_X_NRP(P6d_world_X_base)
 
 					else:
 						Leg[j].update_world_base_X_NRP(P6d_world_X_base)
@@ -569,11 +569,15 @@ class CorinManager:
 					
 					## Get cell height in (x,y) location of world_X_foot
 					cell_h = np.array([0.,0.,0.])			# TODO: unstack height from map
-					if (self.T_GND_X_WALL is True or self.T_WALL_X_GND is True or self.W_WALL is True):
+					## SIM DATA
+					if (self.T_GND_X_WALL is True or self.T_WALL_X_GND is True):
 						## TODO: temporary setting this side height to be equiv. of wall
 						if (j < 3):
 							cell_h = np.array([0.,0.,1.])
 					
+					if (self.W_WALL is True):
+						cell_h = np.array([0.,0.,1.])
+
 					else:
 						cell_h = np.array([0.,0.,0.])
 
@@ -583,23 +587,54 @@ class CorinManager:
 
 					## Check if foothold valid for chimney transition
 					elif (self.T_GND_X_CHIM is True):
-						# print j, '  ', Leg[j].world_X_foot[2,3], cell_h.item(2)
+
 						## SIM DATA
-						if (Leg[j].world_X_foot[0,3]>0.26):
-							# print j, Leg[j].world_X_foot[0,3]
-							cell_h[2] = -0.1
+						# if (Leg[j].world_X_foot[0,3]>0.3):
+						cell_h[2] = -0.1
 
 						dh = Leg[j].world_X_foot[2,3] - cell_h.item(2)
+						# if (j==0):
+						# 	print 'before: ', j, np.round(Leg[j].world_X_foot[:3,3],4)
+						# 	print np.round(Leg[j].world_base_X_NRP[:3,3],4)
 						if (dh > 0.001):
-							# print j, ' dh ', dh
-							print j, ' Recompute NRP!'
 							compute_wall_footholds()
 							## Recompute AEP wrt base and world frame					
-							Leg[j].world_base_X_AEP[:3,3] = Leg[j].world_base_X_NRP[:3,3].copy()
+							# Leg[j].world_base_X_AEP[:3,3] = Leg[j].world_base_X_NRP[:3,3].copy()
+							Leg[j].world_base_X_AEP[:3,3] = Leg[j].world_base_X_NRP[:3,3] + (v3_uv*STEP_STROKE/2.)
+
 							Leg[j].base_X_AEP[:3,3:4] = mX(XHd.base_X_world[:3,:3], Leg[j].world_base_X_AEP[:3,3:4])
 							Leg[j].base_X_NRP[:3,3:4] = mX(XHd.base_X_world[:3,:3], Leg[j].world_base_X_NRP[:3,3:4])
 							
 							Leg[j].world_X_foot = mX(XHd.world_X_base, Leg[j].base_X_AEP)
+
+						# if (j==0):
+						# 	print 'after: ', j, np.round(Leg[j].world_X_foot[:3,3],4)
+						# 	print np.round(Leg[j].world_base_X_NRP[:3,3],4)
+							# print np.round(Leg[j].world_base_X_AEP[:3,3],4)
+
+					elif (self.T_CHIM_X_GND is True):
+						
+						## SIM DATA
+						if (Leg[j].world_X_foot[0,3]>0.32):
+							cell_h[2] = 0.0
+						else:
+							cell_h[2] = -0.1
+
+						if (cell_h[2] > -0.01):
+							# set to default ground NRP
+							KDL = kdl.KDL()
+							Leg[j].update_base_X_NRP(KDL.leg_IK(LEG_STANCE[j])) 	
+							Leg[j].world_base_X_NRP[:3,3:4] = mX(XHd.world_X_base[:3,:3], Leg[j].base_X_NRP[:3,3:4])
+
+							# recompute AEP
+							Leg[j].world_base_X_AEP[:3,3] = Leg[j].world_base_X_NRP[:3,3] + (v3_uv*STEP_STROKE/2.)
+							Leg[j].base_X_AEP[:3,3:4] = mX(XHd.base_X_world[:3,:3], Leg[j].world_base_X_AEP[:3,3:4])
+						
+							Leg[j].world_X_foot = mX(XHd.world_X_base, Leg[j].base_X_AEP)
+							
+						if (j==0):
+							print j, Leg[j].world_X_foot[0,3]
+							print np.round(Leg[j].world_base_X_AEP[:3,3],4)
 					else:
 						pass
 
