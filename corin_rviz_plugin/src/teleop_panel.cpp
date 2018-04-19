@@ -29,9 +29,14 @@ namespace corin_rviz_plugin
 // publishing.
 TeleopPanel::TeleopPanel( QWidget* parent )
   : rviz::Panel( parent )
+  , cmd_state_("hold")
+  , run_toggle_(false)
   // , motion_selected_( false )
   // , angular_velocity_( 0 )
 {
+  //***************** PUBLISHERS ***************//
+  ui_publisher_ = nh_.advertise<std_msgs::String>( "/corin/ui_execute", 1 );
+
   button_front_ = new QPushButton("Forward", this);
   button_back_ = new QPushButton("Backward", this);
   button_left_ = new QPushButton("Left", this);
@@ -60,20 +65,6 @@ TeleopPanel::TeleopPanel( QWidget* parent )
 
   // Lay out the topic field above the control widget.
   QVBoxLayout* main_layout  = new QVBoxLayout;
-  // QVBoxLayout* param_layout = new QVBoxLayout;
-  
-  // param_layout->addWidget( button_bodypose_ );
-  // param_layout->addWidget( button_rotate_ );
-  // param_layout->addWidget( hline1_ );
-  // param_layout->addWidget( button_front_ );
-  // param_layout->addWidget( button_back_ );
-  // param_layout->addWidget( button_left_ );
-  // param_layout->addWidget( button_right_ );
-  // param_layout->addWidget( hline2_ );
-  // param_layout->addWidget( button_g2w_transition_ );
-  // param_layout->addWidget( button_w2g_transition_ );
-  // param_layout->addWidget( button_g2c_transition_ );
-  // param_layout->addWidget( button_c2g_transition_ );
   
   QGridLayout *poses_layout = new QGridLayout;
   poses_layout->addWidget( button_bodypose_, 0, 0 );
@@ -108,7 +99,8 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   QTimer* output_timer = new QTimer( this );
 
   // Next we make signal/slot connections.
-  // connect( output_timer, SIGNAL( timeout() ), this, SLOT( sendVel() ));
+  // connect( output_timer, SIGNAL( timeout() ), this, SLOT( sendUserCmd() ));
+
   connect( button_front_, SIGNAL (released()), this, SLOT (handleButtonFront()));
   connect( button_back_, SIGNAL (released()), this, SLOT (handleButtonBack()));
   connect( button_left_, SIGNAL (released()), this, SLOT (handleButtonLeft()));
@@ -124,7 +116,7 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   connect( button_cancel_, SIGNAL (released()), this, SLOT (handleButtonCancel()));
 
   // Start the timer.
-  output_timer->start( 100 );
+  // output_timer->start( 500 );
 
 }
 QGroupBox *TeleopPanel::TransitionGroup()
@@ -154,7 +146,7 @@ QGroupBox *TeleopPanel::ExecutionGroup()
 
     // groupBox->setStyleSheet("margin: 1px solid black");
 
-    button_execute_ = new QPushButton("Execute", this);
+    button_execute_ = new QPushButton("Run", this);
     button_cancel_  = new QPushButton("Cancel", this);
     
     QGridLayout* grid_layout  = new QGridLayout;
@@ -236,43 +228,59 @@ void TeleopPanel::handleButtonBack()
 // ====================================================== //
  void TeleopPanel::handleButtonExecute()
  {
-    nh_.setParam("corin/execute", 1);
-    enableExecButtons(false);
+    if (run_toggle_ == false)
+    {
+      cmd_state_  = "play";
+      run_toggle_ = true;
+      button_execute_->setText("Pause");
+      ROS_INFO("should run");
+    }
+    else if (run_toggle_ == true)
+    {
+      cmd_state_  = "pause";
+      run_toggle_ = false;
+      button_execute_->setText("Run");
+      ROS_INFO("should pause");
+    }
+    sendUserCmd(cmd_state_);
+    
  }
  void TeleopPanel::handleButtonCancel()
  {
-    nh_.setParam("corin/execute", 2);
+    cmd_state_ = "cancel";
     enableExecButtons(false);
+    sendUserCmd(cmd_state_);
  }
  void TeleopPanel::enableExecButtons(bool mselect)
  {
+  // disable buttons when no motion selected, or cancelled
   if (mselect == false)
   {
     button_execute_->setEnabled(false);
     button_cancel_->setEnabled(false);
   }
+  // motion has been selected, enable run/cancel buttons
   else if (mselect == true)
   {
     button_execute_->setEnabled(true);
     button_cancel_->setEnabled(true);
+    button_execute_->setText("Run");
+    run_toggle_ = false;
   }
  }
-// Publish the control velocities if ROS is not shutting down and the
+// Publish the commanded state if ROS is not shutting down and the
 // publisher is ready with a valid topic name.
-// void TeleopPanel::sendVel()
-// {
-//   if( ros::ok() && velocity_publisher_ )
-//   {
-//     geometry_msgs::Twist msg;
-//     msg.linear.x = linear_velocity_;
-//     msg.linear.y = 0;
-//     msg.linear.z = 0;
-//     msg.angular.x = 0;
-//     msg.angular.y = 0;
-//     msg.angular.z = angular_velocity_;
-//     velocity_publisher_.publish( msg );
-//   }
-// }
+void TeleopPanel::sendUserCmd(std::string cmd_state_)
+{
+  if( ros::ok() && ui_publisher_ )
+  {
+    std_msgs::String msg;
+    msg.data = cmd_state_;
+    ui_publisher_.publish(msg);
+  }
+  // resets command
+  cmd_state_ = "hold";
+}
 
 // Save all configuration data from this panel to the given
 // Config object.  It is important here that you call save()

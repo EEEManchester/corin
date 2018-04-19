@@ -24,6 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    JointState.srv
    Imu.srv
+   UiState.srv
  )
 
 ## Generate actions in the 'action' folder

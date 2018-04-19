@@ -18,7 +18,11 @@ from sensor_msgs.msg import JointState 		# sub msg for joint states
 from std_msgs.msg import Float64 			# pub msg for Gazebo joints
 from std_msgs.msg import ByteMultiArray 	# foot contact state
 from std_msgs.msg import Float32MultiArray	# foot contact force
+from std_msgs.msg import String 			# ui control
 import tf 		 							# ROS transform library
+
+## Services
+from corin_control.srv import UiState 	# NOT USED
 
 ## Robotis ROS msgs for joint control
 from robotis_controller_msgs.msg import SyncWriteMultiFloat
@@ -49,6 +53,8 @@ class CorinManager:
 		self.interface = "rviz"			# interface to control: gazebo, rviz or robotis hardware
 		self.control_mode = "fast" 	# run controller in various mode: 1) normal, 2) fast
 
+		self.ui_state = "hold" 		# user interface for commanding motions
+
 		self.__initialise__()
 
 	def joint_state_callback(self, msg):
@@ -67,6 +73,11 @@ class CorinManager:
 		""" foot contact force """
 		self.Robot.cforce = msg.data
 
+	def ui_callback(self, msg):
+		""" user interface control state """
+		self.ui_state = msg.data.lower()
+		
+
 	def __initialise__(self):
 		""" Initialises robot and classes """
 
@@ -75,6 +86,7 @@ class CorinManager:
 
 		## set up publisher and subscriber topics
 		self.__initialise_topics__()
+		# self.__initialise_service__()
 
 		## initialises robot transform
 		self.robot_broadcaster.sendTransform( (0.,0.,BODY_HEIGHT), (0.,0.,0.,1.), 
@@ -138,6 +150,7 @@ class CorinManager:
 		self.robot_broadcaster = tf.TransformBroadcaster()	# Transform for robot pose
 
 		##***************** SUBSCRIBERS ***************##
+		## Robot State ##
 		self.imu_sub_	 = rospy.Subscriber(ROBOT_NS + '/imu/base/data', Imu, self.imu_callback, queue_size=1)
 		self.cstate_sub_ = rospy.Subscriber(ROBOT_NS + '/contact_state', ByteMultiArray, self.contact_state_callback, queue_size=1)
 		self.cforce_sub_ = rospy.Subscriber(ROBOT_NS + '/contact_force', Float32MultiArray, self.contact_force_callback, queue_size=1)
@@ -148,7 +161,21 @@ class CorinManager:
 		elif (self.interface == 'robotis'):
 			self.joint_sub_  = rospy.Subscriber('robotis/present_joint_states', JointState, self.joint_state_callback, queue_size=5)
 
-		rospy.sleep(0.5) # sleep for short while for topics to be initiated properly
+		## User Interface
+		self.ui_control_ = rospy.Subscriber(ROBOT_NS + '/ui_execute', String, self.ui_callback, queue_size=1)
+
+		# Sleep for short while for topics to be initiated properly
+		rospy.sleep(0.5)
+
+	# def handle_ui_state(self,req):
+	# 	""" Service handler for user interface """
+	# 	self.ui_state = str(req.state.data)
+	# 	msg = String()
+	# 	msg.data = "Success"
+	# 	return msg
+
+	# def __initialise_service__(self):
+	# 	self.ui_service = rospy.Service(ROBOT_NS + '/set_ui_state', UiState, self.handle_ui_state)
 
 	def publish_topics(self, q, q_log=None):
 		""" Publish joint position to joint controller topics and
@@ -615,7 +642,7 @@ class CorinManager:
 					elif (self.T_CHIM_X_GND is True):
 						
 						## SIM DATA
-						if (Leg[j].world_X_foot[0,3]>0.32):
+						if (Leg[j].world_X_foot[0,3]>0.86):
 							cell_h[2] = 0.0
 						else:
 							cell_h[2] = -0.1
@@ -631,7 +658,7 @@ class CorinManager:
 							Leg[j].base_X_AEP[:3,3:4] = mX(XHd.base_X_world[:3,:3], Leg[j].world_base_X_AEP[:3,3:4])
 						
 							Leg[j].world_X_foot = mX(XHd.world_X_base, Leg[j].base_X_AEP)
-							
+
 						if (j==0):
 							print j, Leg[j].world_X_foot[0,3]
 							print np.round(Leg[j].world_base_X_AEP[:3,3],4)
@@ -725,7 +752,6 @@ class CorinManager:
 			PathGenerator.V_MAX = PathGenerator.W_MAX = 0.4
 		else:
 			self.Robot.Gait.walk_mode()
-			print PathGenerator.V_MAX
 
 		# Trajectory for robot's base
 		base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV)
@@ -744,33 +770,34 @@ class CorinManager:
 													rospy.Time.now(), "trunk", "world") ;
 			self.path_pub_.publish(array_to_path(base_path, rospy.Time.now(), "world", wXbase_offset))
 			self.mark_pub_.publish(list_to_marker_array(world_X_footholds, rospy.Time.now(), "world"))
-			self.joint_pub_.publish(array_to_joint_states(self.Robot.qc.position, rospy.Time.now(), ""))
+			if (self.interface == 'rviz'):
+				self.joint_pub_.publish(array_to_joint_states(self.Robot.qc.position, rospy.Time.now(), ""))
 			rospy.sleep(0.2)
 
-		## User input: Returns if path rejected
+		## User input
 		print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 		print 'Execute Path? '
-		# key_input = raw_input('Execute Path? (Accept-y Reject-n) : ')
-		# if (key_input.lower() == 'n'):
-		# 	return
-		while (not rospy.is_shutdown()):
-			if rospy.has_param('/corin/execute'):
-				ex_status = rospy.get_param('/corin/execute')
-				if (ex_status == 1):
-					print 'Executing motion!'
-					rospy.set_param('/corin/execute', 0)
-					break
-				elif(ex_status == 2):
-					print 'Cancelling!'
-					rospy.set_param('/corin/execute', 0)
-					return
-			rospy.sleep(0.1)
+		self.ui_state = 'hold'
 
 		# cycle through trajectory points until complete
 		i = 1 	# skip first point since spline has zero initial differential conditions
 		while (i != len(base_path.X.t) and not rospy.is_shutdown()):
+
+			## User Interface for commanding robot motion state
+			# while (self.ui_state == 'hold' or self.ui_state == 'pause'):
+			# 	# loop until instructed to start or cancel
+			# 	if (rospy.is_shutdown()):
+			# 		break
+			# 	rospy.sleep(0.15)
+			# else:
+			# 	if (self.ui_state == 'play'):
+			# 		pass
+			# 	else:
+			# 		print 'Motion Cancelled!'
+			# 		return False
+
 			# print 'counting: ', i, len(base_path.X.t)
-			# print self.Robot.Gait.cs, i
+			
 			## suppress trajectory counter as body support suspended
 			if (self.Robot.suspend == True):
 				i -= 1
@@ -936,8 +963,11 @@ class CorinManager:
 			print 'Trajectory executed'
 			print 'Desired Goal: ', np.round(base_path.X.xp[-1],4), np.round(base_path.W.xp[-1],4)
 			print 'Tracked Goal: ', np.round(cob_X_desired.flatten(),4), np.round(cob_W_desired.flatten(),4)
+
+			return True
 		else:
 			print 'Motion invalid, exiting!'
+			return False
 
 	def action_interface(self):
 		""" Interface for commanding robot """
@@ -996,7 +1026,7 @@ class CorinManager:
 				prev_suspend = self.Robot.suspend
 				self.Robot.support_mode = True
 				self.Robot.suspend = False 		# clear suspension flag
-				self.trajectory_tracking(x_cob, w_cob)
+				success = self.trajectory_tracking(x_cob, w_cob)
 				self.Robot.suspend = prev_suspend
 				## Move back to nominal position
 				# self.default_pose()
@@ -1006,7 +1036,7 @@ class CorinManager:
 				print 'walk mode'
 				self.Robot.support_mode = False
 				
-				self.trajectory_tracking(x_cob, w_cob)
+				success = self.trajectory_tracking(x_cob, w_cob)
 				self.Robot.alternate_phase()
 
 			elif (mode == 3):
