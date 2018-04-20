@@ -28,16 +28,24 @@ if __name__ == "__main__":
 	# 	manager.action_interface()
 		# rospy.set_param('walkleft', True)
 	
-	## Demo - Chimney ========================================== ##
-	rospy.set_param('/corin/g2c_transition', True)
+	# ## Demo - Chimney ========================================== ##
+	# rospy.set_param('/corin/g2c_transition', True)
+	# manager.action_interface()
+	# rospy.set_param('/corin/walk_front', True)
+	# manager.action_interface()
+	# rospy.set_param('/corin/walk_up', True)
+	# manager.action_interface()
+	# rospy.set_param('/corin/walk_front', True)
+	# manager.action_interface()
+	# rospy.set_param('/corin/walk_down', True)
+	# manager.action_interface()
+	# rospy.set_param('/corin/c2g_transition', True)
+	# manager.action_interface()
+
+	## Demo - Wall ========================================== ##
+	rospy.set_param('/corin/g2w_transition', True)
 	manager.action_interface()
 	rospy.set_param('/corin/walk_front', True)
 	manager.action_interface()
-	rospy.set_param('/corin/walk_up', True)
-	manager.action_interface()
-	rospy.set_param('/corin/walk_front', True)
-	manager.action_interface()
-	rospy.set_param('/corin/walk_down', True)
-	manager.action_interface()
-	rospy.set_param('/corin/c2g_transition', True)
+	rospy.set_param('/corin/w2g_transition', True)
 	manager.action_interface()

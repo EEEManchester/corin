@@ -391,24 +391,20 @@ class CorinManager:
 			final_foothold 	 = [np.zeros(3)]*6
 
 			if (self.T_GND_X_WALL is True):
-				final_foothold[0] = np.array([v3cp_base[0]+ 0.115, v3cp_base[1]+d_wall, 0.69])
-				final_foothold[1] = np.array([v3cp_base[0]+ 0.,    v3cp_base[1]+d_wall, 0.69])
-				final_foothold[2] = np.array([v3cp_base[0]+-0.115, v3cp_base[1]+d_wall, 0.69])
-
+				for ji in range(0,3):
+					final_foothold[ji] = np.array([v3cp_base[0]+ Leg[j].base_X_NRP[0,3], v3cp_base[1]+d_wall, 0.69])
+					
 			elif (self.T_WALL_X_GND is True):
-				final_foothold[0] = np.array([v3cp_base[0]+ 0.115, v3cp_base[1]+d_wall, h_init])
-				final_foothold[1] = np.array([v3cp_base[0]+ 0.,    v3cp_base[1]+d_wall, h_init])
-				final_foothold[2] = np.array([v3cp_base[0]+-0.115, v3cp_base[1]+d_wall, h_init])
-
+				for ji in range(0,3):
+					final_foothold[ji] = np.array([v3cp_base[0]+ Leg[j].base_X_NRP[0,3], d_wall, h_init])	
+				
 			elif (self.T_GND_X_CHIM is True):
-				# if (j==0):
-				# 	print j, np.round(v3cp_base.flatten(),3)
-				final_foothold[0] = np.array([v3cp[0]+ Leg[j].base_X_NRP[0,3], v3cp_base[1]+ d_chim, BODY_HEIGHT])
-				final_foothold[1] = np.array([v3cp[0]+ Leg[j].base_X_NRP[0,3], v3cp_base[1]+ d_chim, BODY_HEIGHT])
-				final_foothold[2] = np.array([v3cp[0]+ Leg[j].base_X_NRP[0,3], v3cp_base[1]+ d_chim, BODY_HEIGHT])
-				final_foothold[3] = np.array([v3cp[0]+ Leg[j].base_X_NRP[0,3], v3cp_base[1]+-d_chim, BODY_HEIGHT])
-				final_foothold[4] = np.array([v3cp[0]+ Leg[j].base_X_NRP[0,3], v3cp_base[1]+-d_chim, BODY_HEIGHT])
-				final_foothold[5] = np.array([v3cp[0]+ Leg[j].base_X_NRP[0,3], v3cp_base[1]+-d_chim, BODY_HEIGHT])
+				for ji in range(0,3):
+					final_foothold[ji] = np.array([v3cp[0]+ Leg[j].base_X_NRP[0,3], v3cp_base[1]+ d_chim, BODY_HEIGHT])
+				
+				for ji in range(3,6):
+					final_foothold[ji] = np.array([v3cp[0]+ Leg[j].base_X_NRP[0,3], v3cp_base[1]+-d_chim, BODY_HEIGHT])
+				
 
 			for ji in range(0,6):
 				# set initial foothold and overwrite y & z-component
@@ -558,10 +554,6 @@ class CorinManager:
 						Leg[j].world_X_NRP = np.dot(XHy_world_X_base, Leg[j].base_X_NRP)
 						Leg[j].world_base_X_NRP[:3,3:4] = mX((XHy_world_X_base[:3,:3]), Leg[j].base_X_NRP[:3,3:4])
 
-					# elif (self.T_GND_X_CHIM is True):
-					# 	# compute_wall_footholds()
-					# 	Leg[j].update_world_base_X_NRP(P6d_world_X_base)
-
 					else:
 						Leg[j].update_world_base_X_NRP(P6d_world_X_base)
 					
@@ -597,16 +589,11 @@ class CorinManager:
 					## Get cell height in (x,y) location of world_X_foot
 					cell_h = np.array([0.,0.,0.])			# TODO: unstack height from map
 					## SIM DATA
-					if (self.T_GND_X_WALL is True or self.T_WALL_X_GND is True):
+					if (self.T_GND_X_WALL is True or self.T_WALL_X_GND is True or self.W_WALL is True):
 						## TODO: temporary setting this side height to be equiv. of wall
 						if (j < 3):
 							cell_h = np.array([0.,0.,1.])
 					
-					if (self.W_WALL is True):
-						cell_h = np.array([0.,0.,1.])
-
-					else:
-						cell_h = np.array([0.,0.,0.])
 
 					## Cell height above threshold gets ignored as this requires advanced motions
 					if (cell_h.item(2) < 0.1 and chim_trans is False and self.W_CHIM is False):
@@ -659,9 +646,9 @@ class CorinManager:
 						
 							Leg[j].world_X_foot = mX(XHd.world_X_base, Leg[j].base_X_AEP)
 
-						if (j==0):
-							print j, Leg[j].world_X_foot[0,3]
-							print np.round(Leg[j].world_base_X_AEP[:3,3],4)
+						# if (j==0):
+						# 	print j, Leg[j].world_X_foot[0,3]
+						# 	print np.round(Leg[j].world_base_X_AEP[:3,3],4)
 					else:
 						pass
 
@@ -885,7 +872,7 @@ class CorinManager:
 					## Update NRP
 					self.Robot.Leg[j].XHd.base_X_NRP[:3,3] = mX(self.Robot.XHd.base_X_world[:3,:3], 
 																self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3])
-					if (j == 1):
+					if (j == 0):
 						print 'bXN: ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],4)
 						print 'wXN: ', np.round(self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3],4)
 						# print j, ' Xc: ', np.round(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3],4)
