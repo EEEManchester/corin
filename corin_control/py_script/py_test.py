@@ -85,4 +85,5 @@ b = True
 c = True
 a = np.array([1.11,2.321])
 a[0] = 3
-print a
+print np.zeros(16)
+

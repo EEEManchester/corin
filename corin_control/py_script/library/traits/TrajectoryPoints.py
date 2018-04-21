@@ -58,7 +58,6 @@ class Trajectory6D():
 		self.X.insert(start,end,data.X)
 		self.W.insert(start,end,data.W)
 
-
 class TrajectoryPoints():
 	def __init__(self,data=None):
 		if data is None:

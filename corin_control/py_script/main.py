@@ -12,7 +12,6 @@ if __name__ == "__main__":
 	manager = Control_Framework.CorinManager(True)
 
 	rospy.loginfo('Robot Ready!')
-	# raw_input('ROBOT READY!')
 	
 	# rospy.set_param('/corin/bodypose', True)
 	# rospy.set_param('/corin/walk_front', True)
@@ -24,8 +23,8 @@ if __name__ == "__main__":
 	
 	# rospy.set_param('/corin/g2c_transition', True)
 	
-	# while not rospy.is_shutdown():
-	# 	manager.action_interface()
+	while not rospy.is_shutdown():
+		manager.action_interface()
 		# rospy.set_param('walkleft', True)
 	
 	# ## Demo - Chimney ========================================== ##
@@ -43,9 +42,10 @@ if __name__ == "__main__":
 	# manager.action_interface()
 
 	## Demo - Wall ========================================== ##
-	rospy.set_param('/corin/g2w_transition', True)
-	manager.action_interface()
-	rospy.set_param('/corin/walk_front', True)
-	manager.action_interface()
-	rospy.set_param('/corin/w2g_transition', True)
-	manager.action_interface()
+	# raw_input('ROBOT READY!')
+	# rospy.set_param('/corin/g2w_transition', True)
+	# manager.action_interface()
+	# rospy.set_param('/corin/walk_front', True)
+	# manager.action_interface()
+	# rospy.set_param('/corin/w2g_transition', True)
+	# manager.action_interface()

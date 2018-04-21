@@ -31,11 +31,15 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   : rviz::Panel( parent )
   , cmd_state_("hold")
   , run_toggle_(false)
+  , jump_toggle_(false)
   // , motion_selected_( false )
   // , angular_velocity_( 0 )
 {
   //***************** PUBLISHERS ***************//
   ui_publisher_ = nh_.advertise<std_msgs::String>( "/corin/ui_execute", 1 );
+
+  //***************** SERVICES ***************//
+  ui_client_ = nh_.serviceClient<corin_control::UiState>("/corin/set_ui_state");
 
   button_front_ = new QPushButton("Forward", this);
   button_back_ = new QPushButton("Backward", this);
@@ -44,11 +48,6 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   button_bodypose_ = new QPushButton("Bodypose", this);
   button_rotate_ = new QPushButton("Rotate", this);
   button_reset_ = new QPushButton("Reset", this);
-  
-  button_front_->setIcon(QIcon("package://icons/classes/uparrow.png"));
-  // QString buttonStyle = "QPushButton{border:none;background-color:rgba(255, 255, 255,100);}";
-  // button_front_->setStyleSheet(buttonStyle); // Style sheet
-  // button_front_->setIconSize(QSize(50,50));
 
   tran_group_ = TransitionGroup();
   exec_group_ = ExecutionGroup();
@@ -114,6 +113,7 @@ TeleopPanel::TeleopPanel( QWidget* parent )
 
   connect( button_execute_, SIGNAL (released()), this, SLOT (handleButtonExecute()));
   connect( button_cancel_, SIGNAL (released()), this, SLOT (handleButtonCancel()));
+  connect( button_pose_jump_, SIGNAL (released()), this, SLOT (handleButtonPoseJump()));
 
   // Start the timer.
   // output_timer->start( 500 );
@@ -148,10 +148,12 @@ QGroupBox *TeleopPanel::ExecutionGroup()
 
     button_execute_ = new QPushButton("Run", this);
     button_cancel_  = new QPushButton("Cancel", this);
-    
+    button_pose_jump_ = new QPushButton("End Pose", this);
+
     QGridLayout* grid_layout  = new QGridLayout;
     grid_layout->addWidget( button_execute_, 0, 0);
     grid_layout->addWidget( button_cancel_, 0, 1);
+    grid_layout->addWidget( button_pose_jump_, 1, 0, 1, 2);
 
     groupBox->setLayout(grid_layout);
     // groupBox->setFlat(false);
@@ -233,7 +235,7 @@ void TeleopPanel::handleButtonBack()
       cmd_state_  = "play";
       run_toggle_ = true;
       button_execute_->setText("Pause");
-      ROS_INFO("should run");
+      // ROS_INFO("should run");
     }
     else if (run_toggle_ == true)
     {
@@ -268,6 +270,48 @@ void TeleopPanel::handleButtonBack()
     run_toggle_ = false;
   }
  }
+
+ void TeleopPanel::handleButtonPoseJump()
+ {
+  if (jump_toggle_ == false)
+  {
+    if (sendSrvCmd("go_final_pose"))
+    {
+      jump_toggle_ = true;
+      button_pose_jump_->setText("Initial Pose"); 
+      ROS_INFO("Moving robot to final pose"); 
+    }
+  }
+  else if (jump_toggle_ == true)
+  {
+    if (sendSrvCmd("go_initial_pose"))
+    {
+      jump_toggle_ = false;
+      button_pose_jump_->setText("Final Pose");
+      ROS_INFO("Moving robot to initial pose"); 
+    }
+  }
+ }
+// Sends the command to service function
+bool TeleopPanel::sendSrvCmd(std::string srv_cmd)
+{
+  std_msgs::String msg;
+  msg.data = srv_cmd;
+  
+  corin_control::UiState srv;
+  srv.request.state = msg;
+  
+  if (ui_client_.call(srv))
+  {
+    return true;
+  }
+  else
+  {
+    ROS_ERROR("Failed to call service");
+    return false;
+  }
+}
+
 // Publish the commanded state if ROS is not shutting down and the
 // publisher is ready with a valid topic name.
 void TeleopPanel::sendUserCmd(std::string cmd_state_)

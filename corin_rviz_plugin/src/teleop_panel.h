@@ -5,6 +5,7 @@
 #ifndef Q_MOC_RUN
 # include <ros/ros.h>
 # include <std_msgs/String.h>
+#include "corin_control/UiState.h"
 # include <QPushButton>
 # include <QFrame>
 # include <QGroupBox>
@@ -56,11 +57,14 @@ public Q_SLOTS:
   void handleButtonGnd2ChimneyTransition();
   void handleButtonChimney2GndTransition();
 
+  void handleButtonPoseJump();
+
   void handleButtonExecute();
   void handleButtonCancel();
   void enableExecButtons(bool mselect);
 
   void sendUserCmd(std::string cmd_state_);
+  bool sendSrvCmd(std::string srv_cmd);
   // In this example setTopic() does not get connected to any signal
   // (it is called directly), but it is easy to define it as a public
   // slot instead of a private function in case it would be useful to
@@ -87,6 +91,8 @@ protected:
   QPushButton* button_execute_;
   QPushButton* button_cancel_;
 
+  QPushButton* button_pose_jump_;
+
   QGroupBox* exec_group_;
   QGroupBox* tran_group_;
 
@@ -103,12 +109,16 @@ protected:
   // The ROS node handle.
   ros::NodeHandle nh_;
 
+  // ROS service client
+  ros::ServiceClient ui_client_;
+
   // The latest velocity values from the drive widget.
   // float linear_velocity_;
   // float angular_velocity_;
   // bool motion_selected_;
   std::string cmd_state_;   // state to control: run, pause, hold
   bool run_toggle_;         // toggles button state between run and pause
+  bool jump_toggle_;
 };
 
 } // end namespace corin_rviz_plugin

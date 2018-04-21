@@ -1,32 +1,36 @@
 <?xml version="1.0" ?>
 <launch>
 
+	<arg name="robotis" default="false"/>
 	<arg name="sensors" default="true"/>
 	<arg name="gui" default="false"/> 		<!-- True: manual control   False: real sensor -->
-	<!-- <arg name="rviz_conf" default="$(find hyq_description)/rviz/hyq_model_tf.rviz"/> -->
+	<arg name="rviz_conf" default="$(find corin_description)/rviz/grid_map.rviz"/>
 
 	<!-- load robot -->
-	<param name="robot_description" textfile="$(find corin_description)/robots/corin.urdf" />
-	<param name="publish_frequency" value="50" /> <!-- Hz -->
+	<!-- Load the URDF into the ROS Parameter Server -->
+  	<param name="robot_description"
+   	 command="$(find xacro)/xacro --inorder '$(find corin_description)/robots/Corin_fixed.urdf.xacro'"/>
+	<param name="publish_frequency" value="400" /> <!-- Hz -->
 
 	<!-- publish the joint and robot states -->
 	<group if="$(arg gui)">
 		<node name="joint_state_publisher" pkg="joint_state_publisher"
-			type="joint_state_publisher" respawn="true" />
+			type="joint_state_publisher" respawn="true" >
 			<param name="use_gui" value="$(arg gui)"/>
-			<param name="rate" value="100"/>
+			<param name="rate" value="400"/>
+		</node>
 	</group>
 
 	<node name="robot_state_publisher" pkg="robot_state_publisher"
 		type="state_publisher" respawn="true">
-		<param name="publish_frequency" value="200" />
-		<!-- <param name="rate" value="200" /> -->
-		<!--<remap from="/joint_states" to="/corin/joint_states" /> 	 when running gazebo -->
-		<remap from="/joint_states" to="/robotis/present_joint_states" />
+		<param name="publish_frequency" value="400" />
+		<param name="rate" value="400" />
+		<remap from="/joint_states" to="/robotis/present_joint_states" if="$(arg robotis)"/> 	<!-- interfacing to robotis -->
+		<remap from="/joint_states" to="/corin/joint_states" unless="$(arg robotis)"/> 			<!-- interfacing to gazebo or rviz -->
 	</node>
 
 	<!-- load displays -->
 	<param name="use_gui" value="true"/>
-	<node name="rviz" pkg="rviz" type="rviz" required="true" />
+	<node name="rviz" pkg="rviz" type="rviz" output="screen" required="true" args="-d $(arg rviz_conf) -f world" />
 
 </launch>

@@ -4,7 +4,10 @@
 
 cmake_minimum_required(VERSION 2.8.3)
 project(corin_rviz_plugin)
-find_package(catkin REQUIRED COMPONENTS rviz)
+find_package(catkin REQUIRED COMPONENTS
+  corin_control
+  rviz
+)
 catkin_package()
 
 include_directories(

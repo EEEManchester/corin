@@ -10,6 +10,7 @@ import sys; sys.dont_write_bytecode = True
 from library import *			# library modules to include
 from motion_planning import *	# library modules on motion planning
 import control_interface 		# action selection from ROS parameter server
+from rviz_visual import *
 
 ## ROS messages & libraries
 import rospy
@@ -54,6 +55,8 @@ class CorinManager:
 		self.control_mode = "fast" 	# run controller in various mode: 1) normal, 2) fast
 
 		self.ui_state = "hold" 		# user interface for commanding motions
+		self.MotionPlan = MotionPlan()
+		self.Visualizer = RvizVisualise() 	# visualisation for rviz
 
 		self.__initialise__()
 
@@ -86,10 +89,10 @@ class CorinManager:
 
 		## set up publisher and subscriber topics
 		self.__initialise_topics__()
-		# self.__initialise_service__()
+		self.__initialise_service__()
 
 		## initialises robot transform
-		self.robot_broadcaster.sendTransform( (0.,0.,BODY_HEIGHT), (0.,0.,0.,1.), 
+		self.Visualizer.robot_broadcaster.sendTransform( (0.,0.,BODY_HEIGHT), (0.,0.,0.,1.), 
 													rospy.Time.now(), "trunk", "world");
 		## setup RVIZ JointState topic
 		if (self.interface == 'rviz'):
@@ -143,12 +146,6 @@ class CorinManager:
 			rospy.logerr("INVALID HARDWARE INTERFACE SELECTED!")
 			rospy.signal_shutdown("INVALID HARDWARE INTERFACE SELECTED - SHUTTING DOWN")
 
-		## Motion planning and preview for RVIZ ##
-		self.map_pub_  = rospy.Publisher(ROBOT_NS + '/point_cloud', PointCloud2, queue_size=1)
-		self.path_pub_ = rospy.Publisher(ROBOT_NS + '/path', Path, queue_size=1)
-		self.mark_pub_ = rospy.Publisher(ROBOT_NS + '/footholds', MarkerArray, queue_size=1)	# marker array
-		self.robot_broadcaster = tf.TransformBroadcaster()	# Transform for robot pose
-
 		##***************** SUBSCRIBERS ***************##
 		## Robot State ##
 		self.imu_sub_	 = rospy.Subscriber(ROBOT_NS + '/imu/base/data', Imu, self.imu_callback, queue_size=1)
@@ -167,15 +164,26 @@ class CorinManager:
 		# Sleep for short while for topics to be initiated properly
 		rospy.sleep(0.5)
 
-	# def handle_ui_state(self,req):
-	# 	""" Service handler for user interface """
-	# 	self.ui_state = str(req.state.data)
-	# 	msg = String()
-	# 	msg.data = "Success"
-	# 	return msg
+	def handle_ui_state(self,req):
+		""" Service handler for user interface """
+		
+		cmd = str(req.state.data)
+		if (cmd == "go_final_pose"):
+			if (self.interface != 'robotis'):
+				print 'Going to final pose'
+				self.pose_switch('final')
 
-	# def __initialise_service__(self):
-	# 	self.ui_service = rospy.Service(ROBOT_NS + '/set_ui_state', UiState, self.handle_ui_state)
+		elif (cmd == "go_initial_pose"):
+			if (self.interface != 'robotis'):
+				print 'Going to initial pose'
+				self.pose_switch('initial')
+
+		msg = String()
+		msg.data = "Success"
+		return msg
+
+	def __initialise_service__(self):
+		self.ui_service = rospy.Service(ROBOT_NS + '/set_ui_state', UiState, self.handle_ui_state)
 
 	def publish_topics(self, q, q_log=None):
 		""" Publish joint position to joint controller topics and
@@ -219,7 +227,7 @@ class CorinManager:
 				self.joint_pub_.publish(dqp)
 
 		qb = self.Robot.P6c.world_X_base.copy()
-		self.robot_broadcaster.sendTransform( (qb[0],qb[1],qb[2]), 
+		self.Visualizer.robot_broadcaster.sendTransform( (qb[0],qb[1],qb[2]), 
 												tf.transformations.quaternion_from_euler(qb[3],	qb[4], qb[5]), 
 												rospy.Time.now(), "trunk", "world");
 
@@ -515,7 +523,7 @@ class CorinManager:
 					print 'Finishing foothold planning at ', i
 					break
 
-			## Stack to array next CoB location
+			## Stack to list next CoB location
 			world_X_base.append(P6d_world_X_base.reshape(1,6))
 			gphase_intv.append(i)
 
@@ -718,6 +726,12 @@ class CorinManager:
 
 		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 		# print np.round(world_X_footholds[0].xp,3)
+		
+		## Set MotionPlan class
+		self.MotionPlan.set_base_path(self.Robot.P6c.world_X_base.copy(), base_path, world_X_base)
+		self.MotionPlan.set_footholds(world_X_footholds, base_X_footholds, world_base_X_NRP)
+		self.MotionPlan.set_gait(self.Robot.Gait.cs, Gait.cs)
+
 		return world_X_base, world_X_footholds, base_X_footholds, world_base_X_NRP
 
 	def trajectory_tracking(self, x_cob, w_cob=0):
@@ -750,13 +764,13 @@ class CorinManager:
 
 		## Publish multiple times to ensure it is published 
 		for c in range(0,3):
-			self.robot_broadcaster.sendTransform( (wXbase_offset[0],wXbase_offset[1],wXbase_offset[2]), 
+			self.Visualizer.robot_broadcaster.sendTransform( (wXbase_offset[0],wXbase_offset[1],wXbase_offset[2]), 
 													tf.transformations.quaternion_from_euler(wXbase_offset[3].copy(), 
 																								wXbase_offset[4].copy(), 
 																								wXbase_offset[5].copy()), 
 													rospy.Time.now(), "trunk", "world") ;
-			self.path_pub_.publish(array_to_path(base_path, rospy.Time.now(), "world", wXbase_offset))
-			self.mark_pub_.publish(list_to_marker_array(world_X_footholds, rospy.Time.now(), "world"))
+			self.Visualizer.path_pub_.publish(array_to_path(base_path, rospy.Time.now(), "world", wXbase_offset))
+			self.Visualizer.mark_pub_.publish(list_to_marker_array(world_X_footholds, rospy.Time.now(), "world"))
 			if (self.interface == 'rviz'):
 				self.joint_pub_.publish(array_to_joint_states(self.Robot.qc.position, rospy.Time.now(), ""))
 			rospy.sleep(0.2)
@@ -770,18 +784,18 @@ class CorinManager:
 		i = 1 	# skip first point since spline has zero initial differential conditions
 		while (i != len(base_path.X.t) and not rospy.is_shutdown()):
 
-			## User Interface for commanding robot motion state
-			# while (self.ui_state == 'hold' or self.ui_state == 'pause'):
-			# 	# loop until instructed to start or cancel
-			# 	if (rospy.is_shutdown()):
-			# 		break
-			# 	rospy.sleep(0.15)
-			# else:
-			# 	if (self.ui_state == 'play'):
-			# 		pass
-			# 	else:
-			# 		print 'Motion Cancelled!'
-			# 		return False
+			# User Interface for commanding robot motion state
+			while (self.ui_state == 'hold' or self.ui_state == 'pause'):
+				# loop until instructed to start or cancel
+				if (rospy.is_shutdown()):
+					break
+				rospy.sleep(0.15)
+			else:
+				if (self.ui_state == 'play'):
+					pass
+				else:
+					print 'Motion Cancelled!'
+					return False
 
 			# print 'counting: ', i, len(base_path.X.t)
 			
@@ -968,15 +982,7 @@ class CorinManager:
 
 		if (data is not None):
 			
-			## Clear visualization components ##
-			clear_marker = MarkerArray()
-			mark = Marker()
-			mark.action = 3
-			clear_marker.markers.append(mark)
-			clear_path = Path()
-			clear_path.header.frame_id = 'world'
-			self.mark_pub_.publish(clear_marker)
-			self.path_pub_.publish(clear_path)
+			self.Visualizer.clear_visualisation()
 
 			## Data mapping - for convenience
 			x_cob, w_cob, mode, motion_prim = data
@@ -1024,7 +1030,8 @@ class CorinManager:
 				self.Robot.support_mode = False
 				
 				success = self.trajectory_tracking(x_cob, w_cob)
-				self.Robot.alternate_phase()
+				if (success is True):
+					self.Robot.alternate_phase()
 
 			elif (mode == 3):
 				if (self.resting == False): 	# rest robot
@@ -1039,3 +1046,41 @@ class CorinManager:
 
 		else:
 			rospy.sleep(0.5)
+
+	def pose_switch(self, setpoint):
+		""" Moves the robot into a pose immediately """
+		print self.MotionPlan.gait_is, self.MotionPlan.gait_fs
+		# Set counter to start or end position
+		if (setpoint == 'initial'):
+			i = 0
+			self.Robot.Gait.cs = list(self.MotionPlan.gait_is)
+		else:
+			i = -1
+			self.Robot.Gait.cs = list(self.MotionPlan.gait_fs)
+		# i = 0 if (setpoint == 'initial') else -1
+
+		# Set bodypose
+		v3cp = self.MotionPlan.qb_bias[0:3] + self.MotionPlan.qb.X.xp[i].reshape(3,1);
+		v3wp = self.MotionPlan.qb_bias[3:6] + self.MotionPlan.qb.W.xp[i].reshape(3,1);
+
+		self.Robot.P6d.world_X_base = np.vstack((v3cp,v3wp))
+		self.Robot.P6c.world_X_base = np.vstack((v3cp,v3wp))
+
+		self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
+		self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
+
+		## Set leg states
+		for j in range(0,6):
+
+			self.Robot.Leg[j].XHd.world_X_foot = v3_X_m(self.MotionPlan.f_world_X_foot[j].xp[i])
+			self.Robot.Leg[j].XHc.world_X_foot = self.Robot.Leg[j].XHd.world_X_foot.copy()
+			self.Robot.Leg[j].XHd.world_base_X_NRP = v3_X_m(self.MotionPlan.f_world_base_X_NRP[j].xp[i])
+			self.Robot.Leg[j].XHc.world_base_X_NRP = self.Robot.Leg[j].XHd.world_base_X_NRP.copy()
+
+			self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
+			self.Robot.Leg[j].XHc.base_X_foot = self.Robot.Leg[j].XHd.base_X_foot.copy()
+			self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
+			self.Robot.Leg[j].XHc.coxa_X_foot = self.Robot.Leg[j].XHd.coxa_X_foot.copy()
+
+		qd = self.Robot.task_X_joint()
+		self.publish_topics(qd)

@@ -31,6 +31,6 @@
 
 	<!-- load displays -->
 	<param name="use_gui" value="true"/>
-	<node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(arg rviz_conf) -f world" />
+	<node name="rviz" pkg="rviz" type="rviz" output="screen" required="true" args="-d $(arg rviz_conf) -f world" />
 
 </launch>
