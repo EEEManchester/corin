@@ -18,8 +18,8 @@ class MotionPlan():
 		self.f_base_X_foot = [None]*6 		# foothold wrt base frame
 		self.f_world_base_X_NRP = [None]*6 	# NRP from base frame wrt world frame
 
-		self.gait_is = [0]*6
-		self.gait_fs = [0]*6
+		self.gait_in = 0
+		self.gait_fn = 0
 
 		self.__initialise__()
 
@@ -51,5 +51,5 @@ class MotionPlan():
 			self.f_world_base_X_NRP[j].xp = list(bXN[j].xp)
 			
 	def set_gait(self, gait_initial, gait_final):
-		self.gait_is = list(gait_initial)
-		self.gait_fs = list(gait_final)
+		self.gait_in = gait_initial
+		self.gait_fn = gait_final

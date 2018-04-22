@@ -226,10 +226,7 @@ class CorinManager:
 
 				self.joint_pub_.publish(dqp)
 
-		qb = self.Robot.P6c.world_X_base.copy()
-		self.Visualizer.robot_broadcaster.sendTransform( (qb[0],qb[1],qb[2]), 
-												tf.transformations.quaternion_from_euler(qb[3],	qb[4], qb[5]), 
-												rospy.Time.now(), "trunk", "world");
+		self.Visualizer.publish_robot(self.Robot.P6c.world_X_base)
 
 		## Publish setpoints to logging topic
 		if (q_log is not None):
@@ -452,7 +449,7 @@ class CorinManager:
 		world_base_X_NRP  = [None]*6
 
 		Gait.cs = list(self.Robot.Gait.cs) 	# update local gait current state 
-		Gait.gphase = self.Robot.Gait.gphase
+		Gait.np = self.Robot.Gait.np
 		v3cp_prev = self.Robot.P6c.world_X_base[0:3].copy()	# previous CoB position
 		v3wp_prev = self.Robot.P6c.world_X_base[3:6].copy()	# previous CoB orientation
 		world_X_base.append(self.Robot.P6c.world_X_base.flatten())
@@ -478,9 +475,14 @@ class CorinManager:
 		if (self.Robot.support_mode is True):
 			return world_X_base, world_X_footholds, base_X_footholds, world_base_X_NRP
 		
+		for j in range(0,6):
+			print np.round(Leg[j].world_base_X_NRP[:3,3],4)
+			print np.round(Leg[j].world_X_foot[:3,3],4)
+			print '--------------------------------------'
+
 		## Cycle through trajectory
 		while (i != len(base_path.X.t) and not rospy.is_shutdown()):
-			# print i, ' Gait phase ', Gait.cs
+			print i, ' Gait phase ', Gait.cs, Gait.np
 			bound_exceed = False
 
 			# cycles through one gait phase
@@ -502,14 +504,14 @@ class CorinManager:
 						## Legs in support phase:
 						if (Gait.cs[j] == 0):
 							Leg[j].base_X_foot = mX(XHd.base_X_world, Leg[j].world_X_foot)
-							Leg[j].coxa_X_foot = mX(Leg[j].coxa_X_base, Leg[j].base_X_foot)
+							# Leg[j].coxa_X_foot = mX(Leg[j].coxa_X_base, Leg[j].base_X_foot)
 
 							Leg[j].world_base_X_foot = mX(world_X_base_rot, Leg[j].base_X_foot)
 							bound_exceed = self.Robot.Leg[j].check_boundary_limit(Leg[j].world_base_X_foot,
 																					Leg[j].world_base_X_NRP)
 							
 							if (bound_exceed == True):
-								# print 'bound exceed on ', j, ' at ', i, i*CTR_INTV
+								print 'bound exceed on ', j, ' at ', i, i*CTR_INTV
 								break
 
 					if (bound_exceed is True):
@@ -686,12 +688,11 @@ class CorinManager:
 						# print 'wXA:  ', XHd.world_X_base[:3,3] + Leg[j].world_base_X_AEP[:3,3]
 						# print 'wXb:  ', np.round(XHd.base_X_world,4)
 						
-
 			## Alternate gait phase
 			Gait.change_phase()
 			v3cp_prev = v3cp.copy()
 			v3wp_prev = v3wp.copy()
-
+		
 		# Replace last footholds with default ground NRP
 		if (self.T_WALL_X_GND is True or self.T_CHIM_X_GND is True):
 			KDL = kdl.KDL()
@@ -730,7 +731,7 @@ class CorinManager:
 		## Set MotionPlan class
 		self.MotionPlan.set_base_path(self.Robot.P6c.world_X_base.copy(), base_path, world_X_base)
 		self.MotionPlan.set_footholds(world_X_footholds, base_X_footholds, world_base_X_NRP)
-		self.MotionPlan.set_gait(self.Robot.Gait.cs, Gait.cs)
+		self.MotionPlan.set_gait(self.Robot.Gait.np, Gait.np)
 
 		return world_X_base, world_X_footholds, base_X_footholds, world_base_X_NRP
 
@@ -761,16 +762,14 @@ class CorinManager:
 
 		## Plan foothold for robot - world_X_base, world_X_footholds not used
 		world_X_base, world_X_footholds, base_X_footholds, w_base_X_NRP = self.foothold_selection(base_path)
-
+		for j in range(0,6):
+			print world_X_footholds[j].xp
 		## Publish multiple times to ensure it is published 
 		for c in range(0,3):
-			self.Visualizer.robot_broadcaster.sendTransform( (wXbase_offset[0],wXbase_offset[1],wXbase_offset[2]), 
-													tf.transformations.quaternion_from_euler(wXbase_offset[3].copy(), 
-																								wXbase_offset[4].copy(), 
-																								wXbase_offset[5].copy()), 
-													rospy.Time.now(), "trunk", "world") ;
-			self.Visualizer.path_pub_.publish(array_to_path(base_path, rospy.Time.now(), "world", wXbase_offset))
-			self.Visualizer.mark_pub_.publish(list_to_marker_array(world_X_footholds, rospy.Time.now(), "world"))
+			self.Visualizer.publish_robot(wXbase_offset)
+			self.Visualizer.publish_path(base_path, wXbase_offset)
+			self.Visualizer.publish_footholds(world_X_footholds)
+
 			if (self.interface == 'rviz'):
 				self.joint_pub_.publish(array_to_joint_states(self.Robot.qc.position, rospy.Time.now(), ""))
 			rospy.sleep(0.2)
@@ -886,14 +885,14 @@ class CorinManager:
 					## Update NRP
 					self.Robot.Leg[j].XHd.base_X_NRP[:3,3] = mX(self.Robot.XHd.base_X_world[:3,:3], 
 																self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3])
-					if (j == 0):
-						print 'bXN: ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],4)
-						print 'wXN: ', np.round(self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3],4)
+					if (j == 2):
+						# print 'bXN: ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],4)
+						# print 'wXN: ', np.round(self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3],4)
 						# print j, ' Xc: ', np.round(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3],4)
 						# print j, ' Xd: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],4)
 						# print j, ' Wn: ', np.round(world_norm,4)
 						# print j, ' Ln: ', np.round(self.Robot.Leg[j].qsurface,4)
-						# print 'wXf: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],4)
+						print 'wXf: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],4)
 
 					if (svalid is False):
 						# set invalid if trajectory unfeasible for leg's kinematic
@@ -1049,16 +1048,17 @@ class CorinManager:
 
 	def pose_switch(self, setpoint):
 		""" Moves the robot into a pose immediately """
-		print self.MotionPlan.gait_is, self.MotionPlan.gait_fs
-		# Set counter to start or end position
+		
+		# Set counter and gait phases to start or end position
 		if (setpoint == 'initial'):
 			i = 0
-			self.Robot.Gait.cs = list(self.MotionPlan.gait_is)
+			self.Robot.Gait.np = self.MotionPlan.gait_in
+			self.Robot.Gait.cs = self.Robot.Gait.phase[self.Robot.Gait.np]
 		else:
 			i = -1
-			self.Robot.Gait.cs = list(self.MotionPlan.gait_fs)
-		# i = 0 if (setpoint == 'initial') else -1
-
+			self.Robot.Gait.np = self.MotionPlan.gait_fn
+			self.Robot.Gait.cs = self.Robot.Gait.phase[self.Robot.Gait.np]
+		
 		# Set bodypose
 		v3cp = self.MotionPlan.qb_bias[0:3] + self.MotionPlan.qb.X.xp[i].reshape(3,1);
 		v3wp = self.MotionPlan.qb_bias[3:6] + self.MotionPlan.qb.W.xp[i].reshape(3,1);
@@ -1083,4 +1083,8 @@ class CorinManager:
 			self.Robot.Leg[j].XHc.coxa_X_foot = self.Robot.Leg[j].XHd.coxa_X_foot.copy()
 
 		qd = self.Robot.task_X_joint()
-		self.publish_topics(qd)
+		
+		if (self.Robot.invalid == True):
+			print 'Robot Configuration Invalid!'
+		else:
+			self.publish_topics(qd)
