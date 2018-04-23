@@ -84,6 +84,21 @@ a = True
 b = True
 c = True
 a = np.array([1.11,2.321])
-a[0] = 3
-print np.zeros(16)
 
+a = ([1,2,3],[6,3,2])# 'seom'
+print a[1]
+print type(a)
+if (isinstance(a,str)):
+	print 'a string!'
+elif (isinstance(a,tuple)):
+	print 'a tuple!'
+else:
+	print 'not a string'
+
+def testf(**options):
+	print options
+	if options.get("start"):
+		s = options.get("start")
+		print 'start!', s
+
+# testf(start=[1,2,3],end=2)

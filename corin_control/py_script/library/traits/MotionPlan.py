@@ -15,7 +15,7 @@ class MotionPlan():
 		self.qb  = Trajectory6D() 			# base path trajectory
 		self.qbp = Trajectory6D() 			# base location where gait phase changes
 		self.f_world_X_foot = [None]*6 		# foothold wrt world frame
-		self.f_base_X_foot = [None]*6 		# foothold wrt base frame
+		self.f_base_X_foot  = [None]*6 		# foothold wrt base frame
 		self.f_world_base_X_NRP = [None]*6 	# NRP from base frame wrt world frame
 
 		self.gait_in = 0

@@ -13,7 +13,6 @@ from traits import *
 from constant import * 					# constants used
 import leg_class 						# class for robot's leg
 import gait_class as Gaitgen			# class for gait coordinator
-# import gait_class_new as Gaitgen
 import pspline_generator as Pspline 	# spline generator for body
 import bspline_generator as Bspline 	# spline generator for leg
 import stability_margin as SMargin 		# stability margin evaluation

@@ -34,6 +34,8 @@ class ControlInterface:
 		rospy.set_param('/corin/g2c_transition', False)
 		rospy.set_param('/corin/c2g_transition', False)
 
+		rospy.set_param('/corin/plan_path', False)
+
 	#corin performs bodypose
 	def bodypose(self, x_cob, w_cob):
 		self.mode = 1
@@ -99,21 +101,21 @@ class ControlInterface:
 			# for i in range(0,5):
 			# 	x_cob = np.vstack((x_cob,np.zeros(3,1)))
 
-			# x_cob = np.vstack((x_cob,np.array([0. , -0.04, 0.])))
-			# x_cob = np.vstack((x_cob,np.array([0.03,  0.04, 0.])))
-			# x_cob = np.vstack((x_cob,np.array([-0.03, 0.04, 0.])))
-			# x_cob = np.vstack((x_cob,np.array([-0.03, -0.04, 0.])))
+			x_cob = np.vstack((x_cob,np.array([0. , -0.04, 0.])))
+			x_cob = np.vstack((x_cob,np.array([0.03,  0.04, 0.])))
+			x_cob = np.vstack((x_cob,np.array([-0.03, 0.04, 0.])))
+			x_cob = np.vstack((x_cob,np.array([-0.03, -0.04, 0.])))
 			# x_cob = np.vstack((x_cob,np.array([0.00, 0.00, 0.])))
 			# x_cob = np.vstack((x_cob,np.array([0.00, 0.0, 0.12])))
 			x_cob = np.vstack((x_cob,np.array([0.,  0.0, 0.])))
 
-			# w_cob = np.vstack((w_cob,np.array([-0.22, -0.075, 0.])))
-			# w_cob = np.vstack((w_cob,np.array([0.22, -0.075, 0.])))
-			# w_cob = np.vstack((w_cob,np.array([0.22,  0.075, 0.])))
-			# w_cob = np.vstack((w_cob,np.array([-0.22,  0.075, 0.])))
+			w_cob = np.vstack((w_cob,np.array([-0.22, -0.075, 0.])))
+			w_cob = np.vstack((w_cob,np.array([0.22, -0.075, 0.])))
+			w_cob = np.vstack((w_cob,np.array([0.22,  0.075, 0.])))
+			w_cob = np.vstack((w_cob,np.array([-0.22,  0.075, 0.])))
 			# w_cob = np.vstack((w_cob,np.array([0.00, 0.00, -0.15])))
 			# w_cob = np.vstack((w_cob,np.array([0.,0.,0.12])))
-			w_cob = np.vstack((w_cob,np.array([0.2,  0.0, 0.])))
+			w_cob = np.vstack((w_cob,np.array([0.,  0.0, 0.])))
 
 		return x_cob, w_cob, self.mode, 'walk'
 		
@@ -132,9 +134,9 @@ class ControlInterface:
 
 	def walk_right(self, x_cob, w_cob):
 		self.mode  = 2
-		x_cob = np.vstack((x_cob,np.array([0.0, -0.25, 0.])))
+		x_cob = np.vstack((x_cob,np.array([0.0, -0.2, 0.])))
 		w_cob = np.vstack((w_cob,np.array([0.1, 0., 0.])))
-		x_cob = np.vstack((x_cob,np.array([0.0, -0.5, 0.])))
+		x_cob = np.vstack((x_cob,np.array([0.0, -0.4, 0.])))
 		w_cob = np.vstack((w_cob,np.array([0.1, 0., 0.])))
 		return x_cob, w_cob, self.mode, 'walk'
 
@@ -218,6 +220,10 @@ class ControlInterface:
 			rospy.set_param('/corin/c2g_transition',False)
 			return self.chimney_X_gnd_transition(x_cob, w_cob)
 
+		elif (rospy.get_param('/corin/plan_path')==True):
+			rospy.set_param('/corin/plan_path',False)
+			return self.plan_path(x_cob, w_cob)
+
 		elif (rospy.get_param('/corin/reset')==True):		# Command Prompt: rosparam set reset True
 			rospy.set_param('/corin/reset',False)
 			return self.reset(x_cob, w_cob)
@@ -284,3 +290,7 @@ class ControlInterface:
 		# 	x_cob = np.vstack((x_cob,np.array([0., 0., 0.])))
 		
 		return x_cob, w_cob, self.mode, 'c2g_transition'
+
+	def plan_path(self, x_cob, w_cob):
+		self.mode = 4
+		return x_cob, w_cob, self.mode, 'walk'
