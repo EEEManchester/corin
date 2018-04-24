@@ -74,7 +74,7 @@ class RobotState:
 			self.Leg[j].XHc.update_coxa_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
 			self.Leg[j].XHd.update_coxa_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
 			self.Leg[j].XHc.world_X_foot = mX(self.XHc.world_X_base, self.Leg[j].XHc.base_X_foot)
-			self.Leg[j].XHd.world_X_foot = mX(self.XHd.world_X_base, self.Leg[j].XHd.base_X_foot)
+			self.Leg[j].XHd.world_X_foot = self.Leg[j].XHc.world_X_foot.copy()
 			self.Leg[j].XHd.base_X_AEP = mX(v3_X_m(np.array([ STEP_STROKE/2,0,0])), self.Leg[j].XHd.base_X_NRP)
 			self.Leg[j].XHd.base_X_PEP = mX(v3_X_m(np.array([-STEP_STROKE/2,0,0])), self.Leg[j].XHd.base_X_NRP)
 			self.Leg[j].XHd.world_base_X_AEP = self.Leg[j].XHd.base_X_AEP.copy()
@@ -83,6 +83,8 @@ class RobotState:
 			self.Leg[j].XHc.base_X_PEP = mX(v3_X_m(np.array([-STEP_STROKE/2,0,0])), self.Leg[j].XHc.base_X_NRP)
 			self.Leg[j].XHc.world_base_X_AEP = self.Leg[j].XHc.base_X_AEP.copy()
 			self.Leg[j].XHc.world_base_X_PEP = self.Leg[j].XHc.base_X_PEP.copy()
+			self.Leg[j].XHc.update_world_base_X_NRP(self.P6c.world_X_base)
+			self.Leg[j].XHd.update_world_base_X_NRP(self.P6c.world_X_base)
 
 		self.task_X_joint()
 		print ">> INITIALISED ROBOT CLASS"

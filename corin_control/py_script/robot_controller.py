@@ -46,7 +46,7 @@ class CorinManager:
 
 		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.Action	= control_interface.ControlInterface()	# control action class
-		self.Map 	= grid_planner.GridPlanner('simple')	# map class 
+		self.Map 	= grid_planner.GridPlanner('wall_demo')	# map class 
 		# self.Gait = gait_class.GaitClass(GAIT_TYPE) 		# gait class
 
 		self.resting   = False 			# Flag indicating robot standing or resting
@@ -400,8 +400,8 @@ class CorinManager:
 			self.Visualizer.publish_path(base_path, wXbase_offset)
 			self.Visualizer.publish_footholds(world_X_footholds)
 
-			# if (self.interface == 'rviz'):
-			# 	self.joint_pub_.publish(array_to_joint_states(self.Robot.qc.position, rospy.Time.now(), ""))
+			if (self.interface == 'rviz'):
+				self.joint_pub_.publish(array_to_joint_states(self.Robot.qc.position, rospy.Time.now(), ""))
 			rospy.sleep(0.2)
 
 		## User input
@@ -548,6 +548,7 @@ class CorinManager:
 					## Determine foot position wrt base & coxa - REQ: world_X_foot position
 					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
+					# if (j==2):
 
 			## Task to joint space
 			qd = self.Robot.task_X_joint()	
@@ -687,14 +688,22 @@ class CorinManager:
 				# Straight Line
 				ps = (17,17); pf = (17,18)
 				# g2w transition
-				ps = (17,17); pf = (17,18)
+				ps = (17,17); pf = (16,17)
 
+				## Set robot to starting position in default configuration
+				self.Robot.P6c.world_X_base = np.array([ps[0]*self.Map.resolution,
+														ps[1]*self.Map.resolution,
+														BODY_HEIGHT,
+														0.,0.,np.pi/2]).reshape(6,1)
+				self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
+				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
+
+				self.Robot._initialise()
+				
 				motion_plan = self.Map.generate_motion_plan(self.Robot, start=ps, end=pf)
 
 				if (motion_plan is not None):
-					success = self.main_controller(motion_plan)
-					
-					if (success is True):
+					if (self.main_controller(motion_plan)):
 						self.Robot.alternate_phase()
 
 		else:

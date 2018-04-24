@@ -72,8 +72,8 @@ RF_Q3_JOINT = 11;	RM_Q3_JOINT = 14;	RR_Q3_JOINT = 17;
 ## 		Motion Planning		##
 ## ------------------------ ##
 # Foothold area (m) - MP
-LEG_AREA_LX = 0.15
-LEG_AREA_LY = 0.15
+LEG_AREA_LX = 0.09
+LEG_AREA_LY = 0.06
 
 ## ----------------------------	##
 ## 			Transition			##

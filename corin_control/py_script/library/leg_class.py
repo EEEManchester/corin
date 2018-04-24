@@ -166,10 +166,10 @@ class LegClass:
 
 		if (xp is None):
 			# Use previous known state
-			xp = self.XHd.coxa_X_foot[:3,3:4]
+			xp = self.XHd.coxa_X_foot[:3,3]
 		# if (self.number==2):
-		# 	print 'bf: ', np.round(self.XHd.base_X_foot[:3,3],4)
-		# 	print 'cf: ', np.round(xp,4)
+			# print 'bf: ', np.round(self.XHd.base_X_foot[:3,3],4)
+			# print 'cf: ', np.round(xp,4)
 			# print 'qp: ', np.round(self.Joint.qpd,4)
 		self.Joint.qpd = self.KDL.leg_IK(xp)
 		
@@ -287,8 +287,3 @@ class LegClass:
 		except:
 			self.feedback_state = 2
 			return False
-
-	# def update_NRP(self):
-	# 	# print self.number, ' updating NRP'
-	# 	self.XHc.update_world_base_X_NRP(self.P6_world_X_base)
-	# 	self.XHd.update_world_base_X_NRP(self.P6_world_X_base)

@@ -141,16 +141,16 @@ class GaitClass:
 ## 												TESTING 											##
 ## ================================================================================================ ##
 
-gait = GaitClass(1)
+gait = GaitClass(4)
 # print gait.gdic['beta']
 # print gait.gdic['beta'].denominator
 
 # print gait.cs, gait.ps
 
-# for z in range(0,3):
-# 	print gait.cs, gait.ps
-# 	gait.change_phase()
-# print '--------------'
+for z in range(0,6):
+	print gait.cs, gait.ps
+	gait.change_phase()
+print '--------------'
 
 # gclass.direction = False 	# change gait direction
 # for z in range(0,3):

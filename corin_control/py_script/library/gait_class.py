@@ -44,9 +44,9 @@ class GaitClass:
 			self.phase.append([0,1,0,0,0,0])
 		# Tetrapod Gait
 		elif (self.type == 3):
-			self.phase.append([0,0,1,0,0,1])
-			self.phase.append([0,1,0,0,1,0])
-			self.phase.append([1,0,0,1,0,0])
+			self.phase.append([1,0,0,0,0,1])
+			self.phase.append([0,0,1,0,1,0])
+			self.phase.append([0,1,0,1,0,0])
 		# Tripod Gait
 		elif (self.type == 4):
 			self.phase.append([0,1,0,1,0,1])

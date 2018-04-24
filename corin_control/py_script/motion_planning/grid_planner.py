@@ -115,7 +115,7 @@ def bodypose_table():
 		
 		# leg on wall contact - distances in world frame
 		wch = i*(dhf-dhi)/ns + dhi
-		wcx = (ns-i)*(STANCE_WIDTH-0.1)/ns + 0.1 	# horizontal distance of femur joint from foot
+		wcx = (ns-i)*(STANCE_WIDTH-0.0)/ns + 0.1 	# horizontal distance of femur joint from foot
 		wpW = np.array([[wcx],[wch]])				# foot position from coxa wrt world frame
 		
 		wpL = np.dot(leg_X_world,wpW)				# foot position wrt leg frame
@@ -125,12 +125,12 @@ def bodypose_table():
 		
 		## robot footprint
 		wR = ((COXA_Y+L1)*np.cos(qr)+gcx) + (COXA_Y*np.cos(qr)+wcx)
-		
+		# print qr, wR
 		## write to dictionary
 		POSE_TABLE[i] = {'footprint':wR, "bodypose":np.array([0.,0.,bn,qr,0.,0.]),"ground":np.array([gcx,0.,-gch]),"wall":np.array([wcx,0.,-wch])}
 		
 	return POSE_TABLE
-
+bodypose_table()
 
 class GridPlanner:
 	def __init__(self,smap):
@@ -163,6 +163,8 @@ class GridPlanner:
 				return (1.27,5.48)
 			elif (smap == 'rolling'):
 				return (0.3,0.3)
+			elif (smap == 'wall_demo'):
+				return (0.9,0.9)
 		elif (isinstance(smap,tuple) and len(smap) == 2):
 			return smap
 		else:
@@ -172,7 +174,7 @@ class GridPlanner:
 
 		# Set map size
 		self.map_size = self.__map_select__(smap)
-		print self.map_size
+		
 		# determine robot related size in grid cell
 		self.rbfp_gd = tuple(map(lambda x: int(math.ceil(x/self.resolution)), self.rbfp_size))					# footprint
 		self.rbbd_gd = tuple(map(lambda x: int(math.ceil(x/self.resolution)), self.rbbd_size))					# body
@@ -274,7 +276,7 @@ class GridPlanner:
 				if (obstacle == 'wall'):
 					if (x == 0):
 						snorm = np.array([0.,1.,0.])
-					elif (x == dx)
+					elif (x == dx):
 						snorm = np.array([0.,-1.,0.])
 					if (y == 0):
 						snorm = np.array([-1.,0.,0.])
@@ -357,7 +359,7 @@ class GridPlanner:
  
 	def __set_obstacle__(self, smap):
 
-		if (type(smap) == 'str'):
+		if (isinstance(smap,str)):
 			if (smap=='empty'):
 				pass
 			elif (smap=='simple'):
@@ -366,8 +368,8 @@ class GridPlanner:
 				self.set_map01()
 			elif (smap == 'rolling'):
 				pass
-		# self.set_map01()	# assign cost for map used for IROS paper
-		# self.set_map02() 	# simple test map
+			elif (smap == 'wall_demo'):
+				self.set_wall_demo()
 
 	def set_map01(self):
 		""" Set obstacle area and cost - map for IROS submission """
@@ -417,6 +419,11 @@ class GridPlanner:
 		self.obstacle_area([(28,0),(30,33)], 'wall')
 		self.obstacle_area([(7,25),(27,33)], 'hole')
 		
+	def set_wall_demo(self):
+		print 'setting walls'
+		self.obstacle_area([ (4,0),( 5,30)], 'wall')
+		self.obstacle_area([(29,0),(30,30)], 'wall')
+
 	def edge_removal(self, G):
 		""" remove edges with obstacles """
 
@@ -529,7 +536,7 @@ class GridPlanner:
 
 		## Check if valid foothold exist in each leg region, outputs boolean
 		for i in range(0,6):
-			# set foot and transform (x,y) (m) - CHANGE TO USE XH
+			# Approximate nominal stance to nearest cell
 			px 	  = int(np.round( (np.cos(np.pi/2)*(p_leg[i][0])-np.sin(np.pi/2)*(p_leg[i][1]))/self.resolution))
 			py 	  = int(np.round( (np.sin(np.pi/2)*(p_leg[i][0])+np.cos(np.pi/2)*(p_leg[i][1]))/self.resolution))
 			pbnom = (px,py)
@@ -542,7 +549,9 @@ class GridPlanner:
 			# skip_col = False
 
 			foothold_exist = False 	# reset flag
-
+			# if (p==(15,17) and i==1):
+			# 	print '----------------'
+			# 	print pbnom, pwnom
 			## calculate sum for each area
 			for cx in range(0,self.rblg_gd[0]): 		# cycle through x
 				skip_row = False 						# reset flag 
@@ -554,6 +563,8 @@ class GridPlanner:
 						if (i<3):
 							## LHS
 							pwset = (pwnom[0]+by-cy,pwnom[1]+bx-cx) 
+							# if (p==(15,17) and i==1):
+							# 	print pwset
 						else:
 							## RHS
 							pwset = (pwnom[0]-by+cy,pwnom[1]+bx-cx) 
@@ -569,6 +580,8 @@ class GridPlanner:
 							else:
 								foothold_exist = True
 								# assign cost to this foothold
+							# if (p==(15,17) and i==1):
+							# 	print skip_row
 						except:
 							pass
 
@@ -591,6 +604,9 @@ class GridPlanner:
 		return motion_valid, m_width
 
 	def wall_walking(self, p):
+		""" Check if wall walking is feasible for CoB at p """
+		""" Input: p -> CoB location """
+
 		## variables ##
 		# scost = 0 						# total cost
 		width = 0 						# footprint width (cells)
@@ -601,17 +617,17 @@ class GridPlanner:
 		# leg_valid  = np.zeros(6)		# flag array if foothold area valid
 		motion_valid = False 				# boolen flag if area is permissible
 		MIN_WALLING_AREA = (0.3,0.18)	# minimum footprint area for wall walking - based on kinematic and torque study
-		MAX_WALLING_AREA = (0.3,0.57) 	# maximum footprint area for wall walking - based on kinematic and torque study
+		MAX_WALLING_AREA = (0.3,0.7) 	# maximum footprint area for wall walking - based on kinematic and torque study
 
 		bx_min = int((MIN_WALLING_AREA[0]/self.resolution-1)/2)
 		by_min = int((MIN_WALLING_AREA[1]/self.resolution)/2)
 		
 		bx_max = int((MAX_WALLING_AREA[0]/self.resolution-1)/2)
 		by_max = int((MAX_WALLING_AREA[1]/self.resolution-1)/2)
-
-		# print 'wall: ', bx_min*2, by_min*2, bx_max*2, by_max*2
-		test_point = (40,0)
-
+		
+		test_point = (15,17)
+		# if (p==test_point):
+		# 	print 'wall: ', bx_min, by_min, bx_max, by_max
 		# skip if centre occupied
 		if (self.G.nodes[p]['cost'] != 1):
 			i_edge = 0 	# internal edge
@@ -651,7 +667,7 @@ class GridPlanner:
 							pf_6n = (pf_6[0]-1,pf_6[1])
 
 							# if (p==test_point):
-							# 	print p, pf_1, pf_2, pf_3, pf_4, pf_5, pf_6
+							# 	print p, d, pf_1, pf_2, pf_3, pf_4, pf_5, pf_6
 
 							# LEG 1
 							if (self.G.nodes[pf_1]['cost']==1 and self.G.nodes[pf_1n]['cost']==1):
@@ -1003,9 +1019,9 @@ class GridPlanner:
 			# list_path	= nx.shortest_path(self.Gbody,start,end,weight='cost')
 			# list_path	= nx.dijkstra_path(self.Gbody,start,end,weight='cost')
 			list_path 	= nx.astar_path(self.Gbody,start,end,heuristic=self.eucld_dist,weight='cost')
-			graph_path 	= nx.path_graph(list_path)
-			# self.spline = self.spline_interpolation(list_path)
-			# return self.spline_interpolation(list_path)
+			# graph_path 	= nx.path_graph(list_path)
+			# self.spline = self.path_interpolation(list_path)
+			# return self.path_interpolation(list_path)
 			# self.G_LF, self.G_LM, self.G_LR, self.G_RF, self.G_RM, self.G_RR = self.find_foothold(list_path)
 			print 'Path exist!' #, len(list_path)
 			
@@ -1176,14 +1192,16 @@ class GridPlanner:
 			return set_motion_plan()
 			# return world_X_base, world_X_footholds, base_X_footholds, world_base_X_NRP
 		
-		for j in range(0,6):
-			print np.round(Leg[j].world_base_X_NRP[:3,3],4)
-			print np.round(Leg[j].world_X_foot[:3,3],4)
-			print '--------------------------------------'
+		# for j in range(2,3):
+		# 	print np.round(Leg[j].world_base_X_NRP[:3,3],4)
+		# 	print np.round(Leg[j].world_base_X_foot[:3,3],4)
+		# 	print np.round(Leg[j].world_X_foot[:3,3],4)
+		# 	print np.round(Robot.Leg[j].XHd.world_X_foot[:3,3],4)
+		# 	print '--------------------------------------'
 
 		## Cycle through trajectory
 		while (i != len(base_path.X.t)):
-			# print i, ' Gait phase ', Gait.cs, Gait.np
+			print i, ' Gait phase ', Gait.cs, Gait.np
 			bound_exceed = False
 
 			# cycles through one gait phase
@@ -1210,7 +1228,12 @@ class GridPlanner:
 							Leg[j].world_base_X_foot = mX(world_X_base_rot, Leg[j].base_X_foot)
 							bound_exceed = Robot.Leg[j].check_boundary_limit(Leg[j].world_base_X_foot,
 																					Leg[j].world_base_X_NRP)
-							
+							# if (j==1):
+							# 	print np.round(world_X_base_rot,4)
+							# 	print np.round(Leg[j].base_X_foot,4)
+							# 	print np.round(Leg[j].world_base_X_NRP[:3,3],4)
+							# 	print np.round(Leg[j].world_base_X_foot[:3,3],4)
+							# 	print '------------------------------------------------------'
 							if (bound_exceed == True):
 								print 'bound exceed on ', j, ' at ', i, i*CTR_INTV
 								break
@@ -1444,8 +1467,14 @@ class GridPlanner:
 			list_gpath = self.find_base_path(start, end)
 
 			if (list_gpath is not None):
+				print list_gpath
+				# High level preview
+				# gpath = nx.path_graph(list_gpath)
+				# self.graph_representation(False, gpath)
+				# plt.show()
 				# Convert path from cell index to Re^3 format 
 				x_cob, w_cob = self.path_to_nparray(list_gpath, start)
+
 			else:
 				# No path exist, exit
 				return None
@@ -1471,12 +1500,15 @@ class GridPlanner:
 			Robot.Gait.walk_mode()
 
 		# Trajectory for robot's base
-		base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV)
+		# base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV)
 		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 
+		# Split path according to motion primitive
+		return self.post_process_path(list_gpath, Robot)
+
 		## Plan foothold and returns motion plan - world_X_base, world_X_footholds not used
-		return self.foothold_planner(base_path, Robot)
+		# return self.foothold_planner(base_path, Robot)
 
 	def old_foothold_planner(self, Robot, p):
 		""" Search for footholds using greedy method along path p 	"""
@@ -1579,37 +1611,37 @@ class GridPlanner:
 		# print 'xi: ', x_i
 		if (ttype=='Gnd_X_Wall'):
 			print 'ground to wall'
-			inst_path = self.spline_interpolation([p1,p2])
+			inst_path = self.path_interpolation([p1,p2])
 			
 		elif (ttype=='Wall_X_Gnd'):
 			print 'wall to ground'
 			# n_cycle = self.wall_transition(p1, p2)
-			# x_inst, w_inst = self.spline_interpolation([p1,p2],np.array([0.,tspan]))
-			inst_path = self.spline_interpolation([p1,p2])
+			# x_inst, w_inst = self.path_interpolation([p1,p2],np.array([0.,tspan]))
+			inst_path = self.path_interpolation([p1,p2])
 
 		elif (ttype=='Gnd_X_Chim'):
 			""" change from ground to chimney wall support footholds """
 			""" one gait cycle of stationary x_cob and w_cob """
 			print 'ground to chimney'
-			# inst_path = self.spline_interpolation([p1,p2],np.array([0.,tspan]))
-			inst_path = self.spline_interpolation([p1,p2])
+			# inst_path = self.path_interpolation([p1,p2],np.array([0.,tspan]))
+			inst_path = self.path_interpolation([p1,p2])
 
 		elif (ttype=='Chim_X_Gnd'):
 			""" change from chimney wall to ground support footholds """
 			""" one gait cycle of stationary x_cob and w_cob """
 			print 'chimney to ground'
-			# inst_path = self.spline_interpolation([p1,p2],np.array([0.,tspan]))
-			inst_path = self.spline_interpolation([p1,p2])
+			# inst_path = self.path_interpolation([p1,p2],np.array([0.,tspan]))
+			inst_path = self.path_interpolation([p1,p2])
 			
 		return inst_path
 
-	def spline_interpolation(self, path, tn=0.1):
+	def path_interpolation(self, path, tn=0.1):
 		""" interpolate cells using cubic spline """
 
 		## Define Variables ##
 		x_cob = np.array([.0,.0,.0])
 		w_cob = np.array([.0,.0,.0])
-
+		
 		## populate array
 		for e in path:
 			x_cob = np.vstack((x_cob,np.array([e[0]*self.resolution, e[1]*self.resolution, self.Gbody.nodes[e]['pose'][0]])))
@@ -1618,56 +1650,67 @@ class GridPlanner:
 		
 		x_cob = np.delete(x_cob,0,0)
 		w_cob = np.delete(w_cob,0,0)
-		
-		return x_cob, w_cob
+		# return x_cob, w_cob
 		PathGenerator = path_generator.PathGenerator()
 		base_path = PathGenerator.generate_base_path(x_cob, w_cob, tn)
 
 		# Plot.plot_2d_multiple(1,wn_com.t,wn_com.xp*180/np.pi)
-		# Plot.plot_2d_multiple(1,xn_com.t,xn_com.xp)
+		# Plot.plot_2d_multiple(1,base_path.X.t,base_path.X.xp)
 		
 		return base_path
 
-	def post_process_path(self,path):
-		""" Introduce transition routines into body spline """
-
+	def post_process_path(self,path, Robot):
+		""" Identifies motion primitive from path, introduce transition 
+			routines, and call foothold for the respective sections 	"""
+		""" Input: 	1) path -> path in grid format
+					2) Robot -> Robot class
+			Output: MotionPlan() type 									"""
+		print 'Post-processing path......'
+		
 		## Define Variables ##
 		temp_path = []
 		base_path = Trajectory6D()
+		motion_plan = MotionPlan()
 		m = np.zeros(3) 	# motion primitive for next 3 steps
 
 		## cycle through path
-		for i in range(0,len(path)-1):
-			# print i, path[i]
+		for i in range(0,len(path)):
+			print i, path[i]
 			temp_path.append(path[i])
 			## check transition
 			m[0] = self.Gbody.nodes[path[i]]['motion']
-			m[1] = self.Gbody.nodes[path[i+1]]['motion']
 			try:
+				m[1] = self.Gbody.nodes[path[i+1]]['motion']
 				m[2] = self.Gbody.nodes[path[i+2]]['motion']
 			except:
 				pass
 
 			if (m[0]==0 and m[1]==2):
 				## Walk to Wall ##
-				# print path[i-1], path[i], 'walk to wall'
-				inst_path = self.spline_interpolation(temp_path)
-				tran_path = self.transition_routine('Gnd_X_Wall',path[i],path[i+1])
+				print path[i-1], path[i], 'Ground to Wall'
+				# First, plan path and foothold for ground walking
+				path_01 = self.path_interpolation(temp_path)
+				plan_01 = self.foothold_planner(path_01, Robot)
 				
-				base_path.append(inst_path)
-				base_path.append(tran_path)
+				# Next, generate CoB path and plan foothold for wall walking
+				path_02 = self.transition_routine('Gnd_X_Wall',path[i],path[i+1])
+				plan_02 = self.foothold_planner(path_01, Robot)
+				
+				motion_plan.append(plan_01)
+				motion_plan.append(plan_02)
+				print 'concatenated: ', motion_plan.qb.X.t
 				temp_path = []
 
 			elif (m[0]==2 and m[1]==0):
 				## Wall to Walk ##
-				# print path[i-1], path[i], 'wall to walk'
+				print path[i-1], path[i], 'wall to walk'
 				if (m[2]==2):
 					# force motion to walling for gap of one
 					self.Gbody.nodes[path[i+1]]['motion'] = 1
 					self.GM_chim.add_node(path[i+1])
 					temp_path.append(path[i])
 				else:
-					inst_path = self.spline_interpolation(temp_path)
+					inst_path = self.path_interpolation(temp_path)
 					tran_path = self.transition_routine('Wall_X_Gnd',path[i],path[i+1])
 					
 					base_path.append(inst_path)
@@ -1676,8 +1719,8 @@ class GridPlanner:
 
 			elif (m[0]==0 and m[1]==1):
 				## Walk to Chimney ##
-				# print path[i], path[i+1], 'walk to chimney'
-				inst_path = self.spline_interpolation(temp_path)
+				print path[i], path[i+1], 'walk to chimney'
+				inst_path = self.path_interpolation(temp_path)
 				# TODO: plan foothold for above
 				tran_path = self.transition_routine('Gnd_X_Chim',path[i],path[i+1])
 				# TODO: plan foothold for above
@@ -1690,14 +1733,14 @@ class GridPlanner:
 
 			elif (m[0]==1 and m[1]==0):
 				## Chimney to Walk ##
-				# print path[i-1], path[i], 'chimney to walk'
+				print path[i-1], path[i], 'chimney to walk'
 				if (m[2]==1):
 					# force motion to chimney for gap of one
 					self.Gbody.nodes[path[i+1]]['motion'] = 1
 					self.GM_chim.add_node(path[i+1])
 					temp_path.append(path[i])
 				else:
-					inst_path = self.spline_interpolation(temp_path)
+					inst_path = self.path_interpolation(temp_path)
 					# TODO: plan foothold for above
 					tran_path = self.transition_routine('Chim_X_Gnd',path[i],path[i+1])
 					# TODO: plan foothold for above
@@ -1708,22 +1751,27 @@ class GridPlanner:
 					# append(temp_path, shuffle, transition)
 					temp_path = []
 
-		# interpolate final sub-division
-		inst_path = self.spline_interpolation(temp_path)
-		base_path.append(inst_path)
-
+		# Interpolate final sub-division if not empty
+		if temp_path:
+			# print 'interpolating path: '
+			# print temp_path
+			path_01 = self.path_interpolation(temp_path)
+			plan_01 = self.foothold_planner(path_01, Robot)
+			motion_plan.append(plan_01)
+		print 'footholds: ', motion_plan.f_world_X_foot[0].xp
+		# print 'Path completed'
 		## generate path without segmenting them
-		# x_inst, w_inst = self.spline_interpolation(path)
+		# x_inst, w_inst = self.path_interpolation(path)
 		# x_cob = x_inst 
 		# w_cob = w_inst 
 
 		## Update spline time interval TODO
-		tspan = len(base_path.X.t)
-		print tspan
+		tspan = len(motion_plan.qb.X.t)
+		# print tspan, len(motion_plan.qb.W.t)
 		for i in range(0,tspan):
-			base_path.X.t[i] = np.round(i*CTR_INTV,4)
-			base_path.X.t[i] = np.round(i*CTR_INTV,4)
-
+			motion_plan.qb.X.t[i] = np.round(i*CTR_INTV,4)
+			motion_plan.qb.W.t[i] = np.round(i*CTR_INTV,4)
+		# Plot.plot_2d_multiple(1,motion_plan.qb.X.t,motion_plan.qb.X.xp)
 		# Plot.plot_2d_multiple(1,w_cob.t,w_cob.xv*180/np.pi)
 		# Plot.plot_2d_multiple(1,x_cob.t,x_cob.xp)
 		
@@ -1733,7 +1781,7 @@ class GridPlanner:
 		# 	for i in range(0,len(x_cob.t)):
 		# 		data = np.hstack((x_cob.t[i],x_cob.xp[i],x_cob.xv[i],x_cob.xa[i],w_cob.t[i],w_cob.xp[i],w_cob.xv[i],w_cob.xa[i]))
 		# 		csvwriter.writerow(data)
-		return base_path
+		return motion_plan
 
 	def graph_representation(self,initialized, gpath):
 		""" Plots graph functions """
@@ -1783,7 +1831,7 @@ class GridPlanner:
 			if (type(gpath) == list):
 				gpath = nx.path_graph(gpath)
 			
-			nx.draw_networkx(gpath,p_fin, with_labels=labels,node_size=10,node_color='#ff33ff',edge_color='#ff33ff',alpha=1.0,width=5.0);
+			nx.draw_networkx(gpath,p_fin, with_labels=labels,node_size=10,node_color='#ff33ff',edge_color='#ff33ff',alpha=1.0,width=1.0);
 
 		else:
 			# Feasible path - single point

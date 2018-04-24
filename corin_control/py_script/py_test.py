@@ -75,10 +75,9 @@ b = np.array([3,4])
 
 
 arr = np.arange(6) #.reshape(2, 3)
-print arr
+
 # np.place(arr, arr>2, [44, 55])
 arr = np.insert(arr,2,np.array([0,1,0]))
-print (arr)
 
 a = True
 b = True
@@ -86,19 +85,8 @@ c = True
 a = np.array([1.11,2.321])
 
 a = ([1,2,3],[6,3,2])# 'seom'
-print a[1]
-print type(a)
-if (isinstance(a,str)):
-	print 'a string!'
-elif (isinstance(a,tuple)):
-	print 'a tuple!'
-else:
-	print 'not a string'
-
-def testf(**options):
-	print options
-	if options.get("start"):
-		s = options.get("start")
-		print 'start!', s
-
-# testf(start=[1,2,3],end=2)
+a = [1]
+if a:
+	print 'not empty'
+elif (not a):
+	print 'empty'

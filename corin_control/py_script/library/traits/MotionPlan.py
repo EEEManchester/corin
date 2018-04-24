@@ -13,7 +13,7 @@ class MotionPlan():
 	def __init__(self):
 		self.qb_bias = np.zeros((6,1)) 		# offset for robot's base
 		self.qb  = Trajectory6D() 			# base path trajectory
-		self.qbp = Trajectory6D() 			# base location where gait phase changes
+		self.qbp = [] 						# base location where gait phase changes
 		self.f_world_X_foot = [None]*6 		# foothold wrt world frame
 		self.f_base_X_foot  = [None]*6 		# foothold wrt base frame
 		self.f_world_base_X_NRP = [None]*6 	# NRP from base frame wrt world frame
@@ -53,3 +53,15 @@ class MotionPlan():
 	def set_gait(self, gait_initial, gait_final):
 		self.gait_in = gait_initial
 		self.gait_fn = gait_final
+
+	def append(self, plan):
+		""" Appends similar object to existing plan """
+		
+		self.qb_bias = plan.qb_bias.copy()
+		self.qb.append(plan.qb)
+		self.qbp += plan.qbp
+
+		for j in range(0,6):
+			self.f_world_X_foot.append(plan.f_world_X_foot)
+			self.f_base_X_foot.append(plan.f_base_X_foot)
+			self.f_world_base_X_NRP.append(plan.f_world_base_X_NRP)

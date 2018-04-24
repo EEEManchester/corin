@@ -245,31 +245,11 @@ def point_cloud_array_mapping(data):
     
     points_arr['x'] = data[0]
     points_arr['y'] = data[1]
-    points_arr['z'] = data[2]
+    points_arr['z'] = data[2] - 0.015
     points_arr['r'] = 0
     points_arr['g'] = 0
     points_arr['b'] = 255
     
-    return points_arr
-
-def makeArray(npoints):
-    """ create random 3D array of size npoints """
-
-    points_arr = np.zeros((npoints,), dtype=[
-                        ('x', np.float32),
-                        ('y', np.float32),
-                        ('z', np.float32),
-                        ('r', np.uint8),
-                        ('g', np.uint8),
-                        ('b', np.uint8)])
-    points_arr['x'] = np.arange(0,1.0,0.1)#np.random.random((npoints,))
-    points_arr['y'] = np.arange(0,1.0,0.1)#np.random.random((npoints,))
-    points_arr['z'] = np.arange(0,1.0,0.1)#np.random.random((npoints,))
-    points_arr['r'] = 0#np.floor(np.random.random((npoints,))*255)
-    points_arr['g'] = 0
-    points_arr['b'] = 255
-    x = np.random.random((npoints,))
-
     return points_arr
 
 def dtype_to_fields(dtype):

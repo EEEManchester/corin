@@ -42,7 +42,7 @@ class Trajectory6D():
 		self.X.xv = np.vstack((self.X.xv, data.X.xv))
 		self.X.xa = np.vstack((self.X.xa, data.X.xa))
 			
-		self.W.t + self.W.t + data.W.t
+		self.W.t = self.W.t + data.W.t
 		self.W.xp = np.vstack((self.W.xp, data.W.xp))
 		self.W.xv = np.vstack((self.W.xv, data.W.xv))
 		self.W.xa = np.vstack((self.W.xa, data.W.xa))

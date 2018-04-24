@@ -21,7 +21,7 @@ if __name__ == "__main__":
 	# rospy.set_param('/corin/rotate', True)
 	# rospy.set_param('/corin/g2c_transition', True)
 	
-	# rospy.set_param('/corin/plan_path', True)
+	rospy.set_param('/corin/plan_path', True)
 
 	while not rospy.is_shutdown():
 		manager.action_interface()

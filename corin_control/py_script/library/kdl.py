@@ -52,20 +52,21 @@ class KDL():
 			x = p[0];	y = p[1];	z = p[2];
 
 			q1 = np.arctan2(y,x)
-
+			
 			# Adding the square of element (1,4) & (2,4) in inv(H01)*Psym = T12*T23
 			c3  = ( (x*np.cos(q1) + y*np.sin(q1) - L1)**2 + z**2 -L3**2-L2**2 )/(2*L2*L3);
 			a3  = 1.0-c3**2
-			if (a3 < 0):
-				raise Exception, "Negative value encountered for ", p 
+			
+			if (a3 < 0.):
+				raise ValueError("Negative value ", np.round(p,4)) 
 			s3  = np.sqrt(1.0-c3**2);
 			q3t = [np.arctan2(s3,c3), np.arctan2(-s3,c3)];
-
+			
 			if (q3t[0] < 0):
 				q3 = q3t[0];
 			else:
 				q3 = q3t[1];
-
+			
 			# Dividing the element (1,4) & (2,4) in inv(H01)*Psym = T12*T23
 			xp = x*np.cos(q1) + np.sin(q1)*y - L1;
 			yp = z;
@@ -75,8 +76,10 @@ class KDL():
 				q2 = q2t[0];
 			else:
 				q2 = q2t[1];
-			#return q2
+			
 			return np.array([q1, q2, q3])
+		except ValueError, e:
+			print 'KDL-IK(): ', e
 		except Exception, e:
 			print 'KDL-IK(): ', e
 			return None
@@ -195,16 +198,17 @@ qsurface = np.array([0.,-np.pi/2,0.])
 base_X_surface = 0.29
 bodypose = np.array([0.,0.,BODY_HEIGHT, 0.,0.,0.])
 
-CK.update_nominal_stance(bodypose, base_X_surface, qsurface)
+# CK.update_nominal_stance(bodypose, base_X_surface, qsurface)
 
 # print bodypose[3:7]
 # qs = [0., 1.238, -1.724] #[0., 1.195, -1.773] 	# left side
 qs = [0., 0.45, -2.033]	# right side
 
-cd = CK.leg_FK(qs)
+# cd = CK.leg_FK(qs)
 # print cd.flatten()
-cd = [ 0.21, 0., -0.1]
-qp = CK.leg_IK(cd)
+# cd = [ 0.21, 0., -0.1]
+cd = [-0.1367, -0.3331, -0.07]
+# qp = CK.leg_IK(cd)
 # print 'q: ', qp
 # print qp
 # if (not CK.check_singularity(qp)):
