@@ -90,3 +90,31 @@ if a:
 	print 'not empty'
 elif (not a):
 	print 'empty'
+
+
+world_ground_X_base = np.array([[ 0. ,    -0.9918 , 0.1275 , 0.    ],
+								 [ 1.,      0.    , -0.    ,  0.    ],
+								 [-0.,      0.1275,  0.9918,  0.1143],
+								 [ 0.,      0.    ,  0.    ,  1.    ]])
+world_ground_X_base[:2,3:4] = np.zeros((2,1))
+Leg_base_X_femur = np.array([[-0.342,   0.,     -0.9397, -0.1355],
+	 							[-0.9397,  0.,      0.342,  -0.1464],
+	 							[ 0.,      1.,      0.   ,   0.    ],
+	 							[ 0.,      0.,      0.   ,   1.    ]])
+world_ground_X_femur = mX(world_ground_X_base, Leg_base_X_femur)
+
+# print np.round(world_ground_X_base,4)
+# print np.round(world_ground_X_femur,4)
+qr = 0.128
+hy = world_ground_X_femur[2,3] - L3 - 0. 		# h_femur_X_tibia
+yy = np.sqrt(L2**2 - hy**2) 					# world horizontal distance from femur to foot
+by = np.cos(qr)*(COXA_Y + L1) 				# world horizontal distance from base to femur 
+sy = by + yy									# y_base_X_foot - leg frame
+py = sy*np.sin(np.deg2rad(ROT_BASE_X_LEG[5]+LEG_OFFSET[5])) 	# y_base_X_foot - world frame
+
+print py
+# pbas = np.array([[-0.19],[-0.28],[-0.1]])
+temp = np.array([[-0.19],[py],[0.5]])
+# pby = np.round(mX(rot_X(qr),temp),4)
+# print pby
+print np.round(mX(rot_Z(0.),temp),4)

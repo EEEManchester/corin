@@ -386,7 +386,9 @@ class CorinManager:
 		cob_X_desired = np.zeros((3,1)) 	# cob linear location
 		cob_W_desired = np.zeros((3,1)) 	# cob angular location
 		wXbase_offset = self.Robot.P6c.world_X_base.copy()
-
+		# print wXbase_offset
+		# print motion_plan.qb_bias
+		# print motion_plan.qb.X.xp
 		## Variable mapping from motion plan
 		base_path = motion_plan.qb
 		world_X_base = motion_plan.qbp
@@ -686,9 +688,9 @@ class CorinManager:
 				self.Robot.support_mode = False
 				
 				# Straight Line
-				ps = (17,17); pf = (17,18)
+				# ps = (17,17); pf = (17,18)
 				# g2w transition
-				ps = (17,17); pf = (16,17)
+				ps = (16,17); pf = (15,17)
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.Map.resolution,

@@ -57,11 +57,11 @@ class MotionPlan():
 	def append(self, plan):
 		""" Appends similar object to existing plan """
 		
-		self.qb_bias = plan.qb_bias.copy()
+		# self.qb_bias = plan.qb_bias.copy()
 		self.qb.append(plan.qb)
 		self.qbp += plan.qbp
 
 		for j in range(0,6):
-			self.f_world_X_foot.append(plan.f_world_X_foot)
-			self.f_base_X_foot.append(plan.f_base_X_foot)
-			self.f_world_base_X_NRP.append(plan.f_world_base_X_NRP)
+			self.f_world_X_foot[j].append(plan.f_world_X_foot[j])
+			self.f_base_X_foot[j].append(plan.f_base_X_foot[j])
+			self.f_world_base_X_NRP[j].append(plan.f_world_base_X_NRP[j])

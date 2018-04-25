@@ -15,6 +15,6 @@ class MarkerList():
 			self.t  = data[0]
 			self.xp = data[1]
 
-	def append(self, x):
+	def append(self, data):
 		self.t  += data.t 
 		self.xp += data.xp
