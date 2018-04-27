@@ -122,3 +122,4 @@ b = (2,1)
 
 print a
 a = b
+print np.ceil(3./4)
