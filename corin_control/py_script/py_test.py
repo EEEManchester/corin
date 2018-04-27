@@ -117,4 +117,8 @@ print py
 temp = np.array([[-0.19],[py],[0.5]])
 # pby = np.round(mX(rot_X(qr),temp),4)
 # print pby
-print np.round(mX(rot_Z(0.),temp),4)
+a = (1,1)
+b = (2,1)
+
+print a
+a = b

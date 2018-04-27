@@ -395,7 +395,7 @@ class CorinManager:
 		w_base_X_NRP = motion_plan.f_world_base_X_NRP
 		world_X_footholds = motion_plan.f_world_X_foot
 		base_X_footholds  = motion_plan.f_base_X_foot
-		
+		# print np.round(world_X_footholds[0].xp,4)
 		## Publish multiple times to ensure it is published 
 		for c in range(0,3):
 			self.Visualizer.publish_robot(wXbase_offset)
@@ -502,10 +502,8 @@ class CorinManager:
 
 					## Compute average surface normal from cell surface normal at both footholds
 					wall_trans = True if (self.T_GND_X_WALL is True or self.T_WALL_X_GND is True) else False
-					snorm_1 = self.Map.get_cell_snorm(self.Robot.Leg[j].XHc.world_X_foot[0:3,3], 
-														wall_trans, self.T_GND_X_CHIM, self.W_WALL, self.W_CHIM)
-					snorm_2 = self.Map.get_cell_snorm(self.Robot.Leg[j].XHd.world_X_foot[0:3,3], 
-														wall_trans, self.T_GND_X_CHIM, self.W_WALL, self.W_CHIM)
+					snorm_1 = self.Map.get_cell_snorm(self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+					snorm_2 = self.Map.get_cell_snorm(self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
 					w_snorm = (snorm_1 + snorm_2)/2.
 
 					## Set bodypose in leg class
@@ -690,7 +688,7 @@ class CorinManager:
 				# Straight Line
 				# ps = (17,17); pf = (17,18)
 				# g2w transition
-				ps = (16,17); pf = (15,17)
+				ps = (16,17); pf = (13,17)
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.Map.resolution,

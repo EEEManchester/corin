@@ -65,7 +65,8 @@ class ArrayHomogeneousTransform:
 		# Transformation wrt world frame: world to parts
 		# self.world_X_base = np.identity(4)
 		self.world_X_foot = np.identity(4)
-		
+		self.world_X_NRP  = np.identity(4)
+
 		# Transformations wrt world frame: base to parts
 		self.world_base_X_foot = np.identity(4)
 		self.world_base_X_AEP  = np.identity(4)
