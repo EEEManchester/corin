@@ -46,7 +46,7 @@ class CorinManager:
 
 		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.Action	= control_interface.ControlInterface()	# control action class
-		self.Map 	= grid_planner.GridPlanner('wall_demo')	# map class 
+		self.Map 	= grid_planner.GridPlanner('wall_demo_02')	# map class 
 		# self.Gait = gait_class.GaitClass(GAIT_TYPE) 		# gait class
 
 		self.resting   = False 			# Flag indicating robot standing or resting
@@ -226,7 +226,7 @@ class CorinManager:
 
 				self.joint_pub_.publish(dqp)
 
-		self.Visualizer.publish_robot(self.Robot.P6c.world_X_base)
+		self.Visualizer.publish_robot(self.Robot.P6d.world_X_base)
 
 		## Publish setpoints to logging topic
 		if (q_log is not None):
@@ -429,7 +429,18 @@ class CorinManager:
 					return False
 
 			# print 'counting: ', i, len(base_path.X.t)
-			
+
+			## Update robot state
+			self.Robot.update_state(control_mode=self.control_mode)
+			#########################################################################
+			## overwrite - TC: use IMU data
+			self.Robot.XHc.world_X_base = self.Robot.XHd.world_X_base.copy()
+			self.Robot.XHc.base_X_world = self.Robot.XHd.base_X_world.copy()
+			self.Robot.P6c.world_X_base = self.Robot.P6d.world_X_base.copy()
+			for j in range(0, self.Robot.active_legs):
+				self.Robot.Leg[j].P6_world_X_base = self.Robot.P6c.world_X_base.copy()
+			#########################################################################
+
 			## suppress trajectory counter as body support suspended
 			if (self.Robot.suspend == True):
 				i -= 1
@@ -445,12 +456,11 @@ class CorinManager:
 			v3wp = wXbase_offset[3:6] + base_path.W.xp[i].reshape(3,1);
 			v3wv = base_path.W.xv[i].reshape(3,1);
 			v3wa = base_path.W.xa[i].reshape(3,1);
-
+			
 			## Next CoB location - NOT USED ATM
 			# try:
 			# 	v3cp_n = wXbase_offset[0:3] + base_path.X.xp[i+int(CTR_RATE*GAIT_TPHASE)].reshape(3,1);
 			# 	v3wp_n = wXbase_offset[3:6] + base_path.W.xp[i+int(CTR_RATE*GAIT_TPHASE)].reshape(3,1);
-				
 			# except:
 			# 	v3cp_n = wXbase_offset[0:3] + base_path.X.xp[-1].reshape(3,1);
 			# 	v3wp_n = wXbase_offset[3:6] + base_path.W.xp[-1].reshape(3,1);
@@ -464,19 +474,6 @@ class CorinManager:
 			## Execution of command ##
 			## ==================== ##
 			
-			## Update robot state
-			self.Robot.update_state(control_mode=self.control_mode)
-			
-			#########################################################################
-			## overwrite - TC: use IMU data
-			self.Robot.XHc.world_X_base = self.Robot.XHd.world_X_base.copy()
-			self.Robot.XHc.base_X_world = self.Robot.XHd.base_X_world.copy()
-			self.Robot.P6c.world_X_base = self.Robot.P6d.world_X_base.copy()
-			for j in range(0, self.Robot.active_legs):
-				self.Robot.Leg[j].P6_world_X_base = self.Robot.P6c.world_X_base.copy()
-
-			#########################################################################
-
 			## Update robot's desired position, velocity & acceleration to next point on spline
 			self.Robot.P6d.world_X_base = np.vstack((v3cp,v3wp))
 			self.Robot.V6d.world_X_base = np.vstack((v3cv,v3wv)) 			# not used atm
@@ -497,13 +494,13 @@ class CorinManager:
 						self.Robot.Leg[j].XHc.world_base_X_NRP = self.Robot.Leg[j].XHd.world_base_X_NRP.copy()
 					except IndexError:
 						## TODO: plan on the fly. Currently set to default position
-						print 'Leg: ', j, ' No further foothold planned!'
+						print 'Leg: ', j, ' No further foothold planned!', i
 						self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP.copy()
 
 					## Compute average surface normal from cell surface normal at both footholds
 					wall_trans = True if (self.T_GND_X_WALL is True or self.T_WALL_X_GND is True) else False
-					snorm_1 = self.Map.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
-					snorm_2 = self.Map.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
+					snorm_1 = self.Map.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
+					snorm_2 = self.Map.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3], j)
 					w_snorm = (snorm_1 + snorm_2)/2.
 
 					## Set bodypose in leg class
@@ -515,14 +512,14 @@ class CorinManager:
 					## Update NRP
 					self.Robot.Leg[j].XHd.base_X_NRP[:3,3] = mX(self.Robot.XHd.base_X_world[:3,:3], 
 																self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3])
-					if (j == 2):
+					# if (j == 5):
 						# print 'bXN: ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],4)
 						# print 'wXN: ', np.round(self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3],4)
 						# print j, ' Xc: ', np.round(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3],4)
 						# print j, ' Xd: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],4)
-						# print j, ' Wn: ', np.round(world_norm,4)
+						# print j, ' Wn: ', np.round(w_snorm,4)
 						# print j, ' Ln: ', np.round(self.Robot.Leg[j].qsurface,4)
-						print 'wXf: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],4)
+						# print 'wXf: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],4)
 
 					if (svalid is False):
 						# set invalid if trajectory unfeasible for leg's kinematic
@@ -548,7 +545,8 @@ class CorinManager:
 					## Determine foot position wrt base & coxa - REQ: world_X_foot position
 					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
-					# if (j==2):
+				# if (j==4):
+				# 	print 'bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3],4)
 
 			## Task to joint space
 			qd = self.Robot.task_X_joint()	
@@ -572,7 +570,7 @@ class CorinManager:
 				# > 0: prevents trigger during all leg support
 				if (transfer_total == leg_complete and transfer_total > 0 and leg_complete > 0):
 					self.Robot.alternate_phase()
-					
+					print i, self.Robot.Gait.cs
 
 				## LOGGING: initialise variable and set respective data ##
 				qlog 		  = JointState()
@@ -617,27 +615,6 @@ class CorinManager:
 			## Data mapping - for convenience
 			x_cob, w_cob, mode, motion_prim = data
 
-			## TEMP: Check motion primitive
-			self.T_GND_X_CHIM = self.T_CHIM_X_GND = False
-			self.T_GND_X_WALL = self.T_WALL_X_GND = False
-
-			if (motion_prim == 'g2w_transition'):
-				self.T_GND_X_WALL = True
-				self.W_WALL = True
-				self.W_GND  = False
-			elif (motion_prim == 'w2g_transition'):
-				self.T_WALL_X_GND = True
-				self.W_WALL = False
-				self.W_GND  = True
-			elif (motion_prim == 'g2c_transition'):
-				self.T_GND_X_CHIM = True
-				self.W_CHIM = True
-				self.W_GND  = False
-			elif (motion_prim == 'c2g_transition'):
-				self.T_CHIM_X_GND = True
-				self.W_CHIM = False
-				self.W_GND  = True
-			# print 'prim: ', self.W_CHIM
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
 				print 'Going to standup'
@@ -685,16 +662,22 @@ class CorinManager:
 				print 'Planning path...'
 				self.Robot.support_mode = False
 				
+				## Initial Map
 				# Straight Line
-				# ps = (17,17); pf = (17,18)
+				# ps = (12,17); pf = (12,20)
 				# g2w transition
 				# ps = (12,17); pf = (6,17) # Left side up
-				ps = (12,17); pf = (18,17)	# right side up
+				# ps = (12,17); pf = (18,21)	# right side up
+
+				## Second map
+				# ps = (13,12); pf = (16,12)	# Straight Line
+				ps = (13,12); pf = (16,15)	# G2W - Right side up
+
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.Map.resolution,
 														ps[1]*self.Map.resolution,
 														BODY_HEIGHT,
-														0.,0.,np.pi/2]).reshape(6,1)
+														0.,0.,0.]).reshape(6,1)
 				self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
 				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 

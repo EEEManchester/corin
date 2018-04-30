@@ -18,7 +18,7 @@ if __name__ == "__main__":
 	# rospy.sleep(0.5)
 
 	## Create map and plan path
-	GridPlanner = GridPlanner('wall_demo')
+	GridPlanner = GridPlanner('wall_demo_02')
 	# GridPlanner = GridPlanner((1.27,5.48)) 	# map size, [x,y] (m,m)
 	# grid_path 	= GridPlanner.find_path((15, 10),(10,150))	# define start and end points
 	# pp.graph_representation(False, grid_path)

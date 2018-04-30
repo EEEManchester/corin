@@ -285,7 +285,9 @@ def array_to_pointcloud2(cloud_arr, stamp=None, frame_id=None):
         cloud_msg.header.stamp = stamp
     if frame_id is not None:
         cloud_msg.header.frame_id = frame_id
-
+    # print cloud_arr
+    # print 'max x', np.amax(cloud_arr.shape[0])
+    # print 'max y', np.amax(cloud_arr.shape[1])
     cloud_msg.height = cloud_arr.shape[0]
     cloud_msg.width = cloud_arr.shape[1]
     cloud_msg.fields = dtype_to_fields(cloud_arr.dtype)

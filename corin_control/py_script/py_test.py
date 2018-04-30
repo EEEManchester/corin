@@ -120,6 +120,29 @@ temp = np.array([[-0.19],[py],[0.5]])
 a = (1,1)
 b = (2,1)
 
+q = 0
+d = 0
+p = (13,15)
+body_area = (10,6)
+
+bx = int(math.floor(body_area[0])/2) # longitudinal distance to check
+by = int(math.floor(body_area[1])/2) # lateral distance to check
+print bx, by
+for y in range(0,by+1): 		# cycle lateral - inflated if body_area[1] is even
+	for x in range(0,2*bx+1):		# cycle longitudinal
+		# displacement from centre rotated about q
+		nx1 = p[0] + int(np.round((-bx+x)*np.cos(q) - (-y)*np.sin(q)))
+		ny1 = p[1] + int(np.round((-bx+x)*np.sin(q) + (-y)*np.cos(q)))
+		nx2 = p[0] + int(np.round((-bx+x)*np.cos(q) - (+y)*np.sin(q)))
+		ny2 = p[1] + int(np.round((-bx+x)*np.sin(q) + (+y)*np.cos(q)))
+
+	# 	print p, body_area, (nx1,ny1), (nx2,ny2)
+	# print '----------------------------'
+
+a = [(1,2),(5,5),(1,2)]
+
+a = map(lambda x: (x[0],-1) , a)
 print a
-a = b
-print np.ceil(3./4)
+
+from collections import OrderedDict
+print list(OrderedDict.fromkeys(a))

@@ -127,7 +127,8 @@ class RobotState:
 			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
 				self.suspend = True
 				# print 'Suspend ', j
-				
+				pass
+		
 		# print '-------------------------------------------------------'
 
 	def update_bodypose_state(self, cmode):

@@ -35,7 +35,7 @@ class RvizVisualise:
 
 	def publish_robot(self, qb):
 		""" Robot transform publisher """
-		
+		# print 'pub: ', np.round(qb[:3].flatten(),4)
 		quat = tf.transformations.quaternion_from_euler(qb[3].copy(), qb[4].copy(), qb[5].copy())
 		self.robot_broadcaster.sendTransform( (qb[0],qb[1],qb[2]), quat, rospy.Time.now(), self.fr_robot, self.fr_fix);
 

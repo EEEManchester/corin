@@ -167,10 +167,7 @@ class LegClass:
 		if (xp is None):
 			# Use previous known state
 			xp = self.XHd.coxa_X_foot[:3,3]
-		# if (self.number==2):
-			# print 'bf: ', np.round(self.XHd.base_X_foot[:3,3],4)
-			# print 'cf: ', np.round(xp,4)
-			# print 'qp: ', np.round(self.Joint.qpd,4)
+		
 		self.Joint.qpd = self.KDL.leg_IK(xp)
 		
 
@@ -201,17 +198,8 @@ class LegClass:
 		v3_NRP_X_AEP  = self.XHd.world_base_X_AEP[:3,3:4]  - self.XHd.world_base_X_NRP[:3,3:4]
 		v3_NRP_X_foot = world_base_X_foot[:3,3:4] - world_base_X_NRP[:3,3:4]
 
-		# if (self.number == 0):
-		# 	print 'bXN : ', np.round(world_base_X_NRP[:3,3].flatten(),4)
-		# 	print 'bXf : ', np.round(world_base_X_foot[:3,3].flatten(),4)
-		# 	print 'NXf : ', np.round(v3_NRP_X_foot.flatten(),4)
-		# 	print 'rst : ', np.round((v3_NRP_X_foot.item(0)**2 + v3_NRP_X_foot.item(1)**2)/(STEP_STROKE/2.)**2,4)
-
 		# Magnitude of current point
 		mag_nom_X_ee  = np.dot(v3_NRP_X_AEP.flatten(), v3_NRP_X_foot.flatten())
-
-		# Angle between hip frame and AEP
-		vec_ang = np.arctan2(v3_NRP_X_AEP.item(1), v3_NRP_X_AEP.item(0))
 
 		## Ellipse boundary - for the front half: p_nom to AEP
 		if (mag_nom_X_ee > 0.):
@@ -221,7 +209,9 @@ class LegClass:
 			# 	# ellipse major, minor radius, rotation
 			# 	a  = np.sqrt(v3_NRP_X_AEP.item(0)**2 + v3_NRP_X_AEP.item(1)**2)
 			# 	b  = STEP_STROKE/2.
-			# 	qr = vec_ang
+
+			# Angle between hip frame and AEP
+			# 	qr = np.arctan2(v3_NRP_X_AEP.item(1), v3_NRP_X_AEP.item(0))
 			# 	x  = v3_NRP_X_foot.item(0)
 			# 	y  = v3_NRP_X_foot.item(1)
 
@@ -229,7 +219,6 @@ class LegClass:
 
 			# 	# if (BOUND_FACTOR < r_state):
 			# 	# 	bound_violate = True
-
 			# except:
 			pass
 
@@ -240,6 +229,12 @@ class LegClass:
 			if (BOUND_FACTOR < r_state):
 				bound_violate = True
 		
+			# if (self.number == 3):
+			# 	print 'BL_bXN : ', np.round(world_base_X_NRP[:3,3].flatten(),4)
+			# 	print 'BL_bXf : ', np.round(world_base_X_foot[:3,3].flatten(),4)
+			# 	print 'BL_NXf : ', np.round(v3_NRP_X_foot.flatten(),4)
+			# 	print 'BL_rst : ', r_state, BOUND_FACTOR
+
 		return bound_violate
 
 	## Kinematic functions
