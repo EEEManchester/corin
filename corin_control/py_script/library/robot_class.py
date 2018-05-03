@@ -128,7 +128,7 @@ class RobotState:
 				self.suspend = True
 				# print 'Suspend ', j
 				pass
-		
+
 		# print '-------------------------------------------------------'
 
 	def update_bodypose_state(self, cmode):
@@ -244,6 +244,23 @@ class RobotState:
 			self.invalid = True
 			return None
 
+	def duplicate_self(self, robot):
+		""" Duplicates robot state by creating local copy of input robot """
+
+		self.Gait.cs = list(robot.Gait.cs) 	# use local gait current state 
+		self.Gait.np = robot.Gait.np 		# copy gait counter
+		
+		self.XHc.duplicate(robot.XHc)
+		self.XHd.duplicate(robot.XHd)
+		self.P6c.duplicate(robot.P6c)
+		self.P6d.duplicate(robot.P6d)
+		self.V6c.duplicate(robot.V6c)
+		self.V6d.duplicate(robot.V6d)
+		self.A6c.duplicate(robot.A6c)
+		self.A6d.duplicate(robot.A6d)
+
+		for j in range(0,6):
+			self.Leg[j].duplicate_self(robot.Leg[j])
 # robot = RobotState()
 ## ====================================================================================================================================== ##
 ## ====================================================================================================================================== ##

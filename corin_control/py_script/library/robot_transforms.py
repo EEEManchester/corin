@@ -43,6 +43,27 @@ class Vector6D:
 		self.coxa_X_NRP   = np.zeros(Column6D)
 		self.tibia_X_foot = np.zeros(Column6D)
 
+	def duplicate(self, obj):
+		self.world_X_base 	 = obj.world_X_base.copy()
+		self.world_X_LF_foot = obj.world_X_LF_foot.copy()
+		self.world_X_LM_foot = obj.world_X_LM_foot.copy()
+		self.world_X_LR_foot = obj.world_X_LR_foot.copy()
+		self.world_X_RF_foot = obj.world_X_RF_foot.copy()
+		self.world_X_RM_foot = obj.world_X_RM_foot.copy()
+		self.world_X_RR_foot = obj.world_X_RR_foot.copy()
+
+		self.base_X_coxa  = obj.base_X_coxa.copy()
+		self.base_X_foot  = obj.base_X_foot.copy()
+		self.base_X_AEP   = obj.base_X_AEP.copy()
+		self.base_X_PEP   = obj.base_X_PEP.copy()
+		self.base_X_NRP   = obj.base_X_NRP.copy()
+		self.coxa_X_base  = obj.coxa_X_base.copy()
+		self.coxa_X_foot  = obj.coxa_X_foot.copy()
+		self.coxa_X_AEP   = obj.coxa_X_AEP.copy()
+		self.coxa_X_PEP   = obj.coxa_X_PEP.copy()
+		self.coxa_X_NRP   = obj.coxa_X_NRP.copy()
+		self.tibia_X_foot = obj.tibia_X_foot.copy()
+
 class ArrayVector6D:
 	""" 6D vector for robot's legs """ 
 	def __init__(self):
@@ -56,6 +77,16 @@ class ArrayVector6D:
 		self.coxa_X_NRP   = np.zeros(Column6D)
 		self.tibia_X_foot = np.zeros(Column6D)
 		
+	def duplicate(self, obj):
+		self.world_X_foot = obj.world_X_foot.copy()
+		self.base_X_coxa  = obj.base_X_coxa.copy()
+		self.base_X_foot  = obj.base_X_foot.copy()
+		self.coxa_X_base  = obj.coxa_X_base.copy()
+		self.coxa_X_foot  = obj.coxa_X_foot.copy()
+		self.coxa_X_AEP   = obj.coxa_X_AEP.copy()
+		self.coxa_X_PEP   = obj.coxa_X_PEP.copy()
+		self.coxa_X_NRP   = obj.coxa_X_NRP.copy()
+		self.tibia_X_foot = obj.tibia_X_foot.copy()
 
 class ArrayHomogeneousTransform:
 	""" SE(3) for robot's leg transformations """
@@ -492,6 +523,10 @@ class HomogeneousTransform:
 		# self.coxa_X_coxaCOM()
 		# self.femur_X_femurCOM()
 		# self.tibia_X_tibiaCOM()
+
+	def duplicate(self, obj):
+		self.world_X_base = obj.world_X_base.copy()
+		self.base_X_world = obj.base_X_world.copy()
 
 	def update_robot(self,qb,q):
 		self.update_base(qb)

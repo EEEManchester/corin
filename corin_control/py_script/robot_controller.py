@@ -46,7 +46,7 @@ class CorinManager:
 
 		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.Action	= control_interface.ControlInterface()	# control action class
-		self.Map 	= grid_planner.GridPlanner('wall_demo_02')	# map class 
+		self.Map 	= grid_planner.GridPlanner('wall_demo_03')	# map class 
 		# self.Gait = gait_class.GaitClass(GAIT_TYPE) 		# gait class
 
 		self.resting   = False 			# Flag indicating robot standing or resting
@@ -405,7 +405,8 @@ class CorinManager:
 			if (self.interface == 'rviz'):
 				self.joint_pub_.publish(array_to_joint_states(self.Robot.qc.position, rospy.Time.now(), ""))
 			rospy.sleep(0.2)
-
+		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
+		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 		## User input
 		print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 		print 'Execute Path? '
@@ -488,9 +489,9 @@ class CorinManager:
 
 					## Using planned foothold arrays
 					try:
-						self.Robot.Leg[j].XHd.world_X_foot = v3_X_m(world_X_footholds[j].xp.pop(1))
-						self.Robot.Leg[j].XHd.base_X_foot  = v3_X_m(base_X_footholds[j].xp.pop(1))
-						self.Robot.Leg[j].XHd.world_base_X_NRP = v3_X_m(w_base_X_NRP[j].xp.pop(1))
+						self.Robot.Leg[j].XHd.world_X_foot = v3_X_m(world_X_footholds[j].xp.pop(0))
+						self.Robot.Leg[j].XHd.base_X_foot  = v3_X_m(base_X_footholds[j].xp.pop(0))
+						self.Robot.Leg[j].XHd.world_base_X_NRP = v3_X_m(w_base_X_NRP[j].xp.pop(0))
 						self.Robot.Leg[j].XHc.world_base_X_NRP = self.Robot.Leg[j].XHd.world_base_X_NRP.copy()
 					except IndexError:
 						## TODO: plan on the fly. Currently set to default position
@@ -512,15 +513,23 @@ class CorinManager:
 					## Update NRP
 					self.Robot.Leg[j].XHd.base_X_NRP[:3,3] = mX(self.Robot.XHd.base_X_world[:3,:3], 
 																self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3])
-					# if (j == 5):
+					self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = mX(self.Robot.XHd.world_X_base[:3,:3], 
+																		self.Robot.Leg[j].XHd.base_X_foot[:3,3])
+					# if (j == 2):
 						# print 'bXN: ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],4)
 						# print 'wXN: ', np.round(self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3],4)
+						# print 'wXA: ', np.round(self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3],4)
 						# print j, ' Xc: ', np.round(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3],4)
 						# print j, ' Xd: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],4)
 						# print j, ' Wn: ', np.round(w_snorm,4)
 						# print j, ' Ln: ', np.round(self.Robot.Leg[j].qsurface,4)
-						# print 'wXf: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],4)
-
+						# print np.round(self.Robot.P6d.world_X_base.flatten(),4)
+						# print np.round(self.Robot.XHd.world_X_base[:3,:3],4)
+						# print j, ' wXf: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],4)
+						# print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3],4)
+						# print j, ' cwf: ', np.round(mX(self.Robot.XHd.world_X_base[:3,:3], 
+						# 										self.Robot.Leg[j].XHd.base_X_foot[:3,3]), 4)
+						# print '=========================================='
 					if (svalid is False):
 						# set invalid if trajectory unfeasible for leg's kinematic
 						self.Robot.invalid = True
@@ -570,7 +579,7 @@ class CorinManager:
 				# > 0: prevents trigger during all leg support
 				if (transfer_total == leg_complete and transfer_total > 0 and leg_complete > 0):
 					self.Robot.alternate_phase()
-					print i, self.Robot.Gait.cs
+					print i, self.Robot.Gait.cs, np.round(v3cp.flatten(),4)
 
 				## LOGGING: initialise variable and set respective data ##
 				qlog 		  = JointState()
@@ -639,7 +648,7 @@ class CorinManager:
 			elif (mode == 2):
 				print 'walk mode'
 				self.Robot.support_mode = False
-				
+				## TODO: Shouldnt' have to call motion planner
 				motion_plan = self.Map.generate_motion_plan(self.Robot, path=(x_cob,w_cob))
 
 				if (motion_plan is not None):
@@ -661,17 +670,10 @@ class CorinManager:
 				""" Plan path & execute """
 				print 'Planning path...'
 				self.Robot.support_mode = False
-				
-				## Initial Map
-				# Straight Line
-				# ps = (12,17); pf = (12,20)
-				# g2w transition
-				# ps = (12,17); pf = (6,17) # Left side up
-				# ps = (12,17); pf = (18,21)	# right side up
 
-				## Second map
-				# ps = (13,12); pf = (16,12)	# Straight Line
-				ps = (13,12); pf = (16,15)	# G2W - Right side up
+				ps = (8,12); pf = (35,15)	# Straight Line
+				# ps = (13,12); pf = (18,18)	# G2W - Left side up
+				# ps = (13,12); pf = (18,6)	# G2W - Right side up
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.Map.resolution,

@@ -107,7 +107,9 @@ class LegClass:
 			start = self.XHc.world_base_X_foot[:3,3].copy()
 			end   = mX(self.XH_world_X_base[:3,:3], self.XHd.base_X_foot[:3,3])
 			wpx, td = self.Path.interpolate_leg_path(start, end, snorm, phase, reflex, ctime)
-			
+			if (self.number ==3):
+				print 'i: ', np.round(start,4)
+				print 'f: ', np.round(end,4)
 			# Transform each via point from world to leg frame
 			wcp = np.zeros((len(wpx),3))
 			wcp[0] = self.XHc.coxa_X_foot[0:3,3].copy()
@@ -200,9 +202,9 @@ class LegClass:
 
 		# Magnitude of current point
 		mag_nom_X_ee  = np.dot(v3_NRP_X_AEP.flatten(), v3_NRP_X_foot.flatten())
-
+		r_state = 0
 		## Ellipse boundary - for the front half: p_nom to AEP
-		if (mag_nom_X_ee > 0.):
+		if (mag_nom_X_ee > 0.01):
 			# if (self.number == 0):
 			# 	print self.number, ' ellipse boundary'
 			# try:
@@ -229,12 +231,13 @@ class LegClass:
 			if (BOUND_FACTOR < r_state):
 				bound_violate = True
 		
-			# if (self.number == 3):
-			# 	print 'BL_bXN : ', np.round(world_base_X_NRP[:3,3].flatten(),4)
-			# 	print 'BL_bXf : ', np.round(world_base_X_foot[:3,3].flatten(),4)
-			# 	print 'BL_NXf : ', np.round(v3_NRP_X_foot.flatten(),4)
-			# 	print 'BL_rst : ', r_state, BOUND_FACTOR
-
+		# if (self.number == 2):
+		# 	print 'BL_mag : ', mag_nom_X_ee, np.round(r_state,3)
+		# 	print 'BL_bXA : ', np.round(self.XHd.world_base_X_AEP[:3,3],4)
+		# 	print 'BL_bXN : ', np.round(world_base_X_NRP[:3,3].flatten(),4)
+		# 	print 'BL_bXf : ', np.round(world_base_X_foot[:3,3].flatten(),4)
+		# 	print 'BL_NXf : ', np.round(v3_NRP_X_foot.flatten(),4)
+			# print '-------------------------------------------'
 		return bound_violate
 
 	## Kinematic functions
@@ -282,3 +285,18 @@ class LegClass:
 		except:
 			self.feedback_state = 2
 			return False
+
+	def duplicate_self(self, leg):
+		""" Duplicates leg state by creating local copy of input leg """
+
+		self.XHc.duplicate(leg.XHc)
+		self.XHd.duplicate(leg.XHd)
+		self.V6c.duplicate(leg.V6c)
+		self.V6d.duplicate(leg.V6d)
+		self.A6c.duplicate(leg.A6c)
+		self.A6d.duplicate(leg.A6d)
+		self.F6c.duplicate(leg.F6c)
+		self.F6d.duplicate(leg.F6d)
+
+		self.XH_world_X_base = leg.XH_world_X_base.copy()
+		self.P6_world_X_base = leg.P6_world_X_base.copy()

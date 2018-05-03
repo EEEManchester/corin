@@ -143,6 +143,29 @@ a = [(1,2),(5,5),(1,2)]
 
 a = map(lambda x: (x[0],-1) , a)
 print a
+# [1.02  0.39  0.148] [1.02 0.36 0.1 ] 0.236 0.0
+qi = 0.24
+qf = 0.0
+xi = np.array([1.02,0.39,0.15])
+xf = np.array([1.02,0.36,0.10])
+qrange = range(90,-1,-10) # (0,91,10)
+delta_q = (qf-qi)/(len(qrange)-1)
+delta_x = xf - xi
+print 'delta: ', delta_q, delta_x
+x_cob = xi.copy()
+w_cob = np.array([qi, 0., 0.])
 
-from collections import OrderedDict
-print list(OrderedDict.fromkeys(a))
+for i in range(1, len(qrange)):
+	qr = -np.deg2rad(qrange[i])
+	xd = xi + np.array([(np.cos(qr))*delta_x[0],
+						(np.cos(qr))*delta_x[1], 
+						(1-np.sin(qr))*delta_x[2]])
+
+	x_cob = np.vstack(( x_cob, np.round(xd,3) ))
+	w_cob = np.vstack(( w_cob, np.array([qi+i*delta_q, 0., 0.]) ))
+	print xd
+# print np.round(x_cob,3)
+PathGenerator = Pathgenerator.PathGenerator()
+base_path = PathGenerator.generate_base_path(x_cob, w_cob, 0.1)
+Plot.plot_3d(base_path.X.xp[:,0],base_path.X.xp[:,1],base_path.X.xp[:,2])
+# Plot.plot_2d(base_path.X.t, base_path.W.xp)
