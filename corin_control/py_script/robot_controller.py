@@ -671,7 +671,7 @@ class CorinManager:
 				print 'Planning path...'
 				self.Robot.support_mode = False
 
-				ps = (8,12); pf = (35,15)	# Straight Line
+				ps = (8,13); pf = (35,14)	# Straight Line
 				# ps = (13,12); pf = (18,18)	# G2W - Left side up
 				# ps = (13,12); pf = (18,6)	# G2W - Right side up
 

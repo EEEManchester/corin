@@ -30,9 +30,13 @@ class PathGenerator():
 	def __init__(self):
 		self.base_path = Trajectory6D() 		# class for 6D path storage
 		
-	def reset_static_elements(self):
-		self.V_MAX = BASE_MAX_LINEAR_VELOCITY
-		self.W_MAX = BASE_MAX_ANGULAR_VELOCITY
+	def reset_static_elements(self, v_max=None, w_max=None):
+		if (v_max is None and w_max is None):
+			self.V_MAX = BASE_MAX_LINEAR_VELOCITY
+			self.W_MAX = BASE_MAX_ANGULAR_VELOCITY
+		else:
+			self.V_MAX = v_max
+			self.W_MAX = w_max
 
 	def compute_no_via_points(self, via_points):
 		""" generate unit time interval for spline if unspecified or modified	"""
@@ -104,7 +108,7 @@ class PathGenerator():
 			# regenerate spline
 			x_out = SplineGenerator.generate_spline(x_cob, t_cob, tn)
 			w_out = SplineGenerator.generate_spline(w_cob, t_cob, tn)
-
+			
 		# check if base angular velocity exceeds limit
 		w_max = np.amax(w_out[2])
 		w_min = np.amin(w_out[2])
@@ -117,6 +121,7 @@ class PathGenerator():
 			# regenerate spline
 			x_out = SplineGenerator.generate_spline(x_cob, t_cob, tn)
 			w_out = SplineGenerator.generate_spline(w_cob, t_cob, tn)
+			
 
 		self.base_path = Trajectory6D((x_out,w_out))
 		# return TrajectoryPoints(x_out), TrajectoryPoints(w_out)	# convert to TrajectoryPoints format

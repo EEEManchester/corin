@@ -113,7 +113,6 @@ class BodyposeTable:
 				base_X_femur   = np.array([TRN_BASE_X_LEG[j][0], TRN_BASE_X_LEG[j][1], 0.])
 				world_X_NRP[j] = np.round(mX(rot_Z(np.deg2rad(ROT_BASE_X_LEG[j]+LEG_OFFSET[j])), leg_stance) + \
 											base_X_femur, 4)
-				# print j, np.round(base_stance,4)#, np.round(base_X_femur,4)
 
 			POSE_TABLE[i] = {"footprint":np.array([0.27, fp_w, fp_h]), 
 								"bodypose":np.array([0.,0., fp_h, 0.,0.,0.]),
@@ -126,7 +125,8 @@ class BodyposeTable:
 		ns = 20
 		delta_fp = (MAX_WP - MIN_FP)/ns
 		delta_bh = (BASE_hmax - BASE_hnom)/ns
-		
+		woff = 0.3 	# minimise footprint further by this constant
+
 		for i in range(1,ns+1):
 
 			# variables
@@ -170,7 +170,9 @@ class BodyposeTable:
 				wall_world_base_X_NRP[j] = np.array([0., sside*bXfy, bXfz])
 				# if (j==1): 
 				# 	print wall_world_base_X_NRP[1]
-
+			fp_w = gnd_world_base_X_NRP[1][1] + wall_world_base_X_NRP[1][1]
+			# print np.array([0.27, fp_w, fp_h]), gnd_world_base_X_NRP[1], wall_world_base_X_NRP[1]
+			# print '------------------------'
 			POSE_TABLE[fs+i] = {"footprint":np.array([0.27, fp_w, fp_h]), 
 								"bodypose":np.array([0.,0., fp_h, np.round(qr,3),0.,0.]),
 								"ground":gnd_world_base_X_NRP,
@@ -214,7 +216,7 @@ class BodyposeTable:
 		return selection
 
 # tb = BodyposeTable()
-
+# print tb.table
 class GridPlanner:
 	def __init__(self,smap):
 		self.Robot = robot_class.RobotState()
@@ -254,7 +256,7 @@ class GridPlanner:
 			elif (smap == 'wall_demo_02'):
 				return (0.9,0.75)
 			elif (smap == 'wall_demo_03'):
-				return (1.51,0.75)
+				return (1.51,0.81)
 		elif (isinstance(smap,tuple) and len(smap) == 2):
 			return smap
 		else:
@@ -576,7 +578,7 @@ class GridPlanner:
 		print 'setting walls for wall_demo_02'
 		self._obstacle_area([(0,0),( 50,1)], 'wall')
 		self._obstacle_area([(20,2),(25,6)], 'wall')
-		self._obstacle_area([(0,23),(50,24)], 'wall')
+		self._obstacle_area([(0,25),(50,26)], 'wall')
 
 		i_wall = []
 		for e in self.G.nodes():
@@ -1042,7 +1044,7 @@ class GridPlanner:
 		## Variables ##
 		ax = int(np.ceil((self.rbfp_gd[0])/2)) 			# robot longitudinal distance (grid cell)
 		ay = int(np.ceil((MIN_FP/self.resolution)/2))	# robot lateral distance (grid cell) - HARDCODED
-		# POSE_TABLE  = bodypose_table()	# lookup table for walling bodypose
+		self.WIDTH_SAFETY = 0.03
 		print 'Body Edges: ', ax, ' ', ay
 		
 		node_ignored = [] 	# list for nodes to ignore: either near map border or intersect obstacles/holes
@@ -1060,7 +1062,7 @@ class GridPlanner:
 				
 				if (m_valid):
 					if (primitive==2):
-						idx = self.PoseTable.search_table(width=abs(m_width)*self.resolution)
+						idx = self.PoseTable.search_table(width=abs(m_width)*self.resolution - self.WIDTH_SAFETY)
 						bh = self.PoseTable.table[idx]['bodypose'][2]
 						sb = 1 if (m_width > 0.) else -1
 						qr = sb*self.PoseTable.table[idx]['bodypose'][3]
@@ -1139,11 +1141,6 @@ class GridPlanner:
 				if (valid):
 					footholds_cost, valid_flag = self.ground_walking(e)
 
-					# set node cost based on foothold average cost					
-					# self.Gbody.nodes[e]['cost'] = footholds_cost
-					# if (e == (13,17) ):
-					# 	print e, valid_flag
-
 					if (valid_flag == True):
 						node_free.append(e)
 						self.Gbody.nodes[e]['cost'] = 0
@@ -1205,8 +1202,18 @@ class GridPlanner:
 			self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4] = mX(rot_Z(v3wp[2]), temp)
 			self.Robot.Leg[j].XHd.world_X_NRP[:3,3] = np.round( (v3cp + self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4]).flatten(),4)
 			
+			# if (j==2):
+			# 	print 'fw v3wp: ', np.round(v3wp.flatten(),4)
+			# 	print d_wall[1], np.sin(qj)
+			# 	print np.round(world_base_X_femur_z,4), np.round(world_base_X_femur_y,4)
+			# 	print bXfy, dy, dh, bXfz
+			# 	print np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],4)
+
 		i = ig = 0
-		do_wall = np.array([0., 0.31, 0.]) 		# Initial distance from robot's base to wall (base frame)
+		if (self.T_GND_X_WALL):
+			do_wall = np.array([0., 0.31, 0.]) 		# Initial distance from robot's base to wall (base frame)
+		elif (self.T_WALL_X_GND):
+			do_wall = self.di_wall
 
 		gphase_intv  = [] 						# intervals in which gait phase changes
 		world_X_base = []
@@ -1230,7 +1237,7 @@ class GridPlanner:
 
 		## Cycle through trajectory
 		while (i != len(base_path.X.t)):
-			print i, ' Gait phase ', self.Robot.Gait.cs 
+			# print i, ' Gait phase ', self.Robot.Gait.cs 
 			bound_exceed = False
 			ig = i
 			# Cycles through one gait phase for support legs
@@ -1240,9 +1247,8 @@ class GridPlanner:
 					v3cp = base_path.X.xp[i].reshape(3,1) #+ Robot.P6c.world_X_base[0:3]
 					v3wp = base_path.W.xp[i].reshape(3,1) #+ self.Robot.P6c.world_X_base[3:6]
 					
-					# print np.round(v3cp.flatten(),4)
 					P6d_world_X_base = np.vstack((v3cp,v3wp))
-					print np.round(P6d_world_X_base.flatten(),4)
+					
 					## update robot's pose
 					self.Robot.XHd.update_world_X_base(P6d_world_X_base)
 					world_X_base_rot = self.Robot.XHd.world_X_base.copy()
@@ -1285,7 +1291,7 @@ class GridPlanner:
 					## 1) Update NRP
 					if (self.W_WALL):
 						## Identify sides for ground or wall contact based on body roll
-						delta_w = 1 if (base_path.W.xp[-1][0] > 0) else -1 # - base_path.W.xp[0]
+						delta_w = 1 if (base_path.W.xp[-1][0] >= 0.) else -1 # - base_path.W.xp[0]
 
 						# Update Robot's base distance travelled from origin for transition
 						if (self.T_GND_X_WALL or self.T_WALL_X_GND):
@@ -1300,12 +1306,39 @@ class GridPlanner:
 								compute_ground_footholds()
 							else:
 								compute_wall_footholds(self.di_wall)
+
+								# Set NRP to ground contact if below threshold
+								print j, 'NRP: ', np.round(self.Robot.Leg[j].XHd.world_X_NRP[:3,3],4)
+								if (self.T_WALL_X_GND):
+									if (self.Robot.Leg[j].XHd.world_X_NRP[2,3] < 0.3):
+										print 'Can make ground contact now'
+										KDL = kdl.KDL()
+										self.Robot.Leg[j].XHd.update_base_X_NRP(KDL.leg_IK(LEG_STANCE[j])) 
+										self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] = mX(self.Robot.XHd.world_X_base[:3,:3], 
+																							self.Robot.Leg[j].XHd.base_X_NRP[:3,3])
+										self.Robot.Leg[j].XHd.world_X_NRP[:3,3] = np.round( (v3cp + self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4]).flatten(),4)
+										
+										delta_cob = v3cp.flatten() - base_path.X.xp[-1]
+										self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] = -delta_cob + self.Robot.Leg[j].XHd.base_X_NRP[:3,3]
+										self.Robot.Leg[j].XHd.world_X_NRP[:3,3] = np.round(v3cp.flatten() + self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],2)
+
+										new_world_X_NRP = base_path.X.xp[-1] + self.Robot.Leg[j].XHd.base_X_NRP[:3,3]
+										new_world_base_X_NRP = new_world_X_NRP -v3cp.flatten()
+
+										# print 'dcob: ', np.round(delta_cob,4), np.round(v3cp.flatten(),4), np.round(base_path.X.xp[-1],4)
+										# print 'bXN:  ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],4)
+										# print 'old: '
+										# print np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],4)
+										# print np.round(self.Robot.Leg[j].XHd.world_X_NRP[:3,3],4)
+										# print 'new: '
+										# print np.round(new_world_base_X_NRP,4)
+										# print np.round(new_world_X_NRP,4)
 						else:
 							if (j >= 3):
 								compute_wall_footholds(self.di_wall)
 							else:
 								compute_ground_footholds()
-								
+						
 						# if (j==1):
 						# 	print 'body roll ', delta_w
 							# self.Robot.Leg[j].XHd.world_base_X_NRP[2,3] = P6d_world_X_base[2]
@@ -1315,12 +1348,12 @@ class GridPlanner:
 					else:
 						self.Robot.Leg[j].XHd.update_world_base_X_NRP(P6d_world_X_base)
 
-					# if (j==2):
+					if (j==1):
 					# 	print j, ' vcp3: ', np.round(v3cp.flatten(),3), np.round(base_path.X.xp[0],4)
 					# 	print j, ' dwa : ', self.di_wall
-					# 	print j, ' wXn : ', np.round(self.Robot.Leg[j].XHd.world_X_NRP[:3,3],3)
-					# 	print j, ' grp : ', ( (int(np.floor(self.Robot.Leg[j].XHd.world_X_NRP[0,3]/self.resolution))), 
-					# 							(int(np.ceil(self.Robot.Leg[j].XHd.world_X_NRP[1,3]/self.resolution))) )
+						print j, ' wXn : ', self.Robot.Leg[j].XHd.world_X_NRP[:3,3]
+						print j, ' grp : ', ( (int(np.floor(self.Robot.Leg[j].XHd.world_X_NRP[0,3]/self.resolution))), 
+												(int(np.ceil(self.Robot.Leg[j].XHd.world_X_NRP[1,3]/self.resolution))) )
 					# 	print j, ' wXbn: ', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
 
 					## 2) Compute magnitude & vector direction
@@ -1403,19 +1436,19 @@ class GridPlanner:
 					base_X_footholds[j].t.append(i*CTR_INTV)
 					base_X_footholds[j].xp.append(self.Robot.Leg[j].XHd.base_X_AEP[:3,3:4].copy())
 					
-					# if (j==2):
-					# 	print 'v3:  ', np.round(v3_dv,4), np.round(v3_uv.flatten(),4)
-					# 	print 'sn:  ', snorm
-					# 	print j, ' wXf: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3], 4)
-					# 	print j, ' wbXN:', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],4)
-					# 	print j, ' wbXA:', np.round(self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3],4)
-					# 	print j, ' bXN: ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],4)
-					# 	print j, ' bXA: ', np.round(self.Robot.Leg[j].XHd.base_X_AEP[:3,3],4)
-					# 	print j, ' cwf: ', np.round(mX(self.Robot.XHd.world_X_base[:3,:3], 
-					# 											self.Robot.Leg[j].XHd.base_X_AEP[:3,3]), 4)
-					# 	print 'wXb: '
-					# 	print np.round(self.Robot.XHd.world_X_base,4)
-					# 	print '--------------------------------------------'
+					if (j==1):
+						print 'v3:  ', np.round(v3_dv,4), np.round(v3_uv.flatten(),4)
+						print 'sn:  ', snorm
+						print j, ' wXf: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3], 4)
+						print j, ' wbXN:', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],4)
+						print j, ' wbXA:', np.round(self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3],4)
+						print j, ' bXN: ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],4)
+						print j, ' bXA: ', np.round(self.Robot.Leg[j].XHd.base_X_AEP[:3,3],4)
+						print j, ' cwf: ', np.round(mX(self.Robot.XHd.world_X_base[:3,:3], 
+																self.Robot.Leg[j].XHd.base_X_AEP[:3,3]), 4)
+						print 'wXb: '
+						print np.round(self.Robot.XHd.world_X_base,4)
+						print '--------------------------------------------'
 
 			## Alternate gait phase
 			self.Robot.Gait.change_phase()
@@ -1423,13 +1456,13 @@ class GridPlanner:
 			v3wp_prev = v3wp.copy()
 
 		# Replace last footholds with default ground NRP
-		if (self.T_WALL_X_GND is True or self.T_CHIM_X_GND is True):
-			KDL = kdl.KDL()
-			for j in range(0,6):
-				self.Robot.Leg[j].XHd.update_base_X_NRP(KDL.leg_IK(LEG_STANCE[j]))
-				base_X_footholds[j].xp[-1] = self.Robot.Leg[j].XHd.base_X_NRP[:3,3:4].copy()
-				world_base_X_NRP[j].xp[-1] = self.Robot.Leg[j].XHd.base_X_NRP[:3,3:4].copy()
-				world_X_footholds[j].xp[-1] = mX(self.Robot.XHd.world_X_base, self.Robot.Leg[j].XHd.base_X_NRP)[:3,3:4]
+		# if (self.T_WALL_X_GND is True or self.T_CHIM_X_GND is True):
+		# 	KDL = kdl.KDL()
+		# 	for j in range(0,6):
+		# 		self.Robot.Leg[j].XHd.update_base_X_NRP(KDL.leg_IK(LEG_STANCE[j]))
+		# 		base_X_footholds[j].xp[-1] = self.Robot.Leg[j].XHd.base_X_NRP[:3,3:4].copy()
+		# 		world_base_X_NRP[j].xp[-1] = self.Robot.Leg[j].XHd.base_X_NRP[:3,3:4].copy()
+		# 		world_X_footholds[j].xp[-1] = mX(self.Robot.XHd.world_X_base, self.Robot.Leg[j].XHd.base_X_NRP)[:3,3:4]
 		print '============================================='
 
 		# Update robot's current state
@@ -1549,7 +1582,7 @@ class GridPlanner:
 				w_cob = np.vstack(( w_cob, np.array([qi+i*delta_q, 0., 0.]) ))
 			
 			base_path = PathGenerator.generate_base_path(x_cob, w_cob, tn)
-			# Plot.plot_2d(base_path.X.t, base_path.W.xp)
+			# Plot.plot_2d(base_path.X.t, base_path.W.xv)
 
 		elif (ttype=='Wall_X_Gnd'):
 			print 'TR: w2g'
@@ -1569,6 +1602,8 @@ class GridPlanner:
 			
 			base_path = PathGenerator.generate_base_path(x_cob, w_cob, tn)
 			# Plot.plot_3d(base_path.X.xp[:,0],base_path.X.xp[:,1],base_path.X.xp[:,2])
+			# Plot.plot_2d(base_path.X.t, base_path.X.xp)
+			# Plot.plot_2d(base_path.X.t, base_path.W.xp)
 
 		elif (ttype=='Gnd_X_Chim'):
 			""" change from ground to chimney wall support footholds """
@@ -1601,12 +1636,13 @@ class GridPlanner:
 		
 		x_cob = np.delete(x_cob,0,0)
 		w_cob = np.delete(w_cob,0,0)
-		# print x_cob, w_cob
+		# print x_cob
+		# print w_cob
 		PathGenerator = path_generator.PathGenerator()
 		base_path = PathGenerator.generate_base_path(x_cob, w_cob, tn)
 
 		# Plot.plot_2d_multiple(1,wn_com.t,wn_com.xp*180/np.pi)
-		# Plot.plot_2d_multiple(1,base_path.X.t,base_path.X.xp)
+		# Plot.plot_2d_multiple(2,base_path.X.t,base_path.X.xv, base_path.W.xv)
 		
 		return base_path
 
@@ -1627,7 +1663,7 @@ class GridPlanner:
 
 		## cycle through path
 		for i in range(0,len(path)):
-			print 'cycle: ', path[i]
+			
 			temp_path.append(path[i])
 			## check transition
 			m[0] = self.Gbody.nodes[path[i]]['motion']
@@ -1646,6 +1682,7 @@ class GridPlanner:
 						ep = (sp[0],path[i][1])	# set new end point
 						# modify path to start from end of segmentised transition
 						temp_path = map(lambda x: (x[0],path[i][1]) , temp_path)
+						temp_path.insert(0,ep)
 						# remove duplicates
 						temp_path = list(OrderedDict.fromkeys(temp_path))
 						print 'segmentised forward linear path: ', temp_path
@@ -1657,6 +1694,8 @@ class GridPlanner:
 					plan_01 = self.foothold_planner(path_01)
 					motion_plan.append(plan_01)
 					self.T_GND_X_WALL = self.T_WALL_X_GND = False
+			
+			## ============================================================================ ##
 
 			## Check transition instances
 			if (m[0]==0 and m[1]==2):
@@ -1678,7 +1717,7 @@ class GridPlanner:
 
 			elif (m[0]==2 and m[1]==0):
 				## Wall to Walk ##
-				print path[i], path[i+1], 'wall to walk'
+				print path[i], path[i+1], 'Wall to Ground'
 				if (m[2]==2):
 					# force motion to walling for gap of one
 					self.Gbody.nodes[path[i+1]]['motion'] = 1
@@ -1688,21 +1727,22 @@ class GridPlanner:
 					# First, plan path and foothold for ground walking
 					if (len(temp_path) > 1):
 						print 'Interpolating Ww prior to Wg... ', temp_path
+						# Append the transitioned point
+						temp_path.append(path[i+1])
+						# Segmentise temp_path
+						for n in temp_path:
+							temp_path = map(lambda x: (x[0],temp_path[0][1]) , temp_path)
+						temp_path = list(OrderedDict.fromkeys(temp_path))
+						print 'new temp path ', temp_path
 						path_01 = self.path_interpolation(temp_path)
 						plan_01 = self.foothold_planner(path_01)
 						motion_plan.append(plan_01)
+
+						sp = temp_path[-1]
 						temp_path = []
 
-					sp = path[i]
-					# Next, set the respective state machine flags
-					self.T_WALL_X_GND = True
-					self.W_WALL = False
-					self.W_GND  = True
-					# inst_path = self.path_interpolation(temp_path)
-					# tran_path = self.transition_routine('Wall_X_Gnd',path[i],path[i+1])
-					# base_path.append(inst_path)
-					# base_path.append(tran_path)
-					# temp_path = []
+						# Next, set the respective state machine flags
+						self.T_WALL_X_GND = True
 
 			elif (m[0]==0 and m[1]==1):
 				## Walk to Chimney ##
@@ -1741,11 +1781,10 @@ class GridPlanner:
 		# if (len(temp_path) > 1):
 		# Check type of interpolation
 		
-		if (self.T_GND_X_WALL or self.T_WALL_X_GND):
+		if (self.T_GND_X_WALL):
 			## Decouple forward and sideways motion
 			## TODO: YAW DEPENDANT
 			print 'Final interpolation, Wg-w: '
-			print sp, path[i]
 			if (path[i][0] - sp[0] > 0):
 				ep = (sp[0],path[i][1])	# set new end point
 				# modify path to start from end of segmentised transition
@@ -1757,12 +1796,13 @@ class GridPlanner:
 				ep = path[i]
 				temp_path = []
 
-			if (self.T_GND_X_WALL):
-				print 'G2W Transition from ', sp, 'to ', ep
-				path_01 = self.transition_routine('Gnd_X_Wall', sp, ep)
-			else:
-				print 'W2G Transition from ', sp, 'to ', ep
-				path_01 = self.transition_routine('Wall_X_Gnd', sp, ep)
+			print 'G2W Transition from ', sp, 'to ', ep
+			path_01 = self.transition_routine('Gnd_X_Wall', sp, ep)
+		
+		elif (self.T_WALL_X_GND):
+		 	print 'Final interpolation, Ww-g: '
+			print 'W2G Transition from ', sp, 'to ', path[i]
+			path_01 = self.transition_routine('Wall_X_Gnd', sp, path[i])
 
 		elif (self.W_GND or self.W_WALL):
 			print 'Final interpolation, Wg: ', temp_path

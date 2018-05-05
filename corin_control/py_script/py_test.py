@@ -143,7 +143,7 @@ a = [(1,2),(5,5),(1,2)]
 
 a = map(lambda x: (x[0],-1) , a)
 print a
-# [1.02  0.39  0.148] [1.02 0.36 0.1 ] 0.236 0.0
+
 qi = 0.24
 qf = 0.0
 xi = np.array([1.02,0.39,0.15])
@@ -156,10 +156,10 @@ x_cob = xi.copy()
 w_cob = np.array([qi, 0., 0.])
 
 for i in range(1, len(qrange)):
-	qr = -np.deg2rad(qrange[i])
+	qr = np.deg2rad(qrange[i])
 	xd = xi + np.array([(np.cos(qr))*delta_x[0],
-						(np.cos(qr))*delta_x[1], 
-						(1-np.sin(qr))*delta_x[2]])
+									(np.cos(qr))*delta_x[1], 
+									(1-np.sin(qr))*delta_x[2]])
 
 	x_cob = np.vstack(( x_cob, np.round(xd,3) ))
 	w_cob = np.vstack(( w_cob, np.array([qi+i*delta_q, 0., 0.]) ))
