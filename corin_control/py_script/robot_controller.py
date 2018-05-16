@@ -31,22 +31,13 @@ from robotis_controller_msgs.msg import SyncWriteMultiFloat
 #####################################################################
 
 class CorinManager:
-	## TEMP VARIABLES
-	T_GND_X_WALL = False
-	T_GND_X_CHIM = False
-	T_WALL_X_GND = False
-	T_CHIM_X_GND = False
-	W_GND 	= False
-	W_WALL = False
-	W_CHIM = False
-
 	def __init__(self, initialise=False):
 		rospy.init_node('CorinController') 		# Initialises node
 		self.rate 	  = rospy.Rate(CTR_RATE)	# Controller rate
 
 		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.Action	= control_interface.ControlInterface()	# control action class
-		self.Map 	= grid_planner.GridPlanner('wall_demo_03')	# map class 
+		self.Map 	= grid_planner.GridPlanner('wall_demo_right')	# map class 
 		# self.Gait = gait_class.GaitClass(GAIT_TYPE) 		# gait class
 
 		self.resting   = False 			# Flag indicating robot standing or resting
@@ -386,9 +377,7 @@ class CorinManager:
 		cob_X_desired = np.zeros((3,1)) 	# cob linear location
 		cob_W_desired = np.zeros((3,1)) 	# cob angular location
 		wXbase_offset = self.Robot.P6c.world_X_base.copy()
-		# print wXbase_offset
-		# print motion_plan.qb_bias
-		# print motion_plan.qb.X.xp
+		
 		## Variable mapping from motion plan
 		base_path = motion_plan.qb
 		world_X_base = motion_plan.qbp
@@ -499,7 +488,6 @@ class CorinManager:
 						self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP.copy()
 
 					## Compute average surface normal from cell surface normal at both footholds
-					wall_trans = True if (self.T_GND_X_WALL is True or self.T_WALL_X_GND is True) else False
 					snorm_1 = self.Map.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
 					snorm_2 = self.Map.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3], j)
 					w_snorm = (snorm_1 + snorm_2)/2.
@@ -618,7 +606,6 @@ class CorinManager:
 		data = self.Action.action_to_take()
 
 		if (data is not None):
-			
 			self.Visualizer.clear_visualisation()
 
 			## Data mapping - for convenience
@@ -671,13 +658,15 @@ class CorinManager:
 				print 'Planning path...'
 				self.Robot.support_mode = False
 
-				ps = (8,13); pf = (35,14)	# Straight Line
+				# ps = (8,13); pf = (12,13)	# Short straight Line
+				# ps = (8,13); pf = (42,13)	# Long straight Line - for chimney
 				# ps = (13,12); pf = (18,18)	# G2W - Left side up
-				# ps = (13,12); pf = (18,6)	# G2W - Right side up
+				# ps = (8,13); pf = (18,6)	# G2W - Right side up
+				ps = (8,13); pf = (35,13)	# Left side up and down again
 
 				## Set robot to starting position in default configuration
-				self.Robot.P6c.world_X_base = np.array([ps[0]*self.Map.resolution,
-														ps[1]*self.Map.resolution,
+				self.Robot.P6c.world_X_base = np.array([ps[0]*self.Map.cell_resolution,
+														ps[1]*self.Map.cell_resolution,
 														BODY_HEIGHT,
 														0.,0.,0.]).reshape(6,1)
 				self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()

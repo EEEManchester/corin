@@ -6,7 +6,7 @@
 import sys; sys.dont_write_bytecode = True
 
 import numpy as np
-import stance_selection
+from stance_selection import *
 
 # Main name
 ROBOT_NS = "corin"
@@ -87,23 +87,6 @@ CTR_RATE 	= 50 			# controller rate for robot, Hz
 CTR_INTV 	= 1./CTR_RATE 	# controller interval for robot, s
 
 ## ================================================================ ##
-##                       Gait parameters 	 						##
-## ================================================================ ##
-
-GAIT_TYPE 	 = 3 		# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
-BODY_HEIGHT  = 0.1		# ori: 0.10, chimney: 0.0
-STANCE_WIDTH = 0.21		# ori: 0.21, chimney: 0.27, 0.31 for tripod
-STEP_STROKE  = 0.1		# step size, x, 	default 0.07
-STEP_HEIGHT  = 0.05		# step height, z 	default 0.05
-GAIT_TPHASE	 = 2.0 		# period per gait phase
-
-BASE_MAX_LINEAR_VELOCITY  = 0.025	# maximum base velocity, m/s - walking: 0.025
-BASE_MAX_ANGULAR_VELOCITY = 0.01	# maximum base velocity, rad/s
-
-# BASE_SPEED 			= 0.025 		# walking speed in m/s
-# DUTY_FACTOR = {'tripod':0.5, 'tetrapod':2./3., 'ripple':3./4., 'wave':5./6. }
-
-## ================================================================ ##
 ##                  	Stability Parameters 						##
 ## ================================================================ ## 
 SM_MIN = 0.05
@@ -122,13 +105,32 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 ## ================================================================ ##
 ##                       Stance parameters 	 						##
 ## ================================================================ ##
+
+STANCE_WIDTH = 0.21		# ori: 0.21, chimney: 0.27, 0.31 for tripod
+BODY_HEIGHT  = 0.1		# ori: 0.10, chimney: 0.0
 # Offset for front and rear legs
 TETA_F = 40.;	
 TETA_R = -TETA_F;
 LEG_OFFSET = [TETA_F, 0., TETA_R, -TETA_F, 0., -TETA_R]
 ### Leg default position, SCS
 STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
-LEG_STANCE  = stance_selection.initial_stance(STANCE_WIDTH,BODY_HEIGHT, STANCE_TYPE, TETA_F, TETA_R)
+LEG_STANCE  = initial_stance(STANCE_WIDTH,BODY_HEIGHT, STANCE_TYPE, TETA_F, TETA_R)
+
+## ================================================================ ##
+##                       Gait parameters 	 						##
+## ================================================================ ##
+
+GAIT_TYPE 	 = 3 		# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+GAIT_TPHASE	 = 2.0 		# period per gait phase
+BOUND_FACTOR = 1.05 	# boundary constraint for leg workplane space
+STEP_HEIGHT  = 0.05		# step height, z 	default 0.05
+LEG_CLEAR 	 = 0.08 		# clearance between leg workplane boundaries
+STEP_STROKE  = set_step_stroke(TRN_BASE_X_LEG, ROT_BASE_X_LEG, LEG_STANCE, LEG_CLEAR, 0.1)	# step size, x, 	default 0.07
+
+BASE_MAX_LINEAR_VELOCITY  = 0.025	# maximum base velocity, m/s - walking: 0.025
+BASE_MAX_ANGULAR_VELOCITY = 0.01	# maximum base velocity, rad/s
+
+
 
 ##########################################################################################################################################
 

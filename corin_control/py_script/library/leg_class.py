@@ -188,11 +188,11 @@ class LegClass:
 		return error, self.Joint.qpd, self.Joint.qvd, self.Joint.qad 	# TEMP: change to normal (huh?)
 
 	
-	def check_boundary_limit(self, world_base_X_foot, world_base_X_NRP):
+	def check_boundary_limit(self, world_base_X_foot, world_base_X_NRP, radius=None):
 		""" leg boundary area projected to 2D space """
 
 		bound_violate = False
-		BOUND_FACTOR  = 1.8 	# relaxes the boundary constraint
+		radius = STEP_STROKE/2. if (radius is None) else radius
 
 		# Vector to aep and current position wrt nominal point
 		v3_NRP_X_AEP  = self.XHd.world_base_X_AEP[:3,3:4]  - self.XHd.world_base_X_NRP[:3,3:4]

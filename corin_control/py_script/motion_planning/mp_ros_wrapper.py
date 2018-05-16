@@ -18,7 +18,7 @@ if __name__ == "__main__":
 	# rospy.sleep(0.5)
 
 	## Create map and plan path
-	GridPlanner = GridPlanner('wall_demo_03')
+	GridPlanner = GridPlanner('full_ground_demo')
 	# GridPlanner = GridPlanner((1.27,5.48)) 	# map size, [x,y] (m,m)
 	# grid_path 	= GridPlanner.find_path((15, 10),(10,150))	# define start and end points
 	# pp.graph_representation(False, grid_path)
@@ -33,8 +33,8 @@ if __name__ == "__main__":
 	# plt.show()
 
 	## Convert to ROS point cloud and visualise in RVIZ
-	map_arr  = point_cloud_array_mapping(GridPlanner.graph_to_nparray())
-	cloud_msg= array_to_pointcloud2(map_arr, rospy.Time.now(), "world")
+	map_arr   = point_cloud_array_mapping(GridPlanner.graph_to_nparray())
+	cloud_msg = array_to_pointcloud2(map_arr, rospy.Time.now(), "world")
 
 	# path_arr = GridPlanner.path_to_nparray(grid_path) 	# raw path
 	# path_arr = GridPlanner.post_process_path(grid_path)		# post-processed path

@@ -155,17 +155,35 @@ print 'delta: ', delta_q, delta_x
 x_cob = xi.copy()
 w_cob = np.array([qi, 0., 0.])
 
-for i in range(1, len(qrange)):
-	qr = np.deg2rad(qrange[i])
-	xd = xi + np.array([(np.cos(qr))*delta_x[0],
-									(np.cos(qr))*delta_x[1], 
-									(1-np.sin(qr))*delta_x[2]])
+# for i in range(1, len(qrange)):
+# 	qr = np.deg2rad(qrange[i])
+# 	xd = xi + np.array([(np.cos(qr))*delta_x[0],
+# 									(np.cos(qr))*delta_x[1], 
+# 									(1-np.sin(qr))*delta_x[2]])
 
-	x_cob = np.vstack(( x_cob, np.round(xd,3) ))
-	w_cob = np.vstack(( w_cob, np.array([qi+i*delta_q, 0., 0.]) ))
-	print xd
+# 	x_cob = np.vstack(( x_cob, np.round(xd,3) ))
+# 	w_cob = np.vstack(( w_cob, np.array([qi+i*delta_q, 0., 0.]) ))
+# 	print xd
 # print np.round(x_cob,3)
-PathGenerator = Pathgenerator.PathGenerator()
-base_path = PathGenerator.generate_base_path(x_cob, w_cob, 0.1)
-Plot.plot_3d(base_path.X.xp[:,0],base_path.X.xp[:,1],base_path.X.xp[:,2])
+# PathGenerator = Pathgenerator.PathGenerator()
+# base_path = PathGenerator.generate_base_path(x_cob, w_cob, 0.1)
+# Plot.plot_3d(base_path.X.xp[:,0],base_path.X.xp[:,1],base_path.X.xp[:,2])
 # Plot.plot_2d(base_path.X.t, base_path.W.xp)
+
+def fu(radius=None):
+	# if (radius is None):
+	# 	radius = STEP_STROKE/2.
+	# else: 
+	# 	pass
+	radius = STEP_STROKE/2. if (radius is None) else radius
+	print 'radius ', radius
+
+# fu(0.01)
+a = np.array([1.,0.,0.])
+b = 1.
+c = a/b
+d = np.nan_to_num(a/b)
+print c, d
+if (np.isnan(c).any() or np.isinf(c).any()):
+	print 'has nan'
+print np.zeros((3,1))
