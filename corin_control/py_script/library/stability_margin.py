@@ -61,7 +61,7 @@ class StabilityMargin():
 			p1 = p[pf[0+i*2]]
 			p2 = p[pf[1+i*2]]
 			
-			v_lr  = -p1 + p2 												# support edge vector
+			v_lr  = p2 - p1 												# support edge vector
 			p_p   = ( np.dot(-p1,v_lr)/np.linalg.norm(v_lr)**2 )*v_lr 		# foot vector projected onto support edge
 			p_f   = p1 + p_p  												# rejection vector from base
 			sm[i] = np.sqrt(p_f[0]**2 + p_f[1]**2) 							# magnitude of rejection vector

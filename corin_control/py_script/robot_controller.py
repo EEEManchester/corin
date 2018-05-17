@@ -37,12 +37,14 @@ class CorinManager:
 
 		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.Action	= control_interface.ControlInterface()	# control action class
-		self.Map 	= grid_planner.GridPlanner('wall_demo_right')	# map class 
+		# self.Map 	= grid_planner.GridPlanner('wall_demo_right')	# map class 
+		self.GridMap  = GridMap('wall_hole_demo')
+		self.PathPlan = PathPlanner(self.GridMap)
 		# self.Gait = gait_class.GaitClass(GAIT_TYPE) 		# gait class
 
-		self.resting   = False 			# Flag indicating robot standing or resting
-		self.on_start  = False 			# variable for resetting to leg suspended in air
-		self.interface = "rviz"			# interface to control: gazebo, rviz or robotis hardware
+		self.resting   = False 		# Flag indicating robot standing or resting
+		self.on_start  = False 		# variable for resetting to leg suspended in air
+		self.interface = "rviz"		# interface to control: gazebo, rviz or robotis hardware
 		self.control_mode = "fast" 	# run controller in various mode: 1) normal, 2) fast
 
 		self.ui_state = "hold" 		# user interface for commanding motions
@@ -488,8 +490,8 @@ class CorinManager:
 						self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP.copy()
 
 					## Compute average surface normal from cell surface normal at both footholds
-					snorm_1 = self.Map.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
-					snorm_2 = self.Map.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3], j)
+					snorm_1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
+					snorm_2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3], j)
 					w_snorm = (snorm_1 + snorm_2)/2.
 
 					## Set bodypose in leg class
@@ -659,14 +661,14 @@ class CorinManager:
 				self.Robot.support_mode = False
 
 				# ps = (8,13); pf = (12,13)	# Short straight Line
-				# ps = (8,13); pf = (42,13)	# Long straight Line - for chimney
+				ps = (8,13); pf = (70,13)	# Long straight Line - for chimney 63
 				# ps = (13,12); pf = (18,18)	# G2W - Left side up
 				# ps = (8,13); pf = (18,6)	# G2W - Right side up
-				ps = (8,13); pf = (35,13)	# Left side up and down again
+				# ps = (8,13); pf = (35,13)	# Left side up and down again
 
 				## Set robot to starting position in default configuration
-				self.Robot.P6c.world_X_base = np.array([ps[0]*self.Map.cell_resolution,
-														ps[1]*self.Map.cell_resolution,
+				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,
+														ps[1]*self.GridMap.resolution,
 														BODY_HEIGHT,
 														0.,0.,0.]).reshape(6,1)
 				self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
@@ -674,11 +676,30 @@ class CorinManager:
 
 				self.Robot._initialise()
 				
-				motion_plan = self.Map.generate_motion_plan(self.Robot, start=ps, end=pf)
-
+				# motion_plan = self.Map.generate_motion_plan(self.Robot, start=ps, end=pf)
+				motion_plan = self.PathPlan.generate_motion_plan(self.Robot, start=ps, end=pf)
+				
 				if (motion_plan is not None):
 					if (self.main_controller(motion_plan)):
 						self.Robot.alternate_phase()
+
+				# ps = (42,13); pf = (65,13)
+				# ## Set robot to starting position in default configuration
+				# self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,
+				# 										ps[1]*self.GridMap.resolution,
+				# 										BODY_HEIGHT,
+				# 										0.,0.,0.]).reshape(6,1)
+				# self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
+				# self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
+
+				# self.Robot._initialise()
+				
+				# # motion_plan = self.Map.generate_motion_plan(self.Robot, start=ps, end=pf)
+				# motion_plan = self.PathPlan.generate_motion_plan(self.Robot, start=ps, end=pf)
+				
+				# if (motion_plan is not None):
+				# 	if (self.main_controller(motion_plan)):
+				# 		self.Robot.alternate_phase()
 
 		else:
 			rospy.sleep(0.5)

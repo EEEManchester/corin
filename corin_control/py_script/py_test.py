@@ -155,18 +155,17 @@ print 'delta: ', delta_q, delta_x
 x_cob = xi.copy()
 w_cob = np.array([qi, 0., 0.])
 
-# for i in range(1, len(qrange)):
-# 	qr = np.deg2rad(qrange[i])
-# 	xd = xi + np.array([(np.cos(qr))*delta_x[0],
-# 									(np.cos(qr))*delta_x[1], 
-# 									(1-np.sin(qr))*delta_x[2]])
+for i in range(1, len(qrange)):
+	qr = np.deg2rad(qrange[i])
+	xd = xi + np.array([(np.cos(qr))*delta_x[0],
+									(np.cos(qr))*delta_x[1], 
+									(1-np.sin(qr))*delta_x[2]])
 
-# 	x_cob = np.vstack(( x_cob, np.round(xd,3) ))
-# 	w_cob = np.vstack(( w_cob, np.array([qi+i*delta_q, 0., 0.]) ))
-# 	print xd
-# print np.round(x_cob,3)
-# PathGenerator = Pathgenerator.PathGenerator()
-# base_path = PathGenerator.generate_base_path(x_cob, w_cob, 0.1)
+	x_cob = np.vstack(( x_cob, np.round(xd,3) ))
+	w_cob = np.vstack(( w_cob, np.array([qi+i*delta_q, 0., 0.]) ))
+
+PathGenerator = Pathgenerator.PathGenerator()
+base_path = PathGenerator.generate_base_path(x_cob, w_cob, 0.1)
 # Plot.plot_3d(base_path.X.xp[:,0],base_path.X.xp[:,1],base_path.X.xp[:,2])
 # Plot.plot_2d(base_path.X.t, base_path.W.xp)
 
@@ -183,7 +182,46 @@ a = np.array([1.,0.,0.])
 b = 1.
 c = a/b
 d = np.nan_to_num(a/b)
-print c, d
-if (np.isnan(c).any() or np.isinf(c).any()):
-	print 'has nan'
-print np.zeros((3,1))
+
+class Class1:
+	def __init__(self):
+		self.a = 1
+		self.b = 2
+		self.c = 3
+
+class PathPlanner:
+	def __init__(self, Map):
+		self.name = 'This'
+
+	def testf(self):
+		print Map.c
+
+import numpy as np
+from scipy.optimize import linprog
+
+def in_hull(points, x):
+    n_points = len(points)
+    n_dim = len(x)
+    c = np.zeros(n_points)
+    A = np.r_[points.T,np.ones((1,n_points))]
+    b = np.r_[x, np.ones(1)]
+    print A
+    print b
+    print c
+    lp = linprog(c, A_ub=A, b_ub=b)
+    # lp = linprog(c, A_eq=A, b_eq=b)
+    print lp 
+    return lp.x
+
+# n_points = 4#10000
+# n_dim = 2#10
+# Z = np.random.rand(n_points,n_dim)
+# x = np.random.rand(n_dim)
+
+Z = np.array([[0.,0.],[2.,0.],[0.,2.],[2,2]])
+x = np.array([1,0])
+
+# x_out = (in_hull(Z, x))
+# print x_out
+# print np.sum(x_out)
+# print np.dot(Z.T,x_out.reshape(4,1))

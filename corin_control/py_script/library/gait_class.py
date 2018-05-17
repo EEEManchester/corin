@@ -14,6 +14,7 @@ class GaitClass:
 		self.phase = [] 		# list of gait phases
 		self.np = 0 			# counter for gait phase
 		self.tp = GAIT_TPHASE	# timing per gait phase
+		self.gd = 1 			# gait direction
 
 		# States
 		self.cs = [0]*6	# current 
@@ -63,10 +64,11 @@ class GaitClass:
 		self.update_phase()
 
 		try:
-			self.np += 1
+			self.np = self.np + self.gd
 			self.cs = self.phase[self.np]
 		except IndexError:
-			self.np = 0
+			# print 'index error'
+			self.np = 0 if (self.gd == 1) else 5
 			self.cs = self.phase[self.np]
 
 	def support_mode(self):
@@ -83,15 +85,30 @@ class GaitClass:
 		if (self.cs == [0]*6):
 			self.cs = copy.deepcopy(self.ps)
 
+	def reverse_gait(self):
+		""" reverses the gait """
+		if (self.gd == 1):
+			self.gd = -1
+		elif (self.gd == -1):
+			self.gd = 1
+		
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-# gait = GaitClass(3)
+gait = GaitClass(1)
+# print gait.cs
 
-# for i in range(0,8):
-# 	print gait.cs
+# for i in range(0,3):
 # 	gait.change_phase()
+# 	print gait.cs
 
+# gait.reverse_gait()
+
+# print 'now reversed'
+# for i in range(0,12):
+# 	gait.change_phase()
+# 	print gait.cs, gait.np
+# print gait.phase[-3]
 # print '============='
 # print gait.cs
 # gait.support_mode()
