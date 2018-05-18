@@ -24,7 +24,7 @@ Map:
     hole:
       i1: { s1: [20,2], s2: [30,24], sh: -1}
 
-  wall_hole_demo:
+  hole_wall_demo:
     size: { sx: 2.51, sy: 0.8}
     wall:
       i1: { s1: [0,0],  s2: [83,1], sh: 1}
@@ -33,6 +33,15 @@ Map:
       i3: { s1: [50,2], s2: [55,6], sh: 1}
     hole:
       i1: { s1: [20,2], s2: [30,24], sh: -1}
+
+  wall_hole_demo:
+    size: { sx: 2.51, sy: 0.8}
+    wall:
+      i1: { s1: [0,0],  s2: [83,1], sh: 1}
+      i2: { s1: [0,25], s2: [83,26], sh: 1}
+      i3: { s1: [20,20], s2: [25,24], sh: 1}
+    hole:
+      i1: { s1: [50,2], s2: [60,24], sh: -1}
 
   large_obstacle_demo:
     size: { sx: 1.51, sy: 0.8}

@@ -661,7 +661,7 @@ class CorinManager:
 				self.Robot.support_mode = False
 
 				# ps = (8,13); pf = (12,13)	# Short straight Line
-				ps = (8,13); pf = (70,13)	# Long straight Line - for chimney 63
+				ps = (8,13); pf = (72,13)	# Long straight Line - for chimney 63
 				# ps = (13,12); pf = (18,18)	# G2W - Left side up
 				# ps = (8,13); pf = (18,6)	# G2W - Right side up
 				# ps = (8,13); pf = (35,13)	# Left side up and down again

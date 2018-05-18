@@ -872,7 +872,8 @@ class PathPlanner:
 								# Set NRP to ground contact if below threshold
 								# print j, 'NRP: ', np.round(self.Robot.Leg[j].XHd.world_X_NRP[:3,3],4)
 								if (self.T_WALL_X_GND):
-									if (self.Robot.Leg[j].XHd.world_X_NRP[2,3] < 0.3):
+									# if (self.Robot.Leg[j].XHd.world_X_NRP[2,3] < 0.3):
+									if (abs(P6d_world_X_base[3]) < 0.12):
 										print 'Can make ground contact now'
 										KDL = kdl.KDL()
 										delta_cob = v3cp.flatten() - base_path.X.xp[-1]
