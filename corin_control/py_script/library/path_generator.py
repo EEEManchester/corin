@@ -86,8 +86,8 @@ class PathGenerator():
 			Output:	BaseTrajectory() array of linear translation and angular
 					rotation points 												"""
 
-		SplineGenerator = Bspline.SplineGenerator()	# biezer spline generator
-		# SplineGenerator = Pspline.SplineGenerator() # cubic polynomial spline generator 
+		# SplineGenerator = Bspline.SplineGenerator()	# biezer spline generator
+		SplineGenerator = Pspline.SplineGenerator() # cubic polynomial spline generator 
 
 		# generate linear or angular via points if size mismatch
 		x_cob, w_cob, t_cob = self.auto_generate_points(x_cob, w_cob, t_cob)
@@ -196,8 +196,8 @@ class PathGenerator():
 					3) tn -> trajectory interval
 			Output:	List of trajectory (position, velocity, acceleration)	"""
 
-		# SpGen = Pspline.SplineGenerator()
-		SpGen = Bspline.SplineGenerator()
+		SpGen = Pspline.SplineGenerator()
+		# SpGen = Bspline.SplineGenerator()
 		x_out = SpGen.generate_spline(cp, td, tn)
 
 		return x_out
@@ -245,9 +245,9 @@ x_cob = np.vstack((x_cob,np.array([0. , -0.04, BODY_HEIGHT])))
 # x_cob = np.vstack((x_cob,np.array([.0,.0,BODY_HEIGHT])))
 # w_cob = np.vstack((w_cob,np.array([0., 0., 0.])))
 t_cob = np.array([0.,2.])
-path_n = planner.generate_base_path(x_cob, w_cob, 0.04, t_cob)
-path_m = planner.generate_base_path(x_cob, w_cob, 0.04, t_cob)
-path_n.insert(6,10,path_m)
+# path_n = planner.generate_base_path(x_cob, w_cob, 0.04, t_cob)
+# path_m = planner.generate_base_path(x_cob, w_cob, 0.04, t_cob)
+# path_n.insert(6,10,path_m)
 # print type(path_n.X.t)
 # print np.round(path_n.X.xp,3)
 # Plot.plot_2d(path_n.X.t,path_n.X.xp)

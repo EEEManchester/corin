@@ -374,14 +374,15 @@ class SplineGenerator:
 				qvz = a1z + 2*a2z*td + 3*a3z*td**2
 				qaz = 2*a2z + 6*a3z*td
 				
-				## concatenate segments together - size is <no_rows> by 3			
+				## concatenate segments together - size is <no_rows> by 3
+				# print td, tk, t[i], type(td+t[i])
 				ct.append( td+t[i] ) 
 				cp.append( [qpx,qpy,qpz]) 
 				cv.append( [qvx,qvy,qvz]) 
 				ca.append( [qax,qay,qaz]) 
 		
 
-		return np.around(ct,4),cp,cv,ca
+		return ct,cp,cv,ca
 
 	def compute_time_intervals(self, q):
 		""" Compute time interval for spline if not specified 	"""
@@ -460,13 +461,14 @@ w_cob = np.vstack((w_cob,np.array([0.2, -0.1, 0.])))
 w_cob = np.vstack((w_cob,np.array([0., 0., 0.])))
 t_cob = np.array([0,1,2,3])
 
-spliner = SplineGenerator()
+# spliner = SplineGenerator()
 # x_out  = spliner.spline_1D(test_points,test_times,TRAC_INTERVAL)
 # spoints = spliner.spline_1D_acc(test_points,t_com)
 # spoints = spliner.spline_3D(w_cob,t_cob)
 
 # x_out = spliner.generate_leg_spline(sp,ep,snorm,phase)
-# x_out = spliner.generate_spline(w_cob)
+# ct,cp,cv,ca = spliner.generate_spline(w_cob, t_com)
+# print type(ct), type(cp)
 # Plot.plot_2d(x_out[0],x_out[1])
 # Plot.plot_2d_multiple(2,x_out.t,x_out.xv,x_out.xa)
 

@@ -1172,7 +1172,7 @@ class PathPlanner:
 		base_path = PathGenerator.generate_base_path(x_cob, w_cob, tn)
 
 		# Plot.plot_2d_multiple(1,wn_com.t,wn_com.xp*180/np.pi)
-		# Plot.plot_2d_multiple(2,base_path.X.t,base_path.X.xv, base_path.W.xv)
+		# Plot.plot_2d_multiple(1,base_path.X.t,base_path.X.xp)#, base_path.W.xv)
 		
 		return base_path
 

@@ -74,7 +74,7 @@ class TrajectoryPoints():
 	def append(self, data):
 		""" Stack data onto array assuming
 			it is of the same data type 	"""
-
+		
 		self.t = self.t + data.t
 		self.xp = np.vstack((self.xp, data.xp))
 		self.xv = np.vstack((self.xv, data.xv))
