@@ -38,7 +38,7 @@ class CorinManager:
 		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.Action	= control_interface.ControlInterface()	# control action class
 		# self.Map 	= grid_planner.GridPlanner('wall_demo_right')	# map class 
-		self.GridMap  = GridMap('wall_hole_demo')
+		self.GridMap  = GridMap('hole_demo')
 		self.PathPlan = PathPlanner(self.GridMap)
 		# self.Gait = gait_class.GaitClass(GAIT_TYPE) 		# gait class
 
@@ -392,6 +392,7 @@ class CorinManager:
 			self.Visualizer.publish_robot(wXbase_offset)
 			self.Visualizer.publish_path(base_path, wXbase_offset)
 			self.Visualizer.publish_footholds(world_X_footholds)
+			self.Visualizer.publish_cob(world_X_base)
 
 			if (self.interface == 'rviz'):
 				self.joint_pub_.publish(array_to_joint_states(self.Robot.qc.position, rospy.Time.now(), ""))
@@ -399,6 +400,7 @@ class CorinManager:
 		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 		## User input
+		print 'wXb: ', len(world_X_base)
 		print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 		print 'Execute Path? '
 		self.ui_state = 'hold'
@@ -432,7 +434,7 @@ class CorinManager:
 			for j in range(0, self.Robot.active_legs):
 				self.Robot.Leg[j].P6_world_X_base = self.Robot.P6c.world_X_base.copy()
 			#########################################################################
-
+			self.Robot.suspend = False
 			## suppress trajectory counter as body support suspended
 			if (self.Robot.suspend == True):
 				i -= 1
@@ -461,7 +463,7 @@ class CorinManager:
 			if (self.Robot.suspend != True):
 				cob_X_desired += v3cv*CTR_INTV
 				cob_W_desired += v3wv*CTR_INTV
-
+			print i, np.round(v3cp.flatten(),4)
 			## ============================================================================================================================== ##
 			## Execution of command ##
 			## ==================== ##
@@ -661,8 +663,8 @@ class CorinManager:
 				self.Robot.support_mode = False
 
 				# ps = (8,13); pf = (12,13)	# Short straight Line
-				ps = (8,13); pf = (72,13)	# Long straight Line - for chimney 63
-				# ps = (13,12); pf = (18,18)	# G2W - Left side up
+				ps = (8,13); pf = (42,13)	# Long straight Line - for chimney 63
+				# ps = (8,13); pf = (8,18)	# G2W - Left side up
 				# ps = (8,13); pf = (18,6)	# G2W - Right side up
 				# ps = (8,13); pf = (35,13)	# Left side up and down again
 

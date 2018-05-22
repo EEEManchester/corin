@@ -16,6 +16,8 @@ class RvizVisualise:
 		self.map_pub_  = rospy.Publisher(ROBOT_NS + '/point_cloud', PointCloud2, queue_size=1)
 		self.path_pub_ = rospy.Publisher(ROBOT_NS + '/path', Path, queue_size=1)
 		self.mark_pub_ = rospy.Publisher(ROBOT_NS + '/footholds', MarkerArray, queue_size=1)	# marker array
+		self.cob_pub_  = rospy.Publisher(ROBOT_NS + '/cob', MarkerArray, queue_size=1)
+
 		self.robot_broadcaster = tf.TransformBroadcaster()	# Transform for robot pose		
 
 		rospy.sleep(0.5)
@@ -31,6 +33,7 @@ class RvizVisualise:
 		clear_path = Path()
 		clear_path.header.frame_id = 'world'
 		self.mark_pub_.publish(clear_marker)
+		self.cob_pub_.publish(clear_marker)
 		self.path_pub_.publish(clear_path)
 
 	def publish_robot(self, qb):
@@ -49,5 +52,11 @@ class RvizVisualise:
 	def publish_footholds(self, footholds):
 		""" Foothold array publisher 
 			Input:  footholds: list of footholds """
+		
+		self.mark_pub_.publish(foothold_list_to_marker_array(footholds, rospy.Time.now(), self.fr_fix))
 
-		self.mark_pub_.publish(list_to_marker_array(footholds, rospy.Time.now(), self.fr_fix))
+	def publish_cob(self, cob):
+		""" Centre of Base array publisher 
+			Input:  cob: list of cob along trajectory """
+		
+		self.cob_pub_.publish(list_to_marker_array(cob, rospy.Time.now(), self.fr_fix))

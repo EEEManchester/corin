@@ -759,8 +759,8 @@ class PathPlanner:
 		elif (self.T_GND_X_CHIM):
 			do_wall = self.di_wall
 
-		print self.W_GND, self.W_WALL, self.W_CHIM
-		print self.T_GND_X_WALL, self.T_WALL_X_GND, self.T_GND_X_CHIM, self.T_CHIM_X_GND
+		# print self.W_GND, self.W_WALL, self.W_CHIM
+		# print self.T_GND_X_WALL, self.T_WALL_X_GND, self.T_GND_X_CHIM, self.T_CHIM_X_GND
 		
 		gphase_intv  = [] 						# intervals in which gait phase changes
 		world_X_base = []
@@ -770,7 +770,7 @@ class PathPlanner:
 
 		v3cp_prev = self.Robot.P6c.world_X_base[0:3].copy()	# previous CoB position
 		v3wp_prev = self.Robot.P6c.world_X_base[3:6].copy()	# previous CoB orientation
-		world_X_base.append(self.Robot.P6c.world_X_base.flatten())
+		# world_X_base.append(self.Robot.P6c.world_X_base.flatten())
 
 		## Instantiate leg transformation class & append initial footholds
 		for j in range (0, 6):
@@ -828,7 +828,7 @@ class PathPlanner:
 					break
 
 			## Stack to list next CoB location
-			world_X_base.append(P6d_world_X_base.reshape(1,6))
+			world_X_base.append(P6d_world_X_base.flatten())
 			gphase_intv.append(i)
 			print 'qbp: ', np.round(P6d_world_X_base.reshape(1,6),3)
 
@@ -1071,9 +1071,8 @@ class PathPlanner:
 			base_path.W.xp = np.vstack((base_path.W.xp, final_wp))
 			base_path.W.xv = np.vstack((base_path.W.xv, final_wv))
 			base_path.W.xa = np.vstack((base_path.W.xa, final_wa))
-		# 	print n, ' Extend trajectory'
-
-		# Reset to default NRP
+		
+		# Reset to default NRP and states
 		if (self.T_WALL_X_GND):
 			print 'Resetting NRP'
 			for j in range(0,6):
@@ -1176,7 +1175,7 @@ class PathPlanner:
 		
 		return base_path
 
-	def post_process_path(self,path, Robot):
+	def post_process_path(self,path, qi):
 		""" Identifies motion primitive from path, introduce transition 
 			routines, and call foothold for the respective sections 	"""
 		""" Input: 	1) path -> path in grid format
@@ -1404,8 +1403,9 @@ class PathPlanner:
 		
 		## Transform path from global to local frame
 		for i in range(1,tspan):
-			motion_plan.qb.X.xp[i] = motion_plan.qb.X.xp[i] - motion_plan.qb.X.xp[0]
+			motion_plan.qb.X.xp[i] = motion_plan.qb.X.xp[i] - motion_plan.qb.X.xp[0]	
 		motion_plan.qb.X.xp[0] = motion_plan.qb.X.xp[0] - motion_plan.qb.X.xp[0]
+		
 		# print motion_plan.qbp
 		# write to csv file
 		# with open('trajectory.csv', 'wb') as csvfile:
@@ -1413,7 +1413,35 @@ class PathPlanner:
 		# 	for i in range(0,len(x_cob.t)):
 		# 		data = np.hstack((x_cob.t[i],x_cob.xp[i],x_cob.xv[i],x_cob.xa[i],w_cob.t[i],w_cob.xp[i],w_cob.xv[i],w_cob.xa[i]))
 		# 		csvwriter.writerow(data)
-		# print motion_plan.f_base_X_foot[3].xp
+		
+		## Regenerate base path
+		print 'mbp ', motion_plan.qbp
+		print 'qi ',qi
+		x_cob = np.zeros(3)# qi[:3].flatten()
+		w_cob = qi[3:6].flatten()
+
+		t_cob = np.zeros(1)
+		for i in range(0,len(motion_plan.qbp)):
+			x_cob_local = motion_plan.qbp[i][:3] - qi[:3]#motion_plan.qbp[0][:3]
+			w_cob_local = motion_plan.qbp[i][3:6]
+
+			x_cob = np.vstack((x_cob, x_cob_local))
+			w_cob = np.vstack((w_cob, w_cob_local))
+			t_cob = np.hstack((t_cob, (i+1)*GAIT_TPHASE))
+		print x_cob + qi[:3]
+		print t_cob
+		path_generator = Pathgenerator.PathGenerator()
+		path_generator.V_MAX = path_generator.W_MAX = 10
+		path = path_generator.generate_base_path(x_cob, w_cob, CTR_INTV, t_cob)
+		
+		# Plot.plot_2d(path.X.t,path.X.xp)
+		# fig, ax = plt.subplots()
+		# ax.plot(motion_plan.qb.X.t, motion_plan.qb.X.xp, label='x');
+		# ax.plot(path.X.t, path.X.xp, label='y');
+		# plt.grid('on');
+		# plt.show()
+		motion_plan.qb = path
+
 		return motion_plan
 
 	def generate_motion_plan(self, Robot, **options):
@@ -1421,7 +1449,7 @@ class PathPlanner:
 
 		# Duplicate robot class instant
 		self.Robot.duplicate_self(Robot)
-
+		print 'before ', Robot.P6c.world_X_base.flatten()
 		# Generate path given start and end location on map
 		if (options.get("start")):
 			start = options.get("start")
@@ -1468,7 +1496,7 @@ class PathPlanner:
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 
 		## Split path according to motion primitive
-		return self.post_process_path(list_gpath, Robot)
+		return self.post_process_path(list_gpath, Robot.P6c.world_X_base.flatten())
 
 ## ================================================================================================ ##
 ## 												TESTING 											##

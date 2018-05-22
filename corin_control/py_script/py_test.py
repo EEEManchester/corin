@@ -219,8 +219,12 @@ def in_hull(points, x):
 # x = np.random.rand(n_dim)
 
 Z = np.array([[0.,0.],[2.,0.],[0.,2.],[2,2]])
-x = np.array([1,0])
+x = np.array([1,0,5,6,4,1])
+# print x[:3]
+t_cob = np.zeros(1)
 
+t_cob = np.hstack((t_cob,1))
+print t_cob
 # x_out = (in_hull(Z, x))
 # print x_out
 # print np.sum(x_out)

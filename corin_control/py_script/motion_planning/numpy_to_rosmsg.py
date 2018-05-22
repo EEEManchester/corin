@@ -129,7 +129,7 @@ def array_to_marker_array(path_arr, stamp=None, frame_id=None):
 
 	return mark_array
 
-def list_to_marker_array(path_arr, stamp=None, frame_id=None):
+def foothold_list_to_marker_array(path_arr, stamp=None, frame_id=None):
 	""" Converts custom marker list to nav_msgs/Path """
 
 	## Define Variables ##
@@ -186,6 +186,47 @@ def list_to_marker_array(path_arr, stamp=None, frame_id=None):
 				
 			# stack into array
 			mark_array.markers.append(mark)
+
+	return mark_array
+
+def list_to_marker_array(path_arr, stamp=None, frame_id=None):
+	""" Converts custom marker list to nav_msgs/Path """
+
+	## Define Variables ##
+	mark_array = MarkerArray()
+
+	## assumes that footholds array are of the same size
+	
+	for i in range (0,len(path_arr)):
+		xb = path_arr[i].flatten()
+		mark = Marker()
+
+		if stamp is not None:
+			mark.header.stamp = stamp
+		if frame_id is not None:
+			mark.header.frame_id = frame_id
+
+		mark.type = 2
+		mark.id = i 
+		mark.pose.position.x = xb[0]
+		mark.pose.position.y = xb[1]
+		mark.pose.position.z = xb[2]
+		mark.pose.orientation.x = 0.0;
+		mark.pose.orientation.y = 0.0;
+		mark.pose.orientation.z = 0.0;
+		mark.pose.orientation.w = 1.0;
+		mark.scale.x = 0.015
+		mark.scale.y = 0.015
+		mark.scale.z = 0.015
+		mark.color.a = 1.0; # transparency level
+		
+		# colour scheme
+		mark.color.r = 1.0;
+		mark.color.g = 0.0;
+		mark.color.b = 0.0;
+					
+		# stack into array
+		mark_array.markers.append(mark)
 
 	return mark_array
 ## ======================================================================================================================================== ##
