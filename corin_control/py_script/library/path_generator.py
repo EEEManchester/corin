@@ -86,8 +86,8 @@ class PathGenerator():
 			Output:	BaseTrajectory() array of linear translation and angular
 					rotation points 												"""
 
-		# SplineGenerator = Bspline.SplineGenerator()	# biezer spline generator
-		SplineGenerator = Pspline.SplineGenerator() # cubic polynomial spline generator 
+		SplineGenerator = Bspline.SplineGenerator()	# biezer spline generator
+		# SplineGenerator = Pspline.SplineGenerator() # cubic polynomial spline generator 
 
 		# generate linear or angular via points if size mismatch
 		x_cob, w_cob, t_cob = self.auto_generate_points(x_cob, w_cob, t_cob)
@@ -150,13 +150,17 @@ class PathGenerator():
 
 			# vector from origin to travel path midpoint
 			if (type=='parabolic'):
-				pdiv = np.array([0.125, 0.5, 0.875]) 		# point division
+				# pdiv = np.array([0.1, 0.5, 0.9]) 		# point division
+				# hdiv = np.array([0.6*sh, sh, 0.6*sh]) 		# height division
+				# tdiv = np.array([0., 0.24*ctime, 0.5*ctime, 0.76*ctime, ctime ])
+				pdiv = np.array([0.1, 0.5, 1.0]) 		# point division
 				hdiv = np.array([0.6*sh, sh, 0.6*sh]) 		# height division
-				tdiv = np.array([0., 0.25*ctime, 0.5*ctime, 0.75*ctime, ctime ])
+				tdiv = np.array([0., 0.24*ctime, 0.5*ctime, 0.76*ctime, ctime ])
+
 			elif (type == 'trapezoidal'):
 				pdiv = np.array([0., 0.12, 0.5, 0.88, 1.])
 				hdiv = np.array([0.9*sh, sh, sh, sh, 0.9*sh])
-				tdiv = np.array([0., 0.3*ctime, 0.4*ctime, 0.5*ctime, 0.6*ctime, 0.7*ctime, ctime ])
+				tdiv = np.array([0., 0.32*ctime, 0.4*ctime, 0.5*ctime, 0.6*ctime, 0.68*ctime, ctime ])
 
 			A = np.zeros((1,3))
 
@@ -216,16 +220,23 @@ class PathGenerator():
 
 # sp = np.array([0., 0.1661,  0.2352])
 # ep = np.array([0., 0.1269,  0.3437])
-sn = np.array([0,-1.,0,])
+sn = np.array([0,0.,1,])
 
-sp = np.array([0.115,  0.12,  0.27])
-ep = np.array([0.115,  0.12,  0.33 ])
+sp = np.array([0.115,  -0.05,  -0.1])
+ep = np.array([0.115,  0.05,  -0.1 ])
 
 phase = 1
 ### Test scripts
 planner = PathGenerator()
-# cxp, tdiv = planner.interpolate_leg_path(sp, ep, sn, phase)
+cxp, tdiv = planner.interpolate_leg_path(sp, ep, sn, phase, False, GAIT_TPHASE)
 # print np.round(cxp,4)	
+# print tdiv
+data = planner.generate_leg_path(cxp, tdiv, CTR_INTV)
+path = TrajectoryPoints(data)
+# Plot.plot_2d(path.xp[:,1], path.xp[:,2])
+# Plot.plot_3d(path.xp[:,0], path.xp[:,1], path.xp[:,2])
+# print len(data[0])
+
 
 x_cob = np.array([.0,.0,BODY_HEIGHT])
 w_cob = np.array([.0,.0,.0])

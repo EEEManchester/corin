@@ -17,7 +17,7 @@ import path_generator
 import gait_class as Gaitgen						# class for gait coordinator
 
 import plotgraph as Plot 							# plot library
-
+import matplotlib.pyplot as plt
 class LegClass:
 	#common base class for Leg
 	def __init__(self, name):
@@ -122,7 +122,12 @@ class LegClass:
 		self.xspline = TrajectoryPoints(self.Path.generate_leg_path(wcp, td, tn))
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)
-		# if (self.number==1):
+		# if (self.number==0):
+		# 	print 'slength: ', self.spline_length
+		# 	fig, ax = plt.subplots()
+		# 	ax.plot(self.xspline.xp, label='vel');
+		# 	plt.grid('on');
+		# 	plt.show()
 			# print 'dwXb: ', np.round(XD_world_base_X_foot,4)#self.XH_world_X_base[:3,3],4)
 			# print 'cp: ', np.round(wcp,4)
 			
@@ -229,13 +234,13 @@ class LegClass:
 			if (BOUND_FACTOR < r_state):
 				bound_violate = True
 		
-		# if (self.number == 2):
+		# if (self.number == 0):
 		# 	print 'BL_mag : ', mag_nom_X_ee, np.round(r_state,3)
 		# 	print 'BL_bXA : ', np.round(self.XHd.world_base_X_AEP[:3,3],4)
 		# 	print 'BL_bXN : ', np.round(world_base_X_NRP[:3,3].flatten(),4)
 		# 	print 'BL_bXf : ', np.round(world_base_X_foot[:3,3].flatten(),4)
 		# 	print 'BL_NXf : ', np.round(v3_NRP_X_foot.flatten(),4)
-			# print '-------------------------------------------'
+		# 	print '-------------------------------------------'
 		return bound_violate
 
 	## Kinematic functions
@@ -271,18 +276,19 @@ class LegClass:
 
 		## Variable mapping ##
 		i = self.spline_counter
-		try:
+		# try:
 
-			self.XHd.update_coxa_X_foot(self.qspline.xp[i])
-			self.V6d.coxa_X_foot[:3]  = self.xspline.xv[i].reshape(3,1)
-			self.A6d.coxa_X_foot[:3]  = self.xspline.xa[i].reshape(3,1)
+		self.XHd.update_coxa_X_foot(self.qspline.xp[i])
+		self.V6d.coxa_X_foot[:3]  = self.xspline.xv[i].reshape(3,1)
+		self.A6d.coxa_X_foot[:3]  = self.xspline.xa[i].reshape(3,1)
 
-			self.spline_counter += 1
-
-			return True
-		except:
+		self.spline_counter += 1
+		if (self.spline_counter == self.spline_length):
 			self.feedback_state = 2
-			return False
+		return True
+		# except:
+		# 	self.feedback_state = 2
+		# 	return False
 
 	def duplicate_self(self, leg):
 		""" Duplicates leg state by creating local copy of input leg """

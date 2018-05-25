@@ -695,7 +695,7 @@ class PathPlanner:
 		def set_motion_plan():
 			## Set MotionPlan class
 			motion_plan = MotionPlan()
-			motion_plan.set_base_path(self.Robot.P6c.world_X_base.copy(), base_path, world_X_base)
+			motion_plan.set_base_path(self.Robot.P6c.world_X_base.copy(), base_path, world_X_base, gait_phase)
 			motion_plan.set_footholds(world_X_footholds, base_X_footholds, world_base_X_NRP)
 			motion_plan.set_gait(self.Robot.Gait.np, self.Robot.Gait.np)
 
@@ -769,6 +769,7 @@ class PathPlanner:
 		# print self.T_GND_X_WALL, self.T_WALL_X_GND, self.T_GND_X_CHIM, self.T_CHIM_X_GND
 		
 		gphase_intv  = [] 						# intervals in which gait phase changes
+		gait_phase	 = []
 		world_X_base = []
 		world_X_footholds = [None]*6
 		base_X_footholds  = [None]*6
@@ -791,6 +792,7 @@ class PathPlanner:
 		## Cycle through trajectory
 		while (i != len(base_path.X.t)):
 			# print i, ' Gait phase ', self.Robot.Gait.cs 
+			leg_exceed = None
 			bound_exceed = False 	# reset suspension flag
 			ig = i 					# last count which gait changes
 
@@ -820,6 +822,7 @@ class PathPlanner:
 																					self.Robot.Leg[j].XHd.world_base_X_NRP)
 							if (bound_exceed == True):
 								print 'bound exceed on ', j, ' at n=', i
+								leg_exceed = j
 								break
 
 					if (bound_exceed is True):
@@ -836,6 +839,7 @@ class PathPlanner:
 			## Stack to list next CoB location
 			world_X_base.append(P6d_world_X_base.flatten())
 			gphase_intv.append(i)
+			gait_phase.append(self.Robot.Gait.cs)
 			print 'qbp:: ', np.round(P6d_world_X_base.reshape(1,6),3)
 
 			## Set foothold for legs in transfer phase
@@ -1042,10 +1046,12 @@ class PathPlanner:
 					# 	print '--------------------------------------------'
 
 			## Alternate gait phase
-			self.Robot.Gait.change_phase()
+			# self.Robot.Gait.change_phase()
+			self.Robot.Gait.change_exceeded_phase(leg_exceed)
 			v3cp_prev = v3cp.copy()
 			v3wp_prev = v3wp.copy()
-
+			print self.Robot.Gait.cs
+			# raw_input('change')
 		# Replace last footholds with default ground NRP
 		# if (self.T_WALL_X_GND is True or self.T_CHIM_X_GND is True):
 		# 	KDL = kdl.KDL()
@@ -1430,7 +1436,7 @@ class PathPlanner:
 		# 		csvwriter.writerow(data)
 		
 		## Regenerate base path
-		# print 'mbp ', motion_plan.qbp
+		print 'mbp ', motion_plan.qbp
 		# print 'qi ',qi
 		x_cob = np.zeros(3)# qi[:3].flatten()
 		w_cob = qi[3:6].flatten()
@@ -1449,10 +1455,12 @@ class PathPlanner:
 		path_generator.V_MAX = path_generator.W_MAX = 10
 		path = path_generator.generate_base_path(x_cob, w_cob, CTR_INTV, t_cob)
 		
+		# print len(path.X.t)
 		# Plot.plot_2d(path.X.t,path.X.xp)
 		# fig, ax = plt.subplots()
 		# ax.plot(motion_plan.qb.X.t, motion_plan.qb.X.xp, label='x');
-		# ax.plot(path.X.t, path.X.xp, label='y');
+		# ax.plot(path.X.xp, label='vel');
+		# ax.plot(path.X.t, path.X.xa, label='acc');
 		# plt.grid('on');
 		# plt.show()
 		motion_plan.qb = path

@@ -304,26 +304,28 @@ class SplineGenerator:
 		ca = [] 	# output array array
 
 		## Populate matrix for calculating intermediate velocity with via points (pg. 171)
-
 		if (sz>0):
 			for i in range(0,sz):
 				T0 = t[i+1]-t[i]
 				T1 = t[i+2]-t[i+1]
 
 				# Compute A
-				if (i-1+0 >= 0): A[i][i-1+0] = T1 	# skip first item
+				if (i-1+0 >= 0): 
+					A[i][i-1+0] = T1 	# skip first item
 				A[i][i-1+1] = 2*(T0+T1)
-				try:	A[i][i-1+2] = T0
-				except: pass 	# skip last item
+				try:	
+					A[i][i-1+2] = T0
+				except: 
+					pass 	# skip last item
 
 				# Compute C - change to 3D
-				# C[i] = 3*( T0**2*(x[i+2]-x[i+1]) + T1**2*(x[i+1]-x[i]) )/(T0*T1) 
-
 				for j in range(0,3):
 					C[i][j] = 3*( T0**2*(x[i+2][j]-x[i+1][j]) + T1**2*(x[i+1][j]-x[i][j]) )/(T0*T1) 
 
-					if (i==0):		C[i][j] = C[i][j] - T1*v0[0][j]
-					elif(i==sz-1):	C[i][j] = C[i][j] - T0*vf[0][j]
+					if (i==0):		
+						C[i][j] = C[i][j] - T1*v0[0][j]
+					elif(i==sz-1):	
+						C[i][j] = C[i][j] - T0*vf[0][j]
 			
 			## Solve for v
 			v = linalg.solve(A,C)
@@ -359,8 +361,8 @@ class SplineGenerator:
 			if (t[i+1]==t[-1]):	
 				lv = 0.
 				nv = 1
-				
-			for tk in np.linspace(t[i],t[i+1]-lv,(t[i+1]-t[i])/tint+nv):
+			
+			for tk in np.linspace(t[i], t[i+1]-lv, np.round((t[i+1]-t[i])/tint+nv)):
 				td = tk - t[i]
 				qpx = a0x + a1x*td + a2x*td**2 + a3x*td**3
 				qvx = a1x + 2*a2x*td + 3*a3x*td**2
@@ -380,8 +382,8 @@ class SplineGenerator:
 				cp.append( [qpx,qpy,qpz]) 
 				cv.append( [qvx,qvy,qvz]) 
 				ca.append( [qax,qay,qaz]) 
-		
-
+		# print len(ct)
+		# print ct
 		return ct,cp,cv,ca
 
 	def compute_time_intervals(self, q):
@@ -428,9 +430,9 @@ class SplineGenerator:
 		tx = np.zeros(len(x)+2)		# time interval array
 		for i in range(0,3):
 			cx[:,i], tx = self.spline_1D_acc(x[:,i].flatten(), t)
-
-		return self.spline_3D(x, t, tn)	# zero initial & final velocity
-		# return self.spline_3D(cx, tx, tn) 	# zero initial & final velocity & acceleration
+		
+		# return self.spline_3D(x, t, tn)	# zero initial & final velocity
+		return self.spline_3D(cx, tx, tn) 	# zero initial & final velocity & acceleration
 
 	
 ## ================================================================================================ ##

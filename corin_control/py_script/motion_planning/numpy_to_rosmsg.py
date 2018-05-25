@@ -25,7 +25,25 @@ from visualization_msgs.msg import MarkerArray
 from sensor_msgs.msg import PointCloud2, PointField
 ## JointStates
 from sensor_msgs.msg import JointState
+## Pose
+from geometry_msgs.msg import Pose
 
+## ======================================================================================================================================== ##
+## 																	Pose																	##
+## ======================================================================================================================================== ##
+def array_to_pose(data):
+	""" converts numpy Re^(6) to geometry_msgs/Pose, euler angles used """
+
+	pose = Pose()
+	pose.position.x = data.item(0)
+	pose.position.y = data.item(1)
+	pose.position.z = data.item(2)
+	pose.orientation.x = data.item(3)
+	pose.orientation.y = data.item(4)
+	pose.orientation.z = data.item(5)
+
+	return pose
+	
 ## ======================================================================================================================================== ##
 ## 																	Path																	##
 ## ======================================================================================================================================== ##

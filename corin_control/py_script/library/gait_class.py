@@ -71,6 +71,26 @@ class GaitClass:
 			self.np = 0 if (self.gd == 1) else 5
 			self.cs = self.phase[self.np]
 
+	def change_exceeded_phase(self, leg=None):
+		""" Change the input leg to transfer """
+
+		self.update_phase()
+
+		if (leg is None):
+			try:
+				self.np = self.np + self.gd
+				self.cs = self.phase[self.np]
+			except IndexError:
+				# print 'index error'
+				self.np = 0 if (self.gd == 1) else 5
+				self.cs = self.phase[self.np]
+		else:
+			for i in range(0, len(gait.phase)):
+				if (gait.phase[i][leg] == 1):
+					self.cs = gait.phase[i]
+					self.np = i
+					# print 'found: ', gait.phase[i]
+
 	def support_mode(self):
 		""" Sets robot to full support mode and
 			updates previous state for continuation """
@@ -95,9 +115,14 @@ class GaitClass:
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-gait = GaitClass(1)
+gait = GaitClass(3)
 # print gait.cs
-
+leg = 1
+for i in range(0, len(gait.phase)):
+	print 'checking: ', gait.phase[i]
+	
+	if (gait.phase[i][leg] == 1):
+		print 'found: ', gait.phase[i]
 # for i in range(0,3):
 # 	gait.change_phase()
 # 	print gait.cs

@@ -224,8 +224,24 @@ x = np.array([1,0,5,6,4,1])
 t_cob = np.zeros(1)
 
 t_cob = np.hstack((t_cob,1))
-print t_cob
+
 # x_out = (in_hull(Z, x))
 # print x_out
 # print np.sum(x_out)
 # print np.dot(Z.T,x_out.reshape(4,1))
+
+a = ['test', 'corin']
+a = [1,2,3]
+b = [4,5,6]
+
+a = b
+b = [9,9,9]
+
+
+ti1 = 0.4
+ti2 = 0.50
+lv = 0.02
+nv = 0.
+tint = 0.02
+print ti1,ti2-lv, np.round((ti2-ti1)/tint+nv)
+print np.linspace(ti1,ti2-lv, np.round((ti2-ti1)/tint+nv))

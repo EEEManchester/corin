@@ -5,6 +5,7 @@ __version__ = '1.0'
 __author__  = 'Wei Cheah'
 
 import sys; sys.dont_write_bytecode = True
+from itertools import cycle
 
 ## Personal libraries
 from library import *			# library modules to include
@@ -27,6 +28,9 @@ from corin_control.srv import UiState 	# NOT USED
 
 ## Robotis ROS msgs for joint control
 from robotis_controller_msgs.msg import SyncWriteMultiFloat
+
+from gazebo_msgs.msg import ModelStates
+from geometry_msgs.msg import Pose
 
 #####################################################################
 
@@ -73,6 +77,17 @@ class CorinManager:
 		""" user interface control state """
 		self.ui_state = msg.data.lower()
 		
+	def robot_state_callback(self, msg):
+		""" robot state from gazebo """
+		idx = msg.name.index(ROBOT_NS)
+		rpy = np.array(euler_from_quaternion([msg.pose[idx].orientation.w, msg.pose[idx].orientation.x,
+												msg.pose[idx].orientation.y, msg.pose[idx].orientation.z], 'sxyz'))
+		self.Robot.P6c.world_X_base[0] = msg.pose[idx].position.x + 0.36
+		self.Robot.P6c.world_X_base[1] = msg.pose[idx].position.y + 0.39
+		self.Robot.P6c.world_X_base[2] = msg.pose[idx].position.z
+		self.Robot.P6c.world_X_base[3] = rpy.item(0)
+		self.Robot.P6c.world_X_base[4] = rpy.item(1)
+		self.Robot.P6c.world_X_base[5] = rpy.item(2)
 
 	def __initialise__(self):
 		""" Initialises robot and classes """
@@ -151,6 +166,13 @@ class CorinManager:
 		elif (self.interface == 'robotis'):
 			self.joint_sub_  = rospy.Subscriber('robotis/present_joint_states', JointState, self.joint_state_callback, queue_size=5)
 
+		## State controller comparison
+		if (self.interface == 'gazebo'):
+			self.robot_sub_ = rospy.Subscriber('/gazebo/model_states', ModelStates, self.robot_state_callback, queue_size=5)
+			self.rstate_cs_pub_ = rospy.Publisher(ROBOT_NS + '/cs', Pose, queue_size=1)
+			self.rstate_ds_pub_ = rospy.Publisher(ROBOT_NS + '/ds', Pose, queue_size=1)
+			# self.rstate_cs_pub_ = rospy.Publisher(ROBOT_NS + '/cs', Pose, queue_size=1)
+
 		## User Interface
 		self.ui_control_ = rospy.Subscriber(ROBOT_NS + '/ui_execute', String, self.ui_callback, queue_size=1)
 
@@ -199,6 +221,8 @@ class CorinManager:
 						self.joint_pub_[n].publish(qp)
 					elif (self.control_mode is "fast"):
 						pass
+				self.rstate_cs_pub_.publish(array_to_pose(self.Robot.P6c.world_X_base))
+				self.rstate_ds_pub_.publish(array_to_pose(self.Robot.P6d.world_X_base))
 
 			elif (self.interface == 'rviz'):
 				dqp = JointState()
@@ -383,10 +407,11 @@ class CorinManager:
 		## Variable mapping from motion plan
 		base_path = motion_plan.qb
 		world_X_base = motion_plan.qbp
+		gait_phase 	 = motion_plan.gait_phase 
 		w_base_X_NRP = motion_plan.f_world_base_X_NRP
 		world_X_footholds = motion_plan.f_world_X_foot
 		base_X_footholds  = motion_plan.f_base_X_foot
-		# print np.round(world_X_footholds[0].xp,4)
+
 		## Publish multiple times to ensure it is published 
 		for c in range(0,3):
 			self.Visualizer.publish_robot(wXbase_offset)
@@ -403,7 +428,11 @@ class CorinManager:
 		print 'wXb: ', len(world_X_base)
 		print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 		print 'Execute Path? '
-		self.ui_state = 'hold'
+		raw_input('cont')
+		self.ui_state = 'play'#'hold'
+
+		gait_stack = cycle(gait_phase)
+		self.Robot.Gait.cs = next(gait_stack)
 
 		# cycle through trajectory points until complete
 		i = 1 	# skip first point since spline has zero initial differential conditions
@@ -430,9 +459,12 @@ class CorinManager:
 			## overwrite - TC: use IMU data
 			self.Robot.XHc.world_X_base = self.Robot.XHd.world_X_base.copy()
 			self.Robot.XHc.base_X_world = self.Robot.XHd.base_X_world.copy()
-			self.Robot.P6c.world_X_base = self.Robot.P6d.world_X_base.copy()
+			# self.Robot.P6c.world_X_base = self.Robot.P6d.world_X_base.copy()
 			for j in range(0, self.Robot.active_legs):
 				self.Robot.Leg[j].P6_world_X_base = self.Robot.P6c.world_X_base.copy()
+			P6e_world_X_base = self.Robot.P6d.world_X_base - self.Robot.P6c.world_X_base
+			# print 'P6d: ', np.round(self.Robot.P6d.world_X_base.flatten(),3)
+			# print 'P6c: ', np.round(self.Robot.P6c.world_X_base.flatten(),3)
 			#########################################################################
 			self.Robot.suspend = False
 			## suppress trajectory counter as body support suspended
@@ -463,7 +495,8 @@ class CorinManager:
 			if (self.Robot.suspend != True):
 				cob_X_desired += v3cv*CTR_INTV
 				cob_W_desired += v3wv*CTR_INTV
-			print i, np.round(v3cp.flatten(),4)
+			# print i, i*CTR_INTV, np.round(v3cp.flatten(),4)
+			# print i, self.Robot.Leg[0].spline_counter
 			## ============================================================================================================================== ##
 			## Execution of command ##
 			## ==================== ##
@@ -546,8 +579,15 @@ class CorinManager:
 					## Determine foot position wrt base & coxa - REQ: world_X_foot position
 					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
-				# if (j==4):
-				# 	print 'bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3],4)
+
+					## Include correction
+					comp_world_X_base = self.update_world_X_base(self.Robot.P6d.world_X_base + P6e_world_X_base)
+					comp_base_X_world = np.linalg.inv(comp_world_X_base)
+
+					# self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
+					# self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
+				if (j==0):
+					print 'cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3],4)
 
 			## Task to joint space
 			qd = self.Robot.task_X_joint()	
@@ -570,7 +610,8 @@ class CorinManager:
 				# triggers only when all transfer phase legs complete and greater than zero
 				# > 0: prevents trigger during all leg support
 				if (transfer_total == leg_complete and transfer_total > 0 and leg_complete > 0):
-					self.Robot.alternate_phase()
+					self.Robot.alternate_phase(next(gait_stack))
+					
 					print i, self.Robot.Gait.cs, np.round(v3cp.flatten(),4)
 
 				## LOGGING: initialise variable and set respective data ##
@@ -662,7 +703,7 @@ class CorinManager:
 				print 'Planning path...'
 				self.Robot.support_mode = False
 
-				ps = (12,13); pf = (16,13)
+				ps = (12,13); pf = (25,13)
 				# ps = (8,13); pf = (12,13)	# Short straight Line
 				# ps = (8,13); pf = (72,13)	# Long straight Line - for chimney 63
 				# ps = (8,13); pf = (40,13)	# G2W - Left side up
@@ -749,3 +790,32 @@ class CorinManager:
 			print 'Robot Configuration Invalid!'
 		else:
 			self.publish_topics(qd)
+
+
+	def update_world_X_base(self, q):
+		# rotates in sequence x, y, z in world frame 
+		tx = q[0]
+		ty = q[1]
+		tz = q[2]
+		qx_sin = np.sin(q[3])
+		qy_sin = np.sin(q[4])
+		qz_sin = np.sin(q[5])
+		qx_cos = np.cos(q[3])
+		qy_cos = np.cos(q[4])
+		qz_cos = np.cos(q[5])
+
+		world_X_base = np.identity(4)
+		world_X_base[0,0] =  qz_cos*qy_cos
+		world_X_base[0,1] = -qz_sin*qx_cos + qz_cos*qy_sin*qx_sin
+		world_X_base[0,2] =  qz_sin*qx_sin + qz_cos*qy_sin*qx_cos
+		world_X_base[0,3] =  tx
+		world_X_base[1,0] =  qz_sin*qy_cos
+		world_X_base[1,1] =  qz_cos*qx_cos + qz_sin*qy_sin*qx_sin
+		world_X_base[1,2] = -qz_cos*qx_sin + qz_sin*qy_sin*qx_cos
+		world_X_base[1,3] =  ty
+		world_X_base[2,0] = -qy_sin
+		world_X_base[2,1] =  qy_cos*qx_sin
+		world_X_base[2,2] =  qy_cos*qx_cos
+		world_X_base[2,3] =  tz
+		
+		return world_X_base

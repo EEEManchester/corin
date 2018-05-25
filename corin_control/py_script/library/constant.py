@@ -121,16 +121,16 @@ LEG_STANCE  = initial_stance(STANCE_WIDTH,BODY_HEIGHT, STANCE_TYPE, TETA_F, TETA
 ## ================================================================ ##
 
 GAIT_TYPE 	 = 3 		# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
-GAIT_TPHASE	 = 1.4 		# period per gait phase
+GAIT_TPHASE	 = 1.2 		# period per gait phase
 BOUND_FACTOR = 1.05 	# boundary constraint for leg workplane space
 STEP_HEIGHT  = 0.05		# step height, z 	default 0.05
 LEG_CLEAR 	 = 0.08 		# clearance between leg workplane boundaries
 STEP_STROKE  = set_step_stroke(TRN_BASE_X_LEG, ROT_BASE_X_LEG, LEG_STANCE, LEG_CLEAR, 0.1)	# step size, x, 	default 0.07
 
-BASE_MAX_LINEAR_VELOCITY  = 0.025	# maximum base velocity, m/s - walking: 0.025
+BASE_MAX_LINEAR_VELOCITY  = 0.02	# maximum base velocity, m/s - walking: 0.025
 BASE_MAX_ANGULAR_VELOCITY = 0.01	# maximum base velocity, rad/s
 
-print STEP_STROKE
+# print STEP_STROKE
 
 ##########################################################################################################################################
 

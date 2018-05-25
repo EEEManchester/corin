@@ -184,11 +184,15 @@ class RobotState:
 			print 'Robot Stopping'
 			self.invalid = True
 
-	def alternate_phase(self):
+	def alternate_phase(self, new_phase=None):
 		""" change gait to next phase """
 		
-		self.Gait.change_phase()
-
+		if (new_phase is None):
+			self.Gait.change_phase()
+		else:
+			self.Gait.ps = self.Gait.cs
+			self.Gait.cs = new_phase
+			
 		# update robot leg phase_change
 		for j in range(0,6):
 			if (self.Gait.cs[j] == 1):
