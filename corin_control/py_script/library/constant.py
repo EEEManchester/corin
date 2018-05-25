@@ -109,7 +109,7 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 STANCE_WIDTH = 0.21		# ori: 0.21, chimney: 0.27, 0.31 for tripod
 BODY_HEIGHT  = 0.1		# ori: 0.10, chimney: 0.0
 # Offset for front and rear legs
-TETA_F = 40.;	
+TETA_F = 0.;	
 TETA_R = -TETA_F;
 LEG_OFFSET = [TETA_F, 0., TETA_R, -TETA_F, 0., -TETA_R]
 ### Leg default position, SCS
@@ -120,8 +120,8 @@ LEG_STANCE  = initial_stance(STANCE_WIDTH,BODY_HEIGHT, STANCE_TYPE, TETA_F, TETA
 ##                       Gait parameters 	 						##
 ## ================================================================ ##
 
-GAIT_TYPE 	 = 4 		# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
-GAIT_TPHASE	 = 2.0 		# period per gait phase
+GAIT_TYPE 	 = 3 		# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+GAIT_TPHASE	 = 1.4 		# period per gait phase
 BOUND_FACTOR = 1.05 	# boundary constraint for leg workplane space
 STEP_HEIGHT  = 0.05		# step height, z 	default 0.05
 LEG_CLEAR 	 = 0.08 		# clearance between leg workplane boundaries

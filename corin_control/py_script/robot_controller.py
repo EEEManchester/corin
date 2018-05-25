@@ -38,14 +38,14 @@ class CorinManager:
 		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.Action	= control_interface.ControlInterface()	# control action class
 		# self.Map 	= grid_planner.GridPlanner('wall_demo_right')	# map class 
-		self.GridMap  = GridMap('hole_demo')
+		self.GridMap  = GridMap('flat')
 		self.PathPlan = PathPlanner(self.GridMap)
 		# self.Gait = gait_class.GaitClass(GAIT_TYPE) 		# gait class
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "rviz"		# interface to control: gazebo, rviz or robotis hardware
-		self.control_mode = "fast" 	# run controller in various mode: 1) normal, 2) fast
+		self.interface = "gazebo"		# interface to control: gazebo, rviz or robotis hardware
+		self.control_mode = "normal" 	# run controller in various mode: 1) normal, 2) fast
 
 		self.ui_state = "hold" 		# user interface for commanding motions
 		self.MotionPlan = MotionPlan()
@@ -662,9 +662,10 @@ class CorinManager:
 				print 'Planning path...'
 				self.Robot.support_mode = False
 
+				ps = (12,13); pf = (16,13)
 				# ps = (8,13); pf = (12,13)	# Short straight Line
-				ps = (8,13); pf = (42,13)	# Long straight Line - for chimney 63
-				# ps = (8,13); pf = (8,18)	# G2W - Left side up
+				# ps = (8,13); pf = (72,13)	# Long straight Line - for chimney 63
+				# ps = (8,13); pf = (40,13)	# G2W - Left side up
 				# ps = (8,13); pf = (18,6)	# G2W - Right side up
 				# ps = (8,13); pf = (35,13)	# Left side up and down again
 

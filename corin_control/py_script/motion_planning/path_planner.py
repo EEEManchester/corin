@@ -705,7 +705,7 @@ class PathPlanner:
 			v3_dv = (v3cp - v3cp_prev).flatten() 			# direction vector from previous to current CoB
 			v3_pv = v3_dv - (np.dot(v3_dv,snorm))*snorm 	# project direction vector onto plane
 			m1_dv = np.linalg.norm(v3_pv) 					# magnitude of direction vector
-			return v3_pv/m1_dv 				# unit vector direction
+			return v3_pv/m1_dv 								# unit vector direction
 
 		def compute_ground_footholds():
 			""" Computes NRP position for ground footholds """
@@ -715,7 +715,7 @@ class PathPlanner:
 			world_ground_X_femur = mX(world_ground_X_base, self.Robot.Leg[j].XHd.base_X_femur)
 
 			hy = world_ground_X_femur[2,3] - L3 - 0. 		# h_femur_X_tibia
-			yy = np.sqrt(L2**2 - hy**2) 					# world horizontal distance from femur to foot
+			yy = np.sqrt((L2**2 - hy**2)) 				# world horizontal distance from femur to foot
 			by = np.cos(v3wp[0])*(COXA_Y + L1) 				# world horizontal distance from base to femur 
 			sy = by + yy									# y_base_X_foot - leg frame
 			py = sy*np.sin(np.deg2rad(ROT_BASE_X_LEG[j]+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
@@ -728,6 +728,12 @@ class PathPlanner:
 			self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4] = mX(rot_Z(v3wp[2]), temp)
 			self.Robot.Leg[j].XHd.world_X_NRP[:3,3] = np.round( (v3cp + self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4]).flatten(),4)
 			
+			# if (j==4):
+			print j, ' w_gXb: ', np.round(world_ground_X_base[:3,3],4)
+			print j, ' w_gXf: ', np.round(world_ground_X_femur[:3,3],4)
+			print j, hy, yy, by
+			print j, sy, py
+
 		def compute_wall_footholds(d_wall):
 			""" Compute footholds for legs in wall contact """
 
@@ -830,7 +836,7 @@ class PathPlanner:
 			## Stack to list next CoB location
 			world_X_base.append(P6d_world_X_base.flatten())
 			gphase_intv.append(i)
-			print 'qbp: ', np.round(P6d_world_X_base.reshape(1,6),3)
+			print 'qbp:: ', np.round(P6d_world_X_base.reshape(1,6),3)
 
 			## Set foothold for legs in transfer phase
 			for j in range (0, 6):
@@ -839,7 +845,12 @@ class PathPlanner:
 					## 1) Update NRP
 					if (self.W_WALL):
 						## Identify sides for ground or wall contact based on body roll, 1 = wall left, -1 = wall right
-						delta_w = 1 if (base_path.W.xp[-1][0] >= 0.) else -1 # - base_path.W.xp[0]
+						if (self.T_GND_X_WALL):
+							delta_w = 1 if (base_path.W.xp[-1][0] >= 0.) else -1
+						elif (self.T_WALL_X_GND):
+							delta_w = 1 if (base_path.W.xp[0][0] > 0.) else -1
+						else:
+							delta_w = 1 if (P6d_world_X_base[3] > 0.) else -1
 
 						# Update Robot's base distance travelled from origin for transition
 						if (self.T_GND_X_WALL or self.T_WALL_X_GND):
@@ -865,6 +876,7 @@ class PathPlanner:
 										self.Robot.Leg[j].XHd.update_base_X_NRP(KDL.leg_IK(LEG_STANCE[j])) 
 										self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] = -delta_cob + self.Robot.Leg[j].XHd.base_X_NRP[:3,3]
 										self.Robot.Leg[j].XHd.world_X_NRP[:3,3] = np.round(v3cp.flatten() + self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],2)
+							
 						else:
 							if (j >= 3):
 								compute_wall_footholds(self.di_wall)
@@ -1015,12 +1027,12 @@ class PathPlanner:
 					base_X_footholds[j].t.append(i*CTR_INTV)
 					base_X_footholds[j].xp.append(self.Robot.Leg[j].XHd.base_X_AEP[:3,3:4].copy())
 					
-					if (j==1):
-						print 'v3:  ', np.round(v3_uv.flatten(),4)
-						print 'sn:  ', snorm
-						print j, ' wXf: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3], 4)
-						print j, ' wbXN:', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],4)
-						print j, ' wbXA:', np.round(self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3],4)
+					# if (j==1):
+					# 	print 'v3:  ', np.round(v3_uv.flatten(),4)
+					# 	print 'sn:  ', snorm
+					# 	print j, ' wXf: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3], 4)
+					# 	print j, ' wbXN:', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],4)
+					# 	print j, ' wbXA:', np.round(self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3],4)
 					# 	print j, ' bXN: ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],4)
 					# 	print j, ' bXA: ', np.round(self.Robot.Leg[j].XHd.base_X_AEP[:3,3],4)
 					# 	print j, ' cwf: ', np.round(mX(self.Robot.XHd.world_X_base[:3,:3], 
@@ -1100,7 +1112,10 @@ class PathPlanner:
 		print 'xi: ', xi, xf, qi, qf
 
 		if (ttype=='Gnd_X_Wall'):
-			print 'TR: g2w'
+			if (self.T_GND_X_WALL):
+				print 'TR: g2w'
+			elif (self.T_WALL_X_GND):
+				print 'TR: w2g'
 			# Generate ellipsoidal base trajectory
 			qrange = range(0,91,10)
 			delta_q = (qf-qi)/(len(qrange)-1)
@@ -1118,7 +1133,7 @@ class PathPlanner:
 			base_path = PathGenerator.generate_base_path(x_cob, w_cob, tn)
 
 		elif (ttype=='Wall_X_Gnd'):
-			print 'TR: w2g'
+			# print 'TR: w2g'
 			# Generate ellipsoidal base trajectory
 			qrange = range(90,-1,-10)
 			delta_q = (qf-qi)/(len(qrange)-1)
@@ -1415,8 +1430,8 @@ class PathPlanner:
 		# 		csvwriter.writerow(data)
 		
 		## Regenerate base path
-		print 'mbp ', motion_plan.qbp
-		print 'qi ',qi
+		# print 'mbp ', motion_plan.qbp
+		# print 'qi ',qi
 		x_cob = np.zeros(3)# qi[:3].flatten()
 		w_cob = qi[3:6].flatten()
 
@@ -1428,8 +1443,8 @@ class PathPlanner:
 			x_cob = np.vstack((x_cob, x_cob_local))
 			w_cob = np.vstack((w_cob, w_cob_local))
 			t_cob = np.hstack((t_cob, (i+1)*GAIT_TPHASE))
-		print x_cob + qi[:3]
-		print t_cob
+		# print x_cob + qi[:3]
+		# print t_cob
 		path_generator = Pathgenerator.PathGenerator()
 		path_generator.V_MAX = path_generator.W_MAX = 10
 		path = path_generator.generate_base_path(x_cob, w_cob, CTR_INTV, t_cob)
@@ -1458,6 +1473,8 @@ class PathPlanner:
 			list_gpath = self.find_base_path(start, end)
 
 			if (list_gpath is not None):
+				print 'Path Found!'
+				# raw_input('continue')
 				print 'Path: ', list_gpath
 				## High level preview
 				# gpath = nx.path_graph(list_gpath)

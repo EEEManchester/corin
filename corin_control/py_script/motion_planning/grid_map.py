@@ -390,7 +390,7 @@ class GridMap:
 					else:						# right wall longer
 						cost_d_lgw = rdist[0]
 			## Sum of cost
-			G.edges[e]['cost'] = cost_dist + cost_motion + cost_d_bh + cost_d_qr + cost_d_qp + cost_d_qy + cost_d_lgw*0.01
+			G.edges[e]['cost'] = cost_dist + cost_motion + (cost_d_bh + cost_d_qr + cost_d_qp + cost_d_qy) + cost_d_lgw*0.01
 
 		# nx.set_edge_attributes(G, 1, 'cost') 	# set cost based on vertical distance to next cell
 		
