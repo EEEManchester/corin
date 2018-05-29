@@ -24,6 +24,7 @@ class Vector6D:
 	""" 6D vector for robot """ 
 	def __init__(self):
 		self.world_X_base 	 = np.zeros(Column6D)
+		self.world_X_base_offset = np.zeros(Column6D)
 		self.world_X_LF_foot = np.zeros(Column6D)
 		self.world_X_LM_foot = np.zeros(Column6D)
 		self.world_X_LR_foot = np.zeros(Column6D)

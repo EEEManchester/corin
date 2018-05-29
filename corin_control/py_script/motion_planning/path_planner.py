@@ -729,10 +729,10 @@ class PathPlanner:
 			self.Robot.Leg[j].XHd.world_X_NRP[:3,3] = np.round( (v3cp + self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4]).flatten(),4)
 			
 			# if (j==4):
-			print j, ' w_gXb: ', np.round(world_ground_X_base[:3,3],4)
-			print j, ' w_gXf: ', np.round(world_ground_X_femur[:3,3],4)
-			print j, hy, yy, by
-			print j, sy, py
+			# print j, ' w_gXb: ', np.round(world_ground_X_base[:3,3],4)
+			# print j, ' w_gXf: ', np.round(world_ground_X_femur[:3,3],4)
+			# print j, hy, yy, by
+			# print j, sy, py
 
 		def compute_wall_footholds(d_wall):
 			""" Compute footholds for legs in wall contact """
@@ -840,7 +840,7 @@ class PathPlanner:
 			world_X_base.append(P6d_world_X_base.flatten())
 			gphase_intv.append(i)
 			gait_phase.append(self.Robot.Gait.cs)
-			print 'qbp:: ', np.round(P6d_world_X_base.reshape(1,6),3)
+			# print 'qbp:: ', np.round(P6d_world_X_base.reshape(1,6),3)
 
 			## Set foothold for legs in transfer phase
 			for j in range (0, 6):
@@ -1050,7 +1050,7 @@ class PathPlanner:
 			self.Robot.Gait.change_exceeded_phase(leg_exceed)
 			v3cp_prev = v3cp.copy()
 			v3wp_prev = v3wp.copy()
-			print self.Robot.Gait.cs
+			# print self.Robot.Gait.cs
 			# raw_input('change')
 		# Replace last footholds with default ground NRP
 		# if (self.T_WALL_X_GND is True or self.T_CHIM_X_GND is True):
@@ -1436,7 +1436,7 @@ class PathPlanner:
 		# 		csvwriter.writerow(data)
 		
 		## Regenerate base path
-		print 'mbp ', motion_plan.qbp
+		# print 'mbp ', motion_plan.qbp
 		# print 'qi ',qi
 		x_cob = np.zeros(3)# qi[:3].flatten()
 		w_cob = qi[3:6].flatten()
@@ -1449,8 +1449,7 @@ class PathPlanner:
 			x_cob = np.vstack((x_cob, x_cob_local))
 			w_cob = np.vstack((w_cob, w_cob_local))
 			t_cob = np.hstack((t_cob, (i+1)*GAIT_TPHASE))
-		# print x_cob + qi[:3]
-		# print t_cob
+		
 		path_generator = Pathgenerator.PathGenerator()
 		path_generator.V_MAX = path_generator.W_MAX = 10
 		path = path_generator.generate_base_path(x_cob, w_cob, CTR_INTV, t_cob)
@@ -1458,8 +1457,9 @@ class PathPlanner:
 		# print len(path.X.t)
 		# Plot.plot_2d(path.X.t,path.X.xp)
 		# fig, ax = plt.subplots()
-		# ax.plot(motion_plan.qb.X.t, motion_plan.qb.X.xp, label='x');
+		# ax.plot(motion_plan.qb.W.t, motion_plan.qb.W.xp, label='x');
 		# ax.plot(path.X.xp, label='vel');
+		# ax.plot(path.W.xp, label='vel');
 		# ax.plot(path.X.t, path.X.xa, label='acc');
 		# plt.grid('on');
 		# plt.show()

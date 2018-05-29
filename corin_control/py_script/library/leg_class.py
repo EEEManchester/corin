@@ -103,6 +103,10 @@ class LegClass:
 		# bpx, td = self.Path.interpolate_leg_path(self.XHc.base_X_foot[:3,3].flatten(), self.XHd.base_X_foot[:3,3].flatten(), snorm, phase, reflex, ctime, tn)
 
 		if (frame is 'world'):
+			# start = self.XHc.world_X_foot[0:3,3].copy()
+			# end   = self.XHd.world_X_foot[0:3,3].copy()
+			# wpt, td = self.Path.interpolate_leg_path(start, end, snorm, phase, reflex, ctime)
+
 			## Interpolate via points in world frame from base to foot
 			start = self.XHc.world_base_X_foot[:3,3].copy()
 			end   = mX(self.XH_world_X_base[:3,:3], self.XHd.base_X_foot[:3,3])
@@ -115,14 +119,21 @@ class LegClass:
 			for i in range (1, len(wpx)):
 				basXft = mX(np.transpose(self.XH_world_X_base[:3,:3]), wpx[i]) 	# transfrom from world to base frame
 				wcp[i] = mX(self.XHc.coxa_X_base, v3_X_m(basXft))[:3,3] 		# transform from base to leg frame
+
+			# if (self.number==5):
+			# 	print np.round(wpx,3)
+			# 	print np.round(wpt,3)
+
+
 		elif (frame is 'leg'):
 			wcp, td = self.Path.interpolate_leg_path(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3], 
 														self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3], 
 														snorm, phase, reflex, ctime)
+
 		self.xspline = TrajectoryPoints(self.Path.generate_leg_path(wcp, td, tn))
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)
-		# if (self.number==0):
+
 		# 	print 'slength: ', self.spline_length
 		# 	fig, ax = plt.subplots()
 		# 	ax.plot(self.xspline.xp, label='vel');

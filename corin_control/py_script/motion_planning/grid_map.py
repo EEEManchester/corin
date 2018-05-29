@@ -182,7 +182,9 @@ class GridMap:
 		else:
 			grid_p = (int(np.floor(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
 			# print 'snorm ', grid_p
-		
+		# if (j==0):
+		# 	print 'getting ', info
+		# 	print np.round(p,3), grid_p, self.Map.nodes[grid_p][info]
 		# Return cell characteristic
 		try:
 			return self.Map.nodes[grid_p][info]

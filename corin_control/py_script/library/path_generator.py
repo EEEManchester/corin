@@ -150,10 +150,10 @@ class PathGenerator():
 
 			# vector from origin to travel path midpoint
 			if (type=='parabolic'):
-				# pdiv = np.array([0.1, 0.5, 0.9]) 		# point division
+				pdiv = np.array([0.1, 0.5, 0.9]) 		# point division
 				# hdiv = np.array([0.6*sh, sh, 0.6*sh]) 		# height division
 				# tdiv = np.array([0., 0.24*ctime, 0.5*ctime, 0.76*ctime, ctime ])
-				pdiv = np.array([0.1, 0.5, 1.0]) 		# point division
+				# pdiv = np.array([0.1, 0.5, 1.0]) 		# point division
 				hdiv = np.array([0.6*sh, sh, 0.6*sh]) 		# height division
 				tdiv = np.array([0., 0.24*ctime, 0.5*ctime, 0.76*ctime, ctime ])
 
@@ -218,21 +218,20 @@ class PathGenerator():
 # ep = np.array([-0.115,  -0.3368, -0.0666])
 # sn = np.array([0.,     0.0998, 0.995])
 
-# sp = np.array([0., 0.1661,  0.2352])
-# ep = np.array([0., 0.1269,  0.3437])
+# sp = np.array([0.160, 0.134, -0.104])
+# ep = np.array([0.165, 0.139, -0.104])
 sn = np.array([0,0.,1,])
 
-sp = np.array([0.115,  -0.05,  -0.1])
-ep = np.array([0.115,  0.05,  -0.1 ])
+sp = np.array([0.115, -0.30, -0.104])
+ep = np.array([0.115,  0.28, -0.152 ])
 
 phase = 1
 ### Test scripts
 planner = PathGenerator()
 cxp, tdiv = planner.interpolate_leg_path(sp, ep, sn, phase, False, GAIT_TPHASE)
-# print np.round(cxp,4)	
-# print tdiv
-data = planner.generate_leg_path(cxp, tdiv, CTR_INTV)
-path = TrajectoryPoints(data)
+print cxp
+# data = planner.generate_leg_path(cxp, tdiv, CTR_INTV)
+# path = TrajectoryPoints(data)
 # Plot.plot_2d(path.xp[:,1], path.xp[:,2])
 # Plot.plot_3d(path.xp[:,0], path.xp[:,1], path.xp[:,2])
 # print len(data[0])
