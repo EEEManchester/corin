@@ -819,7 +819,8 @@ class PathPlanner:
 							self.Robot.Leg[j].XHd.world_base_X_foot = mX(world_X_base_rot, 
 																			self.Robot.Leg[j].XHd.base_X_foot)
 							bound_exceed = self.Robot.Leg[j].check_boundary_limit(self.Robot.Leg[j].XHd.world_base_X_foot,
-																					self.Robot.Leg[j].XHd.world_base_X_NRP)
+																					self.Robot.Leg[j].XHd.world_base_X_NRP,
+																					self.Robot.Gait.step_stroke)
 							if (bound_exceed == True):
 								print 'bound exceed on ', j, ' at n=', i
 								leg_exceed = j
@@ -947,7 +948,7 @@ class PathPlanner:
 					
 					## 3) Compute AEP wrt base and world frame					
 					self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + \
-																	(v3_uv*STEP_STROKE/2.)
+																	(v3_uv*self.Robot.Gait.step_stroke/2.)
 					self.Robot.Leg[j].XHd.base_X_AEP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
 																	self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3:4])
 					self.Robot.Leg[j].XHd.base_X_NRP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
@@ -980,7 +981,8 @@ class PathPlanner:
 							self.Robot.Leg[j].XHd.world_X_NRP[:3,3] = np.round( (v3cp + self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4]).flatten(),4)
 
 							## Recompute AEP wrt base and world frame					
-							self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + (v3_uv*STEP_STROKE/2.)
+							self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + \
+																			(v3_uv*self.Robot.Gait.step_stroke/2.)
 							self.Robot.Leg[j].XHd.base_X_AEP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
 																			self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3:4])
 							self.Robot.Leg[j].XHd.base_X_NRP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
@@ -1010,7 +1012,8 @@ class PathPlanner:
 							# 															self.Robot.Leg[j].XHd.base_X_NRP[:3,3:4])
 
 							## Recompute AEP wrt base and world frame					
-							self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + (v3_uv*STEP_STROKE/2.)
+							self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + \
+																			(v3_uv*self.Robot.Gait.step_stroke/2.)
 							self.Robot.Leg[j].XHd.base_X_AEP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
 																			self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3:4])
 							self.Robot.Leg[j].XHd.base_X_NRP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 

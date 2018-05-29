@@ -54,7 +54,7 @@ class LegClass:
 		self.P6_world_X_base = np.zeros((6,1))
 
 	## Update functions
-	def update_joint_state(self, P6_world_X_base, jointState, resetState):
+	def update_joint_state(self, P6_world_X_base, jointState, resetState, step_stroke):
 		""" Update current joint state of legs and forward transformations 			"""
 		""" Input: 	1) jointState -> joint angles 
 					2) resetState -> flag to set desired state as current state 	""" 
@@ -71,7 +71,7 @@ class LegClass:
 		# self.XHd.update_world_base_X_NRP(P6_world_X_base)
 		
 		## Check work envelope
-		bound_exceed = self.check_boundary_limit(self.XHc.world_base_X_foot, self.XHc.world_base_X_NRP)
+		bound_exceed = self.check_boundary_limit(self.XHc.world_base_X_foot, self.XHc.world_base_X_NRP, step_stroke)
 
 		## Resets state
 		if (resetState):
@@ -120,9 +120,9 @@ class LegClass:
 				basXft = mX(np.transpose(self.XH_world_X_base[:3,:3]), wpx[i]) 	# transfrom from world to base frame
 				wcp[i] = mX(self.XHc.coxa_X_base, v3_X_m(basXft))[:3,3] 		# transform from base to leg frame
 
-			# if (self.number==5):
-			# 	print np.round(wpx,3)
-			# 	print np.round(wpt,3)
+			if (self.number==5):
+				print np.round(wpx,3)
+				print np.round(wcp,3)
 
 
 		elif (frame is 'leg'):
@@ -204,11 +204,11 @@ class LegClass:
 		return error, self.Joint.qpd, self.Joint.qvd, self.Joint.qad 	# TEMP: change to normal (huh?)
 
 	
-	def check_boundary_limit(self, world_base_X_foot, world_base_X_NRP, radius=None):
+	def check_boundary_limit(self, world_base_X_foot, world_base_X_NRP, step_stroke, radius=None):
 		""" leg boundary area projected to 2D space """
 
 		bound_violate = False
-		radius = STEP_STROKE/2. if (radius is None) else radius
+		radius = step_stroke/2. if (radius is None) else radius
 
 		# Vector to aep and current position wrt nominal point
 		v3_NRP_X_AEP  = self.XHd.world_base_X_AEP[:3,3:4]  - self.XHd.world_base_X_NRP[:3,3:4]
@@ -224,7 +224,7 @@ class LegClass:
 			# try:
 			# 	# ellipse major, minor radius, rotation
 			# 	a  = np.sqrt(v3_NRP_X_AEP.item(0)**2 + v3_NRP_X_AEP.item(1)**2)
-			# 	b  = STEP_STROKE/2.
+			# 	b  = step_stroke/2.
 
 			# Angle between hip frame and AEP
 			# 	qr = np.arctan2(v3_NRP_X_AEP.item(1), v3_NRP_X_AEP.item(0))
@@ -240,7 +240,7 @@ class LegClass:
 
 		## Circle boundary - for the back half: p_nom to PEP
 		else:
-			r_state = (v3_NRP_X_foot.item(0)**2 + v3_NRP_X_foot.item(1)**2)/(STEP_STROKE/2.)**2
+			r_state = (v3_NRP_X_foot.item(0)**2 + v3_NRP_X_foot.item(1)**2)/(step_stroke/2.)**2
 			
 			if (BOUND_FACTOR < r_state):
 				bound_violate = True

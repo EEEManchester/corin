@@ -29,9 +29,9 @@ class RobotState:
 		self.imu = None;	# ROS IMU class
 		
 		self.Leg  = [] 								# leg class
-		self.Gait = Gaitgen.GaitClass(GAIT_TYPE)	# gait class
 		self.KDL  = kdl.KDL()
 		self.SM   = SMargin.StabilityMargin() 		# stability margin class
+		self.Gait = Gaitgen.GaitClass(GAIT_TYPE)	# gait class
 
 		self.invalid = False 						# robot state: invalid - do not do anything
 		self.suspend = False 						# robot state: suspend support (TODO)
@@ -43,6 +43,8 @@ class RobotState:
 
 		self.cstate = [None]*6 						# foot contact binary states
 		self.cforce = [None]*18						# foot contact forces
+
+		self.stance_offset = (TETA_F, TETA_R)
 
 		self.XHc = robot_transforms.HomogeneousTransform() 	# position: current state
 		self.XHd = robot_transforms.HomogeneousTransform()	# position: desired state
@@ -59,34 +61,36 @@ class RobotState:
 		""" Initialises robot class for setting up number of legs """
 
 		self.P6c.world_X_base[2] = BODY_HEIGHT
-
+		leg_stance = self.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, self.stance_offset, "flat")
+		print leg_stance
 		for j in range(6):
-			self.qd = self.KDL.leg_IK(LEG_STANCE[j])
+			self.qd = self.KDL.leg_IK(leg_stance[j])
 			self.Leg.append(leg_class.LegClass(j))
-			self.Leg[j].XHc.update_base_X_femur(self.KDL.leg_IK(LEG_STANCE[j]))
-			self.Leg[j].XHd.update_base_X_femur(self.KDL.leg_IK(LEG_STANCE[j]))
-			self.Leg[j].XHc.update_base_X_foot(self.KDL.leg_IK(LEG_STANCE[j]))
-			self.Leg[j].XHd.update_base_X_foot(self.KDL.leg_IK(LEG_STANCE[j]))
-			self.Leg[j].XHc.update_base_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
-			self.Leg[j].XHd.update_base_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
-			self.Leg[j].XHc.update_coxa_X_foot(self.KDL.leg_IK(LEG_STANCE[j]))
-			self.Leg[j].XHd.update_coxa_X_foot(self.KDL.leg_IK(LEG_STANCE[j]))
-			self.Leg[j].XHc.update_coxa_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
-			self.Leg[j].XHd.update_coxa_X_NRP(self.KDL.leg_IK(LEG_STANCE[j]))
+			self.Leg[j].XHc.update_base_X_femur(self.KDL.leg_IK(leg_stance[j]))
+			self.Leg[j].XHd.update_base_X_femur(self.KDL.leg_IK(leg_stance[j]))
+			self.Leg[j].XHc.update_base_X_foot(self.KDL.leg_IK(leg_stance[j]))
+			self.Leg[j].XHd.update_base_X_foot(self.KDL.leg_IK(leg_stance[j]))
+			self.Leg[j].XHc.update_base_X_NRP(self.KDL.leg_IK(leg_stance[j]))
+			self.Leg[j].XHd.update_base_X_NRP(self.KDL.leg_IK(leg_stance[j]))
+			self.Leg[j].XHc.update_coxa_X_foot(self.KDL.leg_IK(leg_stance[j]))
+			self.Leg[j].XHd.update_coxa_X_foot(self.KDL.leg_IK(leg_stance[j]))
+			self.Leg[j].XHc.update_coxa_X_NRP(self.KDL.leg_IK(leg_stance[j]))
+			self.Leg[j].XHd.update_coxa_X_NRP(self.KDL.leg_IK(leg_stance[j]))
 			self.Leg[j].XHc.world_X_foot = mX(self.XHc.world_X_base, self.Leg[j].XHc.base_X_foot)
 			self.Leg[j].XHd.world_X_foot = self.Leg[j].XHc.world_X_foot.copy()
-			self.Leg[j].XHd.base_X_AEP = mX(v3_X_m(np.array([ STEP_STROKE/2,0,0])), self.Leg[j].XHd.base_X_NRP)
-			self.Leg[j].XHd.base_X_PEP = mX(v3_X_m(np.array([-STEP_STROKE/2,0,0])), self.Leg[j].XHd.base_X_NRP)
+			self.Leg[j].XHd.base_X_AEP = mX(v3_X_m(np.array([ self.Gait.step_stroke/2,0,0])), self.Leg[j].XHd.base_X_NRP)
+			self.Leg[j].XHd.base_X_PEP = mX(v3_X_m(np.array([-self.Gait.step_stroke/2,0,0])), self.Leg[j].XHd.base_X_NRP)
 			self.Leg[j].XHd.world_base_X_AEP = self.Leg[j].XHd.base_X_AEP.copy()
 			self.Leg[j].XHd.world_base_X_PEP = self.Leg[j].XHd.base_X_PEP.copy()
-			self.Leg[j].XHc.base_X_AEP = mX(v3_X_m(np.array([ STEP_STROKE/2,0,0])), self.Leg[j].XHc.base_X_NRP)
-			self.Leg[j].XHc.base_X_PEP = mX(v3_X_m(np.array([-STEP_STROKE/2,0,0])), self.Leg[j].XHc.base_X_NRP)
+			self.Leg[j].XHc.base_X_AEP = mX(v3_X_m(np.array([ self.Gait.step_stroke/2,0,0])), self.Leg[j].XHc.base_X_NRP)
+			self.Leg[j].XHc.base_X_PEP = mX(v3_X_m(np.array([-self.Gait.step_stroke/2,0,0])), self.Leg[j].XHc.base_X_NRP)
 			self.Leg[j].XHc.world_base_X_AEP = self.Leg[j].XHc.base_X_AEP.copy()
 			self.Leg[j].XHc.world_base_X_PEP = self.Leg[j].XHc.base_X_PEP.copy()
 			self.Leg[j].XHc.update_world_base_X_NRP(self.P6c.world_X_base)
 			self.Leg[j].XHd.update_world_base_X_NRP(self.P6c.world_X_base)
 
 		self.task_X_joint()
+		self.Gait.set_step_stroke(leg_stance, LEG_CLEAR, STEP_STROKE)
 		print ">> INITIALISED ROBOT CLASS"
 
 	def update_state(self,**options):
@@ -121,7 +125,7 @@ class RobotState:
 		# update leg states and check if boundary exceeded
 		for j in range(0,self.active_legs):
 			
-			bstate = self.Leg[j].update_joint_state(wXb, qpc[offset+j*3:offset+(j*3)+3], reset)
+			bstate = self.Leg[j].update_joint_state(wXb, qpc[offset+j*3:offset+(j*3)+3], reset, self.Gait.step_stroke)
 			cstate = self.Leg[j].update_force_state(self.cstate[j], self.cforce[j*3:(j*3)+3])
 
 			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
@@ -265,6 +269,29 @@ class RobotState:
 
 		for j in range(0,6):
 			self.Leg[j].duplicate_self(robot.Leg[j])
+
+	def set_leg_stance(self, stance_width, base_height, stance_offset, stance_type="flat"):
+		""" Sets leg stance according to front & rear leg offset """
+
+		leg_stance = {}
+		teta_f = stance_offset[0]
+		teta_r = stance_offset[1]
+
+		# Flat ground stance - original
+		if (stance_type == "flat"):
+			print 'Flat selected'
+			leg_stance[0] = np.array([ stance_width*np.cos(teta_f*np.pi/180), stance_width*np.sin(teta_f*np.pi/180), -base_height ])
+			leg_stance[1] = np.array([ stance_width, 0, -base_height])
+			leg_stance[2] = np.array([ stance_width*np.cos(teta_r*np.pi/180), stance_width*np.sin(teta_r*np.pi/180), -base_height ])
+			leg_stance[3] = np.array([ stance_width*np.cos(teta_f*np.pi/180), stance_width*np.sin(-teta_f*np.pi/180), -base_height ])
+			leg_stance[4] = np.array([ stance_width, 0, -base_height])
+			leg_stance[5] = np.array([ stance_width*np.cos(teta_r*np.pi/180), stance_width*np.sin(-teta_r*np.pi/180), -base_height ])
+
+			return leg_stance
+		else:
+			print 'Invalid stance selected!'
+			return None
+
 # robot = RobotState()
 ## ====================================================================================================================================== ##
 ## ====================================================================================================================================== ##

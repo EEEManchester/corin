@@ -41,13 +41,13 @@ class CorinManager:
 
 		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.Action	= control_interface.ControlInterface()	# control action class	
-		self.GridMap  = GridMap('wall_demo_left')
+		self.GridMap  = GridMap('flat')
 		self.PathPlan = PathPlanner(self.GridMap)
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
 		self.interface = "rviz"		# interface to control: gazebo, rviz or robotis hardware
-		self.control_rate = "normal" 	# run controller in various mode: 1) normal, 2) fast
+		self.control_rate = "fast" 	# run controller in various mode: 1) normal, 2) fast
 		self.control_loop = "open" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
@@ -466,10 +466,15 @@ class CorinManager:
 			## overwrite - TC: use IMU data
 			self.Robot.XHc.world_X_base = self.Robot.XHd.world_X_base.copy()
 			self.Robot.XHc.base_X_world = self.Robot.XHd.base_X_world.copy()
-			# self.Robot.P6c.world_X_base = self.Robot.P6d.world_X_base.copy()
+			
+			if (self.interface == 'rviz'):
+				self.Robot.P6c.world_X_base = self.Robot.P6d.world_X_base.copy()
+			elif (self.interface != 'rviz' and self.control_loop == 'close'):
+				P6e_world_X_base = self.Robot.P6d.world_X_base - self.Robot.P6c.world_X_base
+					
 			for j in range(0, self.Robot.active_legs):
 				self.Robot.Leg[j].P6_world_X_base = self.Robot.P6c.world_X_base.copy()
-			P6e_world_X_base = self.Robot.P6d.world_X_base - self.Robot.P6c.world_X_base
+			
 			# print 'P6d: ', np.round(self.Robot.P6d.world_X_base.flatten(),3)
 			# print 'P6c: ', np.round(self.Robot.P6c.world_X_base.flatten(),3)
 			#########################################################################
@@ -583,14 +588,13 @@ class CorinManager:
 
 				## Support phase
 				elif (self.Robot.Gait.cs[j] == 0 and self.Robot.suspend == False):
-					## Closed-loop control on bodypose. Move by sum of desired pose and error 
-					comp_world_X_base = self.update_world_X_base(self.Robot.P6d.world_X_base + P6e_world_X_base)
-					comp_base_X_world = np.linalg.inv(comp_world_X_base)
-
 					## Determine foot position wrt base & coxa - REQ: world_X_foot position
 					if (self.control_loop == "open"):
 						self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 					elif (self.control_loop == "close"):
+						## Closed-loop control on bodypose. Move by sum of desired pose and error 
+						comp_world_X_base = self.update_world_X_base(self.Robot.P6d.world_X_base + P6e_world_X_base)
+						comp_base_X_world = np.linalg.inv(comp_world_X_base)
 						self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 							
 					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
@@ -713,9 +717,9 @@ class CorinManager:
 				self.Robot.support_mode = False
 
 				# ps = (12,13); pf = (25,13)
-				# ps = (8,13); pf = (12,13)	# Short straight Line
+				ps = (8,13); pf = (12,13)	# Short straight Line
 				# ps = (8,13); pf = (72,13)	# Long straight Line - for chimney 63
-				ps = (8,13); pf = (8,18)	# G2W - Left side up
+				# ps = (8,13); pf = (8,18)	# G2W - Left side up
 				# ps = (8,13); pf = (18,6)	# G2W - Right side up
 				# ps = (8,13); pf = (35,13)	# Left side up and down again
 

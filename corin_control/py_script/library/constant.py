@@ -114,18 +114,20 @@ TETA_R = -TETA_F;
 LEG_OFFSET = [TETA_F, 0., TETA_R, -TETA_F, 0., -TETA_R]
 ### Leg default position, SCS
 STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
-LEG_STANCE  = initial_stance(STANCE_WIDTH,BODY_HEIGHT, STANCE_TYPE, TETA_F, TETA_R)
+# LEG_STANCE  = initial_stance(STANCE_WIDTH,BODY_HEIGHT, STANCE_TYPE, TETA_F, TETA_R)
+
+BOUND_FACTOR = 1.05 	# boundary constraint for leg workplane space
+LEG_CLEAR 	 = 0.08 	# clearance between leg workplane boundaries
 
 ## ================================================================ ##
 ##                       Gait parameters 	 						##
 ## ================================================================ ##
 
-GAIT_TYPE 	 = 3 		# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
-GAIT_TPHASE	 = 1.2 		# period per gait phase
-BOUND_FACTOR = 1.05 	# boundary constraint for leg workplane space
-STEP_HEIGHT  = 0.05		# step height, z 	default 0.05
-LEG_CLEAR 	 = 0.08 		# clearance between leg workplane boundaries
-STEP_STROKE  = set_step_stroke(TRN_BASE_X_LEG, ROT_BASE_X_LEG, LEG_STANCE, LEG_CLEAR, 0.1)	# step size, x, 	default 0.07
+## these gait parameters can be changed during runtime
+GAIT_TYPE 	 = 3 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+GAIT_TPHASE	 = 1.2 	# default period per gait phase
+STEP_HEIGHT  = 0.05	# default step height, z
+STEP_STROKE  = 0.1 	# default step stroke
 
 BASE_MAX_LINEAR_VELOCITY  = 0.02	# maximum base velocity, m/s - walking: 0.025
 BASE_MAX_ANGULAR_VELOCITY = 0.01	# maximum base velocity, rad/s

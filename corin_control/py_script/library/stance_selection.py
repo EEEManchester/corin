@@ -107,20 +107,20 @@ def initial_stance(STANCE_WIDTH, BODY_HEIGHT, type="flat", TETA_F=20, TETA_R=-20
 
         return LEG_STANCE
 
-## ================================================================ ##
-##                             Leg Pitch                            ##
-## ================================================================ ##
+# ## ================================================================ ##
+# ##                             Leg Pitch                            ##
+# ## ================================================================ ##
 
-def set_step_stroke(tx_bXl, rot_bXl, leg_stance, d_clear, stroke_default=0.1):
-    """ Sets the size of step stroke """
+# def set_step_stroke(tx_bXl, rot_bXl, leg_stance, d_clear, stroke_default=0.1):
+#     """ Sets the size of step stroke """
     
-    p_base_X_foot_0 = np.array([tx_bXl[0][0], tx_bXl[0][1], 0.]) + mX(rot_Z(np.deg2rad(rot_bXl[0])),leg_stance[0])
-    p_base_X_foot_1 = np.array([tx_bXl[1][0], tx_bXl[1][1], 0.]) + mX(rot_Z(np.deg2rad(rot_bXl[1])),leg_stance[1])
+#     p_base_X_foot_0 = np.array([tx_bXl[0][0], tx_bXl[0][1], 0.]) + mX(rot_Z(np.deg2rad(rot_bXl[0])),leg_stance[0])
+#     p_base_X_foot_1 = np.array([tx_bXl[1][0], tx_bXl[1][1], 0.]) + mX(rot_Z(np.deg2rad(rot_bXl[1])),leg_stance[1])
 
-    # Compute pitch
-    nrp_pitch = p_base_X_foot_0 - p_base_X_foot_1
-    x_pitch = (nrp_pitch[0] - d_clear)/2.
+#     # Compute pitch
+#     nrp_pitch = p_base_X_foot_0 - p_base_X_foot_1
+#     x_pitch = (nrp_pitch[0] - d_clear)/2.
 
-    # Set stroke
-    sstroke = 2*x_pitch if (stroke_default/2 > x_pitch) else stroke_default
-    return sstroke
+#     # Set stroke
+#     sstroke = 2*x_pitch if (stroke_default/2 > x_pitch) else stroke_default
+#     return sstroke

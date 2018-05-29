@@ -150,13 +150,12 @@ class PathGenerator():
 
 			# vector from origin to travel path midpoint
 			if (type=='parabolic'):
-				pdiv = np.array([0.1, 0.5, 0.9]) 		# point division
-				# hdiv = np.array([0.6*sh, sh, 0.6*sh]) 		# height division
-				# tdiv = np.array([0., 0.24*ctime, 0.5*ctime, 0.76*ctime, ctime ])
-				# pdiv = np.array([0.1, 0.5, 1.0]) 		# point division
+				pdiv = np.array([0.1, 0.5, 1.0]) 		# point division
 				hdiv = np.array([0.6*sh, sh, 0.6*sh]) 		# height division
 				tdiv = np.array([0., 0.24*ctime, 0.5*ctime, 0.76*ctime, ctime ])
-
+				# pdiv = np.array([0.125, 0.5, 0.875]) 		# point division
+				# hdiv = np.array([0.6*sh, sh, 0.6*sh]) 		# height division
+				# tdiv = np.array([0., 0.24*ctime, 0.5*ctime, 0.76*ctime, ctime ])
 			elif (type == 'trapezoidal'):
 				pdiv = np.array([0., 0.12, 0.5, 0.88, 1.])
 				hdiv = np.array([0.9*sh, sh, sh, sh, 0.9*sh])
