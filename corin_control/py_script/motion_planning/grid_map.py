@@ -186,10 +186,21 @@ class GridMap:
 		# 	print 'getting ', info
 		# 	print np.round(p,3), grid_p, self.Map.nodes[grid_p][info]
 		# Return cell characteristic
+		return self.get_index(info, grid_p)
+		# try:
+		# 	return self.Map.nodes[grid_p][info]
+		# except:
+		# 	print 'Cell Invalid at ', grid_p, info, j
+		# 	return None
+
+	def get_index(self, info, p):
+		""" Returns cell characteristic at index p """
+		
+		# Return cell characteristic
 		try:
-			return self.Map.nodes[grid_p][info]
+			return self.Map.nodes[p][info]
 		except:
-			print 'Cell Invalid at ', grid_p, info, j
+			print 'Cell Invalid at ', p, info
 			return None
 
 	def get_map_size(self):
@@ -439,44 +450,48 @@ class GridMap:
 
 		return cx, cy, cz
 
-	# def cw_spiral_left(self, sp, grid_area):
-	# 	""" spiral grid: rotates in clockwise direction starting with left, up, right then down """
+	def cw_spiral_left(self, p, grid_area, j):
+		""" spiral grid: rotates in clockwise direction starting with left, up, right then down """
 
-	# 	point_list = []
-	# 	end = 2*grid_area[0] - 2
+		point_list = []
+		end = 2*grid_area[0] - 2
 
-	# 	for i in range(1,end):
-	# 		if (i%2):
-	# 			# move left
-	# 			for x in range(0,i):
-	# 	            # skip last cell - ends in square shape
-	# 				if (end-i==1 and i-x==1):
-	# 					pass
-	# 				else:
-	# 					sp = (sp[0]-1,sp[1])
-	# 					point_list.append(sp)
-	# 			# move up
-	# 			if (i!=end-1):
-	# 				for x in range(0,i):
-	# 					sp = (sp[0],sp[1]+1)
-	# 					point_list.append(sp)
-	# 		else:
-	# 			# move right
-	# 			for x in range(0,i):
-	# 	            # skip last cell - ends in square shape
-	# 				if (end-i==1 and i-x==1):
-	# 					pass
-	# 				else:
-	# 					sp = (sp[0]+1,sp[1])
-	# 					point_list.append(sp)
-	# 			# move down
-	# 			if (i!=end-1):
-	# 				for x in range(0,i):
-	# 					sp = (sp[0],sp[1]-1)
-	# 					point_list.append(sp)
-	# 	return point_list
+		if (j < 3):
+			sp = (int(np.floor(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
+		else:
+			sp = (int(np.floor(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
+		print 'sp: ', sp
+		for i in range(1,end):
+			if (i%2):
+				# move left
+				for x in range(0,i):
+		            # skip last cell - ends in square shape
+					if (end-i==1 and i-x==1):
+						pass
+					else:
+						sp = (sp[0]-1,sp[1])
+						point_list.append(sp)
+				# move up
+				if (i!=end-1):
+					for x in range(0,i):
+						sp = (sp[0],sp[1]+1)
+						point_list.append(sp)
+			else:
+				# move right
+				for x in range(0,i):
+		            # skip last cell - ends in square shape
+					if (end-i==1 and i-x==1):
+						pass
+					else:
+						sp = (sp[0]+1,sp[1])
+						point_list.append(sp)
+				# move down
+				if (i!=end-1):
+					for x in range(0,i):
+						sp = (sp[0],sp[1]-1)
+						point_list.append(sp)
+		return point_list
 
-	# def graph_representation(self, initialized, gpath):
 	def graph_representation(self, gpath=None):
 		""" Plots graph functions """
 

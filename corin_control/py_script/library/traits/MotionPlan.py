@@ -68,3 +68,15 @@ class MotionPlan():
 			self.f_world_X_foot[j].append(plan.f_world_X_foot[j])
 			self.f_base_X_foot[j].append(plan.f_base_X_foot[j])
 			self.f_world_base_X_NRP[j].append(plan.f_world_base_X_NRP[j])
+
+	def reverse_motion(self):
+		""" Reverse the motion plan generated """
+
+		self.qb.reverse()
+		self.qbp = list(reversed(self.qbp))
+		self.gait_phase = list(reversed(self.gait_phase))
+		
+		for j in range(0,6):
+			self.f_world_X_foot[j].reverse()
+			self.f_base_X_foot[j].reverse()
+			self.f_world_base_X_NRP[j].reverse()

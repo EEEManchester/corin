@@ -62,7 +62,7 @@ class RobotState:
 
 		self.P6c.world_X_base[2] = BODY_HEIGHT
 		leg_stance = self.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, self.stance_offset, "flat")
-		print leg_stance
+		
 		for j in range(6):
 			self.qd = self.KDL.leg_IK(leg_stance[j])
 			self.Leg.append(leg_class.LegClass(j))

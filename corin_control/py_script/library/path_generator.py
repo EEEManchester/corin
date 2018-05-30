@@ -228,7 +228,7 @@ phase = 1
 ### Test scripts
 planner = PathGenerator()
 cxp, tdiv = planner.interpolate_leg_path(sp, ep, sn, phase, False, GAIT_TPHASE)
-print cxp
+
 # data = planner.generate_leg_path(cxp, tdiv, CTR_INTV)
 # path = TrajectoryPoints(data)
 # Plot.plot_2d(path.xp[:,1], path.xp[:,2])

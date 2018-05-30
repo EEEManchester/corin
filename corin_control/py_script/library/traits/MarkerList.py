@@ -18,3 +18,6 @@ class MarkerList():
 	def append(self, data):
 		self.t  += data.t 
 		self.xp += data.xp
+
+	def reverse(self):
+		self.xp = list(reversed(self.xp))

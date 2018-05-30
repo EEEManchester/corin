@@ -243,5 +243,38 @@ ti2 = 0.50
 lv = 0.02
 nv = 0.
 tint = 0.02
-print ti1,ti2-lv, np.round((ti2-ti1)/tint+nv)
-print np.linspace(ti1,ti2-lv, np.round((ti2-ti1)/tint+nv))
+
+xi = np.array([0., 2.0, 0.0])
+xf = np.array([0., 4.0, 1.0])
+
+qi = 0.0
+qf = 20.0
+
+qrange = range(0,int(20.),4)
+
+delta_q = (qf-qi)/(len(qrange)-1)
+delta_x = (xf-xi)/(len(qrange)-1)
+
+x_cob = xi.copy()
+w_cob = np.array([qi, 0., 0.])
+t_cob = np.zeros(2*len(qrange)-1)
+
+total_time = 1.2*6
+
+for i in range(1, len(qrange)):
+	qr = np.deg2rad(qrange[i])
+	xd = xi + delta_x*i
+	wd = qi+i*delta_q
+
+	x_cob = np.vstack(( x_cob, xd ))
+	w_cob = np.vstack(( w_cob, np.array([wd, 0., 0.]) ))
+	t_cob[i] = i*total_time/(2*(len(qrange)-1))
+
+
+for i in range(len(qrange),2*len(qrange)-1):
+	x_cob = np.vstack(( x_cob, xd ))
+	w_cob = np.vstack(( w_cob, np.array([wd, 0., 0.]) ))
+	t_cob[i] = i*total_time/(2*(len(qrange)-1))
+
+a = [1,2,3,4]
+print len(a)
