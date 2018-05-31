@@ -231,12 +231,15 @@ class LegClass:
 
 		## Circle boundary - for the back half: p_nom to PEP
 		else:
-			r_state = (v3_NRP_X_foot.item(0)**2 + v3_NRP_X_foot.item(1)**2)/(step_stroke/2.)**2
-			
+			try:
+				r_state = (v3_NRP_X_foot.item(0)**2 + v3_NRP_X_foot.item(1)**2)/(step_stroke/2.)**2
+			except ZeroDivisionError:
+				r_state = BOUND_FACTOR
+				
 			if (BOUND_FACTOR < r_state):
 				bound_violate = True
 		
-		# if (self.number == 0):
+		# if (self.number == 1):
 		# 	print 'BL_mag : ', mag_nom_X_ee, np.round(r_state,3)
 		# 	print 'BL_bXA : ', np.round(self.XHd.world_base_X_AEP[:3,3],4)
 		# 	print 'BL_bXN : ', np.round(world_base_X_NRP[:3,3].flatten(),4)
