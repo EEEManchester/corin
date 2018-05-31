@@ -278,3 +278,8 @@ for i in range(len(qrange),2*len(qrange)-1):
 
 a = np.array([1,0,0])
 print 0./2.
+
+a = [1,5,3]
+
+for i in a:
+	print i

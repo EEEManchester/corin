@@ -692,7 +692,7 @@ class PathPlanner:
 
 		footholds = self.GridMap.cw_spiral_left(sp, (3,3), j)
 		cost = np.zeros(len(footholds))
-		
+		print footholds
 		for i in range(0, len(footholds)):
 			cost[i] = self.GridMap.get_index('height', footholds[i])
 			if (cost[i] == 0):
@@ -779,33 +779,18 @@ class PathPlanner:
 		def set_leg_stance():
 			""" Sets leg offset and update robot stance """
 
-			leg_offset = (0.,0.)
-			
-			if (self.T_GND_X_WALL or self.T_WALL_X_GND):
+			if (self.T_GND_X_WALL or self.T_WALL_X_GND or self.T_GND_X_CHIM or self.T_CHIM_X_GND):
 				print 'Setting to new narrow stance'
 				leg_offset = (40., -40.)
 				
 				stance = self.Robot.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, leg_offset, "flat")
 				self.Robot.Gait.set_step_stroke(stance, LEG_CLEAR, STEP_STROKE)
 
-				for j in range(0,6):
+				for j in [0,2,3,5]:
 					self.Robot.Leg[j].XHd.update_base_X_NRP(self.Robot.KDL.leg_IK(stance[j]))
 					self.Robot.Leg[j].XHd.update_world_base_X_NRP(self.Robot.P6c.world_X_base)
 
 				return stance
-			# elif (self.W_GND):
-			# 	print 'Setting to wide stance'
-			# 	leg_offset = (0.,0.)
-			
-			
-
-			# if (self.T_GND_X_WALL or self.T_WALL_X_GND):
-			# 	# print 'updating nrp'
-			# 	for j in range(0,6):
-			# 		self.Robot.Leg[j].XHd.update_base_X_NRP(self.Robot.KDL.leg_IK(stance[j]))
-			# 		self.Robot.Leg[j].XHd.update_world_base_X_NRP(self.Robot.P6c.world_X_base)
-				
-			# return stance
 
 		i = ig = 0
 		if (self.T_GND_X_WALL):
@@ -889,7 +874,7 @@ class PathPlanner:
 							# 	print 'ss  : ', i, self.Robot.Gait.step_stroke
 							# 	print '----------------------------------------------'
 							# else:
-							if (mag > (L2+L3-0.01)):
+							if (mag > (L2+L3-0.005)):
 								print 'leg length exceeded on ', j, ' at n=', i, mag
 								bound_exceed = True
 								leg_exceed = j
@@ -904,7 +889,7 @@ class PathPlanner:
 						if (i == break_n):
 							break_count += 1
 							# print 'break count ', break_count
-							if (break_count == 7):
+							if (break_count == 10):
 								print 'Inifinite loop'
 								raw_input('Local minima - invalid solution')
 								return None
@@ -926,6 +911,7 @@ class PathPlanner:
 			world_X_base.append(P6d_world_X_base.flatten())
 			gphase_intv.append(i)
 			gait_phase.append(self.Robot.Gait.cs)
+			print self.Robot.Gait.cs
 			# print 'qbp:: ', np.round(P6d_world_X_base.reshape(1,6),3), i
 
 			## Set foothold for legs in transfer phase
@@ -1013,7 +999,9 @@ class PathPlanner:
 					## 3) Compute AEP wrt base and world frame
 					# if (self.Robot.Gait.step_stroke == 0.):
 					# 	self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3]
-					# else:				
+					# else:	
+					# if (j==4):
+					# 	print 'bXa:  ', np.round(self.Robot.Leg[j].XHd.base_X_AEP,3)
 					self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + \
 																		np.nan_to_num(v3_uv*self.Robot.Gait.step_stroke/2.)
 					self.Robot.Leg[j].XHd.base_X_AEP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
@@ -1022,11 +1010,13 @@ class PathPlanner:
 																	self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4])
 					self.Robot.Leg[j].XHd.world_X_foot = mX(self.Robot.XHd.world_X_base, 
 																self.Robot.Leg[j].XHd.base_X_AEP)
-					if (j==1):
+					if (j==4):
 						print 'wbXn: ', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
 						print 'wbXa: ', np.round(self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3],3)
 						print 'bXa:  ', np.round(self.Robot.Leg[j].XHd.base_X_AEP[:3,3],3)
 						print 'bXn:  ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],3)
+						print 'wXb:  ', np.round(self.Robot.XHd.world_X_base[:3,3],3)
+						# print mX(self.Robot.XHd.world_X_base, self.Robot.Leg[j].XHd.base_X_AEP)
 						print 'wXf:  ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
 
 					## Get cell height in (x,y) location of world_X_foot
@@ -1059,7 +1049,7 @@ class PathPlanner:
 
 							## Recompute AEP wrt base and world frame					
 							self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + \
-																			(v3_uv*self.Robot.Gait.step_stroke/2.)
+																			np.nan_to_num(v3_uv*self.Robot.Gait.step_stroke/2.)
 							self.Robot.Leg[j].XHd.base_X_AEP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
 																			self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3:4])
 							self.Robot.Leg[j].XHd.base_X_NRP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
@@ -1090,7 +1080,7 @@ class PathPlanner:
 
 							## Recompute AEP wrt base and world frame					
 							self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + \
-																			(v3_uv*self.Robot.Gait.step_stroke/2.)
+																			np.nan_to_num(v3_uv*self.Robot.Gait.step_stroke/2.)
 							self.Robot.Leg[j].XHd.base_X_AEP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
 																			self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3:4])
 							self.Robot.Leg[j].XHd.base_X_NRP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
@@ -1126,8 +1116,8 @@ class PathPlanner:
 					# 	print '--------------------------------------------'
 
 			## Alternate gait phase
-			# self.Robot.Gait.change_phase()
-			self.Robot.Gait.change_exceeded_phase(leg_exceed)
+			self.Robot.Gait.change_phase()
+			# self.Robot.Gait.change_exceeded_phase(leg_exceed)
 			v3cp_prev = v3cp.copy()
 			v3wp_prev = v3wp.copy()
 			# print self.Robot.Gait.cs
@@ -1172,10 +1162,11 @@ class PathPlanner:
 		
 		# Reset to default NRP and states
 		if (self.T_WALL_X_GND):
+			pass
 			print 'Resetting NRP'
 			for j in range(0,6):
 				self.Robot.Leg[j].XHd.update_base_X_NRP(self.Robot.KDL.leg_IK(leg_stance[j])) 
-		elif (self.T_CHIM_X_GND):
+		if (self.T_CHIM_X_GND):
 			self.T_CHIM_X_GND = False
 			self.W_CHIM = False
 			self.W_GND = True
@@ -1425,7 +1416,7 @@ class PathPlanner:
 				self.Robot.Gait.cs = self.Robot.Gait.phases[0]
 
 			# set stance parameters
-			print 'T WXG: ', p1
+			print 'T WXG: ', p2
 			xi = np.array([p2[0]*self.GridMap.resolution, p2[1]*self.GridMap.resolution, H_BASE])
 			xf = np.array([p2[0]*self.GridMap.resolution, p2[1]*self.GridMap.resolution, self.base_map.nodes[p2]['pose'][0]])
 			
@@ -1457,13 +1448,11 @@ class PathPlanner:
 				w_cob = np.vstack(( w_cob, np.array([wd, 0., 0.]) ))
 				t_cob = np.hstack(( t_cob, nside*self.Robot.Gait.tphase + i*total_time/(2*(len(qrange)-1)) ))
 
-			print 'tcob ', t_cob
-			print 'xcob ', x_cob
-			print 'wcob ', w_cob
+			# print 'tcob ', t_cob
+			# print 'xcob ', x_cob
+			# print 'wcob ', w_cob
 			PathGenerator.V_MAX = PathGenerator.W_MAX = 100
-			print 'path generating'
 			base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV, t_cob)
-			print 'path generated'
 			# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 			# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 
@@ -1539,22 +1528,24 @@ class PathPlanner:
 
 					if (self.T_WALL_X_GND):
 						qr = self.base_map.nodes[sp]['pose'][1]
-						df = 1 if (qr > 0) else -1
+						df = 1 if (qr > 0) else 0
 						ep = (sp[0],path[i][1] + df)
 						print 'Interpolating transition ...', sp, ep
+						# raw_input('cont')
 						print 'Transition pt. 1'
 						path_01 = self.transition_routine('Wall_X_Gnd', sp, ep) #Wall_X_Gnd
 						plan_01 = self.foothold_planner(path_01)
 						motion_plan.append(plan_01)
-					
+						# raw_input('cont')
 						print 'Transition pt. 2'
 						path_01 = self.routine_motion(sp,ep)
 						self.W_WALL = self.T_WALL_X_GND = False
 						self.W_GND  = True
 						plan_01 = self.foothold_planner(path_01)
+						
 						motion_plan.append(plan_01)
 						# raw_input('cont')
-					
+						
 						print 'Transition pt. 3'
 						path_01 = self.routine_motion(ep,ep,'reset_stance')
 						plan_01 = self.foothold_planner(path_01)
