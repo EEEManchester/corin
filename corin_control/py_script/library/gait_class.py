@@ -27,9 +27,16 @@ class GaitClass:
 		self.__initialise__()
 
 	def __initialise__(self):
+		self.set_gait_type()
+
+	def set_gait_type(self, gait_type=None):
 		""" Set gait phases """
 
-		# Reset list
+		if (gait_type is not None):
+			self.type = gait_type
+
+		# Reset gait parameters
+		self.np = 0
 		self.phases = []
 
 		# Wave Gait

@@ -276,5 +276,5 @@ for i in range(len(qrange),2*len(qrange)-1):
 	w_cob = np.vstack(( w_cob, np.array([wd, 0., 0.]) ))
 	t_cob[i] = i*total_time/(2*(len(qrange)-1))
 
-a = [1,2,3,4]
-print len(a)
+a = np.array([1,0,0])
+print 0./2.

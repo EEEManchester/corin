@@ -1010,16 +1010,25 @@ class PathPlanner:
 					if (self.T_GND_X_WALL):
 						v3_uv = np.zeros(3)
 
-					## 3) Compute AEP wrt base and world frame					
+					## 3) Compute AEP wrt base and world frame
+					# if (self.Robot.Gait.step_stroke == 0.):
+					# 	self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3]
+					# else:				
 					self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + \
-																	(v3_uv*self.Robot.Gait.step_stroke/2.)
+																		np.nan_to_num(v3_uv*self.Robot.Gait.step_stroke/2.)
 					self.Robot.Leg[j].XHd.base_X_AEP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
 																	self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3:4])
 					self.Robot.Leg[j].XHd.base_X_NRP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
 																	self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4])
 					self.Robot.Leg[j].XHd.world_X_foot = mX(self.Robot.XHd.world_X_base, 
 																self.Robot.Leg[j].XHd.base_X_AEP)
-					
+					if (j==1):
+						print 'wbXn: ', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
+						print 'wbXa: ', np.round(self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3],3)
+						print 'bXa:  ', np.round(self.Robot.Leg[j].XHd.base_X_AEP[:3,3],3)
+						print 'bXn:  ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],3)
+						print 'wXf:  ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
+
 					## Get cell height in (x,y) location of world_X_foot
 					cell_h = np.array([0., 0., self.GridMap.get_cell('height', self.Robot.Leg[j].XHd.world_X_foot[:3,3], j)])
 					
@@ -1314,8 +1323,9 @@ class PathPlanner:
 
 		if (routine is not None):
 			if (routine == 'reset_stance'):
-				self.Robot.Gait.type = 1
-				self.Robot.Gait.np = 0
+				self.Robot.Gait.set_gait_type(4)
+				# self.Robot.Gait.type = 4
+				# self.Robot.Gait.np = 0
 				self.Robot.Gait.cs = self.Robot.Gait.phases[0]
 
 				xi = np.array([p1[0]*self.GridMap.resolution, p1[1]*self.GridMap.resolution, self.base_map.nodes[p1]['pose'][0]])
@@ -1354,7 +1364,7 @@ class PathPlanner:
 			delta_w = 1 if (self.base_map.nodes[p2]['pose'][1] >= 0.) else -1
 
 			# set gait parameters to wave gait
-			self.Robot.Gait.type = 1
+			self.Robot.Gait.set_gait_type(1)
 			if (delta_w == 1):
 				self.Robot.Gait.np = 0
 				self.Robot.Gait.cs = self.Robot.Gait.phases[0]
@@ -1377,8 +1387,8 @@ class PathPlanner:
 
 			x_cob = xi.copy()
 			w_cob = np.array([qi, 0., 0.])
-			t_cob = np.zeros(2*len(qrange)-1)
-
+			t_cob = np.zeros(1)
+			
 			total_time = self.Robot.Gait.tphase*6
 
 			for i in range(1, len(qrange)):
@@ -1388,13 +1398,13 @@ class PathPlanner:
 
 				x_cob = np.vstack(( x_cob, xd ))
 				w_cob = np.vstack(( w_cob, np.array([wd, 0., 0.]) ))
-				t_cob[i] = i*total_time/(2*(len(qrange)-1))
-
+				t_cob = np.hstack(( t_cob, i*total_time/(2*(len(qrange)-1)) ))
+				
 			for i in range(len(qrange),2*len(qrange)-1):
 				x_cob = np.vstack(( x_cob, xd ))
 				w_cob = np.vstack(( w_cob, np.array([wd, 0., 0.]) ))
-				t_cob[i] = i*total_time/(2*(len(qrange)-1))
-
+				t_cob = np.hstack(( t_cob, i*total_time/(2*(len(qrange)-1)) ))
+				
 			print 'tcob ', t_cob
 			print 'xcob ', x_cob
 			PathGenerator.V_MAX = PathGenerator.W_MAX = 100
@@ -1406,7 +1416,7 @@ class PathPlanner:
 			delta_w = 1 if (self.base_map.nodes[p1]['pose'][1] >= 0.) else -1
 
 			# set gait parameters to wave gait
-			self.Robot.Gait.type = 1
+			self.Robot.Gait.set_gait_type(1)
 			if (delta_w == 1):
 				self.Robot.Gait.np = 3
 				self.Robot.Gait.cs = self.Robot.Gait.phases[3]
@@ -1415,7 +1425,7 @@ class PathPlanner:
 				self.Robot.Gait.cs = self.Robot.Gait.phases[0]
 
 			# set stance parameters
-			print 'T GXW: ', p1
+			print 'T WXG: ', p1
 			xi = np.array([p2[0]*self.GridMap.resolution, p2[1]*self.GridMap.resolution, H_BASE])
 			xf = np.array([p2[0]*self.GridMap.resolution, p2[1]*self.GridMap.resolution, self.base_map.nodes[p2]['pose'][0]])
 			
@@ -1429,14 +1439,14 @@ class PathPlanner:
 
 			x_cob = xi.copy()
 			w_cob = np.array([qi, 0., 0.])
-			t_cob = np.zeros(2*len(qrange)-1)
+			t_cob = np.zeros(1)
 
 			total_time = self.Robot.Gait.tphase*6
-
-			for i in range(len(qrange),2*len(qrange)-1):
+			nside = int(np.ceil(len(self.Robot.Gait.phases)/2))
+			for i in range(1,nside):
 				x_cob = np.vstack(( x_cob, xi ))
 				w_cob = np.vstack(( w_cob, np.array([qi, 0., 0.]) ))
-				t_cob[i] = i*total_time/(2*(len(qrange)-1))
+				t_cob = np.hstack(( t_cob, i*self.Robot.Gait.tphase ))
 
 			for i in range(1, len(qrange)):
 				qr = np.deg2rad(qrange[i])
@@ -1445,12 +1455,15 @@ class PathPlanner:
 
 				x_cob = np.vstack(( x_cob, xd ))
 				w_cob = np.vstack(( w_cob, np.array([wd, 0., 0.]) ))
-				t_cob[i] = i*total_time/(2*(len(qrange)-1))
+				t_cob = np.hstack(( t_cob, nside*self.Robot.Gait.tphase + i*total_time/(2*(len(qrange)-1)) ))
 
 			print 'tcob ', t_cob
 			print 'xcob ', x_cob
+			print 'wcob ', w_cob
 			PathGenerator.V_MAX = PathGenerator.W_MAX = 100
+			print 'path generating'
 			base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV, t_cob)
+			print 'path generated'
 			# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 			# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 
@@ -1474,7 +1487,7 @@ class PathPlanner:
 
 		## cycle through path
 		for i in range(0,len(path)):
-			print 'now: ', path[i]
+			print 'now: ', path[i], self.base_map.nodes[path[i]]['motion']
 			temp_path.append(path[i])
 			## check transition
 			m[0] = self.base_map.nodes[path[i]]['motion']
@@ -1521,7 +1534,8 @@ class PathPlanner:
 						path_01 = self.transition_routine('Gnd_X_Wall', sp, ep)
 						plan_01 = self.foothold_planner(path_01)
 						motion_plan.append(plan_01)
-						# temp_plan.append(plan_01)
+						
+						self.T_GND_X_WALL = False
 
 					if (self.T_WALL_X_GND):
 						qr = self.base_map.nodes[sp]['pose'][1]
@@ -1546,10 +1560,9 @@ class PathPlanner:
 						plan_01 = self.foothold_planner(path_01)
 						motion_plan.append(plan_01)
 
-					if (self.T_WALL_X_GND):
-						self.W_WALL = False
+						self.W_WALL = self.T_WALL_X_GND = False
 						self.W_GND  = True
-					self.T_GND_X_WALL = self.T_WALL_X_GND = False
+
 			## ============================================================================ ##
 
 			## Check transition instances

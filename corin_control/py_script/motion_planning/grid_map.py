@@ -177,11 +177,14 @@ class GridMap:
 		""" Returns cell characteristic at point p (in m) """
 		
 		# Convert cell location to grid format
-		if (j < 3):
-			grid_p = (int(np.floor(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
-		else:
-			grid_p = (int(np.floor(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
-			# print 'snorm ', grid_p
+		try:
+			if (j < 3):
+				grid_p = (int(np.floor(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
+			else:
+				grid_p = (int(np.floor(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
+		except ValueError:	
+			print 'get_cell ValueError: ', p, j
+		# print 'snorm ', grid_p
 		# if (j==0):
 		# 	print 'getting ', info
 		# 	print np.round(p,3), grid_p, self.Map.nodes[grid_p][info]
