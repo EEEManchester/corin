@@ -41,13 +41,13 @@ class CorinManager:
 
 		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.Action	= control_interface.ControlInterface()	# control action class	
-		self.GridMap  = GridMap('wall_demo_right')
+		self.GridMap  = GridMap('wall_demo_left')
 		self.PathPlan = PathPlanner(self.GridMap)
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "rviz"		# interface to control: gazebo, rviz or robotis hardware
-		self.control_rate = "fast" 	# run controller in various mode: 1) normal, 2) fast
+		self.interface = "gazebo"		# interface to control: gazebo, rviz or robotis hardware
+		self.control_rate = "normal" 	# run controller in various mode: 1) normal, 2) fast
 		self.control_loop = "open" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
@@ -351,7 +351,7 @@ class CorinManager:
 				td = period[j][1]-period[j][0] if tv else td
 
 				self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3] = leg_stance[j]
-				svalid = self.Robot.Leg[j].generate_spline('leg', np.array([0.,0.,1.]), leg_phase[j], False, td, CTR_INTV)
+				svalid = self.Robot.Leg[j].generate_spline('leg', np.array([0.,0.,1.]), np.array([0.,0.,1.]), leg_phase[j], False, td, CTR_INTV)
 				if (svalid is False):
 					self.Robot.invalid = True
 					raise Exception, "Trajectory Invalid"
@@ -537,15 +537,14 @@ class CorinManager:
 						self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP.copy()
 
 					## Compute average surface normal from cell surface normal at both footholds
-					snorm_1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
-					snorm_2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3], j)
-					w_snorm = (snorm_1 + snorm_2)/2.
-
+					sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
+					sn2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3], j)
+					
 					## Set bodypose in leg class
 					self.Robot.Leg[j].XH_world_X_base = self.Robot.XHd.world_X_base.copy()
 					
 					## Generate transfer spline
-					svalid = self.Robot.Leg[j].generate_spline('world', w_snorm, 1, False, GAIT_TPHASE, CTR_INTV)
+					svalid = self.Robot.Leg[j].generate_spline('world', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
 					
 					## Update NRP
 					self.Robot.Leg[j].XHd.base_X_NRP[:3,3] = mX(self.Robot.XHd.base_X_world[:3,:3], 
@@ -593,7 +592,7 @@ class CorinManager:
 						self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 					elif (self.control_loop == "close"):
 						## Closed-loop control on bodypose. Move by sum of desired pose and error 
-						comp_world_X_base = self.update_world_X_base(self.Robot.P6d.world_X_base + P6e_world_X_base)
+						comp_world_X_base = self.update_world_X_base(self.Robot.P6d.world_X_base + K_BP*P6e_world_X_base)
 						comp_base_X_world = np.linalg.inv(comp_world_X_base)
 						self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 							
@@ -719,9 +718,9 @@ class CorinManager:
 				# ps = (10,13); pf = (20,19)
 				# ps = (10,13); pf = (12,13)	# Short straight Line
 				# ps = (8,13); pf = (72,13)	# Long straight Line - for chimney 63
-				# ps = (12,14); pf = (12,20)	# G2W - Left side up
+				ps = (10,14); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
-				ps = (10,13); pf = (40,13)	# Wall up and down again
+				# ps = (10,13); pf = (40,13)	# Wall up and down again
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,

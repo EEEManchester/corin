@@ -128,7 +128,7 @@ class PathGenerator():
 
 		return Trajectory6D((x_out,w_out))
 
-	def interpolate_leg_path(self, sp, ep, snorm, phase=1, reflex=False, ctime=2.0, type='parabolic'):
+	def old_interpolate_leg_path(self, sp, ep, snorm, snorm2, phase=1, reflex=False, ctime=2.0, type='parabolic'):
 		""" Generate via points for leg trajectory (Re^3) 				"""
 		""" Input: 	1) sp -> starting position (Re^3)
 					2) ep -> end position (Re^3)
@@ -192,6 +192,75 @@ class PathGenerator():
 
 		return cpx, tdiv
 
+	def interpolate_leg_path(self, sp, ep, sn1, sn2, phase=1, reflex=False, ctime=2.0, type='parabolic'):
+		""" Generate via points for leg trajectory (Re^3) 				"""
+		""" Input: 	1) sp -> starting position (Re^3)
+					2) ep -> end position (Re^3)
+					3) snorm -> surface normal in unit vector (Re^3) 
+								wrt to leg frame
+					4) phase -> leg phase: 1 = transfer, 0 = support
+					5) reflex -> boolean for triggering reflex
+					6) ctime -> duration of trajectory
+					7) type -> spline shape 
+			Output:	Array of via points and time intervals				"""
+
+		## Define Variables ##
+		cpx = sp.copy()		# cartesian position
+		sh  = STEP_HEIGHT  	# step height for transfer phase
+		hl  = 0.5
+
+		## 1) Set via points according to phase
+		if (phase==1):						
+			## Transfer phase 
+
+			# vector from origin to travel path midpoint
+			if (type=='parabolic'):
+				# pdiv = np.array([0.1, 0.5, 0.9]) 		# point division
+				# hdiv = np.array([0.4, 1.0, 0.4])*sh		# height division
+				# tdiv = np.array([0.0, 0.05,0.1,0.15, 0.2, 0.3, 0.5, 0.7, 0.8,0.85, 0.9,0.95, 1.0])*ctime
+				# pdiv = np.array([0.1, 0.5, 0.9]) 		# point division
+				# hdiv = np.array([0.4, 1.0, 0.4])*sh		# height division
+				# tdiv = np.array([0.0, 0.06,0.1,0.16, 0.2, 0.5, 0.8, 0.84, 0.9,0.94, 1.0])*ctime
+				tdiv = np.array([0.0, 0.12,0.2,0.32, 0.4, 0.5, 0.6, 0.68, 0.8,0.88, 1.0])*ctime
+
+			elif (type == 'trapezoidal'):
+				pdiv = np.array([0., 0.12, 0.5, 0.88, 1.])
+				hdiv = np.array([0.9*sh, sh, sh, sh, 0.9*sh])
+				tdiv = np.array([0., 0.32*ctime, 0.4*ctime, 0.5*ctime, 0.6*ctime, 0.68*ctime, ctime ])
+
+			A = np.zeros((1,3))
+
+			## Unloading phase
+			for i in range(1,5):
+				pu = sp + sn1*(i*sh*hl/4)
+				cpx = np.vstack((cpx, pu))
+
+			# Apex point: Compute the via point with height clearance and stack into array
+			v3 = sp + (ep - sp)/2
+			h3 = sh*(sn1+sn2)/2
+			vn  = v3 + h3
+			cpx = np.vstack((cpx, vn))
+			# print v3, h3, vn
+
+			## Loading phase
+			for i in range(4,0,-1):
+				pl = ep + sn2*(i*sh*hl/4)
+				cpx = np.vstack((cpx, pl))
+			
+			# stack final point into array
+			cpx = np.vstack((cpx, ep))
+			
+		elif (phase==0):
+			## Support phase - direct interpolation
+			tdiv = np.array([0, ctime])
+			cpx  = np.array([sp, ep])
+
+		else:
+			print "Invalid phase" 	# have a way to exit function if no phase selected
+			return None
+
+		return cpx, tdiv
+
 	def generate_leg_path(self, cp, td, tn):
 		""" Generate spline based on provided via points and time intervals """
 		""" Input: 	1) cp -> array of via points
@@ -209,29 +278,27 @@ class PathGenerator():
 ## 												TESTING 											##
 ## ================================================================================================ ##
 ## Test leg path generation ##
-# sp = np.array([0.50, -0.10, -0.05])
-# ep = np.array([0.50,  0.10, -0.05])
-# sn = np.array([0., 0., 0.])
-
-# sp = np.array([-0.115,  -0.3027, -0.068 ])
-# ep = np.array([-0.115,  -0.3368, -0.0666])
-# sn = np.array([0.,     0.0998, 0.995])
-
-# sp = np.array([0.160, 0.134, -0.104])
-# ep = np.array([0.165, 0.139, -0.104])
-sn = np.array([0,0.,1,])
-
-sp = np.array([0.115, -0.30, -0.104])
-ep = np.array([0.115,  0.28, -0.152 ])
+# Ground walking:
+# sn1 = np.array([0.,0.,1.])
+# sn2 = np.array([0.,0.,1.])
+# sp = np.array([0.0, -0.30, -0.1])
+# ep = np.array([0.1, -0.30, -0.1 ])
+# Ground to wall
+sn1 = np.array([0.,0.,1.])
+sn2 = np.array([0.,-0.5,0.5])
+sp = np.array([0.0, 0.30, -0.1])
+ep = np.array([0.0, 0.35,  0.1 ])
 
 phase = 1
 ### Test scripts
 planner = PathGenerator()
-cxp, tdiv = planner.interpolate_leg_path(sp, ep, sn, phase, False, GAIT_TPHASE)
-
+# cxp, tdiv = planner.interpolate_leg_path(sp, ep, (sn1+sn2)/2, phase, False, GAIT_TPHASE)
+# cxp, tdiv = planner.new_interpolate_leg_path(sp, ep, sn1, sn2, phase, False, GAIT_TPHASE)
+# print cxp
 # data = planner.generate_leg_path(cxp, tdiv, CTR_INTV)
 # path = TrajectoryPoints(data)
 # Plot.plot_2d(path.xp[:,1], path.xp[:,2])
+# Plot.plot_2d(data[0],data[1])
 # Plot.plot_3d(path.xp[:,0], path.xp[:,1], path.xp[:,2])
 # print len(data[0])
 
@@ -304,3 +371,11 @@ for q in range(80,-1,-10):
 # Plot.plot_2d(path_n.X.t,path_n.X.xp)
 # Plot.plot_3d(path_n.X.xp[:,0], path_n.X.xp[:,1], path_n.X.xp[:,2])
 # Plot.plot_3d(path_n.X.xp[:,0], tran_y+path_n.X.xp[:,1], tran_z+path_n.X.xp[:,2])
+
+## write to csv file
+# import csv
+# with open('trajectory.csv', 'wb') as csvfile:
+# 	csvwriter = csv.writer(csvfile, delimiter=',')#, quotechar='|', quoting=csv.QUOTE_MINIMAL)
+# 	for i in range(0,len(path.t)):
+# 		data_row = np.hstack((path.t[i], path.xp[i], path.xv[i], path.xa[i]))
+# 		csvwriter.writerow(data_row)

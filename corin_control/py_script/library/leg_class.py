@@ -89,7 +89,7 @@ class LegClass:
 		return None
 		## TODO: TRANSFORM FROM FOOT FRAME TO HIP, BASE, WORLD FRAME
 
-	def generate_spline(self, frame, snorm, phase=1, reflex=False, ctime=2.0, tn=0.1):
+	def generate_spline(self, frame, sn1, sn2, phase=1, reflex=False, ctime=2.0, tn=0.1):
 		""" generate leg trajectory using bspline and check for kinematic constraints 	"""
 		""" Input:  a) nLeg   -> Leg number
 			 		b) start  -> start position in 3D space wrt base frame
@@ -106,7 +106,7 @@ class LegClass:
 			## Interpolate via points in world frame from base to foot
 			start = self.XHc.world_base_X_foot[:3,3].copy()
 			end   = mX(self.XH_world_X_base[:3,:3], self.XHd.base_X_foot[:3,3])
-			wpx, td = self.Path.interpolate_leg_path(start, end, snorm, phase, reflex, ctime)
+			wpx, td = self.Path.interpolate_leg_path(start, end, sn1, sn2, phase, reflex, ctime)
 			
 			# Transform each via point from world to leg frame
 			wcp = np.zeros((len(wpx),3))
@@ -125,6 +125,23 @@ class LegClass:
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)
 
+		if (self.number == 5):
+			wpxt, tdt = self.Path.old_interpolate_leg_path(start, end, sn1, sn2, phase, reflex, ctime)
+			wcp1 = np.zeros((len(wpxt),3))
+			wcp1[0] = self.XHc.coxa_X_foot[0:3,3].copy()
+
+			for i in range (1, len(wpxt)):
+				basXft = mX(np.transpose(self.XH_world_X_base[:3,:3]), wpxt[i]) 	# transfrom from world to base frame
+				wcp1[i] = mX(self.XHc.coxa_X_base, v3_X_m(basXft))[:3,3] 		# transform from base to leg frame
+
+			spline1 = TrajectoryPoints(self.Path.generate_leg_path(wcp, td, tn))
+			spline2 = TrajectoryPoints(self.Path.generate_leg_path(wcp1, tdt, tn))
+
+			# fig, ax = plt.subplots()
+			# ax.plot(spline1.t, spline1.xp, label='ori');
+			# ax.plot(spline2.t, spline2.xp, label='new');
+			# plt.grid('on');
+			# plt.show()
 		# 	print 'slength: ', self.spline_length
 		# 	fig, ax = plt.subplots()
 		# 	ax.plot(self.xspline.xp, label='vel');

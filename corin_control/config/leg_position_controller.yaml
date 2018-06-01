@@ -15,13 +15,13 @@ corin:
   lf_q2_joint:
     type: effort_controllers/JointPositionController
     joint: lf_q2_joint
-    pid: {p: 21.002, i: 0.00000, d: 0.102}
+    pid: {p: 51.002, i: 0.00000, d: 0.102}
     state_publish_rate:  80
 
   lf_q3_joint:
     type: effort_controllers/JointPositionController
     joint: lf_q3_joint
-    pid: {p: 12.003, i: 0.00000, d: 0.103}
+    pid: {p: 51.003, i: 0.00000, d: 0.103}
     state_publish_rate:  80
 
   # Leg 2 ------------------------------------------------------
@@ -34,13 +34,13 @@ corin:
   lm_q2_joint:
     type: effort_controllers/JointPositionController
     joint: lm_q2_joint
-    pid: {p: 21.002, i: 0.00000, d: 0.102}
+    pid: {p: 51.002, i: 0.00000, d: 0.102}
     state_publish_rate:  80
 
   lm_q3_joint:
     type: effort_controllers/JointPositionController
     joint: lm_q3_joint
-    pid: {p: 12.003, i: 0.00000, d: 0.103}
+    pid: {p: 51.003, i: 0.00000, d: 0.103}
     state_publish_rate:  80
 
   # Leg 3 ------------------------------------------------------
@@ -53,13 +53,13 @@ corin:
   lr_q2_joint:
     type: effort_controllers/JointPositionController
     joint: lr_q2_joint
-    pid: {p: 21.002, i: 0.00000, d: 0.102}
+    pid: {p: 51.002, i: 0.00000, d: 0.102}
     state_publish_rate:  80
 
   lr_q3_joint:
     type: effort_controllers/JointPositionController
     joint: lr_q3_joint
-    pid: {p: 12.003, i: 0.00000, d: 0.103}
+    pid: {p: 51.003, i: 0.00000, d: 0.103}
     state_publish_rate:  80
 
   # Leg 4 ------------------------------------------------------
@@ -72,13 +72,13 @@ corin:
   rf_q2_joint:
     type: effort_controllers/JointPositionController
     joint: rf_q2_joint
-    pid: {p: 21.002, i: 0.00000, d: 0.102}
+    pid: {p: 51.002, i: 0.00000, d: 0.102}
     state_publish_rate:  80
 
   rf_q3_joint:
     type: effort_controllers/JointPositionController
     joint: rf_q3_joint
-    pid: {p: 12.003, i: 0.00000, d: 0.103}
+    pid: {p: 51.003, i: 0.00000, d: 0.103}
     state_publish_rate:  80
 
   # Leg 5 ------------------------------------------------------
@@ -91,13 +91,13 @@ corin:
   rm_q2_joint:
     type: effort_controllers/JointPositionController
     joint: rm_q2_joint
-    pid: {p: 21.002, i: 0.00000, d: 0.102}
+    pid: {p: 51.002, i: 0.00000, d: 0.102}
     state_publish_rate:  80
 
   rm_q3_joint:
     type: effort_controllers/JointPositionController
     joint: rm_q3_joint
-    pid: {p: 12.003, i: 0.00000, d: 0.103}
+    pid: {p: 51.003, i: 0.00000, d: 0.103}
     state_publish_rate:  80
 
   # Leg_6 ------------------------------------------------------
@@ -110,12 +110,12 @@ corin:
   rr_q2_joint:
     type: effort_controllers/JointPositionController
     joint: rr_q2_joint
-    pid: {p: 21.002, i: 0.00000, d: 0.102}
+    pid: {p: 51.002, i: 0.00000, d: 0.102}
     state_publish_rate:  80
 
   rr_q3_joint:
     type: effort_controllers/JointPositionController
     joint: rr_q3_joint
-    pid: {p: 12.003, i: 0.00000, d: 0.103}
+    pid: {p: 51.003, i: 0.00000, d: 0.103}
     state_publish_rate:  80
   ## 40 80 40

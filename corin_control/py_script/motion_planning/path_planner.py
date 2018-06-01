@@ -794,7 +794,7 @@ class PathPlanner:
 
 		i = ig = 0
 		if (self.T_GND_X_WALL):
-			do_wall = np.array([0., 0.31, 0.]) 		# Initial distance from robot's base to wall (base frame)
+			do_wall = np.array([0., 0.32, 0.]) 		# Initial distance from robot's base to wall (base frame)
 		elif (self.T_WALL_X_GND):
 			do_wall = self.di_wall
 		elif (self.T_GND_X_CHIM):
@@ -1010,14 +1010,14 @@ class PathPlanner:
 																	self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4])
 					self.Robot.Leg[j].XHd.world_X_foot = mX(self.Robot.XHd.world_X_base, 
 																self.Robot.Leg[j].XHd.base_X_AEP)
-					if (j==4):
-						print 'wbXn: ', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
-						print 'wbXa: ', np.round(self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3],3)
-						print 'bXa:  ', np.round(self.Robot.Leg[j].XHd.base_X_AEP[:3,3],3)
-						print 'bXn:  ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],3)
-						print 'wXb:  ', np.round(self.Robot.XHd.world_X_base[:3,3],3)
-						# print mX(self.Robot.XHd.world_X_base, self.Robot.Leg[j].XHd.base_X_AEP)
-						print 'wXf:  ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
+					# if (j==4):
+					# 	print 'wbXn: ', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
+					# 	print 'wbXa: ', np.round(self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3],3)
+					# 	print 'bXa:  ', np.round(self.Robot.Leg[j].XHd.base_X_AEP[:3,3],3)
+					# 	print 'bXn:  ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],3)
+					# 	print 'wXb:  ', np.round(self.Robot.XHd.world_X_base[:3,3],3)
+					# 	# print mX(self.Robot.XHd.world_X_base, self.Robot.Leg[j].XHd.base_X_AEP)
+					# 	print 'wXf:  ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
 
 					## Get cell height in (x,y) location of world_X_foot
 					cell_h = np.array([0., 0., self.GridMap.get_cell('height', self.Robot.Leg[j].XHd.world_X_foot[:3,3], j)])

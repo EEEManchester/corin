@@ -277,9 +277,22 @@ for i in range(len(qrange),2*len(qrange)-1):
 	t_cob[i] = i*total_time/(2*(len(qrange)-1))
 
 a = np.array([1,0,0])
-print 0./2.
 
 a = [1,5,3]
 
-for i in a:
-	print i
+sh = 0.1
+sn1 = np.array([0.,0.,1.])
+sn2 = np.array([0.,-1.,0.])
+sp = np.array([0.0, -0.30, -0.1])
+ep = np.array([0.0, 0.35,  0.1 ])
+cpx = sp.copy()
+
+for i in range(1,5):
+	pu = sp + sn1*np.array([0.,0.,i*0.05*sh])
+	cpx = np.vstack((cpx, pu))
+
+for i in range(4,0,-1):
+	pu = ep + sn2*(i*0.05*sh)
+	print pu
+	# cpx = np.vstack((cpx, pu))
+# print cpx
