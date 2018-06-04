@@ -46,8 +46,8 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "gazebo"		# interface to control: gazebo, rviz or robotis hardware
-		self.control_rate = "normal" 	# run controller in various mode: 1) normal, 2) fast
+		self.interface = "rviz"		# interface to control: gazebo, rviz or robotis hardware
+		self.control_rate = "fast" 	# run controller in various mode: 1) normal, 2) fast
 		self.control_loop = "open" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
@@ -105,7 +105,7 @@ class CorinManager:
 		## setup RVIZ JointState topic
 		if (self.interface == 'rviz'):
 			rospy.set_param(ROBOT_NS + '/standing', True)
-			qd = self.Robot.task_X_joint()
+			qd, err_list = self.Robot.task_X_joint()
 			for i in range(0,5):
 				self.publish_topics(qd)
 				self.rate.sleep()
@@ -304,7 +304,7 @@ class CorinManager:
 							self.Robot.Leg[j].feedback_state = 2
 							
 				## Task to joint space
-				qd = self.Robot.task_X_joint()
+				qd, err_list = self.Robot.task_X_joint()
 				self.publish_topics(qd)
 				
 			return True
@@ -365,7 +365,7 @@ class CorinManager:
 					if (ti >= period[j][0] and ti <= period[j][1]):
 						self.Robot.Leg[j].update_from_spline(); 	# set cartesian position for joint kinematics
 
-				qd = self.Robot.task_X_joint()
+				qd, err_list = self.Robot.task_X_joint()
 				self.publish_topics(qd)
 
 		except Exception, e:
@@ -602,12 +602,67 @@ class CorinManager:
 				# 	print 'cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3],4)
 
 			## Task to joint space
-			qd = self.Robot.task_X_joint()	
-			
+			qd, tXj_error = self.Robot.task_X_joint()	
+
 			if (self.Robot.invalid == True):
-				print 'Error Occured, robot invalid!'
-				## TODO: recovery routine
-				break
+				print 'Error Occured, robot invalid! ', tXj_error
+				self.Robot.invalid = False
+				## Recovery routine
+				for j in range(0, 6):
+					if (tXj_error[j] != 0):
+						print 'Recovering leg ', j, ' error: ', tXj_error[j]
+						print 'before: ', np.round(self.Robot.Leg[j].XHc.world_base_X_foot[:3,3],3)
+						## Part 1: Joint space leg retraction
+						qsp = np.zeros((0,3))
+						for i in range(0,46,5):
+							qsp = np.vstack(( qsp, np.array([qd_prev.xp[j*3], 
+													qd_prev.xp[j*3+1] + np.deg2rad(i), 
+													qd_prev.xp[j*3+2] - np.deg2rad(i)*1.25]) ))
+
+						tscale = np.array([range(0,len(qsp))])
+						rmax = float(np.amax(tscale))
+						tsp = (tscale/rmax).flatten()
+
+						PathGenerator = Pathgenerator.PathGenerator() 	# path generator for robot's base
+						qtrajectory = PathGenerator.generate_leg_path(qsp, tsp, CTR_INTV)
+						for i in range(1, len(qtrajectory[0])):
+							for z in range(0,3):
+								qd_prev.xp[j*3+z] = qtrajectory[1][i][z]
+								qd_prev.xv[j*3+z] = qtrajectory[1][i][z]
+								qd_prev.xa[j*3+z] = qtrajectory[1][i][z]
+							self.publish_topics(qd_prev)
+						self.Robot.qd = qd_prev.xp
+						self.Robot.update_state(control_mode=self.control_rate)
+						## Part 2: Task space foothold placement
+						## First, set new foothold to NRP position
+						self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP.copy()
+						print 'after: ', np.round(self.Robot.Leg[j].XHc.world_base_X_foot[:3,3],3)
+						## Compute average surface normal from cell surface normal at both footholds
+						sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
+						sn2 = sn1.copy()
+						
+						## Set bodypose in leg class
+						self.Robot.Leg[j].XH_world_X_base = self.Robot.XHd.world_X_base.copy()
+						
+						## Generate transfer spline
+						svalid = self.Robot.Leg[j].generate_spline('world', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
+						print 'init: ', np.round(self.Robot.Leg[j].XHc.world_base_X_foot[:3,3],3)
+						print 'final ', np.round(mX(self.Robot.Leg[j].XH_world_X_base[:3,:3], self.Robot.Leg[j].XHd.base_X_foot[:3,3]),3)
+						## Update NRP
+						self.Robot.Leg[j].XHd.base_X_NRP[:3,3] = mX(self.Robot.XHd.base_X_world[:3,:3], 
+																	self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3])
+						self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = mX(self.Robot.XHd.world_X_base[:3,:3], 
+																			self.Robot.Leg[j].XHd.base_X_foot[:3,3])
+						## Move leg individually
+						for n in range(1, self.Robot.Leg[j].spline_length):
+							qps, qvs, qas = self.Robot.Leg[j].qspline.get_index(n)
+							for z in range(0,3):
+								qd_prev.xp[j*3+z] = qps[z]
+								qd_prev.xv[j*3+z] = qvs[z]
+								qd_prev.xa[j*3+z] = qas[z]
+							self.publish_topics(qd_prev)
+				raw_input('cont')
+
 			else:
 				# ends gait phase early if transfer phase completes - TODO: ANOTHER WAY?
 				transfer_total = 0; 	
@@ -634,7 +689,8 @@ class CorinManager:
 				
 				# publish appended joint angles if motion valid
 				self.publish_topics(qd, qlog)
-				
+				qd_prev = JointTrajectoryPoints(18,(qd.t, qd.xp, qd.xv, qd.xa))
+
 				i += 1
 			## ============================================================================================================================== ##
 			
@@ -718,9 +774,9 @@ class CorinManager:
 				# ps = (10,13); pf = (20,19)
 				# ps = (10,13); pf = (12,13)	# Short straight Line
 				# ps = (8,13); pf = (72,13)	# Long straight Line - for chimney 63
-				ps = (10,14); pf = (10,20)	# G2W - Left side up
+				# ps = (10,14); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
-				# ps = (10,13); pf = (40,13)	# Wall up and down again
+				ps = (10,13); pf = (40,13)	# Wall up and down again
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,
@@ -781,7 +837,7 @@ class CorinManager:
 			self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
 			self.Robot.Leg[j].XHc.coxa_X_foot = self.Robot.Leg[j].XHd.coxa_X_foot.copy()
 
-		qd = self.Robot.task_X_joint()
+		qd, err_list = self.Robot.task_X_joint()
 		
 		if (self.Robot.invalid == True):
 			print 'Robot Configuration Invalid!'

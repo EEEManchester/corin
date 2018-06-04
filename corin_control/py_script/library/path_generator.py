@@ -86,8 +86,8 @@ class PathGenerator():
 			Output:	BaseTrajectory() array of linear translation and angular
 					rotation points 												"""
 
-		# SplineGenerator = Bspline.SplineGenerator()	# biezer spline generator
-		SplineGenerator = Pspline.SplineGenerator() # cubic polynomial spline generator 
+		SplineGenerator = Bspline.SplineGenerator()	# biezer spline generator
+		# SplineGenerator = Pspline.SplineGenerator() # cubic polynomial spline generator 
 
 		# generate linear or angular via points if size mismatch
 		x_cob, w_cob, t_cob = self.auto_generate_points(x_cob, w_cob, t_cob)
@@ -335,6 +335,18 @@ t_cob = np.array([0.,2.])
 # Plot.plot_2d(new_path.X.t,new_path.X.xp)
 # plt.show()
 # Plot.plot_2d_multiple(2,x_out[0],x_out[1],x_out[3])
+
+## Joint Recovery =============================================================
+qsp = np.zeros((0,3))
+for i in range(0,46,5):
+	qsp = np.vstack(( qsp, np.array([0.0, np.deg2rad(i), np.deg2rad(i)]) ))
+
+tscale = np.array([range(0,len(qsp))])
+rmax = float(np.amax(tscale))
+tsp = (tscale/rmax).flatten()
+
+# path_n = planner.generate_leg_path(qsp, tsp, 0.1)
+# Plot.plot_2d(path_n[0], path_n[1])
 
 ## Wall Transition =============================================================
 tran_y = 0.1

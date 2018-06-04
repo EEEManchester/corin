@@ -80,6 +80,7 @@ class KDL():
 			return np.array([q1, q2, q3])
 		except ValueError, e:
 			print 'KDL-IK(): ', e
+			return None
 		except Exception, e:
 			print 'KDL-IK(): ', e
 			return None
@@ -97,6 +98,16 @@ class KDL():
 				return False
 		except Exception, e:
 			return None
+
+	def singularity_approach(self, q=None):
+		""" checks how close the robot is to singular, sqrt[ det(J*J^T)]	"""
+		""" Input: 	1) q -> joint angles (2D array) in radians
+			Output: 1) scalar value how close to singular 		"""
+
+		try:
+			return np.nan_to_num(np.sqrt(np.linalg.det( mX(self.leg_jacobian(q),self.transpose_leg_jacobian(q)) )))
+		except Exception, e:
+			return 0
 
 	def joint_speed(self, q=None, v=None, a=None):
 
@@ -140,55 +151,7 @@ class KDL():
 		# f = J^(-T)*tau
 		return inv(self.transpose_leg_jacobian(q))*tau
 
-	def update_nominal_stance(self, bodypose, base_X_surface, qsurface):
-		""" updates the robot nominal stance (REP/NRP) """
-
-		# print 'bodypose: ', bodypose
-		# print 'b X surf: ', base_X_surface
-		# print 'q surf  : ', qsurface
-
-		qrx = qsurface.item(1)
-
-		world_hip_X_wall_Y = (np.dot(rotation_zyx(bodypose[3:7]), (base_X_surface - COXA_Y)*np.array([ [0.],[1.],[0,] ])) ).item(1)
-		world_hip_X_wall_Z = bodypose.item(2) + (np.dot(rotation_zyx(bodypose[3:7]), np.array([ [0.], [COXA_Y], [0.] ]) ) ).item(2)
-
-		# print 'f tf: ', np.round(world_hip_X_wall_Y, 3), np.round(world_hip_X_wall_Z, 3)
-
-		# foothold algorithm
-		# Step 1:
-		h2 = L3*np.sin(np.pi/2 - qrx);
-		d2 = np.sqrt(L3**2 - h2**2)
-		# print 's1: ', h2, d2
-		# Step 2:
-		d1  = world_hip_X_wall_Y - d2
-		phi = np.arcsin(d1/L2)
-		# print 's2: ', d1, L2, phi
-		# Step 3:
-		hs = np.sqrt(L2**2 - d1**2)
-		h1 = hs - h2
-
-		# Step 4:
-		world_X_wall_Z = world_hip_X_wall_Z + h1
-
-		# transform to world frame
-		world_X_wall_Y = (np.dot(rotation_zyx(bodypose[3:7]), base_X_surface*np.array([ [0.],[1.],[0,] ]))).item(1)
-		base_X_wall_Z  = world_X_wall_Z - bodypose.item(2)
-
-		# transform to base frame
-		# base_X_nom = np.dot(rotation_zyx(-bodypose[3:7]), np.array([ [0.],[world_X_wall_Y], [base_X_wall_Z] ]))
-
-		# output: in base frame, from hip to nominal position
-		base_hip_X_nom = np.dot(rotation_zyx(-bodypose[3:7]), np.array([ [0.],[world_hip_X_wall_Y], [base_X_wall_Z] ]))
-
-		# print world_X_wall_Y, base_X_wall_Z
-		# print base_X_nom.transpose()
-		# print base_hip_X_nom.transpose()
-
-		# return base_X_nom
-		return base_hip_X_nom
-
-
-
+	
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
@@ -202,12 +165,12 @@ bodypose = np.array([0.,0.,BODY_HEIGHT, 0.,0.,0.])
 
 # print bodypose[3:7]
 # qs = [0., 1.238, -1.724] #[0., 1.195, -1.773] 	# left side
-qs = [0., 0.45, -2.033]	# right side
-
+qs = np.array([0., 0.15, -0.10])	# right side
+# print CK.singularity_approach(qs)
 # cd = CK.leg_FK(qs)
 # print cd.flatten()
 # cd = [ 0.21, 0., -0.1]
-cd = [-0.1367, -0.3331, -0.07]
+cd = [0.295, -0.0056, 0.1865]
 # qp = CK.leg_IK(cd)
 # print 'q: ', qp
 # print qp

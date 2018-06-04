@@ -874,11 +874,11 @@ class PathPlanner:
 							# 	print 'ss  : ', i, self.Robot.Gait.step_stroke
 							# 	print '----------------------------------------------'
 							# else:
-							if (mag > (L2+L3-0.005)):
-								print 'leg length exceeded on ', j, ' at n=', i, mag
-								bound_exceed = True
-								leg_exceed = j
-								break
+							# if (mag > (L2+L3-0.005)):
+							# 	print 'leg length exceeded on ', j, ' at n=', i, mag
+							# 	bound_exceed = True
+							# 	leg_exceed = j
+							# 	break
 
 							if (bound_exceed == True):
 								print 'bound exceed on ', j, ' at n=', i
@@ -1776,25 +1776,26 @@ class PathPlanner:
 		path_generator = Pathgenerator.PathGenerator()
 		path_generator.V_MAX = path_generator.W_MAX = 10
 		path = path_generator.generate_base_path(x_cob, w_cob, CTR_INTV, t_cob)
-		motion_plan.qb = path
+		
 
 		sum_footholds = 0
 		for j in range(0,6):
 			sum_footholds += len(motion_plan.f_world_X_foot[j].xp)
 		print 'no. footholds: ', sum_footholds
 		print 'time: ', motion_plan.qb.X.t[-1]
+		print type(motion_plan.qb.X.t)
 		# print len(path.X.t)
 		# Plot.plot_2d(path.X.t,path.X.xp)
 		# Plot.plot_2d(path.W.t,path.W.xp)
 		fig, ax = plt.subplots()
-		# ax.plot(motion_plan.qb.W.t, motion_plan.qb.W.xp, label='x');
+		ax.plot(motion_plan.qb.X.t, motion_plan.qb.X.xp[:,0], 'ro');
 		# ax.plot(path.X.xp, label='x');
-		ax.plot(path.W.xp, label='w');
-		# ax.plot(path.X.t, path.X.xa, label='acc');
-		# plt.grid('on');
-		# plt.show()
+		# ax.plot(path.W.xp, label='w');
+		ax.plot(path.X.t, path.X.xp[:,0], label='acc');
+		plt.grid('on');
+		plt.show()
 		
-
+		motion_plan.qb = path
 		return motion_plan
 
 	def generate_motion_plan(self, Robot, **options):

@@ -72,6 +72,9 @@ class LegClass:
 		
 		## Check work envelope
 		bound_exceed = self.check_boundary_limit(self.XHc.world_base_X_foot, self.XHc.world_base_X_NRP, step_stroke)
+		
+		## Check distance to singular
+		sing_value = self.KDL.singularity_approach(q_compensated)
 
 		## Resets state
 		if (resetState):
@@ -125,31 +128,24 @@ class LegClass:
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)
 
-		if (self.number == 5):
-			wpxt, tdt = self.Path.old_interpolate_leg_path(start, end, sn1, sn2, phase, reflex, ctime)
-			wcp1 = np.zeros((len(wpxt),3))
-			wcp1[0] = self.XHc.coxa_X_foot[0:3,3].copy()
+		# if (self.number == 5):
+		# 	wpxt, tdt = self.Path.old_interpolate_leg_path(start, end, sn1, sn2, phase, reflex, ctime)
+		# 	wcp1 = np.zeros((len(wpxt),3))
+		# 	wcp1[0] = self.XHc.coxa_X_foot[0:3,3].copy()
 
-			for i in range (1, len(wpxt)):
-				basXft = mX(np.transpose(self.XH_world_X_base[:3,:3]), wpxt[i]) 	# transfrom from world to base frame
-				wcp1[i] = mX(self.XHc.coxa_X_base, v3_X_m(basXft))[:3,3] 		# transform from base to leg frame
+			# for i in range (1, len(wpxt)):
+			# 	basXft = mX(np.transpose(self.XH_world_X_base[:3,:3]), wpxt[i]) 	# transfrom from world to base frame
+			# 	wcp1[i] = mX(self.XHc.coxa_X_base, v3_X_m(basXft))[:3,3] 		# transform from base to leg frame
 
-			spline1 = TrajectoryPoints(self.Path.generate_leg_path(wcp, td, tn))
-			spline2 = TrajectoryPoints(self.Path.generate_leg_path(wcp1, tdt, tn))
+			# spline1 = TrajectoryPoints(self.Path.generate_leg_path(wcp, td, tn))
+			# spline2 = TrajectoryPoints(self.Path.generate_leg_path(wcp1, tdt, tn))
 
 			# fig, ax = plt.subplots()
 			# ax.plot(spline1.t, spline1.xp, label='ori');
 			# ax.plot(spline2.t, spline2.xp, label='new');
 			# plt.grid('on');
 			# plt.show()
-		# 	print 'slength: ', self.spline_length
-		# 	fig, ax = plt.subplots()
-		# 	ax.plot(self.xspline.xp, label='vel');
-		# 	plt.grid('on');
-		# 	plt.show()
-			# print 'dwXb: ', np.round(XD_world_base_X_foot,4)#self.XH_world_X_base[:3,3],4)
-			# print 'cp: ', np.round(wcp,4)
-			
+		
 		## checks spline for kinematic constraint
 		qt = [];	qp = [];	qv = [];	qa = [];
 
@@ -193,7 +189,6 @@ class LegClass:
 			xp = self.XHd.coxa_X_foot[:3,3]
 		
 		self.Joint.qpd = self.KDL.leg_IK(xp)
-		
 
 		if (self.Joint.qpd is not None):
 			# checks if joint limit exceeded and singularity occurs
@@ -311,6 +306,11 @@ class LegClass:
 		# except:
 		# 	self.feedback_state = 2
 		# 	return False
+
+	def singular_recovery(self):
+		""" sets the leg to default position when leg is singular """
+
+
 
 	def duplicate_self(self, leg):
 		""" Duplicates leg state by creating local copy of input leg """

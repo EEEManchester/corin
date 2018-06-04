@@ -291,8 +291,14 @@ for i in range(1,5):
 	pu = sp + sn1*np.array([0.,0.,i*0.05*sh])
 	cpx = np.vstack((cpx, pu))
 
-for i in range(4,0,-1):
-	pu = ep + sn2*(i*0.05*sh)
-	print pu
-	# cpx = np.vstack((cpx, pu))
-# print cpx
+qsp = np.zeros((0,3))
+for i in range(0,46,5):
+	qsp = np.vstack(( qsp, np.array([0.0, np.deg2rad(i), np.deg2rad(i)]) ))
+
+tscale = np.array([range(0,len(qsp))])
+rmax = float(np.amax(tscale))
+tsp = tscale/rmax
+# print 'sizeL', tsp.shape
+
+a = np.nan_to_num(float('NaN')) 
+print a

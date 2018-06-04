@@ -219,38 +219,40 @@ class RobotState:
 		qp = []
 		qv = []
 		qa = []
-		
+		err_list = [0]*6
+
 		for j in range(0,6):
-			error, qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
-			# if (j==5):
-			# 	print np.round(qpd.flatten(),4)
+			err_list[j], qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
+			
 			## append to list if valid, otherwise break and raise error
-			try:
-				err_str = 'Unknown error'
-				if (error == 0):
-					for z in range(0,3):
-						qp.append(qpd.item(z))
-						qv.append(qvd.item(z))
-						qa.append(qad.item(z))
+			err_str = ''
+			if (err_list[j] == 0):
+				for z in range(0,3):
+					qp.append(qpd.item(z))
+					qv.append(qvd.item(z))
+					qa.append(qad.item(z))
+			else:
+				if (err_list[j] == 1):
+					err_str = 'Error - joint limit exceeded in leg, '
+				elif (err_list[j] == 2):
+					err_str = 'Error - singularity in leg, '
+				elif (err_list[j] == 3):
+					err_str = 'Error - no kinematic solution in leg, '
 				else:
-					if (error == 1):
-						err_str = 'Error - joint limit exceeded in leg, '
-					elif (error == 2):
-						err_str = 'Error - singularity in leg, '
-					elif (error == 3):
-						err_str = 'Error - no kinematic solution in leg, '
-					raise ValueError, err_str
-			except Exception, e:
-				print e, j
+					err_str = 'Unknown error'
+				print err_str
+					# raise ValueError, err_str
+			# except Exception, e:
+			# 	print e, j
 
 		## check to ensure size is correct
 		# print 'length: ', len(qp)
 		if (len(qp)==18):
 			self.qd = qp 	# remap for "fast"
-			return JointTrajectoryPoints(18,(qt,qp,qv,qa))
+			return JointTrajectoryPoints(18,(qt,qp,qv,qa)), err_list
 		else:
 			self.invalid = True
-			return None
+			return None, err_list
 
 	def duplicate_self(self, robot):
 		""" Duplicates robot state by creating local copy of input robot """

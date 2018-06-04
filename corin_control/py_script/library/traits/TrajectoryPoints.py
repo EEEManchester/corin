@@ -23,6 +23,12 @@ class JointTrajectoryPoints():
 	def append(self, x):
 		pass
 
+	def get_index(self, n):
+		""" returns instant n of trajectory point """
+
+		return self.xp[n], self.xv[n], self.xa[n]
+
+	
 ## output for base trajectory
 class Trajectory6D():
 	def __init__(self,data=None):
