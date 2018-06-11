@@ -61,25 +61,46 @@ def array_to_path(path_arr, stamp=None, frame_id=None, offset=None):
 		path_msg.header.frame_id = frame_id
 	if offset is None:
 		offset = [0]*6
-		
-	for i in range (0,len(path_arr.X.t)):
-		pose = PoseStamped()
-		pose.header.stamp 	 = rospy.Time(path_arr.X.t[i])
-		pose.header.frame_id = frame_id
-		pose.pose.position.x = path_arr.X.xp[i][0] + offset[0]
-		pose.pose.position.y = path_arr.X.xp[i][1] + offset[1]
-		pose.pose.position.z = path_arr.X.xp[i][2] + offset[2]
-		
-		quat = tf.transformations.quaternion_from_euler(path_arr.W.xp[i][0] + offset[3], 
-														path_arr.W.xp[i][1] + offset[4], 
-														path_arr.W.xp[i][2] + offset[5]) 
-		
-		pose.pose.orientation.x = quat[0]
-		pose.pose.orientation.y = quat[1]
-		pose.pose.orientation.z = quat[2]
-		pose.pose.orientation.w = quat[3]
+	
+	try:
+		print 'path length: ', len(path_arr.X.t)
+		for i in range (0,len(path_arr.X.t)):
+			pose = PoseStamped()
+			pose.header.stamp 	 = rospy.Time(path_arr.X.t[i])
+			pose.header.frame_id = frame_id
+			pose.pose.position.x = path_arr.X.xp[i][0] + offset[0]
+			pose.pose.position.y = path_arr.X.xp[i][1] + offset[1]
+			pose.pose.position.z = path_arr.X.xp[i][2] + offset[2]
+			
+			quat = tf.transformations.quaternion_from_euler(path_arr.W.xp[i][0] + offset[3], 
+															path_arr.W.xp[i][1] + offset[4], 
+															path_arr.W.xp[i][2] + offset[5]) 
+			
+			pose.pose.orientation.x = quat[0]
+			pose.pose.orientation.y = quat[1]
+			pose.pose.orientation.z = quat[2]
+			pose.pose.orientation.w = quat[3]
 
-		path_msg.poses.append(pose)
+			path_msg.poses.append(pose)
+	except:
+		for i in range (0, len(path_arr)):
+			pose = PoseStamped()
+			pose.header.stamp 	 = rospy.Time(i)
+			pose.header.frame_id = frame_id
+			pose.pose.position.x = path_arr[i][0] + offset[0]
+			pose.pose.position.y = path_arr[i][1] + offset[1]
+			pose.pose.position.z = path_arr[i][2] + offset[2]
+			
+			quat = tf.transformations.quaternion_from_euler(path_arr[i][0] + offset[3], 
+															path_arr[i][1] + offset[4], 
+															path_arr[i][2] + offset[5]) 
+			
+			pose.pose.orientation.x = quat[0]
+			pose.pose.orientation.y = quat[1]
+			pose.pose.orientation.z = quat[2]
+			pose.pose.orientation.w = quat[3]
+
+			path_msg.poses.append(pose)
 
 	return path_msg
 

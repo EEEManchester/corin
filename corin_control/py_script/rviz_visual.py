@@ -42,7 +42,7 @@ class RvizVisualise:
 		quat = tf.transformations.quaternion_from_euler(qb[3].copy(), qb[4].copy(), qb[5].copy())
 		self.robot_broadcaster.sendTransform( (qb[0],qb[1],qb[2]), quat, rospy.Time.now(), self.fr_robot, self.fr_fix);
 
-	def publish_path(self, xb, xoff):
+	def publish_path(self, xb, xoff=None):
 		""" Trajectory path publisher 
 			Input: 	1) xb: trajectory Re^(6xn)
 					2) xoff: offset Re^6 		"""

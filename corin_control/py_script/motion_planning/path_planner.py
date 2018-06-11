@@ -43,7 +43,7 @@ MAX_WP = 0.62 	# maximum wall walking footprint
 MIN_CFW = 0.60 	# minimum footprint width for chimney
 MAX_CFW = 0.73 	# maximum footprint width for chimney
 
-TEST_POINT = (21,13)
+TEST_POINT = (12,13)
 
 class BodyposeTable:
 	def __init__(self):
@@ -344,7 +344,7 @@ class PathPlanner:
 						## check if cell occupied
 						try:
 							# if (p == TEST_POINT):
-							# 	print p, pwset, i, self.GridMap.Map.nodes[pwset]['height']
+							# 	print p, pinom, pwset, i, self.GridMap.Map.nodes[pwset]['height']
 							if (self.GridMap.Map.nodes[pwset]['height']==1):
 								fcost = fcost + self.GridMap.Map.nodes[pwset]['height'] 	# calculate cost of area - not true since will be skiping through
 								skip_row = True 								# set flag to skip remainder of row - computationally efficient
@@ -874,11 +874,11 @@ class PathPlanner:
 							# 	print 'ss  : ', i, self.Robot.Gait.step_stroke
 							# 	print '----------------------------------------------'
 							# else:
-							# if (mag > (L2+L3-0.005)):
-							# 	print 'leg length exceeded on ', j, ' at n=', i, mag
-							# 	bound_exceed = True
-							# 	leg_exceed = j
-							# 	break
+							if (mag > (L2+L3-0.005)):
+								print 'leg length exceeded on ', j, ' at n=', i, mag
+								bound_exceed = True
+								leg_exceed = j
+								break
 
 							if (bound_exceed == True):
 								print 'bound exceed on ', j, ' at n=', i
@@ -1023,12 +1023,14 @@ class PathPlanner:
 					cell_h = np.array([0., 0., self.GridMap.get_cell('height', self.Robot.Leg[j].XHd.world_X_foot[:3,3], j)])
 					
 					## Cell height above threshold gets ignored as this requires advanced motions
-					if (cell_h.item(2) < 0.1):# and chim_trans is False and self.W_CHIM is False):
+					if (abs(cell_h.item(2)) < 0.1):# and chim_trans is False and self.W_CHIM is False):
 						self.Robot.Leg[j].XHd.world_X_foot[2,3] = cell_h.item(2) 	# set z-component to cell height
 
-					elif (cell_h.item(2) > 0.1 and self.W_GND is True):
+					elif (abs(cell_h.item(2)) > 0.1 and self.W_GND is True):
 						print 'Search for next valid foothold for ', j, cell_h.item(2)
-						self.Robot.Leg[j].XHd.world_X_foot[:3,3] = self.find_valid_foothold(self.Robot.Leg[j].XHd.world_X_foot[:3,3], j)
+						# self.Robot.Leg[j].XHd.world_X_foot[:3,3] = self.find_valid_foothold(self.Robot.Leg[j].XHd.world_X_foot[:3,3], j)
+						self.Robot.Leg[j].XHd.world_X_foot[:3,3] = self.find_valid_foothold(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + 
+																							self.Robot.XHd.world_X_base[:3,3], j)
 
 					## Check if foothold valid for chimney transition
 					elif (self.T_GND_X_CHIM is True):
@@ -1493,7 +1495,7 @@ class PathPlanner:
 				# Body roll stabilises, so interpolate
 				if (abs(qn1-qn0) < 0.05):
 					if (path[i][0] - sp[0] > 0):
-						ep = (sp[0],path[i][1])	# set new end point
+						ep = (sp[0],path[i-1][1])	# set new end point
 						# modify path to start from end of segmentised transition
 						temp_path = map(lambda x: (x[0],path[i][1]) , temp_path)
 						temp_path.insert(0,ep)
@@ -1524,12 +1526,12 @@ class PathPlanner:
 						plan_01 = self.foothold_planner(path_01)
 						motion_plan.append(plan_01)
 						
-						self.T_GND_X_WALL = False
+						self.T_GND_X_WALL = self.W_GND = False
 
 					if (self.T_WALL_X_GND):
 						qr = self.base_map.nodes[sp]['pose'][1]
-						df = 1 if (qr > 0) else 0
-						ep = (sp[0],path[i][1] + df)
+						# df = 1 if (qr > 0) else 0
+						# ep = (sp[0],path[i][1] + df)
 						print 'Interpolating transition ...', sp, ep
 						# raw_input('cont')
 						print 'Transition pt. 1'
@@ -1783,17 +1785,17 @@ class PathPlanner:
 			sum_footholds += len(motion_plan.f_world_X_foot[j].xp)
 		print 'no. footholds: ', sum_footholds
 		print 'time: ', motion_plan.qb.X.t[-1]
-		print type(motion_plan.qb.X.t)
+		
 		# print len(path.X.t)
 		# Plot.plot_2d(path.X.t,path.X.xp)
 		# Plot.plot_2d(path.W.t,path.W.xp)
-		fig, ax = plt.subplots()
-		ax.plot(motion_plan.qb.X.t, motion_plan.qb.X.xp[:,0], 'ro');
+		# fig, ax = plt.subplots()
+		# ax.plot(motion_plan.qb.X.t, motion_plan.qb.X.xp[:,0], 'ro');
 		# ax.plot(path.X.xp, label='x');
 		# ax.plot(path.W.xp, label='w');
-		ax.plot(path.X.t, path.X.xp[:,0], label='acc');
-		plt.grid('on');
-		plt.show()
+		# ax.plot(path.X.t, path.X.xp[:,0], label='acc');
+		# plt.grid('on');
+		# plt.show()
 		
 		motion_plan.qb = path
 		return motion_plan

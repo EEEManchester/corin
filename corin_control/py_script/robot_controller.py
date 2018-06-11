@@ -41,7 +41,7 @@ class CorinManager:
 
 		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.Action	= control_interface.ControlInterface()	# control action class	
-		self.GridMap  = GridMap('wall_demo_left')
+		self.GridMap  = GridMap('hole_demo')
 		self.PathPlan = PathPlanner(self.GridMap)
 
 		self.resting   = False 		# Flag indicating robot standing or resting
@@ -419,9 +419,9 @@ class CorinManager:
 		## Publish multiple times to ensure it is published 
 		for c in range(0,3):
 			self.Visualizer.publish_robot(wXbase_offset)
-			self.Visualizer.publish_path(base_path, wXbase_offset)
+			# self.Visualizer.publish_path(base_path, wXbase_offset)
+			self.Visualizer.publish_path(world_X_base)
 			self.Visualizer.publish_footholds(world_X_footholds)
-			self.Visualizer.publish_cob(world_X_base)
 
 			if (self.interface == 'rviz'):
 				self.joint_pub_.publish(array_to_joint_states(self.Robot.qc.position, rospy.Time.now(), ""))
@@ -772,11 +772,11 @@ class CorinManager:
 				self.Robot.support_mode = False
 
 				# ps = (10,13); pf = (20,19)
-				# ps = (10,13); pf = (12,13)	# Short straight Line
+				ps = (10,13); pf = (13,13)	# Short straight Line
 				# ps = (8,13); pf = (72,13)	# Long straight Line - for chimney 63
 				# ps = (10,14); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
-				ps = (10,13); pf = (40,13)	# Wall up and down again
+				# ps = (10,13); pf = (40,13)	# Wall up and down again
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,
