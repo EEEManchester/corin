@@ -453,46 +453,135 @@ class GridMap:
 
 		return cx, cy, cz
 
-	def cw_spiral_left(self, p, grid_area, j):
+	def square_spiral_search(self, p, grid_area, j):
 		""" spiral grid: rotates in clockwise direction starting with left, up, right then down """
+
+		def move_left(isp, iend, ii):
+			# move left
+			for x in range(0,ii):
+	            # skip last cell - ends in square shape
+				if (iend-ii==1 and ii-x==1):
+					pass
+				else:
+					isp = (isp[0]-1,isp[1])
+					point_list.append(isp)
+			return isp
+		def move_right(isp, iend, ii):
+			for x in range(0,ii):
+	            # skip last cell - ends in square shape
+				if (iend-ii==1 and ii-x==1):
+					pass
+				else:
+					isp = (isp[0]+1,isp[1])
+					point_list.append(isp)
+			return isp
+		def move_up(isp, iend, ii):
+			if (i!=iend-1):
+				for x in range(0,ii):
+					isp = (isp[0],isp[1]+1)
+					point_list.append(isp)
+			return isp
+		def move_down(isp, iend, ii):
+			if (i!=iend-1):
+				for x in range(0,ii):
+					isp = (isp[0],isp[1]-1)
+					point_list.append(isp)
+			return isp
 
 		point_list = []
 		end = 2*grid_area[0] - 2
 
-		if (j < 3):
+		# sets the appropriate foothold in index form
+		if (j == 0):
 			sp = (int(np.floor(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
-		else:
+		elif (j == 1):
+			sp = (int(np.round(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
+		elif (j == 2):
+			sp = (int(np.ceil(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
+		elif (j == 3):
 			sp = (int(np.floor(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
+		elif (j == 4):
+			sp = (int(np.round(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
+		elif (j == 5):
+			sp = (int(np.ceil(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
 		print 'sp: ', sp
+		# sets direction based on feet
+		if (j < 3):
+			direction = 'ccw'
+			# sp = (int(np.floor(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
+		else:
+			direction = 'cw'
+			# sp = (int(np.floor(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
+		
 		for i in range(1,end):
-			if (i%2):
-				# move left
-				for x in range(0,i):
-		            # skip last cell - ends in square shape
-					if (end-i==1 and i-x==1):
-						pass
-					else:
-						sp = (sp[0]-1,sp[1])
-						point_list.append(sp)
-				# move up
-				if (i!=end-1):
+			if (direction == 'cw'):
+				# sp = move_left(sp, end, i)
+				# sp = move_up(sp, end, i)
+				# sp = move_right(sp, end, i)
+				# sp = move_down(sp, end, i)
+				if (i%2):
+					# move left
 					for x in range(0,i):
-						sp = (sp[0],sp[1]+1)
-						point_list.append(sp)
-			else:
-				# move right
-				for x in range(0,i):
-		            # skip last cell - ends in square shape
-					if (end-i==1 and i-x==1):
-						pass
-					else:
-						sp = (sp[0]+1,sp[1])
-						point_list.append(sp)
-				# move down
-				if (i!=end-1):
+			            # skip last cell - ends in square shape
+						if (end-i==1 and i-x==1):
+							pass
+						else:
+							sp = (sp[0]-1,sp[1])
+							point_list.append(sp)
+					# move up
+					if (i!=end-1):
+						for x in range(0,i):
+							sp = (sp[0],sp[1]+1)
+							point_list.append(sp)
+				else:
+					# move right
 					for x in range(0,i):
-						sp = (sp[0],sp[1]-1)
-						point_list.append(sp)
+			            # skip last cell - ends in square shape
+						if (end-i==1 and i-x==1):
+							pass
+						else:
+							sp = (sp[0]+1,sp[1])
+							point_list.append(sp)
+					# move down
+					if (i!=end-1):
+						for x in range(0,i):
+							sp = (sp[0],sp[1]-1)
+							point_list.append(sp)
+
+			elif (direction == 'ccw'):
+				# sp = move_right(sp, end, i)
+				# sp = move_up(sp, end, i)
+				# sp = move_left(sp, end, i)
+				# sp = move_down(sp, end, i)
+				if (i%2):
+					# move right
+					for x in range(0,i):
+			            # skip last cell - ends in square shape
+						if (end-i==1 and i-x==1):
+							pass
+						else:
+							sp = (sp[0]+1,sp[1])
+							point_list.append(sp)
+					# move up
+					if (i!=end-1):
+						for x in range(0,i):
+							sp = (sp[0],sp[1]+1)
+							point_list.append(sp)
+				else:
+					# move left
+					for x in range(0,i):
+			            # skip last cell - ends in square shape
+						if (end-i==1 and i-x==1):
+							pass
+						else:
+							sp = (sp[0]-1,sp[1])
+							point_list.append(sp)
+					# move down
+					if (i!=end-1):
+						for x in range(0,i):
+							sp = (sp[0],sp[1]-1)
+							point_list.append(sp)
+
 		return point_list
 
 	def graph_representation(self, gpath=None):
@@ -558,7 +647,11 @@ class GridMap:
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-# gmap = GridMap('hole_demo')
+gmap = GridMap('hole_demo')
+sp = np.array([0.6015, 0.1391, -0.])
+print gmap.square_spiral_search(sp, (3,3), 3)
 # gmap.graph_representation()
+
+# [(20, 5), (20, 6), (21, 6), (21, 5), (20, 5), (19, 5), (19, 6), (19, 7), (20, 7), (21, 7), (21, 6), (21, 5), (20, 5), (19, 5), (20, 5), (21, 5)]
 
 

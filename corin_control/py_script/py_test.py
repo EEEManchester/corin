@@ -86,10 +86,6 @@ a = np.array([1.11,2.321])
 
 a = ([1,2,3],[6,3,2])# 'seom'
 a = [1]
-if a:
-	print 'not empty'
-elif (not a):
-	print 'empty'
 
 
 world_ground_X_base = np.array([[ 0. ,    -0.9918 , 0.1275 , 0.    ],
@@ -112,7 +108,6 @@ by = np.cos(qr)*(COXA_Y + L1) 				# world horizontal distance from base to femur
 sy = by + yy									# y_base_X_foot - leg frame
 py = sy*np.sin(np.deg2rad(ROT_BASE_X_LEG[5]+LEG_OFFSET[5])) 	# y_base_X_foot - world frame
 
-print py
 # pbas = np.array([[-0.19],[-0.28],[-0.1]])
 temp = np.array([[-0.19],[py],[0.5]])
 # pby = np.round(mX(rot_X(qr),temp),4)
@@ -127,7 +122,7 @@ body_area = (10,6)
 
 bx = int(math.floor(body_area[0])/2) # longitudinal distance to check
 by = int(math.floor(body_area[1])/2) # lateral distance to check
-print bx, by
+
 for y in range(0,by+1): 		# cycle lateral - inflated if body_area[1] is even
 	for x in range(0,2*bx+1):		# cycle longitudinal
 		# displacement from centre rotated about q
@@ -141,9 +136,6 @@ for y in range(0,by+1): 		# cycle lateral - inflated if body_area[1] is even
 
 a = [(1,2),(5,5),(1,2)]
 
-a = map(lambda x: (x[0],-1) , a)
-print a
-
 qi = 0.24
 qf = 0.0
 xi = np.array([1.02,0.39,0.15])
@@ -151,7 +143,6 @@ xf = np.array([1.02,0.36,0.10])
 qrange = range(90,-1,-10) # (0,91,10)
 delta_q = (qf-qi)/(len(qrange)-1)
 delta_x = xf - xi
-print 'delta: ', delta_q, delta_x
 x_cob = xi.copy()
 w_cob = np.array([qi, 0., 0.])
 
@@ -175,7 +166,7 @@ def fu(radius=None):
 	# else: 
 	# 	pass
 	radius = STEP_STROKE/2. if (radius is None) else radius
-	print 'radius ', radius
+	# print 'radius ', radius
 
 # fu(0.01)
 a = np.array([1.,0.,0.])
@@ -205,13 +196,13 @@ def in_hull(points, x):
     c = np.zeros(n_points)
     A = np.r_[points.T,np.ones((1,n_points))]
     b = np.r_[x, np.ones(1)]
-    print A
-    print b
-    print c
-    lp = linprog(c, A_ub=A, b_ub=b)
-    # lp = linprog(c, A_eq=A, b_eq=b)
-    print lp 
-    return lp.x
+    # print A
+    # print b
+    # print c
+    # lp = linprog(c, A_ub=A, b_ub=b)
+    # # lp = linprog(c, A_eq=A, b_eq=b)
+    # print lp 
+    # return lp.x
 
 # n_points = 4#10000
 # n_dim = 2#10
@@ -301,4 +292,39 @@ tsp = tscale/rmax
 # print 'sizeL', tsp.shape
 
 a = np.nan_to_num(float('NaN')) 
-print a
+
+
+sp = (0,0)
+point_list = []
+end = 2*3 - 2
+for i in range(1,end):
+	if (i%2):
+		# move right
+		for x in range(0,i):
+            # skip last cell - ends in square shape
+			if (end-i==1 and i-x==1):
+				pass
+			else:
+				sp = (sp[0]+1,sp[1])
+				point_list.append(sp)
+		# move up
+		if (i!=end-1):
+			for x in range(0,i):
+				sp = (sp[0],sp[1]+1)
+				point_list.append(sp)
+	else:
+		# move left
+		for x in range(0,i):
+            # skip last cell - ends in square shape
+			if (end-i==1 and i-x==1):
+				pass
+			else:
+				sp = (sp[0]-1,sp[1])
+				point_list.append(sp)
+		# move down
+		if (i!=end-1):
+			for x in range(0,i):
+				sp = (sp[0],sp[1]-1)
+				point_list.append(sp)
+
+print point_list

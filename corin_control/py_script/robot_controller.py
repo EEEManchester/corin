@@ -771,12 +771,12 @@ class CorinManager:
 				print 'Planning path...'
 				self.Robot.support_mode = False
 
-				# ps = (10,13); pf = (20,19)
-				ps = (10,13); pf = (13,13)	# Short straight Line
+				# ps = (10,13); pf = (30,13)
+				# ps = (10,13); pf = (13,13)	# Short straight Line
 				# ps = (8,13); pf = (72,13)	# Long straight Line - for chimney 63
 				# ps = (10,14); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
-				# ps = (10,13); pf = (40,13)	# Wall up and down again
+				ps = (10,13); pf = (41,13)	# Wall up and down again
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,
