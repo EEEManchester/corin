@@ -1386,10 +1386,10 @@ class PathPlanner:
 			print 'now: ', path[i], self.base_map.nodes[path[i]]['motion']
 			temp_path.append(path[i])
 			## check transition
-			m[0] = self.base_map.nodes[path[i]]['motion']
+			m0 = self.base_map.nodes[path[i]]['motion']
 			try:
-				m[1] = self.base_map.nodes[path[i+1]]['motion']
-				m[2] = self.base_map.nodes[path[i+2]]['motion']
+				m1 = self.base_map.nodes[path[i+1]]['motion']
+				m2 = self.base_map.nodes[path[i+2]]['motion']
 			except:
 				pass
 
@@ -1453,7 +1453,7 @@ class PathPlanner:
 			## ============================================================================ ##
 
 			## Check transition instances
-			if (m[0]==0 and m[1]==2):
+			if (m0==0 and m1==2):
 				## Walk to Wall ##
 				# First, plan path and foothold for ground walking
 				if (len(temp_path) > 1):
@@ -1469,9 +1469,9 @@ class PathPlanner:
 				self.W_WALL = True
 				self.W_GND  = False
 
-			elif (m[0]==2 and m[1]==0):
+			elif (m0==2 and m1==0):
 				## Wall to Walk ##
-				if (m[2]==2):
+				if (m2==2):
 					# force motion to walling for gap of one
 					self.base_map.nodes[path[i+1]]['motion'] = 1
 					self.GM_chim.add_node(path[i+1])
@@ -1497,7 +1497,7 @@ class PathPlanner:
 						# Next, set the respective state machine flags
 						self.T_WALL_X_GND = True
 
-			elif (m[0]==0 and m[1]==1):
+			elif (m0==0 and m1==1):
 				## Walk to Chimney ##
 				print path[i], path[i+1], 'walk to chimney'
 				# First, plan path and foothold for ground walking
@@ -1521,10 +1521,10 @@ class PathPlanner:
 				self.T_GND_X_CHIM = self.W_CHIM = True
 				self.Robot.Gait.set_gait_type(4)
 
-			elif (m[0]==1 and m[1]==0):
+			elif (m0==1 and m1==0):
 				## Chimney to Walk ##
 				print path[i], path[i+1], 'chimney to walk'
-				if (m[2]==1):
+				if (m2==1):
 					# force motion to chimney for gap of one
 					self.base_map.nodes[path[i+1]]['motion'] = 1
 					self.GM_chim.add_node(path[i+1])
