@@ -14,10 +14,10 @@ The Corin package has been tested with [ROS] Kinetic (under Ubuntu 16.04). This 
 
 The source code is released under a proprietary software license and should not be released to any person without the author's permission.
 
-**Author: Wei Cheah
-Maintainer: Wei Cheah, wei.cheah@manchester.ac.uk
-With contributions by: Hassan Hakim Khalili
-Robotics for Extreme Environment Group, University of Manchester**
+**Author: Wei Cheah**
+**Maintainer: Wei Cheah, wei.cheah@manchester.ac.uk**
+**With contributions by: Hassan Hakim Khalili**
+**Robotics for Extreme Environment Group, University of Manchester**
 
 ## Installation
 
@@ -45,7 +45,7 @@ The other packages depend additionally on the [ROS] standard installation.
 To build from source, clone the latest version from this repository into your catkin workspace and compile the package using
 
     cd catkin_ws/src
-    git clone https://github.com/ethz-asl/grid_map.git
+    git clone https://wilsonz91@bitbucket.org/wilsonz91/corin.git
     cd ../
     catkin_make
 
