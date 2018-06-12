@@ -10,11 +10,11 @@ from constant import *
 
 class GaitClass:
 	def __init__(self, gselect):
-		self.type  = gselect 	# gait type: 1=wave, 2=ripple, 3=tetrapod, 4=wave
-		self.phases = [] 		# list of gait phases
-		self.np = 0 			# counter for gait phase
+		self.type  = gselect 		# gait type: 1=wave, 2=ripple, 3=tetrapod, 4=wave
+		self.phases = [] 			# list of gait phases
+		self.np = 0 				# counter for gait phase
 		self.tphase = GAIT_TPHASE	# timing per gait phase
-		self.gd = 1 			# gait direction
+		self.gd = 1 				# gait direction
 
 		self.step_stroke = STEP_STROKE#self.set_step_stroke(LEG_STANCE, LEG_CLEAR, STEP_STROKE)
 		self.step_height = STEP_HEIGHT

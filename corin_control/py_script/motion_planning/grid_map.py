@@ -184,18 +184,10 @@ class GridMap:
 				grid_p = (int(np.floor(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
 		except ValueError:	
 			print 'get_cell ValueError: ', p, j
-		# print 'snorm ', grid_p
-		# if (j==0):
-		# 	print 'getting ', info
-		# 	print np.round(p,3), grid_p, self.Map.nodes[grid_p][info]
+		
 		# Return cell characteristic
 		return self.get_index(info, grid_p)
-		# try:
-		# 	return self.Map.nodes[grid_p][info]
-		# except:
-		# 	print 'Cell Invalid at ', grid_p, info, j
-		# 	return None
-
+		
 	def get_index(self, info, p):
 		""" Returns cell characteristic at index p """
 		
@@ -647,8 +639,8 @@ class GridMap:
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-gmap = GridMap('hole_demo')
-sp = np.array([0.6015, 0.1391, -0.])
+# gmap = GridMap('hole_demo')
+# sp = np.array([0.6015, 0.1391, -0.])
 
 # gmap.graph_representation()
 

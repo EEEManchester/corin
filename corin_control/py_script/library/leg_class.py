@@ -67,8 +67,6 @@ class LegClass:
 		self.XHc.update_base_X_foot(q_compensated)
 
 		self.XHc.update_world_base_X_foot(P6_world_X_base, q_compensated)
-		# self.XHc.update_world_base_X_NRP(P6_world_X_base)
-		# self.XHd.update_world_base_X_NRP(P6_world_X_base)
 		
 		## Check work envelope
 		bound_exceed = self.check_boundary_limit(self.XHc.world_base_X_foot, self.XHc.world_base_X_NRP, step_stroke)
@@ -105,6 +103,7 @@ class LegClass:
 		## Interpolate via points in base frame
 		# bpx, td = self.Path.interpolate_leg_path(self.XHc.base_X_foot[:3,3].flatten(), self.XHd.base_X_foot[:3,3].flatten(), snorm, phase, reflex, ctime, tn)
 
+		## Interpolate in world frame
 		if (frame is 'world'):
 			## Interpolate via points in world frame from base to foot
 			start = self.XHc.world_base_X_foot[:3,3].copy()
@@ -119,33 +118,20 @@ class LegClass:
 				basXft = mX(np.transpose(self.XH_world_X_base[:3,:3]), wpx[i]) 	# transfrom from world to base frame
 				wcp[i] = mX(self.XHc.coxa_X_base, v3_X_m(basXft))[:3,3] 		# transform from base to leg frame
 
+		elif (frame is 'base'):
+			wco, td = self.Path.interpolate_leg_path(self.XHc.base_X_foot[:3,3], 
+														self.XHd.base_X_foot[:3,3], 
+														sn1, sn2, phase, reflex, ctime, tn)
+
 		elif (frame is 'leg'):
 			wcp, td = self.Path.interpolate_leg_path(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3], 
 														self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3], 
-														snorm, phase, reflex, ctime)
+														sn1, sn2, phase, reflex, ctime)
 
 		self.xspline = TrajectoryPoints(self.Path.generate_leg_path(wcp, td, tn))
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)
 
-		# if (self.number == 5):
-		# 	wpxt, tdt = self.Path.old_interpolate_leg_path(start, end, sn1, sn2, phase, reflex, ctime)
-		# 	wcp1 = np.zeros((len(wpxt),3))
-		# 	wcp1[0] = self.XHc.coxa_X_foot[0:3,3].copy()
-
-			# for i in range (1, len(wpxt)):
-			# 	basXft = mX(np.transpose(self.XH_world_X_base[:3,:3]), wpxt[i]) 	# transfrom from world to base frame
-			# 	wcp1[i] = mX(self.XHc.coxa_X_base, v3_X_m(basXft))[:3,3] 		# transform from base to leg frame
-
-			# spline1 = TrajectoryPoints(self.Path.generate_leg_path(wcp, td, tn))
-			# spline2 = TrajectoryPoints(self.Path.generate_leg_path(wcp1, tdt, tn))
-
-			# fig, ax = plt.subplots()
-			# ax.plot(spline1.t, spline1.xp, label='ori');
-			# ax.plot(spline2.t, spline2.xp, label='new');
-			# plt.grid('on');
-			# plt.show()
-		
 		## checks spline for kinematic constraint
 		qt = [];	qp = [];	qv = [];	qa = [];
 
@@ -220,10 +206,9 @@ class LegClass:
 		# Magnitude of current point
 		mag_nom_X_ee  = np.dot(v3_NRP_X_AEP.flatten(), v3_NRP_X_foot.flatten())
 		r_state = 0
+
 		## Ellipse boundary - for the front half: p_nom to AEP
 		if (mag_nom_X_ee > 0.01):
-			# if (self.number == 0):
-			# 	print self.number, ' ellipse boundary'
 			# try:
 			# 	# ellipse major, minor radius, rotation
 			# 	a  = np.sqrt(v3_NRP_X_AEP.item(0)**2 + v3_NRP_X_AEP.item(1)**2)
@@ -251,13 +236,6 @@ class LegClass:
 			if (BOUND_FACTOR < r_state):
 				bound_violate = True
 		
-		# if (self.number == 4):
-		# 	print 'BL_mag : ', mag_nom_X_ee, np.round(r_state,3)
-		# 	print 'BL_bXA : ', np.round(self.XHd.world_base_X_AEP[:3,3],4)
-		# 	print 'BL_bXN : ', np.round(world_base_X_NRP[:3,3].flatten(),4)
-		# 	print 'BL_bXf : ', np.round(world_base_X_foot[:3,3].flatten(),4)
-		# 	print 'BL_NXf : ', np.round(v3_NRP_X_foot.flatten(),4)
-		# 	print '-------------------------------------------'
 		return bound_violate
 
 	## Kinematic functions
@@ -309,7 +287,7 @@ class LegClass:
 
 	def singular_recovery(self):
 		""" sets the leg to default position when leg is singular """
-
+		pass
 
 
 	def duplicate_self(self, leg):

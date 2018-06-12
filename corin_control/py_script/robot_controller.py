@@ -92,12 +92,8 @@ class CorinManager:
 	def __initialise__(self):
 		""" Initialises robot and classes """
 
-		## Identify interface automatically to control: simulation or robotis motors
-		# self.interface = 'gazebo' if rospy.has_param('/gazebo/auto_disable_bodies') else 'robotis'
-
 		## set up publisher and subscriber topics
 		self.__initialise_topics__()
-		self.__initialise_service__()
 
 		## initialises robot transform
 		self.Visualizer.robot_broadcaster.sendTransform( (0.,0.,BODY_HEIGHT), (0.,0.,0.,1.), 
@@ -170,39 +166,11 @@ class CorinManager:
 		elif (self.interface == 'robotis'):
 			self.joint_sub_  = rospy.Subscriber('robotis/present_joint_states', JointState, self.joint_state_callback, queue_size=5)
 
-		## State controller comparison
-		if (self.interface == 'gazebo'):
-			self.robot_sub_ = rospy.Subscriber('/gazebo/model_states', ModelStates, self.robot_state_callback, queue_size=5)
-			self.rstate_cs_pub_ = rospy.Publisher(ROBOT_NS + '/cs', Pose, queue_size=1)
-			self.rstate_ds_pub_ = rospy.Publisher(ROBOT_NS + '/ds', Pose, queue_size=1)
-			# self.rstate_cs_pub_ = rospy.Publisher(ROBOT_NS + '/cs', Pose, queue_size=1)
-
 		## User Interface
 		self.ui_control_ = rospy.Subscriber(ROBOT_NS + '/ui_execute', String, self.ui_callback, queue_size=1)
 
 		# Sleep for short while for topics to be initiated properly
 		rospy.sleep(0.5)
-
-	def handle_ui_state(self,req):
-		""" Service handler for user interface """
-		
-		cmd = str(req.state.data)
-		if (cmd == "go_final_pose"):
-			if (self.interface != 'robotis'):
-				print 'Going to final pose'
-				self.pose_switch('final')
-
-		elif (cmd == "go_initial_pose"):
-			if (self.interface != 'robotis'):
-				print 'Going to initial pose'
-				self.pose_switch('initial')
-
-		msg = String()
-		msg.data = "Success"
-		return msg
-
-	def __initialise_service__(self):
-		self.ui_service = rospy.Service(ROBOT_NS + '/set_ui_state', UiState, self.handle_ui_state)
 
 	def publish_topics(self, q, q_log=None):
 		""" Publish joint position to joint controller topics and
@@ -419,7 +387,6 @@ class CorinManager:
 		## Publish multiple times to ensure it is published 
 		for c in range(0,3):
 			self.Visualizer.publish_robot(wXbase_offset)
-			# self.Visualizer.publish_path(base_path, wXbase_offset)
 			self.Visualizer.publish_path(world_X_base)
 			self.Visualizer.publish_footholds(world_X_footholds)
 
@@ -475,8 +442,6 @@ class CorinManager:
 			for j in range(0, self.Robot.active_legs):
 				self.Robot.Leg[j].P6_world_X_base = self.Robot.P6c.world_X_base.copy()
 			
-			# print 'P6d: ', np.round(self.Robot.P6d.world_X_base.flatten(),3)
-			# print 'P6c: ', np.round(self.Robot.P6c.world_X_base.flatten(),3)
 			#########################################################################
 			self.Robot.suspend = False
 			## suppress trajectory counter as body support suspended
@@ -507,8 +472,7 @@ class CorinManager:
 			if (self.Robot.suspend != True):
 				cob_X_desired += v3cv*CTR_INTV
 				cob_W_desired += v3wv*CTR_INTV
-			# print i, i*CTR_INTV, np.round(v3cp.flatten(),4)
-			# print i, self.Robot.Leg[0].spline_counter
+			
 			## ============================================================================================================================== ##
 			## Execution of command ##
 			## ==================== ##
@@ -551,29 +515,13 @@ class CorinManager:
 																self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3])
 					self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = mX(self.Robot.XHd.world_X_base[:3,:3], 
 																		self.Robot.Leg[j].XHd.base_X_foot[:3,3])
-					# if (j == 2):
-						# print 'bXN: ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],4)
-						# print 'wXN: ', np.round(self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3],4)
-						# print 'wXA: ', np.round(self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3],4)
-						# print j, ' Xc: ', np.round(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3],4)
-						# print j, ' Xd: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],4)
-						# print j, ' Wn: ', np.round(w_snorm,4)
-						# print j, ' Ln: ', np.round(self.Robot.Leg[j].qsurface,4)
-						# print np.round(self.Robot.P6d.world_X_base.flatten(),4)
-						# print np.round(self.Robot.XHd.world_X_base[:3,:3],4)
-						# print j, ' wXf: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],4)
-						# print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3],4)
-						# print j, ' cwf: ', np.round(mX(self.Robot.XHd.world_X_base[:3,:3], 
-						# 										self.Robot.Leg[j].XHd.base_X_foot[:3,3]), 4)
-						# print '=========================================='
+					
 					if (svalid is False):
 						# set invalid if trajectory unfeasible for leg's kinematic
 						self.Robot.invalid = True
 					else:	
 						# set flag that phase has changed
 						self.Robot.Leg[j].transfer_phase_change = True
-
-			# self.Robot.XHd.update_world_X_base(np.vstack((v3cp,v3wp)))
 
 			## Compute task space foot position for all legs
 			for j in range (0, self.Robot.active_legs):
@@ -598,71 +546,12 @@ class CorinManager:
 							
 					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
 
-				# if (j==0):
-				# 	print 'cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3],4)
-
 			## Task to joint space
 			qd, tXj_error = self.Robot.task_X_joint()	
 
 			if (self.Robot.invalid == True):
 				print 'Error Occured, robot invalid! ', tXj_error
-				self.Robot.invalid = False
-				## Recovery routine
-				for j in range(0, 6):
-					if (tXj_error[j] != 0):
-						print 'Recovering leg ', j, ' error: ', tXj_error[j]
-						print 'before: ', np.round(self.Robot.Leg[j].XHc.world_base_X_foot[:3,3],3)
-						## Part 1: Joint space leg retraction
-						qsp = np.zeros((0,3))
-						for i in range(0,46,5):
-							qsp = np.vstack(( qsp, np.array([qd_prev.xp[j*3], 
-													qd_prev.xp[j*3+1] + np.deg2rad(i), 
-													qd_prev.xp[j*3+2] - np.deg2rad(i)*1.25]) ))
-
-						tscale = np.array([range(0,len(qsp))])
-						rmax = float(np.amax(tscale))
-						tsp = (tscale/rmax).flatten()
-
-						PathGenerator = Pathgenerator.PathGenerator() 	# path generator for robot's base
-						qtrajectory = PathGenerator.generate_leg_path(qsp, tsp, CTR_INTV)
-						for i in range(1, len(qtrajectory[0])):
-							for z in range(0,3):
-								qd_prev.xp[j*3+z] = qtrajectory[1][i][z]
-								qd_prev.xv[j*3+z] = qtrajectory[1][i][z]
-								qd_prev.xa[j*3+z] = qtrajectory[1][i][z]
-							self.publish_topics(qd_prev)
-						self.Robot.qd = qd_prev.xp
-						self.Robot.update_state(control_mode=self.control_rate)
-						## Part 2: Task space foothold placement
-						## First, set new foothold to NRP position
-						self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP.copy()
-						print 'after: ', np.round(self.Robot.Leg[j].XHc.world_base_X_foot[:3,3],3)
-						## Compute average surface normal from cell surface normal at both footholds
-						sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
-						sn2 = sn1.copy()
-						
-						## Set bodypose in leg class
-						self.Robot.Leg[j].XH_world_X_base = self.Robot.XHd.world_X_base.copy()
-						
-						## Generate transfer spline
-						svalid = self.Robot.Leg[j].generate_spline('world', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
-						print 'init: ', np.round(self.Robot.Leg[j].XHc.world_base_X_foot[:3,3],3)
-						print 'final ', np.round(mX(self.Robot.Leg[j].XH_world_X_base[:3,:3], self.Robot.Leg[j].XHd.base_X_foot[:3,3]),3)
-						## Update NRP
-						self.Robot.Leg[j].XHd.base_X_NRP[:3,3] = mX(self.Robot.XHd.base_X_world[:3,:3], 
-																	self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3])
-						self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = mX(self.Robot.XHd.world_X_base[:3,:3], 
-																			self.Robot.Leg[j].XHd.base_X_foot[:3,3])
-						## Move leg individually
-						for n in range(1, self.Robot.Leg[j].spline_length):
-							qps, qvs, qas = self.Robot.Leg[j].qspline.get_index(n)
-							for z in range(0,3):
-								qd_prev.xp[j*3+z] = qps[z]
-								qd_prev.xv[j*3+z] = qvs[z]
-								qd_prev.xa[j*3+z] = qas[z]
-							self.publish_topics(qd_prev)
-				raw_input('cont')
-
+				break
 			else:
 				# ends gait phase early if transfer phase completes - TODO: ANOTHER WAY?
 				transfer_total = 0; 	
@@ -800,50 +689,6 @@ class CorinManager:
 
 		else:
 			rospy.sleep(0.5)
-
-	def pose_switch(self, setpoint):
-		""" Moves the robot into a pose immediately """
-		
-		# Set counter and gait phases to start or end position
-		if (setpoint == 'initial'):
-			i = 0
-			self.Robot.Gait.np = self.MotionPlan.gait_in
-			self.Robot.Gait.cs = self.Robot.Gait.phase[self.Robot.Gait.np]
-		else:
-			i = -1
-			self.Robot.Gait.np = self.MotionPlan.gait_fn
-			self.Robot.Gait.cs = self.Robot.Gait.phase[self.Robot.Gait.np]
-		
-		# Set bodypose
-		v3cp = self.MotionPlan.qb_bias[0:3] + self.MotionPlan.qb.X.xp[i].reshape(3,1);
-		v3wp = self.MotionPlan.qb_bias[3:6] + self.MotionPlan.qb.W.xp[i].reshape(3,1);
-
-		self.Robot.P6d.world_X_base = np.vstack((v3cp,v3wp))
-		self.Robot.P6c.world_X_base = np.vstack((v3cp,v3wp))
-
-		self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
-		self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
-
-		## Set leg states
-		for j in range(0,6):
-
-			self.Robot.Leg[j].XHd.world_X_foot = v3_X_m(self.MotionPlan.f_world_X_foot[j].xp[i])
-			self.Robot.Leg[j].XHc.world_X_foot = self.Robot.Leg[j].XHd.world_X_foot.copy()
-			self.Robot.Leg[j].XHd.world_base_X_NRP = v3_X_m(self.MotionPlan.f_world_base_X_NRP[j].xp[i])
-			self.Robot.Leg[j].XHc.world_base_X_NRP = self.Robot.Leg[j].XHd.world_base_X_NRP.copy()
-
-			self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
-			self.Robot.Leg[j].XHc.base_X_foot = self.Robot.Leg[j].XHd.base_X_foot.copy()
-			self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
-			self.Robot.Leg[j].XHc.coxa_X_foot = self.Robot.Leg[j].XHd.coxa_X_foot.copy()
-
-		qd, err_list = self.Robot.task_X_joint()
-		
-		if (self.Robot.invalid == True):
-			print 'Robot Configuration Invalid!'
-		else:
-			self.publish_topics(qd)
-
 
 	def update_world_X_base(self, q):
 		# rotates in sequence x, y, z in world frame 

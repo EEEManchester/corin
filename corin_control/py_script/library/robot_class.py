@@ -130,10 +130,6 @@ class RobotState:
 
 			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
 				self.suspend = True
-				# print 'Suspend ', j
-				pass
-
-		# print '-------------------------------------------------------'
 
 	def update_bodypose_state(self, cmode):
 		""" update imu state """
@@ -208,7 +204,6 @@ class RobotState:
 				self.Leg[j].XHd.world_X_foot = self.Leg[j].XHc.world_X_foot.copy()
 
 		self.suspend = False
-		# raw_input('cont')
 
 	def task_X_joint(self,legs_phase=None): # TODO - to be revisited
 		""" Convert all leg task space to joint space 		"""								
@@ -241,12 +236,8 @@ class RobotState:
 				else:
 					err_str = 'Unknown error'
 				print err_str
-					# raise ValueError, err_str
-			# except Exception, e:
-			# 	print e, j
-
+			
 		## check to ensure size is correct
-		# print 'length: ', len(qp)
 		if (len(qp)==18):
 			self.qd = qp 	# remap for "fast"
 			return JointTrajectoryPoints(18,(qt,qp,qv,qa)), err_list
@@ -294,8 +285,8 @@ class RobotState:
 			print 'Invalid stance selected!'
 			return None
 
-# robot = RobotState()
 ## ====================================================================================================================================== ##
 ## ====================================================================================================================================== ##
 
+# robot = RobotState()
 
