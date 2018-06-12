@@ -327,4 +327,10 @@ for i in range(1,end):
 				sp = (sp[0],sp[1]-1)
 				point_list.append(sp)
 
-print point_list
+nphase = 6
+Q_BASE = 20. 
+qrange = range(0,int(Q_BASE), 6)
+print qrange
+delta_q = (20-0)/(len(qrange)-1)
+print delta_q
+# delta_x = (xf-xi)/(len(qrange)-1)

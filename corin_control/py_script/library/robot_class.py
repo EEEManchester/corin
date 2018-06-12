@@ -272,7 +272,7 @@ class RobotState:
 
 		# Flat ground stance - original
 		if (stance_type == "flat"):
-			print 'Flat selected'
+			# print 'Flat selected'
 			leg_stance[0] = np.array([ stance_width*np.cos(teta_f*np.pi/180), stance_width*np.sin(teta_f*np.pi/180), -base_height ])
 			leg_stance[1] = np.array([ stance_width, 0, -base_height])
 			leg_stance[2] = np.array([ stance_width*np.cos(teta_r*np.pi/180), stance_width*np.sin(teta_r*np.pi/180), -base_height ])

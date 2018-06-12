@@ -13,14 +13,14 @@ if __name__ == "__main__":
 
 	rospy.loginfo('Robot Ready!')
 	
-	# rospy.set_param('/corin/bodypose', True)
+	rospy.set_param('/corin/bodypose', True)
 	# rospy.set_param('/corin/walk_front', True)
 	# rospy.set_param('/corin/walk_left', True)
 	# rospy.set_param('/corin/walk_right', True)
 	# rospy.set_param('/corin/walk_back', True)
 	# rospy.set_param('/corin/rotate', True)
 	
-	rospy.set_param('/corin/plan_path', True)
+	# rospy.set_param('/corin/plan_path', True)
 
 	## Run continuously
 	# while not rospy.is_shutdown():

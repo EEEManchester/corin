@@ -184,7 +184,8 @@ class GridMap:
 				grid_p = (int(np.floor(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
 		except ValueError:	
 			print 'get_cell ValueError: ', p, j
-		
+		# if (j==1 or j==0):
+		# 	print 'get cell ', j, grid_p
 		# Return cell characteristic
 		return self.get_index(info, grid_p)
 		

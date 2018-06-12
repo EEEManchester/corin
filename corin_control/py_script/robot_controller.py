@@ -41,7 +41,7 @@ class CorinManager:
 
 		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.Action	= control_interface.ControlInterface()	# control action class	
-		self.GridMap  = GridMap('wall_hole_demo')
+		self.GridMap  = GridMap('flat')
 		self.PathPlan = PathPlanner(self.GridMap)
 
 		self.resting   = False 		# Flag indicating robot standing or resting
@@ -161,10 +161,12 @@ class CorinManager:
 		self.cforce_sub_ = rospy.Subscriber(ROBOT_NS + '/contact_force', Float32MultiArray, self.contact_force_callback, queue_size=1)
 
 		## Hardware Specific Subscribers ##
-		if (self.interface == 'gazebo' or self.interface == 'rviz'):
-			self.joint_sub_  = rospy.Subscriber(ROBOT_NS + '/joint_states', JointState, self.joint_state_callback, queue_size=5)
-		elif (self.interface == 'robotis'):
+		if (self.interface == 'robotis'):
 			self.joint_sub_  = rospy.Subscriber('robotis/present_joint_states', JointState, self.joint_state_callback, queue_size=5)
+		else:
+			self.joint_sub_  = rospy.Subscriber(ROBOT_NS + '/joint_states', JointState, self.joint_state_callback, queue_size=5)
+			if (self.interface == 'gazebo'):
+				self.robot_sub_ = rospy.Subscriber('/gazebo/model_states', ModelStates, self.robot_state_callback, queue_size=5)
 
 		## User Interface
 		self.ui_control_ = rospy.Subscriber(ROBOT_NS + '/ui_execute', String, self.ui_callback, queue_size=1)
@@ -365,9 +367,10 @@ class CorinManager:
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 
 		## Plan foothold for robot - world_X_base, world_X_footholds not used
-		mplan = self.Map.foothold_planner(base_path, self.Robot)
-
-		self.main_controller(mplan)
+		# mplan = self.Map.foothold_planner(base_path, self.Robot)
+		motion_plan = MotionPlan()
+		motion_plan.qb = base_path
+		self.main_controller(motion_plan)
 
 	def main_controller(self, motion_plan):
 
@@ -405,9 +408,12 @@ class CorinManager:
 		else:
 			self.ui_state = 'hold'
 
-		gait_stack = cycle(gait_phase)
-		self.Robot.Gait.cs = next(gait_stack)
-
+		try:
+			gait_stack = cycle(gait_phase)
+			self.Robot.Gait.cs = next(gait_stack)
+		except:
+			pass
+			
 		# cycle through trajectory points until complete
 		i = 1 	# skip first point since spline has zero initial differential conditions
 		while (i != len(base_path.X.t) and not rospy.is_shutdown()):
@@ -624,10 +630,10 @@ class CorinManager:
 				prev_suspend = self.Robot.suspend
 				self.Robot.support_mode = True
 				self.Robot.suspend = False 		# clear suspension flag
-				
-				motion_plan = self.Map.generate_motion_plan(self.Robot, path=(x_cob,w_cob))
-				if (motion_plan is not None):
-					success = self.main_controller(motion_plan)
+				self.path_tracking(x_cob, w_cob)
+				# motion_plan = self.Map.generate_motion_plan(self.Robot, path=(x_cob,w_cob))
+				# if (motion_plan is not None):
+				# 	success = self.main_controller(motion_plan)
 
 				self.Robot.suspend = prev_suspend
 				## Move back to nominal position
@@ -660,12 +666,11 @@ class CorinManager:
 				print 'Planning path...'
 				self.Robot.support_mode = False
 
-				# ps = (10,13); pf = (30,13)
 				# ps = (10,13); pf = (13,13)	# Short straight Line
-				ps = (10,13); pf = (72,13)	# Long straight Line - for chimney 63
 				# ps = (10,14); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
 				# ps = (10,13); pf = (41,13)	# Wall up and down again
+				# ps = (10,13); pf = (72,13) 	# full demo
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,
