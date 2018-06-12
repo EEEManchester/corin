@@ -795,9 +795,7 @@ class PathPlanner:
 
 		if (self.W_GND is False):
 			leg_stance = set_leg_stance()
-		# print 'wbXni: ', np.round(self.Robot.Leg[0].XHd.world_base_X_NRP[:3,3],3)
-		# print 'wbXni: ', np.round(self.Robot.Leg[3].XHd.world_base_X_NRP[:3,3],3)
-		print 'step stroke ', self.Robot.Gait.step_stroke
+		
 		gphase_intv  = [] 						# intervals in which gait phase changes
 		gait_phase	 = []
 		world_X_base = []
@@ -917,7 +915,7 @@ class PathPlanner:
 						if (self.T_GND_X_WALL or self.T_WALL_X_GND):
 							dt_base = (mX(rot_Z(-v3wp[2]), (v3cp.reshape(3) - base_path.X.xp[0]).reshape(3,1) )).reshape(3)
 							self.di_wall = do_wall - delta_w*np.round(dt_base ,3)
-							# print 'di_wall ', self.di_wall, np.round(dt_base,3)
+
 						# Set sides for ground or wall contact
 						if (delta_w == 1):
 							# LHS going up
@@ -1078,44 +1076,11 @@ class PathPlanner:
 
 		# Update robot's current state
 		self.Robot.P6c.world_X_base = P6d_world_X_base.copy()
-		# print 'P6d: ', np.round(P6d_world_X_base.flatten(),4)
 		for j in range(0,6):
 			self.Robot.Leg[j].XHc.world_X_foot[:3,3] = self.Robot.Leg[j].XHd.world_X_foot[:3,3].copy()
 			self.Robot.Leg[j].XHc.base_X_foot[:3,3]  = self.Robot.Leg[j].XHd.base_X_foot[:3,3].copy()
 			self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3] = self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3].copy()
 
-		# Extend trajectory to end on desired count
-		nc_phase = ig + int(GAIT_TPHASE*CTR_RATE)+1
-		# print i, ig, nc_phase
-		final_xp = base_path.X.xp[-1].copy()
-		final_xv = base_path.X.xv[-1].copy()
-		final_xa = base_path.X.xa[-1].copy()
-		final_wp = base_path.W.xp[-1].copy()
-		final_wv = base_path.W.xv[-1].copy()
-		final_wa = base_path.W.xa[-1].copy()
-		for n in range(i,nc_phase):
-			base_path.X.t.append(CTR_INTV*n)
-			base_path.X.xp = np.vstack((base_path.X.xp, final_xp))
-			base_path.X.xv = np.vstack((base_path.X.xv, final_xv))
-			base_path.X.xa = np.vstack((base_path.X.xa, final_xa))
-
-			base_path.W.t.append(CTR_INTV*n)
-			base_path.W.xp = np.vstack((base_path.W.xp, final_wp))
-			base_path.W.xv = np.vstack((base_path.W.xv, final_wv))
-			base_path.W.xa = np.vstack((base_path.W.xa, final_wa))
-		
-		# Reset to default NRP and states
-		# if (self.T_WALL_X_GND):
-		# 	pass
-		# 	print 'Resetting NRP'
-		# 	for j in range(0,6):
-		# 		self.Robot.Leg[j].XHd.update_base_X_NRP(self.Robot.KDL.leg_IK(leg_stance[j])) 
-		if (self.T_CHIM_X_GND):
-			self.T_CHIM_X_GND = False
-			self.W_CHIM = False
-			self.W_GND = True
-		print 'wbXne: ', np.round(self.Robot.Leg[0].XHd.world_base_X_NRP[:3,3],3)
-		print 'wbXne: ', np.round(self.Robot.Leg[3].XHd.world_base_X_NRP[:3,3],3)
 		return set_motion_plan()
 
 	def transition_routine(self, ttype, p1, p2, tn=0.1):
@@ -1587,7 +1552,6 @@ class PathPlanner:
 						print 'C2G Transition at ', sp, path[i+1]
 						print 'Transition: Change foothold surface'
 						self.T_CHIM_X_GND = self.W_CHIM = True
-						# path_01 = self.path_interpolation([sp,ep])
 						path_01 = self.routine_motion(sp,ep)
 						motion_plan.append(self.foothold_planner(path_01))
 						self.T_CHIM_X_GND = self.W_CHIM = False
