@@ -343,8 +343,8 @@ class PathPlanner:
 
 						## check if cell occupied
 						try:
-							if (p == TEST_POINT):
-								print p, pinom, pwset, self.GridMap.Map.nodes[pwset]['height']
+							# if (p == TEST_POINT):
+							# 	print p, pinom, pwset, self.GridMap.Map.nodes[pwset]['height']
 							if (self.GridMap.Map.nodes[pwset]['height']==1):
 								fcost = fcost + self.GridMap.Map.nodes[pwset]['height'] 	# calculate cost of area - not true since will be skiping through
 								skip_row = True 								# set flag to skip remainder of row - computationally efficient
@@ -1305,8 +1305,6 @@ class PathPlanner:
 		if (routine is not None):
 			if (routine == 'reset_stance'):
 				self.Robot.Gait.set_gait_type(4)
-				# self.Robot.Gait.type = 4
-				# self.Robot.Gait.np = 0
 				self.Robot.Gait.cs = self.Robot.Gait.phases[0]
 
 				xi = np.array([p1[0]*self.GridMap.resolution, p1[1]*self.GridMap.resolution, self.base_map.nodes[p1]['pose'][0]])
@@ -1322,8 +1320,8 @@ class PathPlanner:
 					w_cob = np.vstack(( w_cob, np.array([qi, 0., 0.]) ))
 					t_cob = np.hstack(( t_cob, i*self.Robot.Gait.tphase))
 
-				print 'tcob ', t_cob
-				print 'xcob ', x_cob
+				# print 'tcob ', t_cob
+				# print 'xcob ', x_cob
 				PathGenerator.V_MAX = PathGenerator.W_MAX = 100
 				base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV, t_cob)
 
@@ -1338,8 +1336,6 @@ class PathPlanner:
 				for j in range(0,6):
 					self.Robot.Leg[j].XHd.update_base_X_NRP(self.Robot.KDL.leg_IK(stance[j]))
 					self.Robot.Leg[j].XHd.update_world_base_X_NRP(self.Robot.P6c.world_X_base)
-				# Plot.plot_2d(base_path.X.t, base_path.X.xp)
-				# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 
 		elif (self.T_GND_X_WALL):
 			delta_w = 1 if (self.base_map.nodes[p2]['pose'][1] >= 0.) else -1
@@ -1386,8 +1382,6 @@ class PathPlanner:
 				w_cob = np.vstack(( w_cob, np.array([wd, 0., 0.]) ))
 				t_cob = np.hstack(( t_cob, i*total_time/(2*(len(qrange)-1)) ))
 				
-			print 'tcob ', t_cob
-			print 'xcob ', x_cob
 			PathGenerator.V_MAX = PathGenerator.W_MAX = 100
 			base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV, t_cob)
 			# Plot.plot_2d(base_path.X.t, base_path.X.xp)
@@ -1406,7 +1400,6 @@ class PathPlanner:
 				self.Robot.Gait.cs = self.Robot.Gait.phases[0]
 
 			# set stance parameters
-			print 'T WXG: ', p2
 			xi = np.array([p2[0]*self.GridMap.resolution, p2[1]*self.GridMap.resolution, H_BASE])
 			xf = np.array([p2[0]*self.GridMap.resolution, p2[1]*self.GridMap.resolution, self.base_map.nodes[p2]['pose'][0]])
 			
@@ -1438,13 +1431,35 @@ class PathPlanner:
 				w_cob = np.vstack(( w_cob, np.array([wd, 0., 0.]) ))
 				t_cob = np.hstack(( t_cob, nside*self.Robot.Gait.tphase + i*total_time/(2*(len(qrange)-1)) ))
 
-			# print 'tcob ', t_cob
-			# print 'xcob ', x_cob
-			# print 'wcob ', w_cob
 			PathGenerator.V_MAX = PathGenerator.W_MAX = 100
 			base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV, t_cob)
 			# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 			# Plot.plot_2d(base_path.W.t, base_path.W.xp)
+
+		elif (self.T_CHIM_X_GND):
+			self.Robot.Gait.set_gait_type(1)
+			self.Robot.Gait.cs = self.Robot.Gait.phases[0]
+
+			xi = np.array([p1[0]*self.GridMap.resolution, p1[1]*self.GridMap.resolution, self.base_map.nodes[p1]['pose'][0]])
+			qi = self.base_map.nodes[p1]['pose'][1]
+			xf = np.array([p2[0]*self.GridMap.resolution, p2[1]*self.GridMap.resolution, self.base_map.nodes[p2]['pose'][0]])
+			qf = self.base_map.nodes[p2]['pose'][1]
+
+			x_cob = xi.copy()
+			w_cob = np.array([qi, 0., 0.])
+			t_cob = np.zeros(1)
+
+			n_phases = len(self.Robot.Gait.phases)
+			delta_q = (qf-qi)/n_phases
+			delta_x = (xf-xi)/n_phases
+
+			for i in range(1, n_phases+1):
+				x_cob = np.vstack(( x_cob, xi + delta_x*i ))
+				w_cob = np.vstack(( w_cob, np.array([delta_q*i, 0., 0.]) ))
+				t_cob = np.hstack(( t_cob, i*self.Robot.Gait.tphase))
+
+			PathGenerator.V_MAX = PathGenerator.W_MAX = 100
+			base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV, t_cob)
 
 		return base_path
 
@@ -1605,6 +1620,7 @@ class PathPlanner:
 				plan_01 = self.foothold_planner(path_01)
 				motion_plan.append(plan_01)
 				self.T_GND_X_CHIM = self.W_CHIM = True
+				self.Robot.Gait.set_gait_type(4)
 
 			elif (m[0]==1 and m[1]==0):
 				## Chimney to Walk ##
@@ -1637,7 +1653,8 @@ class PathPlanner:
 						print 'C2G Transition at ', sp, path[i+1]
 						print 'Transition: Change foothold surface'
 						self.T_CHIM_X_GND = self.W_CHIM = True
-						path_01 = self.path_interpolation([sp,ep])
+						# path_01 = self.path_interpolation([sp,ep])
+						path_01 = self.routine_motion(sp,ep)
 						motion_plan.append(self.foothold_planner(path_01))
 						self.T_CHIM_X_GND = self.W_CHIM = False
 						self.W_GND = True

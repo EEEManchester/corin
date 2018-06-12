@@ -504,7 +504,7 @@ class GridMap:
 			sp = (int(np.round(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
 		elif (j == 5):
 			sp = (int(np.ceil(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
-		print 'sp: ', sp
+		
 		# sets direction based on feet
 		if (j < 3):
 			direction = 'ccw'
@@ -649,7 +649,7 @@ class GridMap:
 ## ================================================================================================ ##
 gmap = GridMap('hole_demo')
 sp = np.array([0.6015, 0.1391, -0.])
-print gmap.square_spiral_search(sp, (3,3), 3)
+
 # gmap.graph_representation()
 
 # [(20, 5), (20, 6), (21, 6), (21, 5), (20, 5), (19, 5), (19, 6), (19, 7), (20, 7), (21, 7), (21, 6), (21, 5), (20, 5), (19, 5), (20, 5), (21, 5)]
