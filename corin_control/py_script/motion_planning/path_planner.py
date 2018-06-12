@@ -1304,7 +1304,7 @@ class PathPlanner:
 
 		if (routine is not None):
 			if (routine == 'reset_stance'):
-				self.Robot.Gait.set_gait_type(4)
+				self.Robot.Gait.set_gait_type(5)
 				self.Robot.Gait.cs = self.Robot.Gait.phases[0]
 
 				xi = np.array([p1[0]*self.GridMap.resolution, p1[1]*self.GridMap.resolution, self.base_map.nodes[p1]['pose'][0]])
@@ -1531,8 +1531,7 @@ class PathPlanner:
 						print 'Interpolating transition ...', sp, ep
 						print 'Transition pt. 1'
 						path_01 = self.transition_routine('Wall_X_Gnd', sp, ep) #Wall_X_Gnd
-						plan_01 = self.foothold_planner(path_01)
-						motion_plan.append(plan_01)
+						motion_plan.append(self.foothold_planner(path_01))
 						
 						print 'Transition pt. 2'
 						path_01 = self.routine_motion(sp,ep)
@@ -1543,8 +1542,8 @@ class PathPlanner:
 						
 						print 'Transition pt. 3'
 						path_01 = self.routine_motion(ep,ep,'reset_stance')
-						plan_01 = self.foothold_planner(path_01)
 						motion_plan.append(self.foothold_planner(path_01))
+						self.Robot.Gait.set_gait_type(4)
 
 						self.W_WALL = self.T_WALL_X_GND = False
 						self.W_GND  = True
@@ -1617,8 +1616,7 @@ class PathPlanner:
 				print 'Transition: Reset Leg Stances'
 				self.T_GND_X_CHIM = self.W_CHIM = False
 				path_01 = self.routine_motion(sp, sp,'reset_stance')
-				plan_01 = self.foothold_planner(path_01)
-				motion_plan.append(plan_01)
+				motion_plan.append(self.foothold_planner(path_01))
 				self.T_GND_X_CHIM = self.W_CHIM = True
 				self.Robot.Gait.set_gait_type(4)
 
@@ -1659,8 +1657,10 @@ class PathPlanner:
 						self.T_CHIM_X_GND = self.W_CHIM = False
 						self.W_GND = True
 						
+						print 'Transition: Reset Leg Stances'
 						path_01 = self.routine_motion(ep, ep,'reset_stance')
 						motion_plan.append(self.foothold_planner(path_01))
+						self.Robot.Gait.set_gait_type(4)
 
 		# Interpolate final sub-division if not empty
 		print 'Cycle exited: ', temp_path

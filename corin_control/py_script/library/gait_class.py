@@ -62,6 +62,11 @@ class GaitClass:
 		elif (self.type == 4):
 			self.phases.append([0,1,0,1,0,1])
 			self.phases.append([1,0,1,0,1,0])
+		# Custom: Reset
+		elif (self.type == 5):
+			self.phases.append([0,1,0,0,1,0])
+			self.phases.append([1,0,0,0,0,1])
+			self.phases.append([0,0,1,1,0,0])
 
 		self.cs = self.phases[self.np]
 
