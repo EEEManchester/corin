@@ -14,9 +14,9 @@ The Corin package has been tested with [ROS] Kinetic (under Ubuntu 16.04). This 
 
 The source code is released under a proprietary software license and should not be released to any person without the author's permission.
 
-**Author: Wei Cheah<br />
-Maintainer: Wei Cheah, wei.cheah@manchester.ac.uk<br />
-With contributions by: Hassan Hakim Khalili<br />
+**Author: Wei Cheah
+Maintainer: Wei Cheah, wei.cheah@manchester.ac.uk
+With contributions by: Hassan Hakim Khalili
 Robotics for Extreme Environment Group, University of Manchester**
 
 ## Installation
