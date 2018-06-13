@@ -41,7 +41,7 @@ class CorinManager:
 
 		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.Action	= control_interface.ControlInterface()	# control action class	
-		self.GridMap  = GridMap('wall_hole_demo')
+		self.GridMap  = GridMap('flat')
 		self.PathPlan = PathPlanner(self.GridMap)
 
 		self.resting   = False 		# Flag indicating robot standing or resting
@@ -663,11 +663,11 @@ class CorinManager:
 				print 'Planning path...'
 				self.Robot.support_mode = False
 
-				ps = (10,13); pf = (13,13)	# Short straight Line
+				ps = (10,13); pf = (15,13)	# Short straight Line
 				# ps = (10,14); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
 				# ps = (10,13); pf = (25,13)	# full wall or chimney 
-				ps = (10,13); pf = (72,13) 	# wall and chimney demo
+				# ps = (10,13); pf = (72,13) 	# wall and chimney demo
 				
 
 				## Set robot to starting position in default configuration

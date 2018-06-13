@@ -14,6 +14,10 @@ import numpy as np
 import math
 from fractions import Fraction
 from collections import OrderedDict 	# remove duplicates
+import random
+
+MAX_FLAT_H = 0.05
+MIN_FLAT_H = -0.05
 
 class GridMap:
 	def __init__(self,map_name):
@@ -88,7 +92,9 @@ class GridMap:
 			self.__set_obstacle__(map_wall, 'wall')
 		if (map_hole is not None):
 			self.__set_obstacle__(map_hole, 'hole')
+		
 		self.__set_surface_normal__()
+		# self.__set_irregular_terrain__()
 
 		self.set_illustrations()
 		# add moore edges
@@ -172,6 +178,14 @@ class GridMap:
 			# Normal for holes
 			elif (self.Map.nodes[e]['height'] < 0.):
 				self.Map.nodes[e]['norm'] = np.array([0.,0.,1.])
+
+	def __set_irregular_terrain__(self):
+		""" Sets the surface normal for cells """
+
+		for e in self.Map.nodes():
+			# Normals for wall
+			if (self.Map.nodes[e]['height'] >= 0. and self.Map.nodes[e]['height'] <= 0.5):
+				self.Map.nodes[e]['height'] = random.uniform(MIN_FLAT_H, MAX_FLAT_H)
 
 	def get_cell(self, info, p, j=0):
 		""" Returns cell characteristic at point p (in m) """
@@ -429,7 +443,8 @@ class GridMap:
 
 		i = 0
 		for p in self.Map.nodes():
-			if (self.Map.nodes[p]['height'] >= 0): 		# TODO: change to minimum permissible depth
+			cell_h = self.Map.nodes[p]['height']
+			if (cell_h >= 0.5):
 				# Append to array walls and ground
 				cx[i] = p[0]*self.resolution
 				cy[i] = p[1]*self.resolution
@@ -439,6 +454,11 @@ class GridMap:
 					cx = np.append(cx,cx[i])
 					cy = np.append(cy,cy[i])
 					cz = np.append(cz,self.resolution*n)
+			elif (cell_h >= MIN_FLAT_H and cell_h <= MAX_FLAT_H):
+				# Append to array walls and ground
+				cx[i] = p[0]*self.resolution
+				cy[i] = p[1]*self.resolution
+				cz[i] = self.Map.nodes[p]['height']
 			else:
 				# Ignore holes, leave them blank
 				pass
