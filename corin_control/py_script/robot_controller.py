@@ -631,10 +631,7 @@ class CorinManager:
 				self.Robot.support_mode = True
 				self.Robot.suspend = False 		# clear suspension flag
 				self.path_tracking(x_cob, w_cob)
-				# motion_plan = self.Map.generate_motion_plan(self.Robot, path=(x_cob,w_cob))
-				# if (motion_plan is not None):
-				# 	success = self.main_controller(motion_plan)
-
+				
 				self.Robot.suspend = prev_suspend
 				## Move back to nominal position
 				# self.default_pose()
