@@ -784,7 +784,7 @@ class PathPlanner:
 			stance = self.Robot.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, leg_offset, "flat")
 			self.Robot.Leg[j].XHd.update_base_X_NRP(self.Robot.KDL.leg_IK(stance[j]))
 			self.Robot.Leg[j].XHd.update_world_base_X_NRP(self.Robot.P6c.world_X_base)
-
+		
 		i = ig = 0
 		if (self.T_GND_X_WALL):
 			do_wall = np.array([0., 0.32, 0.]) 		# Initial distance from robot's base to wall (base frame)
@@ -1372,6 +1372,95 @@ class PathPlanner:
 		""" Input: 	1) path -> path in grid format
 					2) Robot -> Robot class
 			Output: MotionPlan() type 									"""
+		
+		def ts_gw_segmentisation(temp_path):
+			""" segmentise the path to be linear """
+
+			if (path[i][0] - sp[0] > 0):
+				ep = (sp[0],path[i-1][1])	# set new end point
+				# modify path to start from end of segmentised transition
+				temp_path = map(lambda x: (x[0],path[i][1]) , temp_path)
+				temp_path.insert(0,ep)
+				# remove duplicates
+				temp_path = list(OrderedDict.fromkeys(temp_path))
+				print 'segmentised forward linear path: ', temp_path
+			else:
+				ep = path[i]
+				temp_path = []
+			return temp_path, ep
+
+		def ts_gnd_X_wall():
+			""" Full routine for  ground to wall transition """
+
+			print 'TRANSITION: gnd_X_wall - ', sp, ep
+			print 'Transition pt. 1: reset stance'
+			self.T_GND_X_WALL = self.W_WALL = False
+			path_01 = self.routine_motion(sp,ep,'reset_stance')
+			motion_plan.append(self.foothold_planner(path_01))
+			self.T_GND_X_WALL = self.W_WALL = True
+
+			print 'Transition pt. 2: change foothold surface', self.W_GND
+			path_01 = self.routine_motion(sp,ep)
+			motion_plan.append(self.foothold_planner(path_01))
+			
+			print 'Transition pt. 3: moving to setpoint'
+			path_01 = self.transition_routine('Gnd_X_Wall', sp, ep)
+			motion_plan.append(self.foothold_planner(path_01))
+			
+			self.T_GND_X_WALL = self.W_GND = False
+
+		def ts_wall_X_gnd():
+			""" Full routine for wall to ground transition """
+
+			print 'TRANSITION: wall_X_gnd - ', sp, ep
+			print 'Transition pt. 1: moving to setpoint'
+			path_01 = self.transition_routine('Wall_X_Gnd', sp, ep) #Wall_X_Gnd
+			motion_plan.append(self.foothold_planner(path_01))
+			
+			print 'Transition pt. 2: change foothold surface', self.W_GND
+			path_01 = self.routine_motion(sp,ep)
+			motion_plan.append(self.foothold_planner(path_01))
+			self.W_WALL = self.T_WALL_X_GND = False
+			self.W_GND  = True
+			
+			print 'Transition pt. 3: reset stance'
+			path_01 = self.routine_motion(ep,ep,'reset_stance')
+			motion_plan.append(self.foothold_planner(path_01))
+			self.Robot.Gait.set_gait_type(4)
+
+			self.W_WALL = self.T_WALL_X_GND = False
+			self.W_GND  = True
+
+		def ts_gnd_X_chim():
+			""" Full routine for ground to chimney transition """
+
+			print 'G2C Transition at ', sp
+			print 'Transition: Reset Leg Stances'
+			path_01 = self.routine_motion(sp, sp,'reset_stance')
+			motion_plan.append(self.foothold_planner(path_01))
+			self.T_GND_X_CHIM = self.W_CHIM = True
+			self.Robot.Gait.set_gait_type(4)
+
+		def ts_chim_X_gnd():
+			""" Full routine for chimney to ground transition """
+
+			print 'C2G Transition at ', sp, path[i+1]
+			print 'Transition: Change foothold surface'
+			path_01 = self.routine_motion(sp,ep)
+			motion_plan.append(self.foothold_planner(path_01))
+			self.T_CHIM_X_GND = self.W_CHIM = False
+			self.W_GND = True
+			
+			print 'Transition: Reset Leg Stances'
+			path_01 = self.routine_motion(ep, ep,'reset_stance')
+			motion_plan.append(self.foothold_planner(path_01))
+			self.Robot.Gait.set_gait_type(4)
+
+		def generate_plan(path_int):
+			""" convenience for generating and interpolating path """
+
+			return self.foothold_planner(self.path_interpolation(path_int))
+
 		print 'Post-processing path......'
 		
 		## Define Variables ##
@@ -1399,56 +1488,12 @@ class PathPlanner:
 				print path[i], path[i-1], qn1, qn0
 				# Body roll stabilises, so interpolate
 				if (abs(qn1-qn0) < 0.05):
-					if (path[i][0] - sp[0] > 0):
-						ep = (sp[0],path[i-1][1])	# set new end point
-						# modify path to start from end of segmentised transition
-						temp_path = map(lambda x: (x[0],path[i][1]) , temp_path)
-						temp_path.insert(0,ep)
-						# remove duplicates
-						temp_path = list(OrderedDict.fromkeys(temp_path))
-						print 'segmentised forward linear path: ', temp_path
-					else:
-						ep = path[i]
-						temp_path = []
-
+					temp_path, ep = ts_gw_segmentisation(temp_path)
+					
 					if (self.T_GND_X_WALL):
-						print 'Interpolating transition ...', sp, ep
-						print 'Transition pt. 1: reset stance'
-						self.T_GND_X_WALL = self.W_WALL = False
-						path_01 = self.routine_motion(sp,ep,'reset_stance')
-						motion_plan.append(self.foothold_planner(path_01))
-						self.T_GND_X_WALL = self.W_WALL = True
-
-						print 'Transition pt. 2: change foothold surface', self.W_GND
-						path_01 = self.routine_motion(sp,ep)
-						motion_plan.append(self.foothold_planner(path_01))
-						
-						print 'Transition pt. 3: moving to setpoint'
-						path_01 = self.transition_routine('Gnd_X_Wall', sp, ep)
-						motion_plan.append(self.foothold_planner(path_01))
-						
-						self.T_GND_X_WALL = self.W_GND = False
-
-					if (self.T_WALL_X_GND):
-						# qr = self.base_map.nodes[sp]['pose'][1]
-						print 'Interpolating transition ...', sp, ep
-						print 'Transition pt. 1: moving to setpoint'
-						path_01 = self.transition_routine('Wall_X_Gnd', sp, ep) #Wall_X_Gnd
-						motion_plan.append(self.foothold_planner(path_01))
-						
-						print 'Transition pt. 2: change foothold surface', self.W_GND
-						path_01 = self.routine_motion(sp,ep)
-						motion_plan.append(self.foothold_planner(path_01))
-						self.W_WALL = self.T_WALL_X_GND = False
-						self.W_GND  = True
-						
-						print 'Transition pt. 3: reset stance'
-						path_01 = self.routine_motion(ep,ep,'reset_stance')
-						motion_plan.append(self.foothold_planner(path_01))
-						self.Robot.Gait.set_gait_type(4)
-
-						self.W_WALL = self.T_WALL_X_GND = False
-						self.W_GND  = True
+						ts_gnd_X_wall()
+					elif (self.T_WALL_X_GND):
+						ts_wall_X_gnd()
 						
 			## ============================================================================ ##
 
@@ -1458,16 +1503,13 @@ class PathPlanner:
 				# First, plan path and foothold for ground walking
 				if (len(temp_path) > 1):
 					print 'Interpolating Wg prior to Ww...', temp_path[0], temp_path[-1]
-					path_01 = self.path_interpolation(temp_path)
-					plan_01 = self.foothold_planner(path_01)
-					motion_plan.append(plan_01)
+					motion_plan.append(generate_plan(temp_path))
 					temp_path = []
 
 				sp = path[i]
 				# Next, set the respective state machine flags
-				self.T_GND_X_WALL = True
-				self.W_WALL = True
-				self.W_GND  = False
+				self.T_GND_X_WALL = self.W_WALL = True
+				self.W_GND = False
 
 			elif (m0==2 and m1==0):
 				## Wall to Walk ##
@@ -1487,9 +1529,7 @@ class PathPlanner:
 							temp_path = map(lambda x: (x[0],temp_path[0][1]) , temp_path)
 						temp_path = list(OrderedDict.fromkeys(temp_path))
 						print 'new temp path ', temp_path
-						path_01 = self.path_interpolation(temp_path)
-						plan_01 = self.foothold_planner(path_01)
-						motion_plan.append(plan_01)
+						motion_plan.append(generate_plan(temp_path))
 
 						sp = temp_path[-1]
 						temp_path = []
@@ -1499,31 +1539,21 @@ class PathPlanner:
 
 			elif (m0==0 and m1==1):
 				## Walk to Chimney ##
-				print path[i], path[i+1], 'walk to chimney'
 				# First, plan path and foothold for ground walking
 				if (len(temp_path) > 1):
 					print 'Interpolating Wg prior to Wc...', temp_path
-					path_01 = self.path_interpolation(temp_path)
-					plan_01 = self.foothold_planner(path_01)
-					motion_plan.append(plan_01)
+					motion_plan.append(generate_plan(temp_path))
 					temp_path = []
 
 				sp = path[i]
 				self.di_wall = np.array([0., self.base_map.nodes[path[i+1]]['width']*self.GridMap.resolution/2, 0.])
 				# Next, set the respective state machine flags
-				self.W_GND  = False
+				self.T_GND_X_CHIM = self.W_CHIM = self.W_GND = False
 
-				print 'G2C Transition at ', sp
-				print 'Transition: Reset Leg Stances'
-				self.T_GND_X_CHIM = self.W_CHIM = False
-				path_01 = self.routine_motion(sp, sp,'reset_stance')
-				motion_plan.append(self.foothold_planner(path_01))
-				self.T_GND_X_CHIM = self.W_CHIM = True
-				self.Robot.Gait.set_gait_type(4)
+				ts_gnd_X_chim()
 
 			elif (m0==1 and m1==0):
 				## Chimney to Walk ##
-				print path[i], path[i+1], 'chimney to walk'
 				if (m2==1):
 					# force motion to chimney for gap of one
 					self.base_map.nodes[path[i+1]]['motion'] = 1
@@ -1538,111 +1568,47 @@ class PathPlanner:
 						for n in temp_path:
 							temp_path = map(lambda x: (x[0],temp_path[0][1]) , temp_path)
 						temp_path = list(OrderedDict.fromkeys(temp_path))
-						print temp_path
-						path_01 = self.path_interpolation(temp_path)
-						plan_01 = self.foothold_planner(path_01)
-						motion_plan.append(plan_01)
-
+						motion_plan.append(generate_plan(temp_path))
+						
+						# set respective flags
 						self.T_GND_X_CHIM = False
+						self.T_CHIM_X_GND = self.W_CHIM = True
 
 						sp = temp_path[-1]
 						ep = path[i+1]
 						temp_path = []
 						
-						print 'C2G Transition at ', sp, path[i+1]
-						print 'Transition: Change foothold surface'
-						self.T_CHIM_X_GND = self.W_CHIM = True
-						path_01 = self.routine_motion(sp,ep)
-						motion_plan.append(self.foothold_planner(path_01))
-						self.T_CHIM_X_GND = self.W_CHIM = False
-						self.W_GND = True
-						
-						print 'Transition: Reset Leg Stances'
-						path_01 = self.routine_motion(ep, ep,'reset_stance')
-						motion_plan.append(self.foothold_planner(path_01))
-						self.Robot.Gait.set_gait_type(4)
+						ts_chim_X_gnd()
 
 		# Interpolate final sub-division if not empty
 		print 'Cycle exited: ', temp_path
 		
-		# Check type of interpolation
+		# Check if transition required
 		if (self.T_GND_X_WALL):
-			## Decouple forward and sideways motion
-			## TODO: YAW DEPENDANT
-			print 'Final interpolation, Wg-w: '
-			if (path[i][0] - sp[0] > 0):
-				ep = (sp[0],path[i][1])	# set new end point
-				# modify path to start from end of segmentised transition
-				temp_path = map(lambda x: (x[0],path[i][1]) , temp_path)
-				temp_path.insert(0,ep)
-				# remove duplicates
-				temp_path = list(OrderedDict.fromkeys(temp_path))
-			else:
-				ep = path[i]
-				temp_path = []
-
-			print 'G2W Transition from ', sp, 'to ', ep
-			print 'Transition pt. 1'
-			self.T_GND_X_WALL = self.W_WALL = False
-			path_01 = self.routine_motion(sp,ep,'reset_stance')
-			plan_01 = self.foothold_planner(path_01)
-			motion_plan.append(plan_01)
-			self.T_GND_X_WALL = self.W_WALL = True
-
-			print 'Transiton pt. 2: '
-			path_01 = self.routine_motion(sp,ep)
-			plan_01 = self.foothold_planner(path_01)
-			motion_plan.append(plan_01)
-
-			print 'Transiton pt. 3: '
-			path_01 = self.transition_routine('Gnd_X_Wall', sp, ep)
-			motion_plan.append(self.foothold_planner(path_01))
+			print 'Final interpolation, Wg-w: ', sp, 'to ', path[-1]
+			temp_path, ep = ts_gw_segmentisation(temp_path)
+			ts_gnd_X_wall()
 
 		elif (self.T_WALL_X_GND):
-		 	print 'Final interpolation, Ww-g: '
-			print 'W2G Transition from ', sp, 'to ', path[i]
-			print 'Transiton pt. 1: '
-			path_01 = self.transition_routine('Wall_X_Gnd', sp, path[i])
-			plan_01 = self.foothold_planner(path_01)
-			motion_plan.append(plan_01)
-
-			print 'Transiton pt. 2: '
-			path_01 = self.routine_motion(sp,ep)
-			motion_plan.append(self.foothold_planner(path_01))
+		 	print 'Final interpolation, Ww-g: ', sp, 'to ', path[-1]
+		 	temp_path, ep = ts_gw_segmentisation(temp_path)
+			ts_wall_X_gnd()
 
 		elif (self.T_GND_X_CHIM):
 			print 'Final G2C Transition from ', sp, 'to ', temp_path[0]
-			print 'Transition pt. 1'
-			self.T_GND_X_CHIM = self.W_CHIM = False
-			path_01 = self.routine_motion(sp, sp,'reset_stance')
-			plan_01 = self.foothold_planner(path_01)
-			motion_plan.append(plan_01)
-			self.T_GND_X_CHIM = self.W_CHIM = True
-
-			print 'Transition pt. 2'
-			path_01 = self.transition_routine('Gnd_X_Chim', sp, temp_path[-1])
-			motion_plan.append(self.foothold_planner(path_01))
+			ts_gnd_X_chim()
 
 		elif (self.T_CHIM_X_GND):
 			print 'Final G2C Transition from ', sp, 'to ', temp_path[-1]
-			path_01 = self.transition_routine('Chim_X_Gnd', sp, temp_path[3])
-			del temp_path[0:3]
+			ts_chim_X_gnd()
 
-		elif (self.W_GND or self.W_WALL):
-			if (len(temp_path)>1):
-				print 'Final interpolation, Wg: ', temp_path, self.W_GND, self.W_WALL
-				path_01 = self.path_interpolation(temp_path)
-				motion_plan.append(self.foothold_planner(path_01))
-				temp_path = []
-		
+		# reset all transition flags
 		self.T_GND_X_WALL = self.T_WALL_X_GND = False
 		self.T_GND_X_CHIM = self.T_CHIM_X_GND = False
 
 		if (len(temp_path) > 1):
-			print 'Secondary Final interpolation, Wg: ', temp_path
-			path_01 = self.path_interpolation(temp_path)
-			plan_01 = self.foothold_planner(path_01)
-			motion_plan.append(plan_01)
+			print 'Final walking interpolation: ', temp_path
+			motion_plan.append(generate_plan(temp_path))
 				
 		print 'Path completed'
 
@@ -1668,7 +1634,7 @@ class PathPlanner:
 		# 		csvwriter.writerow(data)
 		
 		## Regenerate base path
-		x_cob = np.zeros(3)# qi[:3].flatten()
+		x_cob = np.zeros(3)
 		w_cob = qi[3:6].flatten()
 
 		t_cob = np.zeros(1)
@@ -1684,7 +1650,6 @@ class PathPlanner:
 		path_generator.V_MAX = path_generator.W_MAX = 10
 		path = path_generator.generate_base_path(x_cob, w_cob, CTR_INTV, t_cob)
 		
-
 		sum_footholds = 0
 		for j in range(0,6):
 			sum_footholds += len(motion_plan.f_world_X_foot[j].xp)
