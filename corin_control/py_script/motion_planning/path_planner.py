@@ -869,6 +869,17 @@ class PathPlanner:
 								leg_exceed = j
 								break
 
+					## compute stability margin
+					## Define Variables ##
+					stack_base_X_world = []
+					for j in range(6):
+						stack_base_X_world.append(self.Robot.Leg[j].XHd.world_base_X_foot[:3,3])
+					# compute Longitudinal Stability Margin
+					sm = self.Robot.SM.LSM(stack_base_X_world, self.Robot.Gait.cs)
+					if (sm[0] <= SM_MIN or sm[1] <= SM_MIN):
+						print m, ' current sm: ', sm, self.Robot.Gait.cs
+						# print stack_base_X_world
+
 					if (bound_exceed is True):
 						if (i == break_n):
 							break_count += 1
@@ -1169,31 +1180,6 @@ class PathPlanner:
 			# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 			# Plot.plot_2d(base_path.X.t, base_path.W.xp)
 			
-		return base_path
-
-	def path_interpolation(self, path, tn=0.1):
-		""" interpolate cells using cubic spline """
-
-		## Define Variables ##
-		x_cob = np.array([.0,.0,.0])
-		w_cob = np.array([.0,.0,.0])
-		
-		## populate array
-		for e in path:
-			x_cob = np.vstack((x_cob,np.array([e[0]*self.GridMap.resolution, e[1]*self.GridMap.resolution, self.base_map.nodes[e]['pose'][0]])))
-			w_cob = np.vstack((w_cob,np.array([self.base_map.nodes[e]['pose'][1:4]])))
-			# print e, (np.round(e[0]*self.GridMap.resolution,3), np.round(e[1]*self.GridMap.resolution,3))
-		
-		x_cob = np.delete(x_cob,0,0)
-		w_cob = np.delete(w_cob,0,0)
-		# print x_cob
-		# print w_cob
-		PathGenerator = path_generator.PathGenerator()
-		base_path = PathGenerator.generate_base_path(x_cob, w_cob, tn)
-
-		# Plot.plot_2d_multiple(1,wn_com.t,wn_com.xp*180/np.pi)
-		# Plot.plot_2d_multiple(1,base_path.X.t,base_path.X.xp)#, base_path.W.xv)
-		
 		return base_path
 
 	def routine_motion(self, p1, p2, routine=None, tn=0.1):
@@ -1725,6 +1711,32 @@ class PathPlanner:
 
 		## Split path according to motion primitive
 		return self.post_process_path(list_gpath, Robot.P6c.world_X_base.flatten())
+
+	def path_interpolation(self, path, tn=0.1):
+		""" interpolate cells using cubic spline """
+
+		## Define Variables ##
+		x_cob = np.array([.0,.0,.0])
+		w_cob = np.array([.0,.0,.0])
+		
+		## populate array
+		for e in path:
+			x_cob = np.vstack((x_cob,np.array([e[0]*self.GridMap.resolution, e[1]*self.GridMap.resolution, self.base_map.nodes[e]['pose'][0]])))
+			w_cob = np.vstack((w_cob,np.array([self.base_map.nodes[e]['pose'][1:4]])))
+			# print e, (np.round(e[0]*self.GridMap.resolution,3), np.round(e[1]*self.GridMap.resolution,3))
+		
+		x_cob = np.delete(x_cob,0,0)
+		w_cob = np.delete(w_cob,0,0)
+		# print x_cob
+		# print w_cob
+		PathGenerator = path_generator.PathGenerator()
+		base_path = PathGenerator.generate_base_path(x_cob, w_cob, tn)
+
+		# Plot.plot_2d_multiple(1,wn_com.t,wn_com.xp*180/np.pi)
+		# Plot.plot_2d_multiple(1,base_path.X.t,base_path.X.xp)#, base_path.W.xv)
+		
+		return base_path
+
 
 ## ================================================================================================ ##
 ## 												TESTING 											##

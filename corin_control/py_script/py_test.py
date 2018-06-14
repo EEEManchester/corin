@@ -329,7 +329,8 @@ for i in range(1,end):
 
 import random
 
-a = -0.048
-b = -0.05
-if (a >= b):
+a = np.array([0.1,0.05])
+b = 1.0
+
+if (a.any() >= b):
 	print 'a g b'
