@@ -12,6 +12,7 @@
   <build_depend>ros_control</build_depend>
   <build_depend>ros_controllers</build_depend>
   <build_depend>actionlib</build_depend>
+  <build_depend>cmake_modules</build_depend>
   <build_depend>control_msgs</build_depend>
   <build_depend>dynamic_reconfigure</build_depend>
   <build_depend>gazebo_msgs</build_depend>
@@ -23,6 +24,7 @@
   <build_depend>rospy</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>tf</build_depend>
+  <build_depend>qpoases</build_depend>
 
   <run_depend>ros_control</run_depend>
   <run_depend>ros_controllers</run_depend>

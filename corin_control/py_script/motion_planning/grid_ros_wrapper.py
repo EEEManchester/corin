@@ -19,7 +19,7 @@ if __name__ == "__main__":
 	# rospy.sleep(0.5)
 
 	## Create map and plan path
-	GridPlanner = GridMap('flat')
+	GridPlanner = GridMap('wall_demo_left')
 	
 	## Convert to ROS point cloud and visualise in RVIZ
 	map_arr   = point_cloud_array_mapping(GridPlanner.graph_to_nparray())

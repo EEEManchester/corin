@@ -6,19 +6,19 @@
 
 #IncludeRegexTransform: 
 
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/declarations.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/declarations.h
 Eigen/Dense
 -
 
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/forward_dynamics.cpp
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/forward_dynamics.cpp
 forward_dynamics.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/forward_dynamics.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/forward_dynamics.h
 Eigen/Cholesky
 -
 iit/rbd/robcogen_commons.h
 -
 
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/forward_dynamics.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/forward_dynamics.h
 Eigen/Dense
 -
 iit/rbd/rbd.h
@@ -28,19 +28,19 @@ iit/rbd/InertiaMatrix.h
 iit/rbd/utils.h
 -
 declarations.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/declarations.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/declarations.h
 transforms.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/transforms.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/transforms.h
 inertia_properties.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inertia_properties.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inertia_properties.h
 link_data_map.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/link_data_map.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/link_data_map.h
 
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inertia_properties.cpp
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inertia_properties.cpp
 inertia_properties.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inertia_properties.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inertia_properties.h
 
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inertia_properties.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inertia_properties.h
 Eigen/Dense
 -
 iit/rbd/rbd.h
@@ -50,19 +50,19 @@ iit/rbd/InertiaMatrix.h
 iit/rbd/utils.h
 -
 declarations.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/declarations.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/declarations.h
 
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inverse_dynamics.cpp
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inverse_dynamics.cpp
 iit/rbd/robcogen_commons.h
 -
 inverse_dynamics.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inverse_dynamics.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inverse_dynamics.h
 inertia_properties.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inertia_properties.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inertia_properties.h
 iostream
 -
 
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inverse_dynamics.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inverse_dynamics.h
 Eigen/Dense
 -
 iit/rbd/rbd.h
@@ -72,75 +72,75 @@ iit/rbd/InertiaMatrix.h
 iit/rbd/utils.h
 -
 declarations.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/declarations.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/declarations.h
 inertia_properties.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inertia_properties.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inertia_properties.h
 transforms.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/transforms.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/transforms.h
 link_data_map.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/link_data_map.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/link_data_map.h
 
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/jacobians.cpp
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/jacobians.cpp
 jacobians.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/jacobians.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/jacobians.h
 
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/jacobians.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/jacobians.h
 iit/rbd/TransformsBase.h
 -
 declarations.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/declarations.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/declarations.h
 kinematics_parameters.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/kinematics_parameters.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/kinematics_parameters.h
 
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/jsim.cpp
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/jsim.cpp
 transforms.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/transforms.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/transforms.h
 jsim.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/jsim.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/jsim.h
 iit/rbd/robcogen_commons.h
 -
 
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/jsim.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/jsim.h
 iit/rbd/rbd.h
 -
 iit/rbd/StateDependentMatrix.h
 -
 declarations.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/declarations.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/declarations.h
 transforms.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/transforms.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/transforms.h
 inertia_properties.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inertia_properties.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inertia_properties.h
 
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/kinematics_parameters.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/kinematics_parameters.h
 
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/link_data_map.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/link_data_map.h
 declarations.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/declarations.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/declarations.h
 
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/miscellaneous.cpp
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/miscellaneous.cpp
 iit/rbd/utils.h
 -
 miscellaneous.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/miscellaneous.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/miscellaneous.h
 
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/miscellaneous.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/miscellaneous.h
 inertia_properties.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inertia_properties.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inertia_properties.h
 transforms.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/transforms.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/transforms.h
 
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/transforms.cpp
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/transforms.cpp
 transforms.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/transforms.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/transforms.h
 
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/transforms.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/transforms.h
 Eigen/Dense
 -
 iit/rbd/TransformsBase.h
 -
 declarations.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/declarations.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/declarations.h
 kinematics_parameters.h
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/kinematics_parameters.h
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/kinematics_parameters.h
 

@@ -1,4 +1,4 @@
-# Install script for directory: /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg
+# Install script for directory: /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -42,19 +42,19 @@ if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspeci
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
 file(INSTALL DESTINATION "/usr/local/include/iit/robots/mcorin_leg" TYPE FILE FILES
-    "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/./declarations.h"
-    "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/./link_data_map.h"
-    "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/./joint_data_map.h"
-    "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/./transforms.h"
-    "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/./kinematics_parameters.h"
-    "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/./jacobians.h"
-    "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/./traits.h"
-    "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/./jsim.h"
-    "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/./inverse_dynamics.h"
-    "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/./forward_dynamics.h"
-    "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/./inertia_properties.h"
-    "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/./dynamics_parameters.h"
-    "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/./miscellaneous.h"
+    "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/./declarations.h"
+    "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/./link_data_map.h"
+    "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/./joint_data_map.h"
+    "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/./transforms.h"
+    "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/./kinematics_parameters.h"
+    "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/./jacobians.h"
+    "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/./traits.h"
+    "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/./jsim.h"
+    "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/./inverse_dynamics.h"
+    "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/./forward_dynamics.h"
+    "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/./inertia_properties.h"
+    "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/./dynamics_parameters.h"
+    "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/./miscellaneous.h"
     )
 endif()
 
@@ -73,7 +73,7 @@ if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspeci
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/usr/local/lib" TYPE SHARED_LIBRARY FILES "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/libiitgenmcorin_leg.so")
+file(INSTALL DESTINATION "/usr/local/lib" TYPE SHARED_LIBRARY FILES "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/libiitgenmcorin_leg.so")
   if(EXISTS "$ENV{DESTDIR}/usr/local/lib/libiitgenmcorin_leg.so" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}/usr/local/lib/libiitgenmcorin_leg.so")
     if(CMAKE_INSTALL_DO_STRIP)
@@ -90,5 +90,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

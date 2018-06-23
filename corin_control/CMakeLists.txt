@@ -7,6 +7,7 @@ add_definitions(-std=c++11)
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
   actionlib
+  cmake_modules
   control_msgs
   gazebo_msgs
   geometry_msgs
@@ -17,8 +18,11 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   tf
+  qpoases
 )
 
+find_package(Eigen REQUIRED)
+# find_package (QPOASES)
 ## Generate services in the 'srv' folder
  add_service_files(
    FILES
@@ -51,15 +55,31 @@ catkin_package(
   CATKIN_DEPENDS
   message_runtime
   actionlib
-  DEPENDS Boost
+  DEPENDS Boost Eigen qpOASES
 )
 
 ###########
 ## Build ##
 ###########
 
-include_directories( ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+include_directories( ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS})
 
 add_executable(jointStateServer cpp_script/service/jointStateServer.cpp)
 add_dependencies(jointStateServer corin_control_gencpp)
 target_link_libraries(jointStateServer ${catkin_LIBRARIES})
+
+add_executable(main_node cpp_script/main_node.cpp cpp_script/force_distribution.cpp
+                          cpp_script/robots/mcorin/transforms.cpp 
+                          cpp_script/robots/mcorin/inertia_properties.cpp 
+                          cpp_script/robots/mcorin/inverse_dynamics.cpp
+                          cpp_script/robots/mcorin/jacobians.cpp)
+add_dependencies(main_node corin_control_gencpp)
+target_link_libraries(main_node ${catkin_LIBRARIES})
+
+# add_executable(rcg_test cpp_script/rcg_test.cpp
+#                         cpp_script/robots/mcorin/transforms.cpp 
+#                         cpp_script/robots/mcorin/inertia_properties.cpp 
+#                         cpp_script/robots/mcorin/inverse_dynamics.cpp
+#                         cpp_script/robots/mcorin/jacobians.cpp)
+# add_dependencies(rcg_test corin_control_gencpp)
+# target_link_libraries(rcg_test ${catkin_LIBRARIES})

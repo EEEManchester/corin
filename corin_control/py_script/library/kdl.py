@@ -12,7 +12,8 @@ from constant import *
 class KDL():
 
 	def __init__(self):
-		self.link	= [L1, L2, L3]
+		self.link	 = [L1, L2, L3]
+		self.knee_up = True
 
 	def leg_jacobian(self, q=None):
 
@@ -62,20 +63,25 @@ class KDL():
 			s3  = np.sqrt(1.0-c3**2);
 			q3t = [np.arctan2(s3,c3), np.arctan2(-s3,c3)];
 			
-			if (q3t[0] < 0):
-				q3 = q3t[0];
+			# first choice is (-ve) - correspond to knee up config.
+			if (self.knee_up is True):
+				q3 = q3t[0] if (q3t[0] < 0) else q3t[1]
 			else:
-				q3 = q3t[1];
+				q3 = q3t[0] if (q3t[0] > 0) else q3t[1]
 			
 			# Dividing the element (1,4) & (2,4) in inv(H01)*Psym = T12*T23
 			xp = x*np.cos(q1) + np.sin(q1)*y - L1;
 			yp = z;
 			q2t = [np.arctan2(yp,xp) - np.arctan2(L3*np.sin(q3), L2+L3*np.cos(q3)), np.arctan2(yp,xp) - np.arctan2(L3*np.sin(q3), L2+L3*np.cos(q3))];
 
-			if (q2t[0] < 0):
-				q2 = q2t[0];
+			if (self.knee_up is True):
+				q2 = q2t[0] if (q2t[0] < 0) else q2t[1]
 			else:
-				q2 = q2t[1];
+				q2 = q2t[0] if (q2t[0] > 0) else q2t[1]
+			# if (q2t[0] < 0):
+			# 	q2 = q2t[0];
+			# else:
+			# 	q2 = q2t[1];
 			
 			return np.array([q1, q2, q3])
 		except ValueError, e:

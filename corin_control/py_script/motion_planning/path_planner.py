@@ -43,7 +43,7 @@ MAX_WP = 0.62 	# maximum wall walking footprint
 MIN_CFW = 0.60 	# minimum footprint width for chimney
 MAX_CFW = 0.73 	# maximum footprint width for chimney
 
-TEST_POINT = (38,13)
+TEST_POINT = (25,5)
 
 class BodyposeTable:
 	def __init__(self):
@@ -175,8 +175,9 @@ class BodyposeTable:
 
 		return selection
 
-# tb = BodyposeTable()
-# print tb.table
+tb = BodyposeTable()
+for i in tb.table:
+	print tb.table[i]["footprint"]
 class PathPlanner:
 	def __init__(self, Map):
 		self.GridMap = Map
@@ -401,11 +402,12 @@ class PathPlanner:
 							if (i<3):
 								pf1 = (pxi-ix_off+x, p[1]+by_min+d)
 								pf2 = (pxi-ix_off+x, p[1]+by_min+d-1)
+								if (p==TEST_POINT):
+									print i, p, d, pf1, pf2
 							else:
-								pf1 = (pxi-ix_off+x, p[1]-(by_min+d))
-								pf2 = (pxi-ix_off+x, p[1]-(by_min+d-1))
-								# if (p==TEST_POINT):
-								# 	print i, p, d, pf1, pf2
+								pf1 = (pxi-ix_off+x, p[1]-(by_min+d-1))
+								pf2 = (pxi-ix_off+x, p[1]-(by_min+d))
+								
 							try:
 								if (self.GridMap.Map.nodes[pf1]['height']==1 and self.GridMap.Map.nodes[pf2]['height']==1):
 									LA[i] = -1;
@@ -415,8 +417,8 @@ class PathPlanner:
 							except KeyError:
 								LA[i] = -1;
 								break
-					# if (p==TEST_POINT):
-					# 	print 'flag: ', fp_area, LA
+					if (p==TEST_POINT):
+						print 'flag: ', fp_area, LA
 
 					## valid if THREE legs on wall have footholds and ground are all ground
 					if (np.amin(LA) < 0):
@@ -639,7 +641,7 @@ class PathPlanner:
 		self.GridMap.set_edge_cost(self.base_map)	# assign cost to edge
 		
 		## Display graph of grid map connectivity
-		# b_map = dict(zip(self.base_map, self.base_map))
+		b_map = dict(zip(self.base_map, self.base_map))
 		# ax = nx.draw_networkx(self.base_map, b_map, with_labels=False, node_size=20, node_color='#ff6600', width=0.5, alpha=1.0, node_shape="s");
 		# plt.grid('on');		 plt.grid(which='major', linestyle=':', linewidth='0.5', color='black')
 		# plt.show()
@@ -859,13 +861,13 @@ class PathPlanner:
 							mag = np.sqrt(world_q2_X_foot[1]**2 + world_q2_X_foot[2]**2)
 							
 							if (mag > (L2+L3-0.005)):
-								print 'leg length exceeded on ', j, ' at n=', i, mag
+								# print 'leg length exceeded on ', j, ' at n=', i, mag
 								bound_exceed = True
 								leg_exceed = j
 								break
 
 							if (bound_exceed == True):
-								print 'bound exceed on ', j, ' at n=', i
+								# print 'bound exceed on ', j, ' at n=', i
 								leg_exceed = j
 								break
 
@@ -876,9 +878,10 @@ class PathPlanner:
 						stack_base_X_world.append(self.Robot.Leg[j].XHd.world_base_X_foot[:3,3])
 					# compute Longitudinal Stability Margin
 					sm = self.Robot.SM.LSM(stack_base_X_world, self.Robot.Gait.cs)
+					# print m, ' current sm: ', np.round(sm,4), self.Robot.Gait.cs
 					if (sm[0] <= SM_MIN or sm[1] <= SM_MIN):
 						print m, ' current sm: ', sm, self.Robot.Gait.cs
-						# print stack_base_X_world
+						bound_exceed = True
 
 					if (bound_exceed is True):
 						if (i == break_n):
@@ -905,7 +908,7 @@ class PathPlanner:
 			world_X_base.append(P6d_world_X_base.flatten())
 			gphase_intv.append(i)
 			gait_phase.append(self.Robot.Gait.cs)
-			print self.Robot.Gait.cs
+			# print self.Robot.Gait.cs
 			# print 'qbp:: ', np.round(P6d_world_X_base.reshape(1,6),3), i
 
 			## Set foothold for legs in transfer phase
@@ -1066,7 +1069,8 @@ class PathPlanner:
 					## Recompute base_X_AEP based on cell height
 					self.Robot.Leg[j].XHd.base_X_AEP = mX(self.Robot.XHd.base_X_world, 
 															v3_X_m(self.Robot.Leg[j].XHd.world_X_foot[:3,3]))
-
+					self.Robot.Leg[j].XHd.world_base_X_foot = mX(world_X_base_rot, 
+																	self.Robot.Leg[j].XHd.base_X_AEP)
 					## Stack to array
 					world_X_footholds[j].t.append(i*CTR_INTV)
 					world_X_footholds[j].xp.append(self.Robot.Leg[j].XHd.world_X_foot[:3,3:4].copy())
@@ -1124,6 +1128,8 @@ class PathPlanner:
 				x_cob = xi.copy()
 				w_cob = np.array([qi, 0., 0.])
 
+			print qi, qf
+			print xi, xf
 			# Generate ellipsoidal base trajectory
 			qrange = range(0,91,10)
 			delta_q = (qf-qi)/(len(qrange)-1)
@@ -1270,6 +1276,7 @@ class PathPlanner:
 				t_cob = np.hstack(( t_cob, i*total_time/(2*(len(qrange)-1)) ))
 			# print x_cob
 			# print t_cob
+			print w_cob
 			PathGenerator.V_MAX = PathGenerator.W_MAX = 100
 			base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV, t_cob)
 			# Plot.plot_2d(base_path.X.t, base_path.X.xp)
@@ -1471,9 +1478,12 @@ class PathPlanner:
 			if (self.T_GND_X_WALL or self.T_WALL_X_GND):
 				qn1 = self.base_map.nodes[path[i]]['pose'][1]
 				qn0 = self.base_map.nodes[path[i-1]]['pose'][1]
-				print path[i], path[i-1], qn1, qn0
+				wp1 = self.base_map.nodes[path[i]]['width']
+				wp2 = self.base_map.nodes[path[i-1]]['width']
+				# print path[i], path[i-1], qn1, qn0, wp1, wp2
 				# Body roll stabilises, so interpolate
-				if (abs(qn1-qn0) < 0.05):
+				if (abs(qn1-qn0) < 0.05 and (wp1 == wp2)):
+
 					temp_path, ep = ts_gw_segmentisation(temp_path)
 					
 					if (self.T_GND_X_WALL):
@@ -1640,7 +1650,7 @@ class PathPlanner:
 		for j in range(0,6):
 			sum_footholds += len(motion_plan.f_world_X_foot[j].xp)
 		print 'no. footholds: ', sum_footholds
-		print 'time: ', motion_plan.qb.X.t[-1]
+		print 'time: ', path.X.t[-1]
 		
 		# print len(path.X.t)
 		# Plot.plot_2d(path.X.t,path.X.xp)

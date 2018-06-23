@@ -311,8 +311,8 @@ class SplineGenerator:
 		for i in range(0,3):
 			cx[:,i], tx = self.spline_1D_acc(x[:,i].flatten(), t)
 		
-		# return self.spline_3D(x, t, tn)	# zero initial & final velocity
-		return self.spline_3D(cx, tx, tn) 	# zero initial & final velocity & acceleration
+		return self.spline_3D(x, t, tn)	# zero initial & final velocity
+		# return self.spline_3D(cx, tx, tn) 	# zero initial & final velocity & acceleration
 
 	
 ## ================================================================================================ ##

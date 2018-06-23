@@ -21,7 +21,7 @@ def plot_3d(x=0,y=0,z=0):
 
 def plot_2d(x=0,y=0,show=True):
 	fig = plt.figure()
-	plt.plot(x,y, marker='x')
+	plt.plot(x,y)
 	plt.xlabel('x-axis');plt.ylabel('y-axis');plt.grid('on');
 	# plt.legend(loc='upper center', shadow=True)
 	if (show is True):

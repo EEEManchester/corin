@@ -17,6 +17,7 @@ from rviz_visual import *
 import rospy
 from sensor_msgs.msg import Imu 			# sub msg for IMU
 from sensor_msgs.msg import JointState 		# sub msg for joint states
+from trajectory_msgs.msg import JointTrajectoryPoint
 from std_msgs.msg import Float64 			# pub msg for Gazebo joints
 from std_msgs.msg import ByteMultiArray 	# foot contact state
 from std_msgs.msg import Float32MultiArray	# foot contact force
@@ -129,7 +130,8 @@ class CorinManager:
 
 		##***************** PUBLISHERS ***************##
 		self.setpoint_pub_ = rospy.Publisher('/corin/setpoint_states', JointState, queue_size=1)	# LOGGING publisher
-		
+		self.trajectory_pub_ = rospy.Publisher('/corin/setpoint_trajectory', JointTrajectoryPoint, queue_size=1)	# LOGGING publisher
+
 		## Hardware Specific Publishers ##
 		if (ROBOT_NS == 'corin' and (self.interface == 'gazebo' or 
 									 self.interface == 'rviz' or
@@ -174,7 +176,7 @@ class CorinManager:
 		# Sleep for short while for topics to be initiated properly
 		rospy.sleep(0.5)
 
-	def publish_topics(self, q, q_log=None):
+	def publish_topics(self, q, q_log=None, q_trac=None):
 		""" Publish joint position to joint controller topics and
 			setpoint topic (for logging all setpoint states) 		"""
 		""" Input: 	1) q -> Joint setpoints (position, velocity, 
@@ -222,6 +224,7 @@ class CorinManager:
 		## Publish setpoints to logging topic
 		if (q_log is not None):
 			self.setpoint_pub_.publish(q_log)
+			self.trajectory_pub_.publish(q_trac)
 
 		## Runs controller at desired rate for normal control mode
 		if (self.control_rate is "normal" or self.interface is 'robotis'):
@@ -522,6 +525,21 @@ class CorinManager:
 					self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = mX(self.Robot.XHd.world_X_base[:3,:3], 
 																		self.Robot.Leg[j].XHd.base_X_foot[:3,3])
 					
+					## Identify knee up/down - first, checks only if body roll above threshold
+					if ((self.Robot.P6d.world_X_base[3] > ROLL_TH and j >= 3) or (self.Robot.P6d.world_X_base[3] < -ROLL_TH and j < 3)):
+						x_offset = np.array([COXA_X,0,0]).reshape((3,1)) 	# offset so that search at front of robot
+						wclear = self.GridMap.get_median_width(self.Robot.P6d.world_X_base[:3] + x_offset)
+						# change to knee down if width clearance below threshold
+						if (wclear < WALL_WIDTH_NARROW):
+							print j, ' Changing to knee down ', wclear
+							if (self.Robot.Leg[j].KDL.knee_up == True):
+								print 'Initiate change of knee config. routine'
+							self.Robot.Leg[j].KDL.knee_up = False
+						else:
+							self.Robot.Leg[j].KDL.knee_up = True
+					# else:
+					# 	self.Robot.Leg[j].KDL.knee_up = False
+
 					if (svalid is False):
 						# set invalid if trajectory unfeasible for leg's kinematic
 						self.Robot.invalid = True
@@ -582,8 +600,13 @@ class CorinManager:
 				qlog.position = v3cp.flatten().tolist() + v3wp.flatten().tolist() + qd.xp.tolist()
 				qlog.velocity = v3cv.flatten().tolist() + v3wv.flatten().tolist() + qd.xv.tolist()
 				
+				qtrac = JointTrajectoryPoint()
+				qtrac.positions = v3cp.flatten().tolist() + v3wp.flatten().tolist() + qd.xp.tolist()
+				qtrac.velocities = v3cv.flatten().tolist() + v3wv.flatten().tolist() + qd.xv.tolist()
+				qtrac.accelerations = v3ca.flatten().tolist() + v3wa.flatten().tolist() + qd.xa.tolist()
+				
 				# publish appended joint angles if motion valid
-				self.publish_topics(qd, qlog)
+				self.publish_topics(qd, qlog, qtrac)
 				qd_prev = JointTrajectoryPoints(18,(qd.t, qd.xp, qd.xv, qd.xa))
 
 				i += 1
@@ -664,11 +687,11 @@ class CorinManager:
 				self.Robot.support_mode = False
 
 				ps = (10,13); pf = (15,13)	# Short straight Line
-				# ps = (10,14); pf = (10,20)	# G2W - Left side up
+				ps = (10,14); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
-				# ps = (10,13); pf = (25,13)	# full wall or chimney 
+				# ps = (10,13); pf = (25,21)	# G2W - Left side up
+				# ps = (10,13); pf = (40,13)	# full wall or chimney 
 				# ps = (10,13); pf = (72,13) 	# wall and chimney demo
-				
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,

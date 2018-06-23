@@ -4,13 +4,13 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/forward_dynamics.cpp" "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.o"
-  "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inertia_properties.cpp" "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.o"
-  "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inverse_dynamics.cpp" "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.o"
-  "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/jacobians.cpp" "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.o"
-  "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/jsim.cpp" "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.o"
-  "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/miscellaneous.cpp" "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.o"
-  "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/transforms.cpp" "/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.o"
+  "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/forward_dynamics.cpp" "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.o"
+  "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inertia_properties.cpp" "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.o"
+  "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inverse_dynamics.cpp" "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.o"
+  "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/jacobians.cpp" "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.o"
+  "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/jsim.cpp" "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.o"
+  "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/miscellaneous.cpp" "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.o"
+  "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/transforms.cpp" "/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

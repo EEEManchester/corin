@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg
+CMAKE_SOURCE_DIR = /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build
+CMAKE_BINARY_DIR = /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/iitgenmcorin_leg.dir/depend.make
@@ -59,16 +59,16 @@ include CMakeFiles/iitgenmcorin_leg.dir/flags.make
 
 CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.o: CMakeFiles/iitgenmcorin_leg.dir/flags.make
 CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.o: ../transforms.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.o -c /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/transforms.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.o -c /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/transforms.cpp
 
 CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/transforms.cpp > CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/transforms.cpp > CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.i
 
 CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/transforms.cpp -o CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/transforms.cpp -o CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.s
 
 CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.o.requires:
 
@@ -83,16 +83,16 @@ CMakeFiles/iitgenmcorin_leg.dir/transforms.cpp.o.provides.build: CMakeFiles/iitg
 
 CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.o: CMakeFiles/iitgenmcorin_leg.dir/flags.make
 CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.o: ../jacobians.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.o -c /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/jacobians.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.o -c /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/jacobians.cpp
 
 CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/jacobians.cpp > CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/jacobians.cpp > CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.i
 
 CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/jacobians.cpp -o CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/jacobians.cpp -o CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.s
 
 CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.o.requires:
 
@@ -107,16 +107,16 @@ CMakeFiles/iitgenmcorin_leg.dir/jacobians.cpp.o.provides.build: CMakeFiles/iitge
 
 CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.o: CMakeFiles/iitgenmcorin_leg.dir/flags.make
 CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.o: ../jsim.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.o -c /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/jsim.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.o -c /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/jsim.cpp
 
 CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/jsim.cpp > CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/jsim.cpp > CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.i
 
 CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/jsim.cpp -o CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/jsim.cpp -o CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.s
 
 CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.o.requires:
 
@@ -131,16 +131,16 @@ CMakeFiles/iitgenmcorin_leg.dir/jsim.cpp.o.provides.build: CMakeFiles/iitgenmcor
 
 CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.o: CMakeFiles/iitgenmcorin_leg.dir/flags.make
 CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.o: ../inverse_dynamics.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.o -c /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inverse_dynamics.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.o -c /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inverse_dynamics.cpp
 
 CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inverse_dynamics.cpp > CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inverse_dynamics.cpp > CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.i
 
 CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inverse_dynamics.cpp -o CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inverse_dynamics.cpp -o CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.s
 
 CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.o.requires:
 
@@ -155,16 +155,16 @@ CMakeFiles/iitgenmcorin_leg.dir/inverse_dynamics.cpp.o.provides.build: CMakeFile
 
 CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.o: CMakeFiles/iitgenmcorin_leg.dir/flags.make
 CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.o: ../forward_dynamics.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.o -c /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/forward_dynamics.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.o -c /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/forward_dynamics.cpp
 
 CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/forward_dynamics.cpp > CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/forward_dynamics.cpp > CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.i
 
 CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/forward_dynamics.cpp -o CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/forward_dynamics.cpp -o CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.s
 
 CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.o.requires:
 
@@ -179,16 +179,16 @@ CMakeFiles/iitgenmcorin_leg.dir/forward_dynamics.cpp.o.provides.build: CMakeFile
 
 CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.o: CMakeFiles/iitgenmcorin_leg.dir/flags.make
 CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.o: ../inertia_properties.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.o -c /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inertia_properties.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.o -c /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inertia_properties.cpp
 
 CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inertia_properties.cpp > CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inertia_properties.cpp > CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.i
 
 CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/inertia_properties.cpp -o CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/inertia_properties.cpp -o CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.s
 
 CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.o.requires:
 
@@ -203,16 +203,16 @@ CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.o.provides.build: CMakeFi
 
 CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.o: CMakeFiles/iitgenmcorin_leg.dir/flags.make
 CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.o: ../miscellaneous.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.o -c /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/miscellaneous.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.o -c /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/miscellaneous.cpp
 
 CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/miscellaneous.cpp > CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/miscellaneous.cpp > CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.i
 
 CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/miscellaneous.cpp -o CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/miscellaneous.cpp -o CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.s
 
 CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.o.requires:
 
@@ -247,7 +247,7 @@ libiitgenmcorin_leg.so: CMakeFiles/iitgenmcorin_leg.dir/inertia_properties.cpp.o
 libiitgenmcorin_leg.so: CMakeFiles/iitgenmcorin_leg.dir/miscellaneous.cpp.o
 libiitgenmcorin_leg.so: CMakeFiles/iitgenmcorin_leg.dir/build.make
 libiitgenmcorin_leg.so: CMakeFiles/iitgenmcorin_leg.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking CXX shared library libiitgenmcorin_leg.so"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking CXX shared library libiitgenmcorin_leg.so"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/iitgenmcorin_leg.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -270,6 +270,6 @@ CMakeFiles/iitgenmcorin_leg.dir/clean:
 .PHONY : CMakeFiles/iitgenmcorin_leg.dir/clean
 
 CMakeFiles/iitgenmcorin_leg.dir/depend:
-	cd /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build /home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build /home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/iitgenmcorin_leg.dir/depend
 

@@ -1,7 +1,7 @@
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/install.dir
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/list_install_components.dir
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/rebuild_cache.dir
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/install/strip.dir
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/install/local.dir
-/home/wilson/catkin_ws/src/mcorin/mcorin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/edit_cache.dir
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/install.dir
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/list_install_components.dir
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/rebuild_cache.dir
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/iitgenmcorin_leg.dir
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/install/strip.dir
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/install/local.dir
+/home/wilson/catkin_ws/src/corin/corin_control/cpp_script/robots/mcorin_leg/build/CMakeFiles/edit_cache.dir

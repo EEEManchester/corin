@@ -216,6 +216,42 @@ class GridMap:
 	def get_map_size(self):
 		return self.map_size_g
 
+	def get_median_width(self, p):
+		""" get the width clearance ahead of p """
+
+		grid_p = (int(np.floor(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
+		
+		SCAN_WIDTH = 12
+		SCAN_DEPTH = 3
+		range_scan = [10]*3
+		
+		for row in range(0,SCAN_DEPTH):
+			lwall = (grid_p[0]+row, grid_p[1]+SCAN_WIDTH/2)
+			rwall = (grid_p[0]+row, grid_p[1]-SCAN_WIDTH/2)
+			
+			for column in range(SCAN_WIDTH/2,0,-1):
+				pl = (grid_p[0]+row, grid_p[1]+column)
+				pr = (grid_p[0]+row, grid_p[1]-column)
+				
+				try:
+					cell_h = self.Map.nodes[pl]['height']
+					if (cell_h > 0.5):
+						lwall = pl
+				except:
+					pass
+				try:
+					cell_h = self.Map.nodes[pr]['height']
+					if (cell_h > 0.5):
+						rwall = pr
+				except:
+					pass
+			# 	print pl, pr, lwall, rwall
+			# print '---------------------------'
+			# calculate width (m)
+			range_scan[row] = (lwall[1] - rwall[1]-1)*self.resolution
+
+		return np.median(range_scan)
+
 	def get_wall_length(self, p):
 		""" determine longest wall on either side given a point p """
 
@@ -660,11 +696,12 @@ class GridMap:
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-# gmap = GridMap('hole_demo')
+# gmap = GridMap('wall_demo_left')
 # sp = np.array([0.6015, 0.1391, -0.])
-
+# p = (19,21)
+# print gmap.get_median_width([p[0]*gmap.resolution,p[1]*gmap.resolution])
 # gmap.graph_representation()
-
+# print range(10/2,0,-1)
 # [(20, 5), (20, 6), (21, 6), (21, 5), (20, 5), (19, 5), (19, 6), (19, 7), (20, 7), (21, 7), (21, 6), (21, 5), (20, 5), (19, 5), (20, 5), (21, 5)]
 
 

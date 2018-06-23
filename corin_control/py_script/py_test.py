@@ -334,3 +334,5 @@ b = 1.0
 
 if (a.any() >= b):
 	print 'a g b'
+a = [1,2,3]
+print np.median(a)

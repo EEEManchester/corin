@@ -71,6 +71,9 @@ RF_Q3_JOINT = 11;	RM_Q3_JOINT = 14;	RR_Q3_JOINT = 17;
 LEG_AREA_LX = 0.09
 LEG_AREA_LY = 0.06
 
+# Roll threshold for width clearance detection
+ROLL_TH = 1.0
+WALL_WIDTH_NARROW = 0.3
 ## ----------------------------	##
 ## 			Transition			##
 ## ----------------------------	##
@@ -85,7 +88,7 @@ CTR_INTV 	= 1./CTR_RATE 	# controller interval for robot, s
 ## ================================================================ ##
 ##                  	Stability Parameters 						##
 ## ================================================================ ## 
-SM_MIN = 0.05
+SM_MIN = 0.0
 
 ## ================================================================ ##
 ##                  Error Compensation parameters 					##
