@@ -176,7 +176,8 @@ class SplineGenerator:
 		C  = np.zeros((sz,3))	# intermediate position & time
 		v0 = np.zeros((1,3))	# initial velocity
 		vf = np.zeros((1,3))	# final velocity
-		
+		print 'sz: ', sz, len(x)
+		print x
 		ct = [] 	# output timing array
 		cp = [] 	# output position array
 		cv = [] 	# output velocity array
@@ -192,10 +193,14 @@ class SplineGenerator:
 				if (i-1+0 >= 0): 
 					A[i][i-1+0] = T1 	# skip first item
 				A[i][i-1+1] = 2*(T0+T1)
-				try:	
+				if (i-1+2 != sz):
 					A[i][i-1+2] = T0
-				except: 
-					pass 	# skip last item
+				# try:	
+				# 	A[i][i-1+2] = T0
+				# 	print 'trying ', i-1+2, sz
+				# except: 
+				# 	print 'catch here ', i-1+2, sz
+				# 	pass 	# skip last item
 
 				# Compute C - change to 3D
 				for j in range(0,3):
@@ -209,7 +214,7 @@ class SplineGenerator:
 			## Solve for v
 			v = linalg.solve(A,C)
 		v = np.concatenate((v0,v,vf),axis=0)
-		
+		print  'v', v
 		## Compute coefficients
 		for i in range(0,sz+1):
 			tk	  = t[i+1]-t[i]
@@ -223,7 +228,7 @@ class SplineGenerator:
 			a1x = vkx
 			a2x = (1/tk)*( 3*(qkx_1-qkx)/tk - 2*vkx - vkx_1 )
 			a3x = (1/(tk**2))*( 2*(qkx-qkx_1)/tk + vkx + vkx_1 )
-
+			print a0x, a1x, a2x, a3x
 			a0y = qky
 			a1y = vky
 			a2y = (1/tk)*( 3*(qky_1-qky)/tk - 2*vky - vky_1 )
@@ -241,8 +246,9 @@ class SplineGenerator:
 				lv = 0.
 				nv = 1
 			
-			# print t[i], t[i+1]-lv, np.round((t[i+1]-t[i])/tint+nv)
+			# print 'range: ', t[i], t[i+1]-lv, np.round((t[i+1]-t[i])/tint+nv), tint
 			for tk in np.linspace(t[i], t[i+1]-lv, np.round((t[i+1]-t[i])/tint+nv)):
+				
 				td = tk - t[i]
 				qpx = a0x + a1x*td + a2x*td**2 + a3x*td**3
 				qvx = a1x + 2*a2x*td + 3*a3x*td**2
@@ -255,15 +261,14 @@ class SplineGenerator:
 				qpz = a0z + a1z*td + a2z*td**2 + a3z*td**3
 				qvz = a1z + 2*a2z*td + 3*a3z*td**2
 				qaz = 2*a2z + 6*a3z*td
-				
+				print td+t[i], td, qpx		
 				## concatenate segments together - size is <no_rows> by 3
 				# print td, tk, t[i], type(td+t[i])
 				ct.append( td+t[i] ) 
 				cp.append( [qpx,qpy,qpz]) 
 				cv.append( [qvx,qvy,qvz]) 
 				ca.append( [qax,qay,qaz]) 
-		# print len(ct)
-		# print ct
+		
 		return ct,cp,cv,ca
 
 	def compute_time_intervals(self, q):
@@ -323,13 +328,13 @@ x_com = np.array([.0,.0,BODY_HEIGHT])
 
 ### short V spline
 x_com = np.vstack((x_com,np.array([0.04, 0.0, BODY_HEIGHT])))
-# x_com = np.vstack((x_com,np.array([0.06, 0.0, BODY_HEIGHT+0.025])))
-# x_com = np.vstack((x_com,np.array([0.01, 0.2, BODY_HEIGHT])))
+x_com = np.vstack((x_com,np.array([0.06, 0.0, BODY_HEIGHT+0.025])))
+x_com = np.vstack((x_com,np.array([0.01, 0.2, BODY_HEIGHT])))
 # x_com = np.vstack((x_com,np.array([0.30, 0.05, 0.15])))
 # x_com = np.vstack((x_com,np.array([1.35, 0.05, 0.15])))
 # x_com = np.vstack((x_com,np.array([1.0, 0.5, BODY_HEIGHT+0.05])))
 
-t_com = np.array([0.0,1]) 
+t_com = np.array([0.0,1,2]) 
 ## 1D spline - textbook points
 test_points = np.array([3.,-2.,-5.,0.,6.,12.,8.])
 test_times  = np.array([0.,5.,7.,8.,10.,15.,18.])
@@ -343,13 +348,17 @@ w_cob = np.vstack((w_cob,np.array([0.2, -0.1, 0.])))
 w_cob = np.vstack((w_cob,np.array([0., 0., 0.])))
 t_cob = np.array([0,1,2,3])
 
-# spliner = SplineGenerator()
+spliner = SplineGenerator()
 # x_out  = spliner.spline_1D(test_points,test_times,TRAC_INTERVAL)
 # spoints = spliner.spline_1D_acc(test_points,t_com)
 # spoints = spliner.spline_3D(w_cob,t_cob)
 
 # x_out = spliner.generate_leg_spline(sp,ep,snorm,phase)
-# ct,cp,cv,ca = spliner.generate_spline(w_cob, t_com)
+x_com = np.array([1.,1.,1.])
+x_com = np.vstack((x_com,np.array([2.,2.,2.])))
+x_com = np.vstack((x_com,np.array([3.,3.,3.])))
+x_com = np.vstack((x_com,np.array([4.,4.,4.])))
+ct,cp,cv,ca = spliner.generate_spline(x_com, t_com)
 # print type(ct), type(cp)
 # Plot.plot_2d(x_out[0],x_out[1])
 # Plot.plot_2d_multiple(2,x_out.t,x_out.xv,x_out.xa)

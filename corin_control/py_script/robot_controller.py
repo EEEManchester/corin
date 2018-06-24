@@ -33,6 +33,8 @@ from robotis_controller_msgs.msg import SyncWriteMultiFloat
 from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import Pose
 
+from corin_control.msg import MotionPlan as RosMotionPlan
+
 #####################################################################
 
 class CorinManager:
@@ -130,7 +132,7 @@ class CorinManager:
 
 		##***************** PUBLISHERS ***************##
 		self.setpoint_pub_ = rospy.Publisher('/corin/setpoint_states', JointState, queue_size=1)	# LOGGING publisher
-		self.trajectory_pub_ = rospy.Publisher('/corin/setpoint_trajectory', JointTrajectoryPoint, queue_size=1)	# LOGGING publisher
+		self.trajectory_pub_ = rospy.Publisher('/corin/motion_plan', RosMotionPlan, queue_size=1)	# LOGGING publisher
 
 		## Hardware Specific Publishers ##
 		if (ROBOT_NS == 'corin' and (self.interface == 'gazebo' or 
@@ -605,8 +607,10 @@ class CorinManager:
 				qtrac.velocities = v3cv.flatten().tolist() + v3wv.flatten().tolist() + qd.xv.tolist()
 				qtrac.accelerations = v3ca.flatten().tolist() + v3wa.flatten().tolist() + qd.xa.tolist()
 				
+				mp = RosMotionPlan(setpoint = qtrac, gait_phase = self.Robot.Gait.cs)
+
 				# publish appended joint angles if motion valid
-				self.publish_topics(qd, qlog, qtrac)
+				self.publish_topics(qd, qlog, mp)
 				qd_prev = JointTrajectoryPoints(18,(qd.t, qd.xp, qd.xv, qd.xa))
 
 				i += 1

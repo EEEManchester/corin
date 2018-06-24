@@ -4,6 +4,9 @@ project(corin_control)
 ## Add support for C++11, supported in ROS Kinetic and newer
 add_definitions(-std=c++11)
 
+################################################################################
+# Packages
+################################################################################
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
   actionlib
@@ -22,8 +25,15 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(Eigen REQUIRED)
-# find_package (QPOASES)
-## Generate services in the 'srv' folder
+
+################################################################################
+# Declare ROS messages, services and actions
+################################################################################
+ add_message_files(
+   FILES
+   MotionPlan.msg
+  )
+
  add_service_files(
    FILES
    JointState.srv
@@ -46,6 +56,7 @@ find_package(Eigen REQUIRED)
    robotis_controller_msgs
    sensor_msgs
    std_msgs
+   trajectory_msgs
  )
 
 ###################################
@@ -75,6 +86,10 @@ add_executable(main_node cpp_script/main_node.cpp cpp_script/force_distribution.
                           cpp_script/robots/mcorin/jacobians.cpp)
 add_dependencies(main_node corin_control_gencpp)
 target_link_libraries(main_node ${catkin_LIBRARIES})
+
+add_executable(test_spline cpp_script/polynomial_spline.cpp)
+add_dependencies(test_spline corin_control_gencpp)
+target_link_libraries(test_spline ${catkin_LIBRARIES})
 
 # add_executable(rcg_test cpp_script/rcg_test.cpp
 #                         cpp_script/robots/mcorin/transforms.cpp 
