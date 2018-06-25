@@ -83,12 +83,13 @@ ForceDistribution::ForceDistribution() : invdyn(inertias, xM),
     // cout << Ig.block<3,3>(0,0) << endl;
 
     // CoM to foot position, in world frame
-    Vector3d p_lf = world_X_base*(-x_com + xH.fr_trunk_X_LF_foot(qpr).block<3,1>(0,3));
-    Vector3d p_lm = world_X_base*(-x_com + xH.fr_trunk_X_LM_foot(qpr).block<3,1>(0,3));
-    Vector3d p_lr = world_X_base*(-x_com + xH.fr_trunk_X_LR_foot(qpr).block<3,1>(0,3));
-    Vector3d p_rf = world_X_base*(-x_com + xH.fr_trunk_X_RF_foot(qpr).block<3,1>(0,3));
-    Vector3d p_rm = world_X_base*(-x_com + xH.fr_trunk_X_RM_foot(qpr).block<3,1>(0,3));
-    Vector3d p_rr = world_X_base*(-x_com + xH.fr_trunk_X_RR_foot(qpr).block<3,1>(0,3));
+    Vector3d fr_world_v3_com_X_foot[6];
+    fr_world_v3_com_X_foot[0] = world_X_base*(-x_com + xH.fr_trunk_X_LF_foot(qpr).block<3,1>(0,3));
+    fr_world_v3_com_X_foot[1] = world_X_base*(-x_com + xH.fr_trunk_X_LM_foot(qpr).block<3,1>(0,3));
+    fr_world_v3_com_X_foot[2] = world_X_base*(-x_com + xH.fr_trunk_X_LR_foot(qpr).block<3,1>(0,3));
+    fr_world_v3_com_X_foot[3] = world_X_base*(-x_com + xH.fr_trunk_X_RF_foot(qpr).block<3,1>(0,3));
+    fr_world_v3_com_X_foot[4] = world_X_base*(-x_com + xH.fr_trunk_X_RM_foot(qpr).block<3,1>(0,3));
+    fr_world_v3_com_X_foot[5] = world_X_base*(-x_com + xH.fr_trunk_X_RR_foot(qpr).block<3,1>(0,3));
 
     /* formulate QP problem, Af = B */
     // constructing B
@@ -98,10 +99,17 @@ ForceDistribution::ForceDistribution() : invdyn(inertias, xM),
     // cout << B << endl;
 
     // constructing A
+    int pc = 0;
     MatrixXd A(6,3*n_contact);
-    for (int i=0; i<n_contact; i++){
-      A.block<3,3>(0,i*3) = MatrixXd::Identity(3, 3);
-      A.block<3,3>(3,i*3) = skew_this_vector(p_lf);   // TODO: select accordingly
+    // cycles through all six legs
+    for (int j=0; j<6; j++){
+      // amend matrix if legs are in support phase
+      if (gait_phase(j) == 0){
+        A.block<3,3>(0,pc*3) = MatrixXd::Identity(3, 3);
+        A.block<3,3>(3,pc*3) = skew_this_vector(fr_world_v3_com_X_foot[j]);
+        pc++;
+        // cout << "Amending " << gait_phase(i) << " " << i << " " << pc << endl;
+      }
     }
     // cout << A << endl;
 
@@ -139,35 +147,38 @@ ForceDistribution::ForceDistribution() : invdyn(inertias, xM),
     
     // construct equation
     MatrixXd Hs = 2*A.transpose()*wS*A;
-    MatrixXd qs = (-2*B.transpose()*wS*A).transpose();
+    MatrixXd Qs = (-2*B.transpose()*wS*A).transpose();
 
     USING_NAMESPACE_QPOASES
-    // TODO: populate matrices
-    // real_t H[2*2] = { 1.0, 0.0, 0.0, 0.5 };
-    // real_t A[1*2] = { 1.0, 1.0 };
-    // real_t c[2] = { 1.5, 1.0 };
-    // real_t lb[2] = { 0.5, -2.0 };
-    // real_t ub[2] = { 5.0, 2.0 };
-    // real_t lbA[1] = { -1.0 };
-    // real_t ubA[1] = { 2.0 };
+    
+    real_t qpH[Hs.size()];   // Hessian Matrix, Re^(3cx3c)
+    real_t qpG[Qs.size()];   // Gradient Vector, Re^(3c)
+    real_t qpA[n_contact*6]; // Constraint Matrix, 
+    // real_t qplbA[];
+    // real_t qpubA[];
+    // real_t qpLB[2] = { 0.5, -2.0 };
+    // real_t qpUB[2] = { 5.0, 2.0 };
+    
+    // remap from eigen to std array form
+    Map<RowVectorXd> v1(Hs.data(), Hs.size());  // first, flatten to 1D row vector
+    Map<RowVectorXd>(&qpH[0], Hs.size()) = v1;  // second, convert to array - pointer
+    
+    Map<RowVectorXd> v2(Qs.data(), Qs.size());
+    Map<RowVectorXd>(&qpG[0], Qs.size()) = v2;
 
-    // /* Setting up QProblem object. */
-    // QProblem example( 2,1 );
+    /* Setting up QProblem object. */
+    QProblem qformula( n_contact*3, n_contact*6 );
 
-    // Options options;
-    // example.setOptions( options );
+    Options options;
+    qformula.setOptions( options );
 
-    // /* Solve first QP. */
-    // int nWSR = 10;
-    // example.init( H,c,A,lb,ub,lbA,ubA, nWSR );
-
-    //  // Get and print solution of first QP. 
-    // real_t xOpt[2];
-    // real_t yOpt[2+1];
-    // example.getPrimalSolution( xOpt );
-    // example.getDualSolution( yOpt );
-    // printf( "\nxOpt = [ %e, %e ];  yOpt = [ %e, %e, %e ];  objVal = %e\n\n", 
-    //     xOpt[0],xOpt[1],yOpt[0],yOpt[1],yOpt[2],example.getObjVal() );
+    /* Solve first QP. */
+    int nWSR = 10;
+    // qformula.init( qpH, qpG, qpA, qpLB, qpUB, qplbA, qpubA, nWSR );
+     // Get and print solution of first QP. 
+    // real_t xOpt[n_contact*3];
+    // qformula.getPrimalSolution( xOpt );
+    // printf( "\nxOpt = [ %e, %e ];  objVal = %e\n\n", xOpt[0],xOpt[1], qformula.getObjVal() );
   }
   
   Eigen::Matrix3d ForceDistribution::skew_this_vector(Eigen::Vector3d data)
