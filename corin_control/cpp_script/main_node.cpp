@@ -13,7 +13,9 @@ int main(int argc, char** argv)
   // instatiate our class object
   ROS_INFO_STREAM( "Corin Force Node Ready");
 
-
+  Eigen::MatrixXi a(6,1);
+  a << 0,0,0,1,0,0;
+  std::cout << a << " " << a.sum() << std::endl;
   // Set up a dynamic reconfigure server.
   // This should be done before reading parameter server values.
   // dynamic_reconfigure::Server<mcorin_control::dynreconfigConfig> dr_srv;

@@ -24,7 +24,9 @@ iit::rbd::Vector3d iit::mcorin::getWholeBodyCOM(
     base_X_LF_q1_joint_chain = tmpX * ht.fr_trunk_X_fr_LF_hipassembly;
     tmpSum += inertiaProps.getMass_LF_hipassembly() *
             ( iit::rbd::Utils::transform(base_X_LF_q1_joint_chain, inertiaProps.getCOM_LF_hipassembly()));
-    
+    // std::cout << "=========================================" << std::endl;
+    // std::cout << base_X_LF_q1_joint_chain << std::endl;
+    // std::cout << ht.fr_trunk_X_fr_LF_hipassembly << std::endl;
     base_X_LF_q1_joint_chain = base_X_LF_q1_joint_chain * ht.fr_LF_hipassembly_X_fr_LF_upperleg;
     tmpSum += inertiaProps.getMass_LF_upperleg() *
             ( iit::rbd::Utils::transform(base_X_LF_q1_joint_chain, inertiaProps.getCOM_LF_upperleg()));

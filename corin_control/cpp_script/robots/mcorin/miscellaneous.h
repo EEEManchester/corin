@@ -3,7 +3,7 @@
 
 #include "inertia_properties.h"
 #include "transforms.h"
-
+#include <iostream>
 namespace iit {
 namespace mcorin {
 

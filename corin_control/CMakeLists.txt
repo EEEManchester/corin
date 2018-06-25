@@ -4,6 +4,10 @@ project(corin_control)
 ## Add support for C++11, supported in ROS Kinetic and newer
 add_definitions(-std=c++11)
 
+## add the project source path to the CMake module path so that
+## the FindRBDL.cmake script can be found.
+LIST( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR} )
+
 ################################################################################
 # Packages
 ################################################################################
@@ -24,6 +28,7 @@ find_package(catkin REQUIRED COMPONENTS
   qpoases
 )
 
+find_package(RBDL REQUIRED)
 find_package(Eigen REQUIRED)
 
 ################################################################################
@@ -66,14 +71,14 @@ catkin_package(
   CATKIN_DEPENDS
   message_runtime
   actionlib
-  DEPENDS Boost Eigen qpOASES
+  DEPENDS Boost Eigen qpOASES rbdl
 )
 
 ###########
 ## Build ##
 ###########
 
-include_directories( ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS})
+include_directories( ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS} ${RBDL_INCLUDE_DIR})
 
 add_executable(jointStateServer cpp_script/service/jointStateServer.cpp)
 add_dependencies(jointStateServer corin_control_gencpp)
@@ -83,9 +88,10 @@ add_executable(main_node cpp_script/main_node.cpp cpp_script/force_distribution.
                           cpp_script/robots/mcorin/transforms.cpp 
                           cpp_script/robots/mcorin/inertia_properties.cpp 
                           cpp_script/robots/mcorin/inverse_dynamics.cpp
-                          cpp_script/robots/mcorin/jacobians.cpp)
+                          cpp_script/robots/mcorin/jacobians.cpp
+                          cpp_script/robots/mcorin/miscellaneous.cpp)
 add_dependencies(main_node corin_control_gencpp)
-target_link_libraries(main_node ${catkin_LIBRARIES})
+target_link_libraries(main_node ${catkin_LIBRARIES} ${RBDL_LIBRARY})
 
 add_executable(test_spline cpp_script/polynomial_spline.cpp)
 add_dependencies(test_spline corin_control_gencpp)

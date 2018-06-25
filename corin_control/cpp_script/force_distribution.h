@@ -23,7 +23,9 @@
 #include "robots/mcorin/jacobians.h"
 #include "robots/mcorin/inertia_properties.h"
 #include "robots/mcorin/inverse_dynamics.h"
+#include "robots/mcorin/miscellaneous.h"
 
+#include <rbdl/rbdl.h>
 using namespace iit::mcorin;
 
 namespace force_distribution
@@ -81,6 +83,10 @@ class ForceDistribution
 
     //***************** FUNCTIONS ***************//
     void qp_solution();
+    
+    Eigen::Matrix3d skew_this_vector(Eigen::Vector3d data);
+    Eigen::MatrixXd CRBI();
+
     void publish_cmd(const Eigen::MatrixXd& data);
 
     
