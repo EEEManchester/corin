@@ -63,7 +63,7 @@ ForceDistribution::ForceDistribution() : invdyn(inertias, xM),
 
     // gravity vector, Re^3
     Matrix3d world_X_base;
-    Vector3d gv(0,0,-9.81), g;
+    Vector3d gv(0,0,9.81), g;
     world_X_base = AngleAxisd(qbpr(5), Vector3d::UnitZ())
                   *AngleAxisd(qbpr(4), Vector3d::UnitY())
                   *AngleAxisd(qbpr(3), Vector3d::UnitX());
@@ -93,25 +93,28 @@ ForceDistribution::ForceDistribution() : invdyn(inertias, xM),
 
     /* formulate QP problem, Af = B */
     // constructing B
-    VectorXd B(6);
-    B.block<3,1>(0,0) = inertias.getTotalMass()*(qbpr.block<3,1>(0,0) + g);
-    B.block<3,1>(3,0) = Ig.block<3,3>(0,0)*qbpr.block<3,1>(3,0);
-    // cout << B << endl;
+    // VectorXd B(6);
+    VectorXd B(3);
+    B.block<3,1>(0,0) = inertias.getTotalMass()*(g);
+    // B.block<3,1>(0,0) = inertias.getTotalMass()*(qbpr.block<3,1>(0,0) + g);
+    // B.block<3,1>(3,0) = Ig.block<3,3>(0,0)*qbpr.block<3,1>(3,0);
+    cout << B << endl;
 
     // constructing A
     int pc = 0;
-    MatrixXd A(6,3*n_contact);
+    // MatrixXd A(6,3*n_contact);
+    MatrixXd A(3,3*n_contact);
     // cycles through all six legs
     for (int j=0; j<6; j++){
       // amend matrix if legs are in support phase
       if (gait_phase(j) == 0){
         A.block<3,3>(0,pc*3) = MatrixXd::Identity(3, 3);
-        A.block<3,3>(3,pc*3) = skew_this_vector(fr_world_v3_com_X_foot[j]);
+        // A.block<3,3>(3,pc*3) = skew_this_vector(fr_world_v3_com_X_foot[j]);
         pc++;
         // cout << "Amending " << gait_phase(i) << " " << i << " " << pc << endl;
       }
     }
-    // cout << A << endl;
+    cout << A << endl;
 
     // friction constraint
     MatrixXd C(6,3), Cineq(6*n_contact, 3*n_contact);
@@ -120,9 +123,9 @@ ForceDistribution::ForceDistribution() : invdyn(inertias, xM),
     Cineq.setZero(6*n_contact, 3*n_contact);
     Dineq.setZero(6*n_contact, 1);
 
-    double mu = 0.5;  // friction coefficient
-    double fmin = 1;  // min. force
-    double fmax = 20; // max. force
+    double mu = 1.0;  // friction coefficient
+    double fmin = 1.0;  // min. force
+    double fmax = 10*inertias.getTotalMass(); // max. force
 
     C <<   1, 0, -mu,
           -1, 0, -mu,
@@ -131,7 +134,7 @@ ForceDistribution::ForceDistribution() : invdyn(inertias, xM),
            0, 0, -1,
            0, 0, 1;
 
-    D << 0,0,0,0, fmin, fmax;
+    D << 0,0,0,0, -fmin, fmax;
 
     for (int i=0; i<n_contact; i++){
       Cineq.block<6,3>(i*6,i*3) = C;
@@ -141,8 +144,10 @@ ForceDistribution::ForceDistribution() : invdyn(inertias, xM),
     // cout << Dineq << endl;
 
     // weightage matrix
-    VectorXd sV(6);
-    sV << 1, 1, 10, 10, 10, 10;
+    // VectorXd sV(6);
+    // sV << 1, 1, 10, 10, 10, 10;
+    VectorXd sV(3);
+    sV << 5, 5, 10;
     MatrixXd wS = sV.asDiagonal();
     
     // construct equation
@@ -153,11 +158,11 @@ ForceDistribution::ForceDistribution() : invdyn(inertias, xM),
     
     real_t qpH[Hs.size()];   // Hessian Matrix, Re^(3cx3c)
     real_t qpG[Qs.size()];   // Gradient Vector, Re^(3c)
-    real_t qpA[n_contact*6]; // Constraint Matrix, 
-    // real_t qplbA[];
-    // real_t qpubA[];
-    // real_t qpLB[2] = { 0.5, -2.0 };
-    // real_t qpUB[2] = { 5.0, 2.0 };
+    real_t qpA[Cineq.size()]; // Constraint Matrix, 
+    real_t qpubA[Dineq.size()]; // Upper boundary for constraint
+    real_t *qplbA = NULL;
+    real_t *qpLB = NULL;
+    real_t *qpUB = NULL;
     
     // remap from eigen to std array form
     Map<RowVectorXd> v1(Hs.data(), Hs.size());  // first, flatten to 1D row vector
@@ -165,6 +170,13 @@ ForceDistribution::ForceDistribution() : invdyn(inertias, xM),
     
     Map<RowVectorXd> v2(Qs.data(), Qs.size());
     Map<RowVectorXd>(&qpG[0], Qs.size()) = v2;
+    // cout << Cineq.size() << endl;
+    // cout << Dineq.size() << endl;
+    Map<RowVectorXd> v3(Cineq.data(), Cineq.size());
+    Map<RowVectorXd>(&qpA[0], Cineq.size()) = v3;
+
+    Map<RowVectorXd> v4(Dineq.data(), Dineq.size());
+    Map<RowVectorXd>(&qpubA[0], Dineq.size()) = v4;
 
     /* Setting up QProblem object. */
     QProblem qformula( n_contact*3, n_contact*6 );
@@ -173,11 +185,14 @@ ForceDistribution::ForceDistribution() : invdyn(inertias, xM),
     qformula.setOptions( options );
 
     /* Solve first QP. */
-    int nWSR = 10;
-    // qformula.init( qpH, qpG, qpA, qpLB, qpUB, qplbA, qpubA, nWSR );
-     // Get and print solution of first QP. 
-    // real_t xOpt[n_contact*3];
-    // qformula.getPrimalSolution( xOpt );
+    int nWSR = 30;
+    qformula.init( qpH, qpG, qpA, qpLB, qpUB, qplbA, qpubA, nWSR );
+    // Get and print solution of first QP. 
+    real_t xOpt[n_contact*3];
+    qformula.getPrimalSolution( xOpt );
+    for (int i=0; i<n_contact; i++)
+      printf( "Leg %i, \t%f, \t%f, \t%f \n", i, xOpt[i*3], xOpt[i*3+1], xOpt[i*3+2]);
+      // cout << i << " " << xOpt[i] << endl;
     // printf( "\nxOpt = [ %e, %e ];  objVal = %e\n\n", xOpt[0],xOpt[1], qformula.getObjVal() );
   }
   

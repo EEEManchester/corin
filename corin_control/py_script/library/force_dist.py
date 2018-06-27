@@ -9,13 +9,12 @@ from scipy import integrate
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 
-import transformations as tf
+import matrix_transforms as tf
 from constant import *
 
 from cvxopt import matrix
 from cvxopt import solvers
 
-import quadprog
 
 count_i = 0
 spline_count = 0.
@@ -59,20 +58,22 @@ class QuadProgClass():
 
 		AU = np.eye(3)
 		AL = tf.skew(p_com[0])
-		Hs = np.array([0.5, 0.5, 1]) 	# hessian weightage for single foot
-		HC = Hs
+		# Hs = np.array([0.5, 0.5, 1]) 	# hessian weightage for single foot
+		# HC = Hs
 
 		for i in range(1,n_contact):
 			AU = np.hstack(( AU, np.eye(3) ))
 			AL = np.hstack(( AL, tf.skew(p_com[i]))) 
-			HC = np.hstack(( HC, Hs))
+			# HC = np.hstack(( HC, Hs))
 
 		## Linear equality (system equation)
 		## Arrange into Ax = b form
-		A = matrix([matrix(AU, (3,3*n_contact), tc='d'), matrix(AL, (3,3*n_contact), tc='d')])
-		b = matrix([MASS*(xa+gv), ig*wa])
+		# A = matrix([matrix(AU, (3,3*n_contact), tc='d'), matrix(AL, (3,3*n_contact), tc='d')])
+		# b = matrix([ROBOT_MASS*(xa+gv), ig*wa])
+		A = matrix(AU, (3,3*n_contact), tc='d')
+		b = matrix([ROBOT_MASS*(xa+gv)])
 		# print b
-		H = matrix(np.diag(HC), tc='d')
+		# H = matrix(np.diag(HC), tc='d')
 		q = matrix(np.ones(n_contact*3), tc='d')
 
 		## Linear inequality (friction constraint)
@@ -82,7 +83,7 @@ class QuadProgClass():
 		tn = np.array([0, 0, 1]);
 
 		# Coefficient of friction
-		mu = 0.5;
+		mu = 1.0;
 
 		## =================== UnBounded Force ============================ ##
 		# D  = np.zeros(5);
@@ -100,10 +101,10 @@ class QuadProgClass():
 
 		## =================== Bounded Force ============================ ##
 		f_min = 1.
-		f_max = 20.
+		f_max = 10*5.0
 
 		D  = np.zeros(6);
-		D[4] = f_min
+		D[4] = -f_min
 		D[5] = f_max
 		inq_D = D
 		# print n_contact
@@ -119,7 +120,7 @@ class QuadProgClass():
 			## do not touch
 			inq_D = np.hstack((inq_D, D))
 		inq_D = matrix(inq_D, tc='d')
-
+		
 		# if (count_i < 11):
 		# 	print inq_D
 
@@ -141,17 +142,19 @@ class QuadProgClass():
 		# print np.round(sol['x'],8)
 		
 		## Method 3: Using system equation with weightage
-		s_weight = np.array([1, 1, 10, 10, 10, 10]);
+		# s_weight = np.array([1, 1, 10, 10, 10, 10]);
+		s_weight = np.array([1, 1, 1]);
 		S = matrix(np.diag(s_weight), tc='d');
 
 		H = 2*A.T*S*A
 		q = (-2*b.T*S*A).T
-
+		print np.round(inq_C,3)
 		solvers.options['show_progress'] = False
 		sol = solvers.qp(H,q, inq_C, inq_D) 	
-		
+		# print np.round(H,3)
+		# print np.round(q,3)
 		# print np.round(np.array(sol['x']).transpose(),4)
-		# print A*sol['x']
+		print np.round(sol['x'],3)
 
 		## Method 4: Method 3 with regularization on joint torque
 		# alpha = 0.01
@@ -164,14 +167,14 @@ class QuadProgClass():
 		force_vector = np.zeros((18,1))
 
 		# if (n_contact == 5):
-		for i in range(0,6):
-			if (cstate[i] == 0):
-				for j in range(0,3):
-					force_vector[i*3+j,0] = sol['x'][qc]
-					qc += 1
-			else:
-				for j in range(0,3):
-					force_vector[i*3+j,0] = 0.0
+		# for i in range(0,6):
+		# 	if (cstate[i] == 0):
+		# 		for j in range(0,3):
+		# 			force_vector[i*3+j,0] = sol['x'][qc]
+		# 			qc += 1
+		# 	else:
+		# 		for j in range(0,3):
+		# 			force_vector[i*3+j,0] = 0.0
 
 		# print force_vector
 		# print count_i
@@ -181,7 +184,7 @@ qprog = QuadProgClass()
 ## Body linear and angular parameters
 
 Ig_com = np.zeros((3,3))
-x_com = np.array([0,0,0]) # + MASS*np.array([ [0.,0.,g] ])
+x_com = np.array([0.,0,0]) # + MASS*np.array([ [0.,0.,g] ])
 w_com = np.array([0.,0.,0.])
 ## Foot position
 p1 = np.array([  [2],  [1], [-1] ])
@@ -199,9 +202,9 @@ p4 = np.array([ [0.125] ,[-0.285],[-0.1] ])
 p5 = np.array([ [0.00]  ,[-0.285],[-0.1] ])
 p6 = np.array([ [-0.125],[-0.285],[-0.1] ])
 
-p_com = [p1, p2, p3, p4] 			# leg position wrt CoM expressed in world frame
+p_com = [p1, p2, p3] 			# leg position wrt CoM expressed in world frame
 contacts = [True,False,True,False,False,False]
-# force_vector, twist = qprog.cvxopt_qp_foot(x_com, w_com, p_com, Ig_com, contacts)
+force_vector, twist = qprog.cvxopt_qp_foot(x_com, w_com, p_com, Ig_com, contacts)
 # print wrench[0:3]
 
 # f = open('qp_discont.csv', 'w')
@@ -266,3 +269,21 @@ def quadprog_solve_qp(P, q, G=None, h=None, A=None, b=None):
         qp_b = -h
         meq = 0
     return quadprog.solve_qp(qp_G, qp_a, qp_C, qp_b, meq)[0]
+
+
+
+def simple_test():
+	solvers.options['show_progress'] = False
+	P = matrix([[2.0,3.55],[3.1,10]])
+	print np.round(P,3)
+	q = matrix([3.0,4.0])
+	G = matrix([[-1.0,0.0,-1.0,2.0,3.0],[0.0,-1.0,-3.0,5.0,4.0]])
+	h = matrix([0.0,0.0,-15.0,100.0,80.0])
+	# P = matrix([[1.0,0.0],[0.0,0.5]])
+	# q = matrix([1.5,1.0])
+	# G = matrix([[1.0,-1.0],[1.0,-1.0]])
+	# h = matrix([2., 1.])
+	
+	sol = solvers.qp(P, q, G, h) 
+	print np.round(sol['x'] ,3)
+# simple_test()

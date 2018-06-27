@@ -79,7 +79,10 @@ catkin_package(
 ## Build ##
 ###########
 
-include_directories( ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS} ${RBDL_INCLUDE_DIR})
+include_directories( ${catkin_INCLUDE_DIRS} 
+                      ${Boost_INCLUDE_DIRS} 
+                      ${Eigen_INCLUDE_DIRS} 
+                      ${RBDL_INCLUDE_DIR})
 
 add_executable(jointStateServer cpp_script/service/jointStateServer.cpp)
 add_dependencies(jointStateServer corin_control_gencpp)
@@ -94,9 +97,13 @@ add_executable(main_node cpp_script/main_node.cpp cpp_script/force_distribution.
 add_dependencies(main_node corin_control_gencpp)
 target_link_libraries(main_node ${catkin_LIBRARIES} ${RBDL_LIBRARY})
 
-add_executable(test_spline cpp_script/polynomial_spline.cpp)
-add_dependencies(test_spline corin_control_gencpp)
-target_link_libraries(test_spline ${catkin_LIBRARIES})
+# add_executable(test_spline cpp_script/polynomial_spline.cpp)
+# add_dependencies(test_spline corin_control_gencpp)
+# target_link_libraries(test_spline ${catkin_LIBRARIES})
+
+add_executable(test_node cpp_script/test_node.cpp)
+add_dependencies(test_node corin_control_gencpp)
+target_link_libraries(test_node ${catkin_LIBRARIES})
 
 add_executable(rigid_body_server cpp_script/service/rigid_body_server.cpp
                                   cpp_script/service/robots/mcorin/transforms.cpp 

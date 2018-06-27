@@ -21,6 +21,7 @@ L2 = 0.150;	L2_MASS = 0.350
 L3 = 0.150;	L3_MASS = 0.116
 
 LEG_MASS = L1_MASS + L2_MASS + L3_MASS
+ROBOT_MASS = 5.0#BODY_MASS + LEG_MASS*6
 
 # Link Centre of Mass reference from parent frame
 BODY_COM = [0.0, 0.0, 0.0]
@@ -120,7 +121,7 @@ STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
 ## ================================================================ ##
 
 ## these gait parameters can be changed during runtime
-GAIT_TYPE 	 = 3 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+GAIT_TYPE 	 = 1 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 GAIT_TPHASE	 = 2.0 	# default period per gait phase
 STEP_HEIGHT  = 0.08	# default step height, z
 STEP_STROKE  = 0.1 	# default step stroke
