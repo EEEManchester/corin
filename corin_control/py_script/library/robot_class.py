@@ -55,6 +55,8 @@ class RobotState:
 		self.A6c = robot_transforms.Vector6D() 				# acceleration: current
 		self.A6d = robot_transforms.Vector6D() 				# acceleration: desired
 		
+		self.CRBI = np.identity(3)
+
 		self._initialise()
 
 	def _initialise(self):
@@ -245,6 +247,16 @@ class RobotState:
 			self.invalid = True
 			return None, err_list
 
+	def update_com_crbi(self, i_com, i_crbi):
+		""" remaps tuple to numpy array """
+		nc = 0
+		for i in range(0,3):
+			self.P6c.base_X_CoM[i] = i_com[i]
+			for j in range(0,3):
+				self.CRBI[i,j] = i_crbi[nc]
+				nc += 1
+		# print self.P6c.base_X_CoM
+		# print self.CRBI
 	def duplicate_self(self, robot):
 		""" Duplicates robot state by creating local copy of input robot """
 

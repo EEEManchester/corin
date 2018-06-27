@@ -327,12 +327,10 @@ for i in range(1,end):
 				sp = (sp[0],sp[1]-1)
 				point_list.append(sp)
 
-import random
 
-a = np.array([0.1,0.05])
-b = 1.0
-
-if (a.any() >= b):
-	print 'a g b'
-a = [1,2,3]
-print np.median(a)
+a = (1,2,3)
+b = np.asarray(a)
+a = np.array([[1,2],[3,4]])
+print a[0,0]
+a[0,0] = 2
+print a

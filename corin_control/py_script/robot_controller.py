@@ -26,6 +26,7 @@ import tf 		 							# ROS transform library
 
 ## Services
 from corin_control.srv import UiState 	# NOT USED
+from corin_control.srv import RigidBody
 
 ## Robotis ROS msgs for joint control
 from robotis_controller_msgs.msg import SyncWriteMultiFloat
@@ -97,6 +98,7 @@ class CorinManager:
 
 		## set up publisher and subscriber topics
 		self.__initialise_topics__()
+		# self.__initialise_services__()
 
 		## initialises robot transform
 		self.Visualizer.robot_broadcaster.sendTransform( (0.,0.,BODY_HEIGHT), (0.,0.,0.,1.), 
@@ -177,6 +179,9 @@ class CorinManager:
 
 		# Sleep for short while for topics to be initiated properly
 		rospy.sleep(0.5)
+
+	# def rigid_body_service(self, mp):
+	# 	pass
 
 	def publish_topics(self, q, q_log=None, q_trac=None):
 		""" Publish joint position to joint controller topics and
@@ -608,6 +613,14 @@ class CorinManager:
 				qtrac.accelerations = v3ca.flatten().tolist() + v3wa.flatten().tolist() + qd.xa.tolist()
 				
 				mp = RosMotionPlan(setpoint = qtrac, gait_phase = self.Robot.Gait.cs)
+
+				rospy.wait_for_service('/corin/get_rigid_body_matrix')
+				try:
+					getInertiaState = rospy.ServiceProxy('/corin/get_rigid_body_matrix', RigidBody)
+					resp1 = getInertiaState(mp)
+					self.Robot.update_com_crbi(resp1.CoM, resp1.CRBI)
+				except rospy.ServiceException, e:
+					print "Service call failed: %s"%e
 
 				# publish appended joint angles if motion valid
 				self.publish_topics(qd, qlog, mp)

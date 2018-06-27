@@ -1,0 +1,14 @@
+/usr/local/include/iit/robots/dlm_yp/declarations.h
+/usr/local/include/iit/robots/dlm_yp/link_data_map.h
+/usr/local/include/iit/robots/dlm_yp/joint_data_map.h
+/usr/local/include/iit/robots/dlm_yp/transforms.h
+/usr/local/include/iit/robots/dlm_yp/kinematics_parameters.h
+/usr/local/include/iit/robots/dlm_yp/jacobians.h
+/usr/local/include/iit/robots/dlm_yp/traits.h
+/usr/local/include/iit/robots/dlm_yp/jsim.h
+/usr/local/include/iit/robots/dlm_yp/inverse_dynamics.h
+/usr/local/include/iit/robots/dlm_yp/forward_dynamics.h
+/usr/local/include/iit/robots/dlm_yp/inertia_properties.h
+/usr/local/include/iit/robots/dlm_yp/dynamics_parameters.h
+/usr/local/include/iit/robots/dlm_yp/miscellaneous.h
+/usr/local/lib/libiitgendlm_yp.so

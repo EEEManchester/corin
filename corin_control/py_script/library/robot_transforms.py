@@ -32,6 +32,7 @@ class Vector6D:
 		self.world_X_RM_foot = np.zeros(Column6D)
 		self.world_X_RR_foot = np.zeros(Column6D)
 
+		self.base_X_CoM 	= np.zeros(Column6D)
 		self.base_X_coxa  = np.zeros(Column6D)
 		self.base_X_foot  = np.zeros(Column6D)
 		self.base_X_AEP   = np.zeros(Column6D)
@@ -401,6 +402,7 @@ class HomogeneousTransform:
 		self.world_X_RM_foot = np.identity(4)
 		self.world_X_RR_foot = np.identity(4)
 		
+		self.base_X_CoM 		 = np.identity(4)
 		## base to hip frame of each leg; one-off
 		self.base_X_LF_coxa  = np.identity(4)
 		self.base_X_LM_coxa  = np.identity(4)

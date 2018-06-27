@@ -1,0 +1,14 @@
+/usr/local/include/iit/robots/lcorin_leg/declarations.h
+/usr/local/include/iit/robots/lcorin_leg/link_data_map.h
+/usr/local/include/iit/robots/lcorin_leg/joint_data_map.h
+/usr/local/include/iit/robots/lcorin_leg/transforms.h
+/usr/local/include/iit/robots/lcorin_leg/kinematics_parameters.h
+/usr/local/include/iit/robots/lcorin_leg/jacobians.h
+/usr/local/include/iit/robots/lcorin_leg/traits.h
+/usr/local/include/iit/robots/lcorin_leg/jsim.h
+/usr/local/include/iit/robots/lcorin_leg/inverse_dynamics.h
+/usr/local/include/iit/robots/lcorin_leg/forward_dynamics.h
+/usr/local/include/iit/robots/lcorin_leg/inertia_properties.h
+/usr/local/include/iit/robots/lcorin_leg/dynamics_parameters.h
+/usr/local/include/iit/robots/lcorin_leg/miscellaneous.h
+/usr/local/lib/libiitgenlcorin_leg.so
