@@ -9,6 +9,8 @@ import path_generator as Pathgenerator 		# generates path from via points
 from matrix_transforms 	import *			# SE(3) transformation library
 import plotgraph as Plot 					# library for plotting 
 
+from force_distribution import *			# class for force distribution
+
 import time
 import warnings
 import numpy as np

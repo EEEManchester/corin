@@ -45,8 +45,9 @@ class CorinManager:
 
 		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.Action	= control_interface.ControlInterface()	# control action class	
-		self.GridMap  = GridMap('flat')
-		self.PathPlan = PathPlanner(self.GridMap)
+		self.GridMap   = GridMap('flat')
+		self.PathPlan  = PathPlanner(self.GridMap)
+		self.ForceDist = QPForceDistribution()
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
@@ -619,6 +620,17 @@ class CorinManager:
 					getInertiaState = rospy.ServiceProxy('/corin/get_rigid_body_matrix', RigidBody)
 					resp1 = getInertiaState(mp)
 					self.Robot.update_com_crbi(resp1.CoM, resp1.CRBI)
+					
+					p_foot = []
+					for j in range(0,6):
+						if (self.Robot.Gait.cs[j] == 0):
+							world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3], 
+								  					(-self.Robot.P6c.base_X_CoM[:3].flatten()+self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
+							p_foot.append(world_CoM_X_foot.copy())
+						
+					foot_force = self.ForceDist.resolve_force(v3ca, v3wa, p_foot, 
+																self.Robot.P6c.base_X_CoM[:3], 
+																self.Robot.CRBI, self.Robot.Gait.cs )
 				except rospy.ServiceException, e:
 					print "Service call failed: %s"%e
 

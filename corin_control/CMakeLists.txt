@@ -88,23 +88,6 @@ add_executable(jointStateServer cpp_script/service/jointStateServer.cpp)
 add_dependencies(jointStateServer corin_control_gencpp)
 target_link_libraries(jointStateServer ${catkin_LIBRARIES})
 
-add_executable(main_node cpp_script/main_node.cpp cpp_script/force_distribution.cpp
-                          cpp_script/robots/mcorin/transforms.cpp 
-                          cpp_script/robots/mcorin/inertia_properties.cpp 
-                          cpp_script/robots/mcorin/inverse_dynamics.cpp
-                          cpp_script/robots/mcorin/jacobians.cpp
-                          cpp_script/robots/mcorin/miscellaneous.cpp)
-add_dependencies(main_node corin_control_gencpp)
-target_link_libraries(main_node ${catkin_LIBRARIES} ${RBDL_LIBRARY})
-
-# add_executable(test_spline cpp_script/polynomial_spline.cpp)
-# add_dependencies(test_spline corin_control_gencpp)
-# target_link_libraries(test_spline ${catkin_LIBRARIES})
-
-add_executable(test_node cpp_script/test_node.cpp)
-add_dependencies(test_node corin_control_gencpp)
-target_link_libraries(test_node ${catkin_LIBRARIES})
-
 add_executable(rigid_body_server cpp_script/service/rigid_body_server.cpp
                                   cpp_script/service/robots/mcorin/transforms.cpp 
                                   cpp_script/service/robots/mcorin/inertia_properties.cpp 
@@ -113,6 +96,23 @@ add_executable(rigid_body_server cpp_script/service/rigid_body_server.cpp
                                   cpp_script/service/robots/mcorin/miscellaneous.cpp)
 target_link_libraries(rigid_body_server ${catkin_LIBRARIES})
 add_dependencies(rigid_body_server corin_control_gencpp)
+
+# add_executable(main_node cpp_script/main_node.cpp cpp_script/force_distribution.cpp
+#                           cpp_script/robots/mcorin/transforms.cpp 
+#                           cpp_script/robots/mcorin/inertia_properties.cpp 
+#                           cpp_script/robots/mcorin/inverse_dynamics.cpp
+#                           cpp_script/robots/mcorin/jacobians.cpp
+#                           cpp_script/robots/mcorin/miscellaneous.cpp)
+# add_dependencies(main_node corin_control_gencpp)
+# target_link_libraries(main_node ${catkin_LIBRARIES} ${RBDL_LIBRARY})
+
+# add_executable(test_spline cpp_script/polynomial_spline.cpp)
+# add_dependencies(test_spline corin_control_gencpp)
+# target_link_libraries(test_spline ${catkin_LIBRARIES})
+
+# add_executable(test_node cpp_script/test_node.cpp)
+# add_dependencies(test_node corin_control_gencpp)
+# target_link_libraries(test_node ${catkin_LIBRARIES})
 
 # add_executable(rcg_test cpp_script/rcg_test.cpp
 #                         cpp_script/robots/mcorin/transforms.cpp 
