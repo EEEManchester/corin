@@ -631,6 +631,13 @@ class CorinManager:
 					foot_force = self.ForceDist.resolve_force(v3ca, v3wa, p_foot, 
 																self.Robot.P6c.base_X_CoM[:3], 
 																self.Robot.CRBI, self.Robot.Gait.cs )
+					joint_torque = self.Robot.force_to_torque(foot_force)
+
+					## update logging parameters
+					qlog.effort = np.zeros(6).flatten().tolist() + joint_torque.flatten().tolist()
+					qtrac.effort = np.zeros(6).flatten().tolist() + joint_torque.flatten().tolist()
+					mp = RosMotionPlan(setpoint = qtrac, gait_phase = self.Robot.Gait.cs)
+					
 				except rospy.ServiceException, e:
 					print "Service call failed: %s"%e
 
