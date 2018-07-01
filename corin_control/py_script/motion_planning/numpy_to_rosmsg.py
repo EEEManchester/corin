@@ -10,8 +10,10 @@
 """
 
 import sys; sys.dont_write_bytecode = True
-import numpy as np
 
+import numpy as np
+import itertools
+from traits import *
 import rospy
 from std_msgs.msg import Header
 ## Path
@@ -27,7 +29,12 @@ from sensor_msgs.msg import PointCloud2, PointField
 from sensor_msgs.msg import JointState
 ## Pose
 from geometry_msgs.msg import Pose
-
+## PlanPath
+from geometry_msgs.msg import Transform
+from geometry_msgs.msg import Twist
+from trajectory_msgs.msg import MultiDOFJointTrajectoryPoint
+from nav_msgs.msg import Path
+from std_msgs.msg import *
 ## ======================================================================================================================================== ##
 ## 																	Pose																	##
 ## ======================================================================================================================================== ##
@@ -63,7 +70,6 @@ def array_to_path(path_arr, stamp=None, frame_id=None, offset=None):
 		offset = [0]*6
 	
 	try:
-		print 'path length: ', len(path_arr.X.t)
 		for i in range (0,len(path_arr.X.t)):
 			pose = PoseStamped()
 			pose.header.stamp 	 = rospy.Time(path_arr.X.t[i])
@@ -173,7 +179,7 @@ def foothold_list_to_marker_array(path_arr, stamp=None, frame_id=None):
 
 	## Define Variables ##
 	mark_array = MarkerArray()
-
+	print path_arr[0].xp, len(path_arr[0].t)
 	## assumes that footholds array are of the same size
 	for j in range(0,6):
 		for i in range (0,len(path_arr[j].t)):
@@ -183,7 +189,7 @@ def foothold_list_to_marker_array(path_arr, stamp=None, frame_id=None):
 				mark.header.stamp = stamp
 			if frame_id is not None:
 				mark.header.frame_id = frame_id
-
+			
 			mark.type = 2
 			mark.id = 6*i + j
 			mark.pose.position.x = path_arr[j].xp[i][0]
@@ -380,5 +386,203 @@ def array_to_pointcloud2(cloud_arr, stamp=None, frame_id=None):
     return cloud_msg
 
 ## ======================================================================================================================================== ##
-## 																Something																	##
+## 																Graph and MultiArray Conversion																	##
 ## ======================================================================================================================================== ##
+def graph_attr_to_multiarray(GridMap, attr):
+	""" Converts NetworkX grid map .5 data into ROS multiarray format """
+	
+	layer  = Float32MultiArray()
+	layout = MultiArrayLayout()
+	dim = MultiArrayDimension()
+
+	layer.data, depth = GridMap.graph_attributes_to_nparray(attr)
+
+	dim.label = attr
+	dim.size = GridMap.map_size_g[1]
+	dim.stride = depth*GridMap.map_size_g[0]*GridMap.map_size_g[1]
+	layout.dim.append(dim)
+	dim = MultiArrayDimension()
+	dim.label = "width"
+	dim.size = GridMap.map_size_g[0]
+	dim.stride = depth*GridMap.map_size_g[0]
+	layout.dim.append(dim)
+	dim = MultiArrayDimension()
+	dim.label = "length"
+	dim.size = depth
+	dim.stride = depth
+	layout.dim.append(dim)
+	layer.layout = layout
+
+	return layer
+
+def multiarray_to_graph_attr(GridMap, attr):
+	""" Converts ROS multiarray format to NetworkX grid map .5 data  """
+
+	pass
+## ======================================================================================================================================== ##
+## 																PlanPath and MotionPlan Conversion																	##
+## ======================================================================================================================================== ##
+
+def motionplan_to_planpath(motion_plan, frame_id=None):
+	""" Converts motion plan to PlanPath service message """
+
+	qbp = MultiDOFJointTrajectoryPoint()
+	qbi = Path()
+	gphase = Int8MultiArray()
+	wXf = Float64MultiArray()
+	bXf = Float64MultiArray()
+	bXN = Float64MultiArray()
+	
+	for i in range(0, len(motion_plan.qb.X.t)):
+		
+		gtf = Transform()
+		vtf = Twist()
+		atf = Twist()
+
+		gtf.translation.x = motion_plan.qb.X.xp[i][0]
+		gtf.translation.y = motion_plan.qb.X.xp[i][1]
+		gtf.translation.z = motion_plan.qb.X.xp[i][2]
+		gtf.rotation.x = motion_plan.qb.W.xp[i][0]
+		gtf.rotation.y = motion_plan.qb.W.xp[i][1]
+		gtf.rotation.z = motion_plan.qb.W.xp[i][2]
+
+		vtf.linear.x = motion_plan.qb.X.xv[i][0]
+		vtf.linear.y = motion_plan.qb.X.xv[i][1]
+		vtf.linear.z = motion_plan.qb.X.xv[i][2]
+		vtf.angular.x = motion_plan.qb.W.xv[i][0]
+		vtf.angular.y = motion_plan.qb.W.xv[i][1]
+		vtf.angular.z = motion_plan.qb.W.xv[i][2]
+	
+		atf.linear.x = motion_plan.qb.X.xa[i][0]
+		atf.linear.y = motion_plan.qb.X.xa[i][1]
+		atf.linear.z = motion_plan.qb.X.xa[i][2]
+		atf.angular.x = motion_plan.qb.W.xa[i][0]
+		atf.angular.y = motion_plan.qb.W.xa[i][1]
+		atf.angular.z = motion_plan.qb.W.xa[i][2]
+
+		qbp.transforms.append(gtf)
+		qbp.velocities.append(vtf)
+		qbp.accelerations.append(atf)
+	qbp.time_from_start = rospy.Time(motion_plan.qb.X.t[1] - motion_plan.qb.X.t[0])
+	
+	for i in range(0, len(motion_plan.qbp)):
+		ip = PoseStamped()
+
+		if frame_id is not None:
+			ip.header.frame_id = frame_id
+		ip.header.stamp = rospy.Time(motion_plan.qb.X.t[i])
+
+		ip.pose.position.x = motion_plan.qbp[i][0]
+		ip.pose.position.y = motion_plan.qbp[i][1]
+		ip.pose.position.z = motion_plan.qbp[i][2]
+		ip.pose.orientation.x = motion_plan.qbp[i][3]
+		ip.pose.orientation.y = motion_plan.qbp[i][4]
+		ip.pose.orientation.z = motion_plan.qbp[i][5]
+		ip.pose.orientation.w = 0
+
+		qbi.poses.append(ip)
+	
+	dheader, ddata = list_to_multiarray(motion_plan.gait_phase)
+	gphase.layout.dim.append(dheader)
+	gphase.data = ddata
+	
+	for j in range(0,6):
+		dheader, ddata = list_to_multiarray(motion_plan.f_world_X_foot[j].xp)
+		wXf.layout.dim.append(dheader)
+		wXf.data += ddata
+
+		dheader, ddata = list_to_multiarray(motion_plan.f_base_X_foot[j].xp)
+		bXf.layout.dim.append(dheader)
+		bXf.data += ddata
+
+		dheader, ddata = list_to_multiarray(motion_plan.f_world_base_X_NRP[j].xp)
+		bXN.layout.dim.append(dheader)
+		bXN.data += ddata
+
+	return qbp, qbi, gphase, wXf, bXf, bXN
+
+def list_to_multiarray(idata):
+
+	adim = MultiArrayDimension()
+	adim.size = len(idata[0])
+	adim.stride = len(idata)
+	# print 'stride: ', adim.stride
+	return adim, list(itertools.chain.from_iterable(idata))
+
+def planpath_to_motionplan(plan_path):
+	""" Converts PlanPath service message to MotionPlan """
+	
+	motion_plan = MotionPlan()
+
+	## Trajectory parameters
+	tint = plan_path.base_path.time_from_start.to_sec()
+	path_size = len(plan_path.base_path.transforms)
+
+	motion_plan.qb.X.t = [None]*path_size
+	motion_plan.qb.W.t = [None]*path_size
+	motion_plan.qb.X.xp = np.zeros((path_size,3))
+	motion_plan.qb.X.xv = np.zeros((path_size,3))
+	motion_plan.qb.X.xa = np.zeros((path_size,3))
+	motion_plan.qb.W.xp = np.zeros((path_size,3))
+	motion_plan.qb.W.xv = np.zeros((path_size,3))
+	motion_plan.qb.W.xa = np.zeros((path_size,3))
+
+	for i in range(0, path_size):
+		motion_plan.qb.X.xp[i,0:3] = np.array([ plan_path.base_path.transforms[i].translation.x,
+													 									plan_path.base_path.transforms[i].translation.y,
+													 									plan_path.base_path.transforms[i].translation.z ])
+
+		motion_plan.qb.X.xv[i,0:3] = np.array([ plan_path.base_path.velocities[i].linear.x,
+													 									plan_path.base_path.velocities[i].linear.y,
+													 									plan_path.base_path.velocities[i].linear.z ])
+
+		motion_plan.qb.X.xa[i,0:3] = np.array([ plan_path.base_path.accelerations[i].linear.x,
+													 									plan_path.base_path.accelerations[i].linear.y,
+													 									plan_path.base_path.accelerations[i].linear.z ])
+
+		motion_plan.qb.W.xp[i,0:3] = np.array([ plan_path.base_path.transforms[i].rotation.x,
+													 									plan_path.base_path.transforms[i].rotation.y,
+													 									plan_path.base_path.transforms[i].rotation.z ])
+
+		motion_plan.qb.W.xv[i,0:3] = np.array([ plan_path.base_path.velocities[i].angular.x,
+													 									plan_path.base_path.velocities[i].angular.y,
+													 									plan_path.base_path.velocities[i].angular.z ])
+
+		motion_plan.qb.W.xa[i,0:3] = np.array([ plan_path.base_path.accelerations[i].angular.x,
+													 									plan_path.base_path.accelerations[i].angular.y,
+													 									plan_path.base_path.accelerations[i].angular.z ])
+
+		motion_plan.qb.X.t[i] = i*tint
+		motion_plan.qb.W.t[i] = i*tint
+
+	for i in range(0, len(plan_path.CoB.poses)):
+		motion_plan.qbp.append([ plan_path.CoB.poses[i].pose.position.x,
+							 							 plan_path.CoB.poses[i].pose.position.y,
+							 							 plan_path.CoB.poses[i].pose.position.z,
+							 							 plan_path.CoB.poses[i].pose.orientation.x,
+							 							 plan_path.CoB.poses[i].pose.orientation.y,
+							 							 plan_path.CoB.poses[i].pose.orientation.z ])
+	## Remap Gait Phase List
+	for i in range(0, int(len(plan_path.gait_phase.data)/6)):
+		motion_plan.gait_phase.append(list(plan_path.gait_phase.data[i*6:i*6+6]))
+	
+	## Remap Foot Contact List
+	nc_wXf = nc_bXf = nc_wbXN = 0
+	for j in range(0,6):
+		# print 'f size: ', j, '\t', plan_path.f_world_X_foot.layout.dim[j].stride
+		for i in range(0, plan_path.f_world_X_foot.layout.dim[j].stride):
+			motion_plan.f_world_X_foot[j].xp.append(np.array(plan_path.f_world_X_foot.data[nc_wXf*3+i*3:nc_wXf*3+i*3+3]).reshape((3,1)))
+			motion_plan.f_world_X_foot[j].t.append(i)
+		nc_wXf += plan_path.f_world_X_foot.layout.dim[j].stride
+
+		for i in range(0, plan_path.f_base_X_foot.layout.dim[j].stride):
+			motion_plan.f_base_X_foot[j].xp.append(np.array(plan_path.f_base_X_foot.data[nc_bXf*3+i*3:nc_bXf*3+i*3+3]).reshape((3,1)))
+			motion_plan.f_base_X_foot[j].t.append(i)
+		nc_bXf += plan_path.f_base_X_foot.layout.dim[j].stride
+
+		for i in range(0, plan_path.f_world_base_X_NRP.layout.dim[j].stride):
+			motion_plan.f_world_base_X_NRP[j].xp.append(np.array(plan_path.f_world_base_X_NRP.data[nc_wbXN*3+i*3:nc_wbXN*3+i*3+3]).reshape((3,1)))
+			motion_plan.f_world_base_X_NRP[j].t.append(i)
+		nc_wbXN += plan_path.f_world_base_X_NRP.layout.dim[j].stride
+
+	return motion_plan

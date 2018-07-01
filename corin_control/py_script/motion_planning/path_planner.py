@@ -176,8 +176,8 @@ class BodyposeTable:
 		return selection
 
 tb = BodyposeTable()
-for i in tb.table:
-	print tb.table[i]["footprint"]
+# for i in tb.table:
+# 	print tb.table[i]["footprint"]
 class PathPlanner:
 	def __init__(self, Map):
 		self.GridMap = Map
@@ -198,6 +198,10 @@ class PathPlanner:
 		self.W_CHIM = False
 
 		self.di_wall = 0. 	# distance from base to wall
+
+		self.start = (0,0) 	# starting position
+		self.goal  = (0,0)	# goal position
+		self.motion_plan = None 	# motion plan
 
 		self.__initialise_graph__()
 
@@ -235,6 +239,8 @@ class PathPlanner:
 		print '\tBody grid : ', self.rbbd_gd
 		print '\tFoot grid : ', self.rblg_gd
 		print '==============================================='
+		print 'Map pre-processing.....'
+		self.pre_process_map()
 
 	def remove_motion_edges(self, G):
 		""" remove edges with obstacles """
@@ -402,8 +408,8 @@ class PathPlanner:
 							if (i<3):
 								pf1 = (pxi-ix_off+x, p[1]+by_min+d)
 								pf2 = (pxi-ix_off+x, p[1]+by_min+d-1)
-								if (p==TEST_POINT):
-									print i, p, d, pf1, pf2
+								# if (p==TEST_POINT):
+								# 	print i, p, d, pf1, pf2
 							else:
 								pf1 = (pxi-ix_off+x, p[1]-(by_min+d-1))
 								pf2 = (pxi-ix_off+x, p[1]-(by_min+d))
@@ -417,8 +423,8 @@ class PathPlanner:
 							except KeyError:
 								LA[i] = -1;
 								break
-					if (p==TEST_POINT):
-						print 'flag: ', fp_area, LA
+					# if (p==TEST_POINT):
+					# 	print 'flag: ', fp_area, LA
 
 					## valid if THREE legs on wall have footholds and ground are all ground
 					if (np.amin(LA) < 0):
@@ -627,14 +633,10 @@ class PathPlanner:
 				
 		self.Gfree = nx.path_graph(node_free)
 
-	def find_base_path(self,start,end):
-		""" Finds a path given start and end position on map """
-
-		def eucld_dist(a,b):
-			""" heuristics used for A* planner """
-			(x1, y1) = a
-			(x2, y2) = b
-			return (((x1 - x2)**2 + (y1 - y2)**2)**0.5)
+	def pre_process_map(self):
+		""" Pre-process the grid map. Checks each node for motion 
+				primitive validity and removes invalid nodes and edges. 
+				Assigns cost to edge for biasing planner  							"""
 
 		self.process_map_on_primitive() # finds path then use motion primitives to fit in
 		self.remove_motion_edges(self.base_map) 	# remove edges linked to invalid cells
@@ -645,7 +647,17 @@ class PathPlanner:
 		# ax = nx.draw_networkx(self.base_map, b_map, with_labels=False, node_size=20, node_color='#ff6600', width=0.5, alpha=1.0, node_shape="s");
 		# plt.grid('on');		 plt.grid(which='major', linestyle=':', linewidth='0.5', color='black')
 		# plt.show()
-		
+		print 'Map pre-processing completed'
+
+	def find_base_path(self,start,end):
+		""" Finds a path given start and end position on map """
+
+		def eucld_dist(a,b):
+			""" heuristics used for A* planner """
+			(x1, y1) = a
+			(x2, y2) = b
+			return (((x1 - x2)**2 + (y1 - y2)**2)**0.5)
+
 		## Robot represented with a number of nodes
 		try:
 			# list_path	= nx.shortest_path(self.base_map,start,end,weight='cost')
@@ -692,10 +704,10 @@ class PathPlanner:
 
 	def find_valid_foothold(self, sp, j):
 		""" Find lowest valid foothold in leg grid area """
-		print 'area sp: ', np.round(sp,4)
+		# print 'area sp: ', np.round(sp,4)
 		footholds = self.GridMap.square_spiral_search(sp, (3,3), j)
 		cost = np.zeros(len(footholds))
-		print footholds
+		# print footholds
 		for i in range(0, len(footholds)):
 			cost[i] = self.GridMap.get_index('height', footholds[i])
 			if (cost[i] == 0):
@@ -1017,7 +1029,7 @@ class PathPlanner:
 
 					elif (abs(cell_h.item(2)) > 0.1 and self.W_GND is True):
 						print 'Search for next valid foothold for ', j, cell_h.item(2), np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
-						print np.round(self.Robot.XHd.world_X_base[:3,3],3)
+						# print np.round(self.Robot.XHd.world_X_base[:3,3],3)
 						# self.Robot.Leg[j].XHd.world_X_foot[:3,3] = self.find_valid_foothold(self.Robot.Leg[j].XHd.world_X_foot[:3,3], j)
 						self.Robot.Leg[j].XHd.world_X_foot[:3,3] = self.find_valid_foothold(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + 
 																							self.Robot.XHd.world_X_base[:3,3], j)
@@ -1128,8 +1140,6 @@ class PathPlanner:
 				x_cob = xi.copy()
 				w_cob = np.array([qi, 0., 0.])
 
-			print qi, qf
-			print xi, xf
 			# Generate ellipsoidal base trajectory
 			qrange = range(0,91,10)
 			delta_q = (qf-qi)/(len(qrange)-1)
@@ -1276,7 +1286,7 @@ class PathPlanner:
 				t_cob = np.hstack(( t_cob, i*total_time/(2*(len(qrange)-1)) ))
 			# print x_cob
 			# print t_cob
-			print w_cob
+			
 			PathGenerator.V_MAX = PathGenerator.W_MAX = 100
 			base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV, t_cob)
 			# Plot.plot_2d(base_path.X.t, base_path.X.xp)
@@ -1675,9 +1685,16 @@ class PathPlanner:
 		# Generate path given start and end location on map
 		if (options.get("start")):
 			start = options.get("start")
-			end   = options.get("end")
+			goal  = options.get("end")
 
-			list_gpath = self.find_base_path(start, end)
+			# Return immediately if same path is requested
+			if (start == self.start and goal == self.goal):
+				return self.motion_plan
+			else:
+				self.start = start
+				self.goal  = goal
+
+			list_gpath = self.find_base_path(self.start, self.goal)
 
 			if (list_gpath is not None):
 				print 'Path Found: ', list_gpath
@@ -1720,7 +1737,9 @@ class PathPlanner:
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 
 		## Split path according to motion primitive
-		return self.post_process_path(list_gpath, Robot.P6c.world_X_base.flatten())
+		self.motion_plan = self.post_process_path(list_gpath, Robot.P6c.world_X_base.flatten())
+
+		return self.motion_plan
 
 	def path_interpolation(self, path, tn=0.1):
 		""" interpolate cells using cubic spline """

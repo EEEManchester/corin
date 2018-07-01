@@ -1,6 +1,6 @@
 Map:
   flat:
-    size: { sx: 2.21, sy: 0.8}
+    size: { sx: 1.00, sy: 0.8}
   
   wall_demo_left:
     size: { sx: 1.57, sy: 0.8}

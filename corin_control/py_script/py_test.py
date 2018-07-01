@@ -328,8 +328,32 @@ for i in range(1,end):
 				point_list.append(sp)
 
 
-a = (1,2,3)
-b = np.asarray(a)
-a = np.array([[1,2],[3,4]])
-print a[0,0]
-a[0,0] = 2
+a = [1,2,3,4]
+import itertools
+list2d = [[1,2,3],[4,5,6], [7], [8,9]]
+merged = list(itertools.chain.from_iterable(list2d))
+
+gsample = [None]*2
+print gsample
+gsample[0] = []
+gsample[1] = []
+gsample[0].append([1,1,1])
+gsample[0].append([2,2,2])
+gsample[1].append([3,3,3])
+gsample[1].append([4,4,4])
+merged = list(itertools.chain.from_iterable(gsample))
+merge2 = list(itertools.chain.from_iterable(merged))
+
+b = [2,1,1]
+a += b
+a = np.array([[1,2,3]])
+
+a = [1,2,3,4,5,6,7,8,9]
+# print a
+# print list(a[0:3]), a[3:6]
+# print np.array([1,1,1]).reshape((3,1))
+a = np.array([[1,2,3],[4,5,6]])
+print a
+a[0,0:3] = np.array([9,9,9])
+print a
+

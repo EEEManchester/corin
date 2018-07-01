@@ -18,14 +18,19 @@ find_package(catkin REQUIRED COMPONENTS
   control_msgs
   gazebo_msgs
   geometry_msgs
+  grid_map_msgs
+  nav_msgs
   message_filters
   message_generation
   robotis_controller_msgs
   roscpp
   rospy
+  sensor_msgs
   std_msgs
   tf
+  trajectory_msgs
   qpoases
+  visualization_msgs
 )
 
 find_package(RBDL REQUIRED)
@@ -43,8 +48,10 @@ find_package(Eigen REQUIRED)
    FILES
    JointState.srv
    Imu.srv
-   UiState.srv
-   RigidBody.srv
+   UiState.srv    # user interface
+   RigidBody.srv  # CRBI and CoM
+   PlanPath.srv   # Grid path planning
+   GridMap.srv    # Grid map
  )
 
 ## Generate actions in the 'action' folder
@@ -59,10 +66,13 @@ find_package(Eigen REQUIRED)
    actionlib_msgs
    control_msgs
    geometry_msgs
+   grid_map_msgs
    robotis_controller_msgs
    sensor_msgs
    std_msgs
+   nav_msgs
    trajectory_msgs
+   visualization_msgs
  )
 
 ###################################

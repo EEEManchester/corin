@@ -502,6 +502,26 @@ class GridMap:
 
 		return cx, cy, cz
 
+	def graph_attributes_to_nparray(self, attr):
+		""" returns map attributes as 1D array """
+
+		## Define Variables ##
+		sz = self.Map.number_of_nodes() # size of grid map
+		idx = 0
+
+		try:
+			depth = len(self.Map.nodes[(0,0)][attr])
+		except TypeError:
+			depth = 1
+		
+		cx = np.zeros(sz*depth)
+		for x in range(0, self.map_size_g[0]):
+			for y in range(0, self.map_size_g[1]):
+				cx[idx:idx+depth] = self.Map.nodes[(x,y)][attr]
+				# print (x,y), idx, cx[idx:idx+depth], sz, self.Map.nodes[(x,y)][attr]
+				idx += depth
+		return cx, depth
+
 	def square_spiral_search(self, p, grid_area, j):
 		""" spiral grid: rotates in clockwise direction starting with left, up, right then down """
 
@@ -696,7 +716,10 @@ class GridMap:
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-# gmap = GridMap('wall_demo_left')
+# gmap = GridMap('flat')
+# a, b = gmap.graph_attributes_to_nparray("norm")
+# print a
+# print len(a)
 # sp = np.array([0.6015, 0.1391, -0.])
 # p = (19,21)
 # print gmap.get_median_width([p[0]*gmap.resolution,p[1]*gmap.resolution])

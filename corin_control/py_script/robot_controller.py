@@ -15,10 +15,10 @@ from rviz_visual import *
 
 ## ROS messages & libraries
 import rospy
-from sensor_msgs.msg import Imu 			# sub msg for IMU
+from sensor_msgs.msg import Imu 					# sub msg for IMU
 from sensor_msgs.msg import JointState 		# sub msg for joint states
 from trajectory_msgs.msg import JointTrajectoryPoint
-from std_msgs.msg import Float64 			# pub msg for Gazebo joints
+from std_msgs.msg import Float64 					# pub msg for Gazebo joints
 from std_msgs.msg import ByteMultiArray 	# foot contact state
 from std_msgs.msg import Float32MultiArray	# foot contact force
 from std_msgs.msg import String 			# ui control
@@ -26,7 +26,8 @@ import tf 		 							# ROS transform library
 
 ## Services
 from corin_control.srv import UiState 	# NOT USED
-from corin_control.srv import RigidBody
+from corin_control.srv import RigidBody # compute CRBI & CoM
+from corin_control.srv import PlanPath 	# motion planning
 
 ## Robotis ROS msgs for joint control
 from robotis_controller_msgs.msg import SyncWriteMultiFloat
@@ -46,7 +47,7 @@ class CorinManager:
 		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.Action	= control_interface.ControlInterface()	# control action class	
 		self.GridMap   = GridMap('flat')
-		self.PathPlan  = PathPlanner(self.GridMap)
+		# self.PathPlan  = PathPlanner(self.GridMap)
 		self.ForceDist = QPForceDistribution()
 
 		self.resting   = False 		# Flag indicating robot standing or resting
@@ -397,7 +398,7 @@ class CorinManager:
 		w_base_X_NRP = motion_plan.f_world_base_X_NRP
 		world_X_footholds = motion_plan.f_world_X_foot
 		base_X_footholds  = motion_plan.f_base_X_foot
-
+		print world_X_footholds[0].xp
 		## Publish multiple times to ensure it is published 
 		for c in range(0,3):
 			self.Visualizer.publish_robot(wXbase_offset)
@@ -428,7 +429,7 @@ class CorinManager:
 		# cycle through trajectory points until complete
 		i = 1 	# skip first point since spline has zero initial differential conditions
 		while (i != len(base_path.X.t) and not rospy.is_shutdown()):
-
+			
 			# User Interface for commanding robot motion state
 			while (self.ui_state == 'hold' or self.ui_state == 'pause'):
 				# loop until instructed to start or cancel
@@ -615,31 +616,31 @@ class CorinManager:
 				
 				mp = RosMotionPlan(setpoint = qtrac, gait_phase = self.Robot.Gait.cs)
 
-				rospy.wait_for_service('/corin/get_rigid_body_matrix')
-				try:
-					getInertiaState = rospy.ServiceProxy('/corin/get_rigid_body_matrix', RigidBody)
-					resp1 = getInertiaState(mp)
-					self.Robot.update_com_crbi(resp1.CoM, resp1.CRBI)
+				# rospy.wait_for_service('/corin/get_rigid_body_matrix')
+				# try:
+				# 	getInertiaState = rospy.ServiceProxy('/corin/get_rigid_body_matrix', RigidBody)
+				# 	resp1 = getInertiaState(mp)
+				# 	self.Robot.update_com_crbi(resp1.CoM, resp1.CRBI)
 					
-					p_foot = []
-					for j in range(0,6):
-						if (self.Robot.Gait.cs[j] == 0):
-							world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3], 
-								  					(-self.Robot.P6c.base_X_CoM[:3].flatten()+self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
-							p_foot.append(world_CoM_X_foot.copy())
+				# 	p_foot = []
+				# 	for j in range(0,6):
+				# 		if (self.Robot.Gait.cs[j] == 0):
+				# 			world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3], 
+				# 				  					(-self.Robot.P6c.base_X_CoM[:3].flatten()+self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
+				# 			p_foot.append(world_CoM_X_foot.copy())
 						
-					foot_force = self.ForceDist.resolve_force(v3ca, v3wa, p_foot, 
-																self.Robot.P6c.base_X_CoM[:3], 
-																self.Robot.CRBI, self.Robot.Gait.cs )
-					joint_torque = self.Robot.force_to_torque(foot_force)
+				# 	foot_force = self.ForceDist.resolve_force(v3ca, v3wa, p_foot, 
+				# 												self.Robot.P6c.base_X_CoM[:3], 
+				# 												self.Robot.CRBI, self.Robot.Gait.cs )
+				# 	joint_torque = self.Robot.force_to_torque(foot_force)
 
-					## update logging parameters
-					qlog.effort = np.zeros(6).flatten().tolist() + joint_torque.flatten().tolist()
-					qtrac.effort = np.zeros(6).flatten().tolist() + joint_torque.flatten().tolist()
-					mp = RosMotionPlan(setpoint = qtrac, gait_phase = self.Robot.Gait.cs)
+				# 	## update logging parameters
+				# 	qlog.effort = np.zeros(6).flatten().tolist() + joint_torque.flatten().tolist()
+				# 	qtrac.effort = np.zeros(6).flatten().tolist() + joint_torque.flatten().tolist()
+				# 	mp = RosMotionPlan(setpoint = qtrac, gait_phase = self.Robot.Gait.cs)
 					
-				except rospy.ServiceException, e:
-					print "Service call failed: %s"%e
+				# except rospy.ServiceException, e:
+				# 	print "Service call failed: %s"%e
 
 				# publish appended joint angles if motion valid
 				self.publish_topics(qd, qlog, mp)
@@ -722,11 +723,11 @@ class CorinManager:
 				print 'Planning path...'
 				self.Robot.support_mode = False
 
-				ps = (10,13); pf = (30,13)	# Short straight Line
+				# ps = (10,13); pf = (15,13)	# Short straight Line
 				# ps = (10,14); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
 				# ps = (10,13); pf = (25,21)	# G2W - Left side up
-				# ps = (10,13); pf = (40,13)	# full wall or chimney 
+				ps = (10,13); pf = (40,13)	# full wall or chimney 
 				# ps = (10,13); pf = (72,13) 	# wall and chimney demo
 
 				## Set robot to starting position in default configuration
@@ -742,9 +743,22 @@ class CorinManager:
 
 				self.Robot._initialise()
 				
-				# motion_plan = self.Map.generate_motion_plan(self.Robot, start=ps, end=pf)
-				motion_plan = self.PathPlan.generate_motion_plan(self.Robot, start=ps, end=pf)
-				
+				# motion_plan = self.PathPlan.generate_motion_plan(self.Robot, start=ps, end=pf)
+				rospy.wait_for_service('GridMap/query_map')
+				try:
+					start = Pose()
+					goal  = Pose()
+					start.position.x = ps[0]*self.GridMap.resolution
+					start.position.y = ps[1]*self.GridMap.resolution
+					goal.position.x = pf[0]*self.GridMap.resolution
+					goal.position.y = pf[1]*self.GridMap.resolution
+
+					path_planner = rospy.ServiceProxy('GridMap/query_map', PlanPath)
+					path_generat = path_planner(start, goal)
+					motion_plan  = planpath_to_motionplan(path_generat)
+				except rospy.ServiceException, e:
+					print "Service call failed: %s"%e
+
 				if (motion_plan is not None):
 					if (self.main_controller(motion_plan)):
 						self.Robot.alternate_phase()

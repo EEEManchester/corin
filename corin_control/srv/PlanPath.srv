@@ -1,0 +1,9 @@
+geometry_msgs/Pose start
+geometry_msgs/Pose goal
+---
+trajectory_msgs/MultiDOFJointTrajectoryPoint base_path
+nav_msgs/Path CoB
+std_msgs/Int8MultiArray gait_phase
+std_msgs/Float64MultiArray f_world_X_foot
+std_msgs/Float64MultiArray f_base_X_foot
+std_msgs/Float64MultiArray f_world_base_X_NRP

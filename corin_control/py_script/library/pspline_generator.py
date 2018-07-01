@@ -176,8 +176,7 @@ class SplineGenerator:
 		C  = np.zeros((sz,3))	# intermediate position & time
 		v0 = np.zeros((1,3))	# initial velocity
 		vf = np.zeros((1,3))	# final velocity
-		print 'sz: ', sz, len(x)
-		print x
+		
 		ct = [] 	# output timing array
 		cp = [] 	# output position array
 		cv = [] 	# output velocity array
@@ -214,7 +213,7 @@ class SplineGenerator:
 			## Solve for v
 			v = linalg.solve(A,C)
 		v = np.concatenate((v0,v,vf),axis=0)
-		print  'v', v
+		
 		## Compute coefficients
 		for i in range(0,sz+1):
 			tk	  = t[i+1]-t[i]
@@ -228,7 +227,7 @@ class SplineGenerator:
 			a1x = vkx
 			a2x = (1/tk)*( 3*(qkx_1-qkx)/tk - 2*vkx - vkx_1 )
 			a3x = (1/(tk**2))*( 2*(qkx-qkx_1)/tk + vkx + vkx_1 )
-			print a0x, a1x, a2x, a3x
+			
 			a0y = qky
 			a1y = vky
 			a2y = (1/tk)*( 3*(qky_1-qky)/tk - 2*vky - vky_1 )
@@ -261,7 +260,7 @@ class SplineGenerator:
 				qpz = a0z + a1z*td + a2z*td**2 + a3z*td**3
 				qvz = a1z + 2*a2z*td + 3*a3z*td**2
 				qaz = 2*a2z + 6*a3z*td
-				print td+t[i], td, qpx		
+				# print td+t[i], td, qpx		
 				## concatenate segments together - size is <no_rows> by 3
 				# print td, tk, t[i], type(td+t[i])
 				ct.append( td+t[i] ) 
@@ -358,7 +357,7 @@ x_com = np.array([1.,1.,1.])
 x_com = np.vstack((x_com,np.array([2.,2.,2.])))
 x_com = np.vstack((x_com,np.array([3.,3.,3.])))
 x_com = np.vstack((x_com,np.array([4.,4.,4.])))
-ct,cp,cv,ca = spliner.generate_spline(x_com, t_com)
+# ct,cp,cv,ca = spliner.generate_spline(x_com, t_com)
 # print type(ct), type(cp)
 # Plot.plot_2d(x_out[0],x_out[1])
 # Plot.plot_2d_multiple(2,x_out.t,x_out.xv,x_out.xa)
