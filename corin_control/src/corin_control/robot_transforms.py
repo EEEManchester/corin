@@ -1125,6 +1125,33 @@ class HomogeneousTransform:
 		self.base_X_RR_edge_4[0,3] = self.base_X_RR_foot[0,3] + (-LEG_AREA_LX/2)
 		self.base_X_RR_edge_4[1,3] = self.base_X_RR_foot[1,3] + (-LEG_AREA_LY/2)
 
+def transform_world_X_base(q):
+	# rotates in sequence x, y, z in world frame 
+	tx = q[0]
+	ty = q[1]
+	tz = q[2]
+	qx_sin = np.sin(q[3])
+	qy_sin = np.sin(q[4])
+	qz_sin = np.sin(q[5])
+	qx_cos = np.cos(q[3])
+	qy_cos = np.cos(q[4])
+	qz_cos = np.cos(q[5])
+
+	world_X_base = np.identity(4)
+	world_X_base[0,0] =  qz_cos*qy_cos
+	world_X_base[0,1] = -qz_sin*qx_cos + qz_cos*qy_sin*qx_sin
+	world_X_base[0,2] =  qz_sin*qx_sin + qz_cos*qy_sin*qx_cos
+	world_X_base[0,3] =  tx
+	world_X_base[1,0] =  qz_sin*qy_cos
+	world_X_base[1,1] =  qz_cos*qx_cos + qz_sin*qy_sin*qx_sin
+	world_X_base[1,2] = -qz_cos*qx_sin + qz_sin*qy_sin*qx_cos
+	world_X_base[1,3] =  ty
+	world_X_base[2,0] = -qy_sin
+	world_X_base[2,1] =  qy_cos*qx_sin
+	world_X_base[2,2] =  qy_cos*qx_cos
+	world_X_base[2,3] =  tz
+
+	return world_X_base
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(corin_manager)
+project(corin_joint_manager)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp

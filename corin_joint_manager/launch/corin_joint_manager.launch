@@ -1,0 +1,42 @@
+<?xml version="1.0" ?>
+
+<launch>
+    
+    <arg name="gazebo" default="true"/>
+    <arg name="position" default="true"/>
+    <arg name="effort" default="false"/>
+    
+    <param name="gazebo"                   value="true"    type="bool"/>
+    <param name="gazebo_robot_name"        value="corin"/>
+
+    <param name="offset_file_path"         value="$(find corin_joint_manager)/config/offset.yaml"/>
+    <param name="robot_file_path"          value="$(find corin_joint_manager)/config/mcorin.robot"/>
+    <param name="init_file_path"           value="$(find corin_joint_manager)/config/dxl_init.yaml"/>
+
+    <!-- Load joint controller configurations from YAML file to parameter server -->
+    <rosparam file="$(find corin_joint_manager)/config/gazebo_controllers/leg_position_controller.yaml" command="load" if="$(arg position)"/>
+    <rosparam file="$(find corin_joint_manager)/config/gazebo_controllers/leg_effort_controller.yaml" command="load" if="$(arg effort)"/>
+
+    <!-- corin Manager -->
+    <!-- Gazebo -->
+    <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" clear_params="true"
+        output="screen" ns="/corin" args="joint_state_controller
+        lf_q1_joint lf_q2_joint lf_q3_joint
+        lm_q1_joint lm_q2_joint lm_q3_joint
+        lr_q1_joint lr_q2_joint lr_q3_joint
+        rf_q1_joint rf_q2_joint rf_q3_joint
+        rm_q1_joint rm_q2_joint rm_q3_joint
+        rr_q1_joint rr_q2_joint rr_q3_joint   " if="$(arg gazebo)"/>
+    <!-- contact force node -->
+    <node name="contact_foce" pkg="corin_control" type="footcontact.py" respawn="false" if="$(arg gazebo)"/>
+    <!-- unpause physics engine -->
+    <node name="unpause" pkg="corin_description" type="unpause_physics_engine" args="5.0" if="$(arg gazebo)"/>
+
+    <!-- Dynamixels -->
+    <node name="corin_manager_node" pkg="corin_joint_manager" type="corin_manager" output="screen" unless="$(arg gazebo)"/>
+    <!-- Torque server - enable/disable torque -->
+    <node name="dxl_server" pkg="corin_joint_manager" type="torque_server.py" output="screen" args="12.5" unless="$(arg gazebo)"/>
+
+    <!-- Robot Model & TF -->
+    <!-- <include file="$(find thormang3_description)/launch/thormang3_mpc.launch"/> -->
+</launch>

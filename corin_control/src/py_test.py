@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from library import *
+from corin_control import *
 import copy
 footholds = [[1],[2,3],[4],[None],[None],[None]]
 
@@ -353,7 +353,20 @@ a = [1,2,3,4,5,6,7,8,9]
 # print list(a[0:3]), a[3:6]
 # print np.array([1,1,1]).reshape((3,1))
 a = np.array([[1,2,3],[4,5,6]])
-print a
-a[0,0:3] = np.array([9,9,9])
-print a
 
+def test_func(*argv):
+	# for arg in argv:
+	# 	print "another arg through *argv :", arg
+	no_error = False
+	if (no_error == True):
+		return 1
+	else:
+		raise Exception
+
+try:
+	out = test_func("asdf",2,3,4)
+except:
+	print 'exception'
+
+Jv = np.zeros((3,3))
+print Jv

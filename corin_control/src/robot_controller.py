@@ -28,6 +28,7 @@ from std_msgs.msg import String 			# ui control
 import tf 		 							# ROS transform library
 
 ## Services
+from service_handler import ServiceHandler
 # from corin_control.srv import UiState 	# NOT USED
 from corin_msgs.srv import RigidBody # compute CRBI & CoM
 from corin_msgs.srv import PlanPath
@@ -102,7 +103,7 @@ class CorinManager:
 
 		## set up publisher and subscriber topics
 		self.__initialise_topics__()
-		# self.__initialise_services__()
+		self.__initialise_services__()
 
 		## initialises robot transform
 		self.Visualizer.robot_broadcaster.sendTransform( (0.,0.,BODY_HEIGHT), (0.,0.,0.,1.), 
@@ -190,9 +191,12 @@ class CorinManager:
 		# Sleep for short while for topics to be initiated properly
 		rospy.sleep(0.5)
 
-	# def rigid_body_service(self, mp):
-	# 	pass
+	def __initialise_services__(self):
+		""" Initialises services used in manager """
 
+		self.grid_serv_ = ServiceHandler('GridMap/query_map', PlanPath)
+		self.rbim_serv_ = ServiceHandler('/corin/get_rigid_body_matrix', RigidBody)
+		
 	def publish_topics(self, q, q_log=None, q_trac=None):
 		""" Publish joint position to joint controller topics and
 			setpoint topic (for logging all setpoint states) 		"""
@@ -581,7 +585,7 @@ class CorinManager:
 						self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 					elif (self.control_loop == "close"):
 						## Closed-loop control on bodypose. Move by sum of desired pose and error 
-						comp_world_X_base = self.update_world_X_base(self.Robot.P6d.world_X_base + K_BP*P6e_world_X_base)
+						comp_world_X_base = transform_world_X_base(self.Robot.P6d.world_X_base + K_BP*P6e_world_X_base)
 						comp_base_X_world = np.linalg.inv(comp_world_X_base)
 						self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 							
@@ -624,32 +628,34 @@ class CorinManager:
 				
 				mp = RosMotionPlan(setpoint = qtrac, gait_phase = self.Robot.Gait.cs)
 
-				# rospy.wait_for_service('/corin/get_rigid_body_matrix')
-				# try:
-				# 	getInertiaState = rospy.ServiceProxy('/corin/get_rigid_body_matrix', RigidBody)
-				# 	resp1 = getInertiaState(mp)
-				# 	self.Robot.update_com_crbi(resp1.CoM, resp1.CRBI)
-					
-				# 	p_foot = []
-				# 	for j in range(0,6):
-				# 		if (self.Robot.Gait.cs[j] == 0):
-				# 			world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3], 
-				# 				  					(-self.Robot.P6c.base_X_CoM[:3].flatten()+self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
-				# 			p_foot.append(world_CoM_X_foot.copy())
-						
-				# 	foot_force = self.ForceDist.resolve_force(v3ca, v3wa, p_foot, 
-				# 												self.Robot.P6c.base_X_CoM[:3], 
-				# 												self.Robot.CRBI, self.Robot.Gait.cs )
-				# 	joint_torque = self.Robot.force_to_torque(foot_force)
+				# Compute CRBI and CoM, then compute foot force distribution and joint torque
+				# if (self.rbim_serv_.available):
+				# 	try:
+				# 		resp1 = self.rbim_serv_.call(mp)
+				# 		rbim_valid = True
+				# 	except:
+				# 		rbim_valid = False
 
-				# 	## update logging parameters
-				# 	qlog.effort = np.zeros(6).flatten().tolist() + joint_torque.flatten().tolist()
-				# 	qtrac.effort = np.zeros(6).flatten().tolist() + joint_torque.flatten().tolist()
-				# 	mp = RosMotionPlan(setpoint = qtrac, gait_phase = self.Robot.Gait.cs)
+				# 	if (rbim_valid):
+				# 		self.Robot.update_com_crbi(resp1.CoM, resp1.CRBI)
 					
-				# except rospy.ServiceException, e:
-				# 	print "Service call failed: %s"%e
+				# 		p_foot = []
+				# 		for j in range(0,6):
+				# 			if (self.Robot.Gait.cs[j] == 0):
+				# 				world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3], 
+				# 					  					(-self.Robot.P6c.base_X_CoM[:3].flatten()+self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
+				# 				p_foot.append(world_CoM_X_foot.copy())
+							
+				# 		foot_force = self.ForceDist.resolve_force(v3ca, v3wa, p_foot, 
+				# 													self.Robot.P6c.base_X_CoM[:3], 
+				# 													self.Robot.CRBI, self.Robot.Gait.cs )
+				# 		joint_torque = self.Robot.force_to_torque(foot_force)
 
+				# 		## update logging parameters
+				# 		qlog.effort = np.zeros(6).flatten().tolist() + joint_torque
+				# 		qtrac.effort = np.zeros(6).flatten().tolist() + joint_torque
+				# 		mp = RosMotionPlan(setpoint = qtrac, gait_phase = self.Robot.Gait.cs)
+				
 				# publish appended joint angles if motion valid
 				self.publish_topics(qd, qlog, mp)
 				qd_prev = JointTrajectoryPoints(18,(qd.t, qd.xp, qd.xv, qd.xa))
@@ -751,9 +757,7 @@ class CorinManager:
 
 				self.Robot._initialise()
 				
-				print 'Requesting Planning service'
-				rospy.wait_for_service('GridMap/query_map')
-				try:
+				if (self.grid_serv_.available):
 					start = Pose()
 					goal  = Pose()
 					start.position.x = ps[0]*self.GridMap.resolution
@@ -761,43 +765,19 @@ class CorinManager:
 					goal.position.x = pf[0]*self.GridMap.resolution
 					goal.position.y = pf[1]*self.GridMap.resolution
 
-					path_planner = rospy.ServiceProxy('GridMap/query_map', PlanPath)
-					path_generat = path_planner(start, goal)
-					motion_plan  = planpath_to_motionplan(path_generat)
-				except rospy.ServiceException, e:
-					print "Service call failed: %s"%e
-
-				if (motion_plan is not None):
-					if (self.main_controller(motion_plan)):
-						self.Robot.alternate_phase()
-
+					try:
+						print 'Requesting Planning service'
+						path_generat = self.grid_serv_.call(start, goal)
+						plan_exist = True
+					except:
+						plan_exist = False
+					
+					if (plan_exist):
+						motion_plan  = planpath_to_motionplan(path_generat)
+						if (motion_plan is not None):
+							if (self.main_controller(motion_plan)):
+								self.Robot.alternate_phase()
+				else:
+					print 'Planning service unavailable, exiting...'
 		else:
 			rospy.sleep(0.5)
-
-	def update_world_X_base(self, q):
-		# rotates in sequence x, y, z in world frame 
-		tx = q[0]
-		ty = q[1]
-		tz = q[2]
-		qx_sin = np.sin(q[3])
-		qy_sin = np.sin(q[4])
-		qz_sin = np.sin(q[5])
-		qx_cos = np.cos(q[3])
-		qy_cos = np.cos(q[4])
-		qz_cos = np.cos(q[5])
-
-		world_X_base = np.identity(4)
-		world_X_base[0,0] =  qz_cos*qy_cos
-		world_X_base[0,1] = -qz_sin*qx_cos + qz_cos*qy_sin*qx_sin
-		world_X_base[0,2] =  qz_sin*qx_sin + qz_cos*qy_sin*qx_cos
-		world_X_base[0,3] =  tx
-		world_X_base[1,0] =  qz_sin*qy_cos
-		world_X_base[1,1] =  qz_cos*qx_cos + qz_sin*qy_sin*qx_sin
-		world_X_base[1,2] = -qz_cos*qx_sin + qz_sin*qy_sin*qx_cos
-		world_X_base[1,3] =  ty
-		world_X_base[2,0] = -qy_sin
-		world_X_base[2,1] =  qy_cos*qx_sin
-		world_X_base[2,2] =  qy_cos*qx_cos
-		world_X_base[2,3] =  tz
-		
-		return world_X_base

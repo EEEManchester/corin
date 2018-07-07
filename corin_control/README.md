@@ -2,7 +2,7 @@
 
 ## Overview
 
-This package is the robot's core controller. The launch files in this package is used to control the robot's joints in Gazebo. The file 'main.py', creates an instance of the robot controller and all actions are invoked from here. 
+This package is the robot's core controller. The file 'main.py', creates an instance of the robot controller and all actions are invoked from here. 
 
 ## Demonstrations
 To run a prescripted motion:

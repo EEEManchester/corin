@@ -265,7 +265,7 @@ class RobotState:
 
 		for j in range(0,6):
 			# Transform foot force from world to hip frame
-			self.Leg[j].XHd.update_world_X_coxa(self.Robot.XHd.world_X_base)
+			self.Leg[j].XHd.update_world_X_coxa(self.XHd.world_X_base)
 			self.Leg[j].F6d.world_X_foot[:3] = fforce[j*3:j*3+3]
 			self.Leg[j].F6d.coxa_X_foot[:3] = mX(self.Leg[j].XHd.coxa_X_world[:3,:3],self.Leg[j].F6d.world_X_foot[:3])
 

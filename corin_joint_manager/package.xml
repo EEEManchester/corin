@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <package>
-  <name>corin_manager</name>
-  <version>0.0.0</version>
-  <description>The corin_manager package</description>
+  <name>corin_joint_manager</name>
+  <version>1.0.0</version>
+  <description>The corin_joint_manager package</description>
 
-  <maintainer email="wilson@todo.todo">wilson</maintainer>
+  <maintainer email="wei.cheah@manchester.ac.uk">wilson</maintainer>
   <license>BSD</license>
-  <author email="wilson@todo.todo">wilson</author>
+  <author email="wei.cheah@manchester.ac.uk">wilson</author>
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>cmake_modules</build_depend>
