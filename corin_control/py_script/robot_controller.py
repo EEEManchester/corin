@@ -44,9 +44,9 @@ class CorinManager:
 		rospy.init_node('CorinController') 		# Initialises node
 		self.rate 	  = rospy.Rate(CTR_RATE)	# Controller rate
 
-		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.Action	= control_interface.ControlInterface()	# control action class	
-		self.GridMap   = GridMap('flat')
+		self.Robot 	= robot_class.RobotState() 				# robot class
+		self.GridMap   = GridMap()
 		# self.PathPlan  = PathPlanner(self.GridMap)
 		self.ForceDist = QPForceDistribution()
 
@@ -130,6 +130,12 @@ class CorinManager:
 		## set control flag states
 		if (self.interface == 'rviz'):
 			self.control_loop = 'open'
+
+		## Set map to that available in service
+		try:
+			self.GridMap.set_map(rospy.get_param('GridMap/map_name'))
+		except Exception, e:
+			print 'Grid Map has not been set'
 
 	def __initialise_topics__(self):
 		""" Initialises publishers and subscribers """
@@ -398,7 +404,7 @@ class CorinManager:
 		w_base_X_NRP = motion_plan.f_world_base_X_NRP
 		world_X_footholds = motion_plan.f_world_X_foot
 		base_X_footholds  = motion_plan.f_base_X_foot
-		print world_X_footholds[0].xp
+		
 		## Publish multiple times to ensure it is published 
 		for c in range(0,3):
 			self.Visualizer.publish_robot(wXbase_offset)
@@ -411,7 +417,7 @@ class CorinManager:
 		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 		## User input
-		print 'wXb: ', len(world_X_base)
+		
 		print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 		print 'Execute Path? '
 		if (self.interface == 'gazebo'):
@@ -744,6 +750,7 @@ class CorinManager:
 				self.Robot._initialise()
 				
 				# motion_plan = self.PathPlan.generate_motion_plan(self.Robot, start=ps, end=pf)
+				print 'Requesting Planning service'
 				rospy.wait_for_service('GridMap/query_map')
 				try:
 					start = Pose()

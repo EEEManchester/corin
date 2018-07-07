@@ -28,6 +28,7 @@ class GridMapRos:
 	def __hotstart_initialise__(self):
 		self.__initialise_topics__()
 		self.__initialise_services__()
+		self.__initialise_parameters__()
 		self.convert_graph_to_pointcloud()
 
 	def __initialise_topics__(self):
@@ -39,8 +40,15 @@ class GridMapRos:
 		""" setup service call """
 
 		self.plan_path = rospy.Service(self.namespace + '/query_map', PlanPath, self.serv_path_planner)
+		self.set_grid_map  = rospy.Service(self.namespace + '/set_grid_map', GenericString, self.serv_set_grid_map)
 		self.grid_map  = rospy.Service(self.namespace + '/grid_map', GridMap, self.serv_get_grid_map)
 		print "Ready to plan path."
+
+	def __initialise_parameters__(self):
+		""" initialise ROS parameters """
+
+		rospy.set_param(self.namespace + '/map_name', self.GridMap.map_name)
+		rospy.set_param(self.namespace + '/resolution', self.GridMap.resolution)
 
 	def initialise_robot_state(self, ps, pf):
 		## Set robot to starting position in default configuration
@@ -55,6 +63,15 @@ class GridMapRos:
 		self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 
 		self.Robot._initialise()
+
+	def serv_set_grid_map(self, req):
+		""" Set to selected grid map """
+
+		print "Service - Setting Grid Map"
+		self.GridMap = PyGridMap(req.request)
+		self.Planner = PathPlanner(self.GridMap)
+		self.convert_graph_to_pointcloud()
+		return GenericStringResponse(response = "Success")
 
 	def serv_path_planner(self, req):
 		""" Plans path given start and end position """

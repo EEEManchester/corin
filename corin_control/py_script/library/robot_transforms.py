@@ -99,6 +99,7 @@ class ArrayHomogeneousTransform:
 		# self.world_X_base = np.identity(4)
 		self.world_X_foot = np.identity(4)
 		self.world_X_NRP  = np.identity(4)
+		self.world_X_hip  = np.identity(4)
 
 		# Transformations wrt world frame: base to parts
 		self.world_base_X_foot = np.identity(4)
@@ -224,6 +225,10 @@ class ArrayHomogeneousTransform:
 		self.base_X_foot[2,1] =  (q2_cos*q3_cos - q2_sin*q3_sin)
 		self.base_X_foot[2,1] =  0.
 		self.base_X_foot[2,3] =  (q2_sin*q3_cos + q2_cos*q3_sin)*L3 + q2_sin*L2
+
+	def update_world_X_coxa(self, mx_world_X_base):
+		self.world_X_coxa = np.dot(mx_world_X_base, self.base_X_coxa)
+		self.coxa_X_world = np.linalg.inv(self.world_X_coxa)
 
 	def update_world_X_foot(self, mx_world_X_base):
 		# if (self.n==4):
@@ -379,6 +384,9 @@ XH = ArrayHomogeneousTransform(0)
 
 # world_X_base = mX(v3_X_m(np.array([0.,0.,0.1])),r3_X_m(np.array([0.,0.,0.1])))
 # XH.update_world_base_X_NRP( world_X_base )
+# XH.update_world_X_coxa(world_X_base)
+# print XH.world_X_coxa
+# print XH.coxa_X_world
 
 ## ============================================================================================================================= ##
 ## ============================================================================================================================= ##

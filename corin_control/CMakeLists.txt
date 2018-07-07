@@ -52,6 +52,7 @@ find_package(Eigen REQUIRED)
    RigidBody.srv  # CRBI and CoM
    PlanPath.srv   # Grid path planning
    GridMap.srv    # Grid map
+   GenericString.srv # Generic string service, SISO
  )
 
 ## Generate actions in the 'action' folder

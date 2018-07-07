@@ -28,11 +28,11 @@ class ControlInterface:
 		rospy.set_param('/corin/walk_down', False)	# walk down
 		rospy.set_param('/corin/rotate', False)
 		
-		rospy.set_param('/corin/g2w_transition', False)
-		rospy.set_param('/corin/w2g_transition', False)
+		# rospy.set_param('/corin/g2w_transition', False)
+		# rospy.set_param('/corin/w2g_transition', False)
 		
-		rospy.set_param('/corin/g2c_transition', False)
-		rospy.set_param('/corin/c2g_transition', False)
+		# rospy.set_param('/corin/g2c_transition', False)
+		# rospy.set_param('/corin/c2g_transition', False)
 
 		rospy.set_param('/corin/plan_path', False)
 
@@ -204,21 +204,21 @@ class ControlInterface:
 			rospy.set_param('/corin/rotate',False)
 			return self.rotate(x_cob, w_cob)
 
-		elif (rospy.get_param('/corin/g2w_transition')==True):
-			rospy.set_param('/corin/g2w_transition',False)
-			return self.gnd_X_wall_transition(x_cob, w_cob)
+		# elif (rospy.get_param('/corin/g2w_transition')==True):
+		# 	rospy.set_param('/corin/g2w_transition',False)
+		# 	return self.gnd_X_wall_transition(x_cob, w_cob)
 
-		elif (rospy.get_param('/corin/w2g_transition')==True):
-			rospy.set_param('/corin/w2g_transition',False)
-			return self.wall_X_gnd_transition(x_cob, w_cob)
+		# elif (rospy.get_param('/corin/w2g_transition')==True):
+		# 	rospy.set_param('/corin/w2g_transition',False)
+		# 	return self.wall_X_gnd_transition(x_cob, w_cob)
 
-		elif (rospy.get_param('/corin/g2c_transition')==True):
-			rospy.set_param('/corin/g2c_transition',False)
-			return self.gnd_X_chimney_transition(x_cob, w_cob)
+		# elif (rospy.get_param('/corin/g2c_transition')==True):
+		# 	rospy.set_param('/corin/g2c_transition',False)
+		# 	return self.gnd_X_chimney_transition(x_cob, w_cob)
 
-		elif (rospy.get_param('/corin/c2g_transition')==True):
-			rospy.set_param('/corin/c2g_transition',False)
-			return self.chimney_X_gnd_transition(x_cob, w_cob)
+		# elif (rospy.get_param('/corin/c2g_transition')==True):
+		# 	rospy.set_param('/corin/c2g_transition',False)
+		# 	return self.chimney_X_gnd_transition(x_cob, w_cob)
 
 		elif (rospy.get_param('/corin/plan_path')==True):
 			rospy.set_param('/corin/plan_path',False)

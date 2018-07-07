@@ -44,8 +44,8 @@ class LegClass:
 		self.V6d = robot_transforms.ArrayVector6D() 							# velocity: desired
 		self.A6c = robot_transforms.ArrayVector6D() 							# acceleration: current
 		self.A6d = robot_transforms.ArrayVector6D() 							# acceleration: desired
-		self.F6c = robot_transforms.ArrayVector6D()
-		self.F6d = robot_transforms.ArrayVector6D()
+		self.F6c = robot_transforms.ArrayVector6D() 							# forces: current
+		self.F6d = robot_transforms.ArrayVector6D() 							# forces: desired
 
 		self.transfer_phase_change = False 		# Flag for enabling trajectory to be generated at transfer
 		self.support_phase_change  = False 		# Flag for enabling trajectory to be generated at transfer

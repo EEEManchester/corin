@@ -20,7 +20,9 @@ MAX_FLAT_H = 0.05
 MIN_FLAT_H = -0.05
 
 class GridMap:
-	def __init__(self,map_name):
+	def __init__(self,map_name=None):
+		self.map_name = map_name
+
 		self.resolution	= 0.03	# size of cell, (m) - TARGET: 0.03
 		self.map_size_m = (0,0) # set map size
 		self.map_size_g = (0,0) # set map size
@@ -31,7 +33,8 @@ class GridMap:
 		self.G_wall = nx.Graph()
 		self.G_hole = nx.Graph()
 
-		self.__initialise_graph__(map_name)
+		if (map_name is not None):
+			self.__initialise_graph__(map_name)
 
 	def __load_map__(self, map_name):
 		""" Loads from a list of pre-defined maps """
@@ -101,7 +104,7 @@ class GridMap:
 		# self.Map = self.set_moore_edge(self.Map)		
 		# self.Map = self.remove_edges(self.Map)
 
-		print 'Initialised Map - '
+		print 'Initialised Map - ', self.map_name
 		print '\tGrid  : ', gridx, 'x', gridy
 		print '\tResolution: ', self.resolution, 'm^2'
 		print '==============================================='
@@ -363,6 +366,11 @@ class GridMap:
 
 		self.G_wall = nx.path_graph(i_wall) 	
 		self.G_hole = nx.path_graph(i_hole)
+
+	def set_map(self, map_name):
+		""" Initialise map """
+		self.map_name = map_name
+		self.__initialise_graph__(map_name)
 
 	def set_moore_edge(self, G):
 		""" generates moore edges for graph """

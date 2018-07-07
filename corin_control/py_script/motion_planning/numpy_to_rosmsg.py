@@ -179,7 +179,7 @@ def foothold_list_to_marker_array(path_arr, stamp=None, frame_id=None):
 
 	## Define Variables ##
 	mark_array = MarkerArray()
-	print path_arr[0].xp, len(path_arr[0].t)
+	
 	## assumes that footholds array are of the same size
 	for j in range(0,6):
 		for i in range (0,len(path_arr[j].t)):
@@ -371,9 +371,7 @@ def array_to_pointcloud2(cloud_arr, stamp=None, frame_id=None):
         cloud_msg.header.stamp = stamp
     if frame_id is not None:
         cloud_msg.header.frame_id = frame_id
-    # print cloud_arr
-    # print 'max x', np.amax(cloud_arr.shape[0])
-    # print 'max y', np.amax(cloud_arr.shape[1])
+    
     cloud_msg.height = cloud_arr.shape[0]
     cloud_msg.width = cloud_arr.shape[1]
     cloud_msg.fields = dtype_to_fields(cloud_arr.dtype)
@@ -506,7 +504,7 @@ def list_to_multiarray(idata):
 	adim = MultiArrayDimension()
 	adim.size = len(idata[0])
 	adim.stride = len(idata)
-	# print 'stride: ', adim.stride
+	
 	return adim, list(itertools.chain.from_iterable(idata))
 
 def planpath_to_motionplan(plan_path):
@@ -569,7 +567,7 @@ def planpath_to_motionplan(plan_path):
 	## Remap Foot Contact List
 	nc_wXf = nc_bXf = nc_wbXN = 0
 	for j in range(0,6):
-		# print 'f size: ', j, '\t', plan_path.f_world_X_foot.layout.dim[j].stride
+		
 		for i in range(0, plan_path.f_world_X_foot.layout.dim[j].stride):
 			motion_plan.f_world_X_foot[j].xp.append(np.array(plan_path.f_world_X_foot.data[nc_wXf*3+i*3:nc_wXf*3+i*3+3]).reshape((3,1)))
 			motion_plan.f_world_X_foot[j].t.append(i)

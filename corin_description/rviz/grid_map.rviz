@@ -7,6 +7,7 @@ Panels:
         - /Global Options1
         - /Status1
         - /RobotModel1/Links1
+        - /PointCloud21
         - /Path1
         - /MarkerArray1
       Splitter Ratio: 0.5
@@ -228,7 +229,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.0299999993
       Style: Boxes
-      Topic: /corin/point_cloud
+      Topic: /GridMap/point_cloud
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: false
@@ -303,18 +304,18 @@ Visualization Manager:
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.212788194
-        Y: 0.090134874
-        Z: 0.22155425
+        X: 0.236726761
+        Y: 0.215371564
+        Z: 0.201215222
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.18479614
+      Pitch: 0.169796139
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.48537278
+      Yaw: 2.92537212
     Saved: ~
 Window Geometry:
   Control Interface:
