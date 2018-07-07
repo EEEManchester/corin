@@ -1,6 +1,6 @@
 #include "ros/ros.h"
-#include "corin_control/JointState.h"
-#include "corin_control/Imu.h"
+#include "corin_msgs/JointState.h"
+#include "corin_msgs/Imu.h"
 
 #include "std_msgs/String.h"
 #include "std_msgs/Float64.h"
@@ -16,8 +16,8 @@ sensor_msgs::Imu gazebo_imu, ahrs_imu;
   ========================================================================*/
 
 // Service to return motor state and torque for a leg i.e. three motor state and torque
-bool getJointState(corin_control::JointState::Request  &req,
-                    corin_control::JointState::Response &res)
+bool getJointState(corin_msgs::JointState::Request  &req,
+                    corin_msgs::JointState::Response &res)
 {
   res.jointState  = current_jointState;                       // motor state
   //ROS_INFO("Request processed");
@@ -26,8 +26,8 @@ bool getJointState(corin_control::JointState::Request  &req,
 }
 
 // Gazebo Service to return imu state
-bool getGzImuState(corin_control::Imu::Request  &req,
-                    corin_control::Imu::Response &res)
+bool getGzImuState(corin_msgs::Imu::Request  &req,
+                    corin_msgs::Imu::Response &res)
 {
   res.ImuData  = gazebo_imu;                       // imu state
   //ROS_INFO("Request processed");
@@ -36,8 +36,8 @@ bool getGzImuState(corin_control::Imu::Request  &req,
 }
 
 // Service to return imu state
-bool getAhImuState(corin_control::Imu::Request  &req,
-                    corin_control::Imu::Response &res)
+bool getAhImuState(corin_msgs::Imu::Request  &req,
+                    corin_msgs::Imu::Response &res)
 {
   res.ImuData  = ahrs_imu;                       // imu state
   //ROS_INFO("Request processed");

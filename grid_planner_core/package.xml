@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>grid_planner_core</name>
+  <version>1.0.0</version>
+  <description>The grid_planner_core package</description>
+
+  <maintainer email="wei.cheah@manchester.ac.uk">wilson</maintainer>
+  <license>Private</license>
+  <author email="wei.cheah@manchester.ac.uk">wilson</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  
+  <depend>cmake_modules</depend>
+  <depend>geometry_msgs</depend>
+  <depend>message_generation</depend>
+  <depend>roscpp</depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>tf</depend>
+
+  <exec_depend>message_runtime</exec_depend>
+
+</package>

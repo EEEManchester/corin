@@ -8,10 +8,13 @@ import sys; sys.dont_write_bytecode = True
 from itertools import cycle
 
 ## Personal libraries
-from library import *			# library modules to include
-from motion_planning import *	# library modules on motion planning
+from corin_control import *			# library modules to include
+# from motion_planning import *	# library modules on motion planning
 import control_interface 		# action selection from ROS parameter server
 from rviz_visual import *
+# from grid_planner import grid_map
+from grid_planner_core.grid_map import GridMap
+from grid_planner_core.numpy_to_rosmsg import *
 
 ## ROS messages & libraries
 import rospy
@@ -25,9 +28,9 @@ from std_msgs.msg import String 			# ui control
 import tf 		 							# ROS transform library
 
 ## Services
-from corin_control.srv import UiState 	# NOT USED
-from corin_control.srv import RigidBody # compute CRBI & CoM
-from corin_control.srv import PlanPath 	# motion planning
+# from corin_control.srv import UiState 	# NOT USED
+from corin_msgs.srv import RigidBody # compute CRBI & CoM
+from corin_msgs.srv import PlanPath
 
 ## Robotis ROS msgs for joint control
 from robotis_controller_msgs.msg import SyncWriteMultiFloat
@@ -35,7 +38,7 @@ from robotis_controller_msgs.msg import SyncWriteMultiFloat
 from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import Pose
 
-from corin_control.msg import MotionPlan as RosMotionPlan
+from corin_msgs.msg import MotionPlan as RosMotionPlan
 
 #####################################################################
 
@@ -47,7 +50,6 @@ class CorinManager:
 		self.Action	= control_interface.ControlInterface()	# control action class	
 		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.GridMap   = GridMap()
-		# self.PathPlan  = PathPlanner(self.GridMap)
 		self.ForceDist = QPForceDistribution()
 
 		self.resting   = False 		# Flag indicating robot standing or resting
@@ -611,7 +613,7 @@ class CorinManager:
 
 				## LOGGING: initialise variable and set respective data ##
 				qlog 		  = JointState()
-				qlog.name 	  = ROBOT_STATE + JOINT_NAME
+				qlog.name 	  = ROBOT_STATE + list(JOINT_NAME)
 				qlog.position = v3cp.flatten().tolist() + v3wp.flatten().tolist() + qd.xp.tolist()
 				qlog.velocity = v3cv.flatten().tolist() + v3wv.flatten().tolist() + qd.xv.tolist()
 				
@@ -749,7 +751,6 @@ class CorinManager:
 
 				self.Robot._initialise()
 				
-				# motion_plan = self.PathPlan.generate_motion_plan(self.Robot, start=ps, end=pf)
 				print 'Requesting Planning service'
 				rospy.wait_for_service('GridMap/query_map')
 				try:

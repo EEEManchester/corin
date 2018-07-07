@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(corin_rviz_plugin)
 find_package(catkin REQUIRED COMPONENTS
-  corin_control
+  corin_msgs
   rviz
 )
 catkin_package()

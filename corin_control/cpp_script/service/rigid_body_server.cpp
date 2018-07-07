@@ -1,7 +1,7 @@
 #include "ros/ros.h"
 
-#include "corin_control/MotionPlan.h"
-#include "corin_control/RigidBody.h"
+#include "corin_msgs/MotionPlan.h"
+#include "corin_msgs/RigidBody.h"
 
 #include "std_msgs/String.h"
 #include "std_msgs/Float64.h"
@@ -27,8 +27,8 @@ Eigen::MatrixXd CRBI(JointState qpr);
   ========================================================================*/
 
 // Service to return motor state and torque for a leg i.e. three motor state and torque
-bool getInertiaState(corin_control::RigidBody::Request  &req,
-                    corin_control::RigidBody::Response &res)
+bool getInertiaState(corin_msgs::RigidBody::Request  &req,
+                    corin_msgs::RigidBody::Response &res)
 {
   // res.jointState  = current_jointState;                       // motor state
   if ( (req.motionPlan.setpoint.positions.size() == 24) && 

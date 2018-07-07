@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<launch>
+
+	<arg name="gui" default="false"/> 		<!-- True: manual control   False: real sensor -->
+	<!-- <arg name="rviz_conf" default="$(find grid_planner)/rviz/grid_map.rviz"/> -->
+
+	<!-- load displays -->
+	<param name="use_gui" value="true"/>
+	<node name="rviz" pkg="rviz" type="rviz" output="screen" required="true" args="-d $(arg rviz_conf) -f world" />
+
+	<!-- Launch ROS wrapped grid-based planner -->
+	<node name="grid_map" pkg="grid_planner" type="ros_grid_planner" output="screen"/>
+
+</launch>

@@ -18,7 +18,6 @@ find_package(catkin REQUIRED COMPONENTS
   control_msgs
   gazebo_msgs
   geometry_msgs
-  grid_map_msgs
   nav_msgs
   message_filters
   message_generation
@@ -31,29 +30,28 @@ find_package(catkin REQUIRED COMPONENTS
   trajectory_msgs
   qpoases
   visualization_msgs
+  grid_planner_core
 )
 
 find_package(RBDL REQUIRED)
 find_package(Eigen REQUIRED)
 
+catkin_python_setup()
+
 ################################################################################
 # Declare ROS messages, services and actions
 ################################################################################
- add_message_files(
-   FILES
-   MotionPlan.msg
-  )
+ # add_message_files(
+ #   FILES
+ #  )
 
- add_service_files(
-   FILES
-   JointState.srv
-   Imu.srv
-   UiState.srv    # user interface
-   RigidBody.srv  # CRBI and CoM
-   PlanPath.srv   # Grid path planning
-   GridMap.srv    # Grid map
-   GenericString.srv # Generic string service, SISO
- )
+ # add_service_files(
+ #   FILES
+ #   JointState.srv
+ #   Imu.srv
+ #   UiState.srv    # user interface
+ #   RigidBody.srv  # CRBI and CoM
+ # )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -67,7 +65,6 @@ find_package(Eigen REQUIRED)
    actionlib_msgs
    control_msgs
    geometry_msgs
-   grid_map_msgs
    robotis_controller_msgs
    sensor_msgs
    std_msgs

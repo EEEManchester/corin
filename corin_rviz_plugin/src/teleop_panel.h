@@ -5,7 +5,7 @@
 #ifndef Q_MOC_RUN
 # include <ros/ros.h>
 # include <std_msgs/String.h>
-#include "corin_control/UiState.h"
+#include <corin_msgs/UiState.h>
 # include <QPushButton>
 # include <QFrame>
 # include <QGroupBox>

@@ -1,0 +1,2 @@
+trajectory_msgs/JointTrajectoryPoint setpoint
+int8[] gait_phase

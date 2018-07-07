@@ -39,7 +39,7 @@ TeleopPanel::TeleopPanel( QWidget* parent )
   ui_publisher_ = nh_.advertise<std_msgs::String>( "/corin/ui_execute", 1 );
 
   //***************** SERVICES ***************//
-  ui_client_ = nh_.serviceClient<corin_control::UiState>("/corin/set_ui_state");
+  ui_client_ = nh_.serviceClient<corin_msgs::UiState>("/corin/set_ui_state");
 
   button_front_ = new QPushButton("Forward", this);
   button_back_ = new QPushButton("Backward", this);
@@ -298,7 +298,7 @@ bool TeleopPanel::sendSrvCmd(std::string srv_cmd)
   std_msgs::String msg;
   msg.data = srv_cmd;
   
-  corin_control::UiState srv;
+  corin_msgs::UiState srv;
   srv.request.state = msg;
   
   if (ui_client_.call(srv))

@@ -1,0 +1,3 @@
+std_msgs/String map_name
+---
+corin_msgs/GridMap grid_map

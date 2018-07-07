@@ -1,4 +1,5 @@
-<package>
+<?xml version="1.0"?>
+<package format="2">
   <name>corin_rviz_plugin</name>
   <version>0.1.0</version>
   <description>
@@ -10,15 +11,13 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>qtbase5-dev</build_depend>
-  <build_depend>rviz</build_depend>
-  <build_depend>corin_control</build_depend>
+  <depend>qtbase5-dev</depend>
+  <depend>rviz</depend>
+  <depend>corin_msgs</depend>
 
-  <run_depend>libqt5-core</run_depend>
-  <run_depend>libqt5-gui</run_depend>
-  <run_depend>libqt5-widgets</run_depend>
-  <run_depend>rviz</run_depend>
-  <run_depend>corin_control</run_depend>
+  <exec_depend>libqt5-core</exec_depend>
+  <exec_depend>libqt5-gui</exec_depend>
+  <exec_depend>libqt5-widgets</exec_depend>
 
   <export>
       <rosdoc config="${prefix}/rosdoc.yaml"/>

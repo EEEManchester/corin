@@ -5,8 +5,8 @@
 """
 import rospy
 
-from library import *
-
+# from library import *
+from corin_control import *
 class ControlInterface:
 	def __init__(self):
 		self.mode  = 1 								# 1: pose, 2: walk
