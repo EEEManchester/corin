@@ -17,13 +17,23 @@ class KDL():
 
 	def leg_jacobian(self, q=None):
 
+		Jv = np.zeros((3,3))
 		try:
-			q1 = q.item(0); q2 = q.item(1); q3 = q.item(2)
+			# q1 = q.item(0); q2 = q.item(1); q3 = q.item(2)
+			q1 = q[0]; q2 = q[1]; q3 = q[2]
 			# print 'q: ', q1, q2, q3
-			Jv = np.matrix([	[-np.sin(q1)*(L3*np.cos(q2+q3)+np.cos(q2)*L2+L1),     -np.cos(q1)*(L3*np.sin(q2+q3)+np.sin(q2)*L2),     -np.sin(q2+q3)*np.cos(q1)*L3 ],
-								[ np.cos(q1)*(L3*np.cos(q2+q3)+np.cos(q2)*L2+L1),     -np.sin(q1)*(L3*np.sin(q2+q3)+np.sin(q2)*L2),     -np.sin(q2+q3)*np.sin(q1)*L3 ],
-								[ 0,                                          		   L3*np.cos(q2+q3)+np.cos(q2)*L2,                	 L3*np.cos(q2+q3)]			])
+			# Jv = np.array([	[-np.sin(q1)*(L3*np.cos(q2+q3)+np.cos(q2)*L2+L1),     -np.cos(q1)*(L3*np.sin(q2+q3)+np.sin(q2)*L2),     -np.sin(q2+q3)*np.cos(q1)*L3 ],
+			# 					[ np.cos(q1)*(L3*np.cos(q2+q3)+np.cos(q2)*L2+L1),     -np.sin(q1)*(L3*np.sin(q2+q3)+np.sin(q2)*L2),     -np.sin(q2+q3)*np.sin(q1)*L3 ],
+			# 					[ 0,                                          		   L3*np.cos(q2+q3)+np.cos(q2)*L2,                	 L3*np.cos(q2+q3)]			])
 
+			Jv[0,0] = -np.sin(q1)*(L3*np.cos(q2+q3)+np.cos(q2)*L2+L1)
+			Jv[0,1] = -np.cos(q1)*(L3*np.sin(q2+q3)+np.sin(q2)*L2)
+			Jv[0,2] = -np.sin(q2+q3)*np.cos(q1)*L3
+			Jv[1,0] = np.cos(q1)*(L3*np.cos(q2+q3)+np.cos(q2)*L2+L1)
+			Jv[1,1] = -np.sin(q1)*(L3*np.sin(q2+q3)+np.sin(q2)*L2)
+			Jv[1,2] = -np.sin(q2+q3)*np.sin(q1)*L3
+			Jv[2,1] = L3*np.cos(q2+q3)+np.cos(q2)*L2
+			Jv[2,2] = L3*np.cos(q2+q3)
 			# print Jv
 			return Jv
 		except:
@@ -31,7 +41,11 @@ class KDL():
 
 
 	def transpose_leg_jacobian(self, q=None):
-		return self.leg_jacobian(q).transpose()
+		
+		try:
+			return self.leg_jacobian(q).transpose()
+		except: 
+			return None
 
 	def leg_FK(self, q=None):
 
@@ -151,11 +165,11 @@ class KDL():
 
 	## Torque to force mapping and vice versa uses the relationship: tau = J^(T)*f
 	def force_to_torque(self, q=None, f=None):
-		return self.transpose_leg_jacobian(q)*f
+		return np.dot(self.transpose_leg_jacobian(q),f)
 
 	def torque_to_force(self, q=None, tau=None):
 		# f = J^(-T)*tau
-		return inv(self.transpose_leg_jacobian(q))*tau
+		return np.dot(inv(self.transpose_leg_jacobian(q)),tau)
 
 	
 ## ================================================================================================ ##
