@@ -88,16 +88,20 @@ class GridMapRos:
 		pf = (int(req.goal.position.x/self.GridMap.resolution), 
 					int(req.goal.position.y/self.GridMap.resolution))
 		print ps, pf
-		self.initialise_robot_state(ps, pf)
+		if (self.GridMap.get_index_exists(ps) and self.GridMap.get_index_exists(pf)):
+			self.initialise_robot_state(ps, pf)
 
-		motion_plan = self.Planner.generate_motion_plan(self.Robot, start=ps, end=pf)
-		qbp, qbi, gphase, wXf, bXf, bXN = motionplan_to_planpath(motion_plan, "world")
-		
-		return PlanPathResponse(base_path = qbp, CoB = qbi, 
-															gait_phase = gphase, 
-															f_world_X_foot = wXf,
-															f_base_X_foot = bXf,
-															f_world_base_X_NRP = bXN)
+			motion_plan = self.Planner.generate_motion_plan(self.Robot, start=ps, end=pf)
+			qbp, qbi, gphase, wXf, bXf, bXN = motionplan_to_planpath(motion_plan, "world")
+			
+			return PlanPathResponse(base_path = qbp, CoB = qbi, 
+																gait_phase = gphase, 
+																f_world_X_foot = wXf,
+																f_base_X_foot = bXf,
+																f_world_base_X_NRP = bXN)
+		else:
+			print "Start or End goal out of bounds!"
+			return None
 
 	def serv_get_grid_map(self, req):
 		""" Returns grid map """

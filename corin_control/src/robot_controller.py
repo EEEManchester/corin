@@ -624,31 +624,34 @@ class CorinManager:
 				
 				mp = RosMotionPlan(setpoint = qtrac, gait_phase = self.Robot.Gait.cs)
 
-				# rospy.wait_for_service('/corin/get_rigid_body_matrix')
-				# try:
-				# 	getInertiaState = rospy.ServiceProxy('/corin/get_rigid_body_matrix', RigidBody)
-				# 	resp1 = getInertiaState(mp)
-				# 	self.Robot.update_com_crbi(resp1.CoM, resp1.CRBI)
+				try:
+					# rospy.wait_for_service('/corin/get_rigid_body_matrix',0.5)
+					# getInertiaState = rospy.ServiceProxy('/corin/get_rigid_body_matrix', RigidBody)
+					# resp1 = getInertiaState(mp)
+					# self.Robot.update_com_crbi(resp1.CoM, resp1.CRBI)
 					
-				# 	p_foot = []
-				# 	for j in range(0,6):
-				# 		if (self.Robot.Gait.cs[j] == 0):
-				# 			world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3], 
-				# 				  					(-self.Robot.P6c.base_X_CoM[:3].flatten()+self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
-				# 			p_foot.append(world_CoM_X_foot.copy())
+					p_foot = []
+					for j in range(0,6):
+						if (self.Robot.Gait.cs[j] == 0):
+							world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3], 
+								  					(-self.Robot.P6c.base_X_CoM[:3].flatten()+self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
+							p_foot.append(world_CoM_X_foot.copy())
 						
-				# 	foot_force = self.ForceDist.resolve_force(v3ca, v3wa, p_foot, 
-				# 												self.Robot.P6c.base_X_CoM[:3], 
-				# 												self.Robot.CRBI, self.Robot.Gait.cs )
-				# 	joint_torque = self.Robot.force_to_torque(foot_force)
+					foot_force = self.ForceDist.resolve_force(v3ca, v3wa, p_foot, 
+																self.Robot.P6c.base_X_CoM[:3], 
+																self.Robot.CRBI, self.Robot.Gait.cs )
+					joint_torque = self.Robot.force_to_torque(foot_force)
 
-				# 	## update logging parameters
-				# 	qlog.effort = np.zeros(6).flatten().tolist() + joint_torque.flatten().tolist()
-				# 	qtrac.effort = np.zeros(6).flatten().tolist() + joint_torque.flatten().tolist()
-				# 	mp = RosMotionPlan(setpoint = qtrac, gait_phase = self.Robot.Gait.cs)
+					## update logging parameters
+					qlog.effort = np.zeros(6).flatten().tolist() + joint_torque.flatten().tolist()
+					qtrac.effort = np.zeros(6).flatten().tolist() + joint_torque.flatten().tolist()
+					mp = RosMotionPlan(setpoint = qtrac, gait_phase = self.Robot.Gait.cs)
 					
-				# except rospy.ServiceException, e:
-				# 	print "Service call failed: %s"%e
+				except rospy.ServiceException, e:
+					print "Service call failed: %s"%e
+				except rospy.ROSException, e:
+						print "Service call failed: %s"%e
+						print "Is rigid body server running?"
 
 				# publish appended joint angles if motion valid
 				self.publish_topics(qd, qlog, mp)
@@ -731,7 +734,7 @@ class CorinManager:
 				print 'Planning path...'
 				self.Robot.support_mode = False
 
-				ps = (10,13); pf = (34,13)	# Short straight Line
+				ps = (10,13); pf = (20,13)	# Short straight Line
 				# ps = (10,14); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
 				# ps = (10,13); pf = (25,21)	# G2W - Left side up
