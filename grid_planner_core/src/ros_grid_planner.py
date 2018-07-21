@@ -132,12 +132,12 @@ class GridMapRos:
 
 if __name__ == "__main__":
 
-	RosGridMap = GridMapRos("wall_demo_left")
+	RosGridMap = GridMapRos("flat")
 	
 	print "ROS Grid Map Planner Initialised"
 	
 	## ==================================================== ##
-	## 												Test Scripts 									##
+	## 					Test Scripts 						##
 	## ==================================================== ##
 	## Grid Map
 	# rospy.wait_for_service('GridMap/grid_map')
@@ -171,7 +171,7 @@ if __name__ == "__main__":
 		RosGridMap.loop_cycle()
 
 ## ==================================================== ##
-## 											Service Example 								##
+## 					Service Example 					##
 ## ==================================================== ##
 # rospy.init_node('grid_map_planner')
 # add_two_ints_server()

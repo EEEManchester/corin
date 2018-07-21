@@ -731,11 +731,11 @@ class CorinManager:
 				print 'Planning path...'
 				self.Robot.support_mode = False
 
-				# ps = (10,13); pf = (15,13)	# Short straight Line
+				ps = (10,13); pf = (34,13)	# Short straight Line
 				# ps = (10,14); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
 				# ps = (10,13); pf = (25,21)	# G2W - Left side up
-				ps = (10,13); pf = (40,13)	# full wall or chimney 
+				# ps = (10,13); pf = (40,13)	# full wall or chimney 
 				# ps = (10,13); pf = (72,13) 	# wall and chimney demo
 
 				## Set robot to starting position in default configuration
@@ -751,26 +751,32 @@ class CorinManager:
 
 				self.Robot._initialise()
 				
-				print 'Requesting Planning service'
-				rospy.wait_for_service('GridMap/query_map')
-				try:
-					start = Pose()
-					goal  = Pose()
-					start.position.x = ps[0]*self.GridMap.resolution
-					start.position.y = ps[1]*self.GridMap.resolution
-					goal.position.x = pf[0]*self.GridMap.resolution
-					goal.position.y = pf[1]*self.GridMap.resolution
+				if (self.GridMap.get_index_exists(ps) and self.GridMap.get_index_exists(pf)):
+					try:
+						print 'Requesting Planning service...'
+						rospy.wait_for_service('GridMap/query_map', timeout=1.0)
+						start = Pose()
+						goal  = Pose()
+						start.position.x = ps[0]*self.GridMap.resolution
+						start.position.y = ps[1]*self.GridMap.resolution
+						goal.position.x = pf[0]*self.GridMap.resolution
+						goal.position.y = pf[1]*self.GridMap.resolution
 
-					path_planner = rospy.ServiceProxy('GridMap/query_map', PlanPath)
-					path_generat = path_planner(start, goal)
-					motion_plan  = planpath_to_motionplan(path_generat)
-				except rospy.ServiceException, e:
-					print "Service call failed: %s"%e
+						path_planner = rospy.ServiceProxy('GridMap/query_map', PlanPath)
+						path_generat = path_planner(start, goal)
+						motion_plan  = planpath_to_motionplan(path_generat)
 
-				if (motion_plan is not None):
-					if (self.main_controller(motion_plan)):
-						self.Robot.alternate_phase()
+						if (motion_plan is not None):
+							if (self.main_controller(motion_plan)):
+								self.Robot.alternate_phase()
 
+					except rospy.ServiceException, e:
+						print "Service call failed: %s"%e
+					except rospy.ROSException, e:
+						print "Service call failed: %s"%e
+						print "Is grid map server running?"
+				else:
+					print "Start or End goal out of bounds!"
 		else:
 			rospy.sleep(0.5)
 
