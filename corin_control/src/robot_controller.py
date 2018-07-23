@@ -40,7 +40,7 @@ from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import Pose
 
 from corin_msgs.msg import MotionPlan as RosMotionPlan
-
+from corin_msgs.msg import LoggingState
 #####################################################################
 
 class CorinManager:
@@ -146,6 +146,7 @@ class CorinManager:
 		##***************** PUBLISHERS ***************##
 		self.setpoint_pub_ = rospy.Publisher('/corin/setpoint_states', JointState, queue_size=1)	# LOGGING publisher
 		self.trajectory_pub_ = rospy.Publisher('/corin/motion_plan', RosMotionPlan, queue_size=1)	# LOGGING publisher
+		self.log_pub_ = rospy.Publisher('/corin/log_states', LoggingState, queue_size=1)	# LOGGING publisher
 
 		## Hardware Specific Publishers ##
 		if (ROBOT_NS == 'corin' and (self.interface == 'gazebo' or 
@@ -558,9 +559,7 @@ class CorinManager:
 							self.Robot.Leg[j].KDL.knee_up = False
 						else:
 							self.Robot.Leg[j].KDL.knee_up = True
-					# else:
-					# 	self.Robot.Leg[j].KDL.knee_up = False
-
+					
 					if (svalid is False):
 						# set invalid if trajectory unfeasible for leg's kinematic
 						self.Robot.invalid = True
@@ -628,6 +627,10 @@ class CorinManager:
 				
 				mp = RosMotionPlan(setpoint = qtrac, gait_phase = self.Robot.Gait.cs)
 
+				logstate = LoggingState()
+				logstate.positions = v3cp.flatten().tolist() + v3wp.flatten().tolist() + qd.xp.tolist()
+				logstate.velocities = v3cv.flatten().tolist() + v3wv.flatten().tolist() + qd.xv.tolist()
+				logstate.accelerations = v3ca.flatten().tolist() + v3wa.flatten().tolist() + qd.xa.tolist()
 				## Compute CRBI and CoM, then compute foot force distribution and joint torque
 				# if (self.rbim_serv_.available):
 				# 	try:
@@ -636,7 +639,7 @@ class CorinManager:
 						# self.Robot.update_com_crbi(resp1.CoM, resp1.CRBI)
 				# 	except:
 				# 		rbim_valid = False
-				## Bypass service call
+				## Next two lines bypasses service call
 				if (True):
 					rbim_valid = True
 					if (rbim_valid):
@@ -648,7 +651,10 @@ class CorinManager:
 									  					(-self.Robot.P6c.base_X_CoM[:3].flatten()+self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
 								p_foot.append(world_CoM_X_foot.copy())
 							
-						foot_force = self.ForceDist.resolve_force(v3ca, v3wa, p_foot, 
+						# Gravity vector wrt base orientation
+						gv = mX(rotation_zyx(self.Robot.P6d.world_X_base[3:6]),np.array([0,0,G]))
+
+						foot_force = self.ForceDist.resolve_force(gv, v3ca, v3wa, p_foot, 
 																	self.Robot.P6c.base_X_CoM[:3], 
 																	self.Robot.CRBI, self.Robot.Gait.cs )
 						joint_torque = self.Robot.force_to_torque(foot_force)
@@ -657,6 +663,14 @@ class CorinManager:
 						qlog.effort = np.zeros(6).flatten().tolist() + joint_torque
 						qtrac.effort = np.zeros(6).flatten().tolist() + joint_torque
 						mp = RosMotionPlan(setpoint = qtrac, gait_phase = self.Robot.Gait.cs)
+
+						logstate.effort = np.zeros(6).flatten().tolist() + joint_torque
+						logstate.forces = np.zeros(6).flatten().tolist() + foot_force.flatten().tolist()
+						logstate.qp_sum_forces  = self.ForceDist.sum_forces.flatten().tolist()
+						logstate.qp_sum_moments = self.ForceDist.sum_moment.flatten().tolist()
+						logstate.qp_desired_forces  = self.ForceDist.d_forces.flatten().tolist()
+						logstate.qp_desired_moments = self.ForceDist.d_moment.flatten().tolist()
+						self.log_pub_.publish(logstate)
 				
 				# publish appended joint angles if motion valid
 				self.publish_topics(qd, qlog, mp)

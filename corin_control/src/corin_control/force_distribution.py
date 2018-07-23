@@ -20,40 +20,48 @@ spline_count = 0.
 ## cvxopt input form: # P, q, G, h, None, A, b
 class QPForceDistribution():
 	def __init__(self):
-		self.ode_initial  = [0, 0]
-		
+		self.sum_forces = np.zeros((3,1))
+		self.sum_moment = np.zeros((3,1))
+		self.d_forces = np.zeros((3,1))
+		self.d_moment = np.zeros((3,1))
 
-	def solve(self):
+	def solve_example(self):
 		# setting via numpy
-		P = cvxmatrix(np.diag([1,0]), tc='d')
-		q = matrix(np.array([3,4]), tc='d')
-		G = matrix(np.array([[-1,0],[0,-1],[-1,-3],[2,5],[3,4]]), tc='d')
-		h = matrix(np.array([0,0,-15,100,80]), tc='d')
+		Pn = cvxmatrix(np.diag([1,0]), tc='d')
+		qn = matrix(np.array([3,4]), tc='d')
+		Gn = matrix(np.array([[-1,0],[0,-1],[-1,-3],[2,5],[3,4]]), tc='d')
+		hn = matrix(np.array([0,0,-15,100,80]), tc='d')
 
 		# direct setting
-		P = matrix([[1.0,0.0],[0.0,0.0]])
-		q = matrix([3.0,4.0])
-		G = matrix([[-1.0,0.0,-1.0,2.0,3.0],[0.0,-1.0,-3.0,5.0,4.0]])
-		h = matrix([0.0,0.0,-15.0,100.0,80.0])
+		Pn = matrix([[1.0,0.0],[0.0,0.0]])
+		qn = matrix([3.0,4.0])
+		Gn = matrix([[-1.0,0.0,-1.0,2.0,3.0],[0.0,-1.0,-3.0,5.0,4.0]])
+		hn = matrix([0.0,0.0,-15.0,100.0,80.0])
 
-		sol = solvers.qp(P,q,G,h)
+		sol = solvers.qp(Pn,qn,Gn,hn)
 
 		print sol['x']
 		# return sol
 
 	# def resolve_force(self, v3ca, w3ca, p_foot, Ig, contact):
-	def resolve_force(self, v3ca, w3ca, p_foot, x_com, Ig_com, gphase):
-		## v3ca = Re(1x3) linear acceleration for body
-		## w3ca = Re(1x3) angular acceleration for body
-		## p_foot  = Re(3c)  array of foot position
-		
-		n_contact = len(p_foot)
-		
+	def resolve_force(self, v3gv, v3ca, w3ca, p_foot, x_com, Ig_com, gphase):
+		""" QP problem to resolve foot force distribution 
+			Input: 	v3gv: Re(1x3) gravity vector
+					v3ca: Re(1x3) linear acceleration for body
+					w3ca: Re(1x3) angular acceleration for body
+					p_foot: Re(3c) array of foot position
+					x_com: Re(3x1) CoM position from base
+					Ig_com: Re(3x3) Composite Rigid Body Intertia
+					gphase: Re(6) gait phase of legs
+			Output: force_vector, Re(18) 							"""
+
 		## Declare variables
-		gv = matrix([0.0, 0.0, 9.81]) 			# gravitational matrix
-		xa = matrix(v3ca, (3,1), tc='d') 		# CoM linear acceleration
-		wa = matrix(w3ca, (3,1), tc='d') 		# angular base acceleration
-		ig = matrix(Ig_com, tc='d') 			# centroidal moment of inertia
+		n_contact = len(p_foot)
+		gv = matrix(v3gv, (3,1), tc='d') 	# gravitational matrix
+		xa = matrix(v3ca, (3,1), tc='d') 	# CoM linear acceleration
+		wa = matrix(w3ca, (3,1), tc='d') 	# angular base acceleration
+		ig = matrix(Ig_com, tc='d') 		# centroidal moment of inertia
+		mu = 1.0; 							# Coefficient of friction
 
 		## Linear equality (system equation)
 		A = matrix(np.zeros((6,3*n_contact)), (6,3*n_contact), tc='d')
@@ -63,15 +71,6 @@ class QPForceDistribution():
 			A[:3,(i*3):(i*3+3)]  = np.eye(3)
 			A[3:6,(i*3):(i*3+3)] = mtf.skew(p_foot[i])
 		
-		## Linear inequality (friction constraint)
-		# surface tangent and normal directions
-		# tx = np.array([1, 0, 0]);
-		# ty = np.array([0, 1, 0]);
-		# tn = np.array([0, 0, 1]);
-
-		# Coefficient of friction
-		mu = 0.5;
-
 		## =================== Bounded Force ============================ ##
 		f_min = 1.
 		f_max = 20.
@@ -81,6 +80,7 @@ class QPForceDistribution():
 		D[5] = f_max
 		inq_D = D
 		
+		## Interpolate upper and lower boundary
 		for i in range(0,n_contact-1):
 			# ## Test for interpolation
 			# if (i==4 and n_contact == 6):
@@ -94,36 +94,28 @@ class QPForceDistribution():
 			inq_D = np.hstack((inq_D, D))
 		inq_D = matrix(inq_D, tc='d')
 
-		# if (count_i < 11):
-		# 	print inq_D
-
 		C = matrix([ [1,-1,0,0,0,0],[0,0,1,-1,0,0],[-mu,-mu,-mu,-mu,-1,1] ])
 		inq_C = matrix(np.zeros((6*n_contact, 3*n_contact)), tc='d')
 		
 		for i in range(0,n_contact):
 			inq_C[(i*6):(i+1)*6,(i*3):(i+1)*3] = C
 
-		# Method 1: Using sys. eq. as constraints
-		# sol = solvers.qp(H,q, inq_C, inq_D, A,b) 	
-		# print np.round(sol['x'],3)
-
-		## Method 2: Using system equation as Hessian matrices
-		# H = 2*A.T*A
-		# q = (-2*b.T*A).T
-
-		# sol = solvers.qp(H,q, -inq_C, inq_D) 	
-		# print np.round(sol['x'],8)
-		
 		## Method 3: Using system equation with weightage
-		s_weight = np.array([1, 1, 10, 10, 10, 10]);
+		s_weight = np.array([1, 1, 1, 1, 1, 1]);
 		S = matrix(np.diag(s_weight), tc='d');
 
 		H = 2*A.T*S*A
 		q = (-2*b.T*S*A).T
 
+		## Set Solver parameters
+		solvers.options['abstol']  = 1e-6
+		solvers.options['reltol']  = 1e-6
+		solvers.options['feastol'] = 1e-6
 		solvers.options['show_progress'] = False
-		sol = solvers.qp(H,q, inq_C, inq_D) 	
-		
+
+		## Solve QP problem
+		sol = solvers.qp(H,q, inq_C, inq_D) 
+
 		# print np.round(np.array(sol['x']).transpose(),4)
 		# print A*sol['x']
 
@@ -146,8 +138,27 @@ class QPForceDistribution():
 				for j in range(0,3):
 					force_vector[i*3+j,0] = 0.0
 
-		# print force_vector
-		# print count_i
+		## Check solution
+		fcounter = 0
+		self.sum_forces = self.sum_moment = 0
+		for i in range(0,6):
+			if (gphase[i]==0):
+				self.sum_forces += force_vector[i*3:i*3+3]
+				self.sum_moment += np.cross( p_foot[fcounter].reshape(1,3), force_vector[i*3:i*3+3].reshape(1,3)).reshape(3,1)
+				fcounter += 1
+		self.d_forces = np.array(ROBOT_MASS*(xa+gv))
+		self.d_moment = np.array(ig*wa)
+		# error_forces = ROBOT_MASS*(xa+gv) - sum_forces
+		# error_moment = ig*wa - sum_moment
+		
+		# print np.transpose(np.round(sum_forces,5) )
+		# print np.transpose(np.round(ROBOT_MASS*(xa+gv),5))
+		# print np.transpose(np.round(error_forces,4))
+		# print np.transpose(np.round(ig*wa,5))
+		# print np.round(sum_moment,5)
+		# print np.transpose(np.round(error_moment,4))
+		# print '========================================='
+		
 		return force_vector
 
 qprog = QPForceDistribution()
@@ -155,17 +166,10 @@ qprog = QPForceDistribution()
 
 Ig_com = np.eye(3)
 xb_com = np.array([0,0,0]) 
-x_com = np.array([0,0,0]) # + MASS*np.array([ [0.,0.,g] ])
+x_com = np.array([1.0,0.5,0])
 w_com = np.array([0.,0.,0.])
+
 ## Foot position
-p1 = np.array([  [2],  [1], [-1] ])
-p2 = np.array([ [-2],  [1], [-1] ])
-p3 = np.array([ [ 0], [-1], [-1] ])
-
-p4 = np.array([ [-2], [-1],[0] ])
-p5 = np.array([  [2], [-1],[0] ])
-p6 = np.array([  [0], [-1],[0] ])
-
 p1 = np.array([ [0.125] ,[0.285],[-0.1] ])
 p2 = np.array([ [0.00]  ,[0.285],[-0.1] ])
 p3 = np.array([ [-0.125],[0.285],[-0.1] ])
@@ -173,10 +177,12 @@ p4 = np.array([ [0.125] ,[-0.285],[-0.1] ])
 p5 = np.array([ [0.00]  ,[-0.285],[-0.1] ])
 p6 = np.array([ [-0.125],[-0.285],[-0.1] ])
 
-p_foot = [p1, p2, p3, p4] 			# leg position wrt CoM expressed in world frame
-contacts = [True,False,True,False,False,False]
-force_vector = qprog.resolve_force(x_com, w_com, p_foot, xb_com, Ig_com, contacts)
-# print wrench[0:3]
+p_foot = [p1, p3, p5] 			# leg position wrt CoM expressed in world frame
+contacts = [0,1,0,1,0,1]
+gvset = np.array([0,0,1])
+force_vector = qprog.resolve_force(gvset, x_com, w_com, p_foot, xb_com, Ig_com, contacts)
+
+
 
 # f = open('qp_discont.csv', 'w')
 
@@ -204,11 +210,11 @@ force_vector = qprog.resolve_force(x_com, w_com, p_foot, xb_com, Ig_com, contact
 ## Taken from https://scaron.info/blog/quadratic-programming-in-python.html
 
 # Matrix variables
-M = np.array([[1., 2., 0.], [-8., 3., 2.], [0., 1., 1.]]) 	# objective function A
-P = np.dot(M.T, M)
-q = np.dot(np.array([3., 2., 3.]), M).reshape((3,))			# objective function B
-G = np.array([[1., 2., 1.], [2., 0., 1.], [-1., 2., -1.]]) 	# inequality constraint, A
-h = np.array([3., 2., -2.]).reshape((3,)) 					# inequality constraint, b
+# Mn = np.array([[1., 2., 0.], [-8., 3., 2.], [0., 1., 1.]]) 	# objective function A
+# Pn = np.dot(M.T, M)
+# qn = np.dot(np.array([3., 2., 3.]), M).reshape((3,))			# objective function B
+# Gn = np.array([[1., 2., 1.], [2., 0., 1.], [-1., 2., -1.]]) 	# inequality constraint, A
+# hn = np.array([3., 2., -2.]).reshape((3,)) 					# inequality constraint, b
 
 # print cvxopt_solve_qp(P, q, G, h)
 # print quadprog_solve_qp(P, q, G, h)

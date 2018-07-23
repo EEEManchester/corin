@@ -98,24 +98,26 @@ class ControlInterface:
 
 		## Full bodypose demo
 		elif (STANCE_TYPE == "flat"):
-			# for i in range(0,5):
-			# 	x_cob = np.vstack((x_cob,np.zeros(3,1)))
-
+			
 			x_cob = np.vstack((x_cob,np.array([0. , -0.04, 0.])))
 			x_cob = np.vstack((x_cob,np.array([0.03,  0.04, 0.])))
 			x_cob = np.vstack((x_cob,np.array([-0.03, 0.04, 0.])))
 			x_cob = np.vstack((x_cob,np.array([-0.03, -0.04, 0.])))
-			# x_cob = np.vstack((x_cob,np.array([0.00, 0.00, 0.])))
-			# x_cob = np.vstack((x_cob,np.array([0.00, 0.0, 0.12])))
+			x_cob = np.vstack((x_cob,np.array([0.,  0.0, 0.1])))
 			x_cob = np.vstack((x_cob,np.array([0.,  0.0, 0.])))
 
 			w_cob = np.vstack((w_cob,np.array([-0.22, -0.075, 0.])))
 			w_cob = np.vstack((w_cob,np.array([0.22, -0.075, 0.])))
 			w_cob = np.vstack((w_cob,np.array([0.22,  0.075, 0.])))
 			w_cob = np.vstack((w_cob,np.array([-0.22,  0.075, 0.])))
-			# w_cob = np.vstack((w_cob,np.array([0.00, 0.00, -0.15])))
-			# w_cob = np.vstack((w_cob,np.array([0.,0.,0.12])))
+			w_cob = np.vstack((w_cob,np.array([0.,  0.0, 0.05])))
 			w_cob = np.vstack((w_cob,np.array([0.,  0.0, 0.])))
+
+			## Simple motions
+			# x_cob = np.vstack((x_cob,np.array([0.,  0.0, 0.])))
+			# x_cob = np.vstack((x_cob,np.array([0.,  0.0, 0.])))
+			# w_cob = np.vstack((w_cob,np.array([0.2,  0.0, 0.])))
+			# w_cob = np.vstack((w_cob,np.array([0.4,  0.0, 0.])))
 
 		return x_cob, w_cob, self.mode, 'walk'
 		

@@ -53,7 +53,7 @@ ROT_BASE_X_LEG = [ROT_BASE_X_LF, ROT_BASE_X_LM, ROT_BASE_X_LR,
 TRN_BASE_X_LEG = [	(COXA_X,COXA_Y) ,(0.,COXA_Y) ,(-COXA_X,COXA_Y),\
 					(COXA_X,-COXA_Y),(0.,-COXA_Y),(-COXA_X,-COXA_Y)]
 
-g 	 = 9.81 	# Gravity
+G 	 = 9.81 	# Gravity
 M_KC = 16.06 	# MX64 motor torque constant
 
 # Joint numbering used in transforms.py

@@ -13,8 +13,8 @@ if __name__ == "__main__":
 
 	rospy.loginfo('Robot Ready!')
 	
-	# rospy.set_param('/corin/bodypose', True)
-	rospy.set_param('/corin/plan_path', True)
+	rospy.set_param('/corin/bodypose', True)
+	# rospy.set_param('/corin/plan_path', True)
 
 	## WIP: The following does not work
 	# rospy.set_param('/corin/walk_front', True)

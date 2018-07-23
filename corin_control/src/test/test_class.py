@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-sys.path.insert(0, '/home/wilson/catkin_ws/src/corin/corin_control/py_script/library')
+sys.path.insert(0, '/home/wilson/catkin_ws/src/corin/corin_control/src/corin_control')
 sys.dont_write_bytecode = True
 
 import numpy as np
@@ -109,6 +109,12 @@ if __name__ == "__main__":
 		cz[i] = test[i][2] 
 	
 	a = np.eye(3)
-	print a
-	a[1,1] = 5
-	print a
+	
+	wXb = np.array([[0.5,0,0]])
+	# print mX(rotation_zyx(wXb),np.array([0,0,1]))*2
+	# print mX(rot_X(0.5),np.array([0,0,1]))
+
+	a = np.array([1,2,1])
+	b = np.array([2,2,2])
+	print a*b
+	print np.cross(a,b)
