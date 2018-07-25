@@ -753,7 +753,7 @@ class CorinManager:
 				print 'Planning path...'
 				self.Robot.support_mode = False
 
-				ps = (10,13); pf = (20,13)	# Short straight Line
+				ps = (10,13); pf = (16,13)	# Short straight Line
 				# ps = (10,14); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
 				# ps = (10,13); pf = (25,21)	# G2W - Left side up
@@ -792,6 +792,8 @@ class CorinManager:
 						if (plan_exist):
 							motion_plan  = planpath_to_motionplan(path_generat)
 							if (motion_plan is not None):
+								print len(motion_plan.qb.X.t)
+								motion_plan = self.optimize_trajectory(motion_plan)
 								if (self.main_controller(motion_plan)):
 									self.Robot.alternate_phase()
 					else:
@@ -801,3 +803,64 @@ class CorinManager:
 
 		else:
 			rospy.sleep(0.5)
+
+	def optimize_trajectory(self, motion_plan):
+
+		qprog = QPTrajectoryOptimization()
+		x_cog_0 = list(self.Robot.P6c.world_X_base[0:3].flatten())
+		
+		t = [] 
+		cp = []  
+		cv = [] 
+		ca = [] 
+		for i in range(0,len(motion_plan.qbp)):
+			x_cog_1 = motion_plan.qbp[i][0:3]
+			print 'i: ', i
+			footholds = []
+			gphase = motion_plan.gait_phase[i]
+			for j in range(0,6):
+				if (gphase[j] == 0):
+					# For first support stance - QUICK FIX
+					if (i == 0):
+						footholds.append(self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+					else:
+						# print j, motion_plan.f_world_X_foot[j].unstack()
+						footholds.append(motion_plan.f_world_X_foot[j].unstack().flatten())
+			# print np.round(footholds,4)
+			# print np.round(x_cog_0,4)
+			# print np.round(x_cog_1,4)
+			new_trajectory = qprog.solve_quintic(x_cog_0, x_cog_1, footholds);
+			ti, cpi, cvi, cai = qprog.interpolate_spline_quintic(CTR_INTV)
+
+			## Remove index 0 for subsequent trajectory
+			if (i != 0):
+				ti.pop(0)
+				cpi.pop(0)
+				cvi.pop(0)
+				cai.pop(0)
+			
+			## Concatenate segments together
+			t += [x+(i*GAIT_TPHASE) for x in ti]
+			cp += cpi
+			cv += cvi
+			ca += cai
+			print '===================================='
+			## Update CoG
+			x_cog_0 = list(x_cog_1)
+
+		# Plot.plot_2d(t, cp)
+		# Plot.plot_2d(t, cv)
+		# Plot.plot_2d(t, ca)
+
+		## Replace trajectory in motion_plan
+		# print len(motion_plan.qb.X.xp), np.shape(motion_plan.qb.X.xp)
+		# print np.round(motion_plan.qb.X.xp,3)
+		motion_plan.qb.X.t = t
+		motion_plan.qb.X.xp = np.array(cp) - self.Robot.P6c.world_X_base[0:3].flatten()
+		motion_plan.qb.X.xv = np.array(cv)
+		motion_plan.qb.X.xa = np.array(ca)
+		# print len(motion_plan.qb.X.xp), np.shape(motion_plan.qb.X.xp)
+		# print np.round(motion_plan.qb.X.xp,3)
+
+		return motion_plan
+

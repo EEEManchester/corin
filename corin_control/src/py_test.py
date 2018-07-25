@@ -369,4 +369,9 @@ except:
 	print 'exception'
 
 Jv = np.zeros((3,3))
-print Jv
+print np.shape(Jv)
+a = [1,2,3]
+# print [x*2 for x in a]
+b = [9,9]
+a + b
+print a+b

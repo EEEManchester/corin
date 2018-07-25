@@ -28,7 +28,6 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
   trajectory_msgs
-  qpoases
   visualization_msgs
   grid_planner_core
 )
@@ -80,7 +79,7 @@ catkin_package(
   CATKIN_DEPENDS
   message_runtime
   actionlib
-  DEPENDS Boost Eigen qpOASES rbdl
+  DEPENDS Boost Eigen rbdl
 )
 
 ###########
