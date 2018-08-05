@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 
 #include <eigen-quadprog/QuadProg.h>
+#include <Eigen/Dense>
 
 struct QP1
 {
@@ -99,7 +100,19 @@ int main(int argc, char** argv)
 	ineqWithXBounds(qp1.Aineq, qp1.Bineq, qp1.XL, qp1.XU);
 
 	int nrineq = static_cast<int>(qp1.Aineq.rows());
-	// Eigen::QuadProgDense qp(qp1.nrvar, qp1.nreq, nrineq);
-	// Eigen::QuadProgDense qp(2,2,2);
+	Eigen::QuadProgDense qp(qp1.nrvar, qp1.nreq, nrineq);
+
+	qp.solve(qp1.Q, qp1.C,
+		qp1.Aeq, qp1.Beq,
+		qp1.Aineq, qp1.Bineq);
+
+	// std::cout << qp.result() << std::endl;
+	std::cout << (qp.result() - qp1.X).norm() << std::endl;
+	Eigen::MatrixXd Linv = qp1.Q.llt().matrixU();
+	qp.solve(Linv.inverse(), qp1.C,
+		qp1.Aeq, qp1.Beq,
+		qp1.Aineq, qp1.Bineq, true);
+	std::cout << (qp.result() - qp1.X).norm() << std::endl;
+
 	return 0;
 }

@@ -28,9 +28,9 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
   trajectory_msgs
-  qpoases
   visualization_msgs
   grid_planner_core
+  eigen-quadprog
 )
 
 find_package(RBDL REQUIRED)
@@ -92,10 +92,11 @@ include_directories( ${catkin_INCLUDE_DIRS}
                       ${Eigen_INCLUDE_DIRS} 
                       ${RBDL_INCLUDE_DIR})
 
-add_executable(jointStateServer cpp_script/service/jointStateServer.cpp)
-add_dependencies(jointStateServer corin_control_gencpp)
-target_link_libraries(jointStateServer ${catkin_LIBRARIES})
+# add_executable(jointStateServer cpp_script/service/jointStateServer.cpp)
+# add_dependencies(jointStateServer corin_control_gencpp)
+# target_link_libraries(jointStateServer ${catkin_LIBRARIES})
 
+# Service Server to compute CoM and CRBI
 add_executable(rigid_body_server cpp_script/service/rigid_body_server.cpp
                                   cpp_script/service/robots/mcorin/transforms.cpp 
                                   cpp_script/service/robots/mcorin/inertia_properties.cpp 
@@ -104,6 +105,7 @@ add_executable(rigid_body_server cpp_script/service/rigid_body_server.cpp
                                   cpp_script/service/robots/mcorin/miscellaneous.cpp)
 target_link_libraries(rigid_body_server ${catkin_LIBRARIES})
 add_dependencies(rigid_body_server corin_control_gencpp)
+
 
 # add_executable(main_node cpp_script/main_node.cpp cpp_script/force_distribution.cpp
 #                           cpp_script/robots/mcorin/transforms.cpp 
@@ -118,9 +120,13 @@ add_dependencies(rigid_body_server corin_control_gencpp)
 # add_dependencies(test_spline corin_control_gencpp)
 # target_link_libraries(test_spline ${catkin_LIBRARIES})
 
-# add_executable(test_node cpp_script/test_node.cpp)
-# add_dependencies(test_node corin_control_gencpp)
-# target_link_libraries(test_node ${catkin_LIBRARIES})
+####################
+##  Test Scripts  ##
+####################
+
+# add_executable(test_eigen_quadprog cpp_script/test/test_eigen_quadprog.cpp)
+# add_dependencies(test_eigen_quadprog corin_control_gencpp)
+# target_link_libraries(test_eigen_quadprog ${catkin_LIBRARIES})
 
 # add_executable(rcg_test cpp_script/rcg_test.cpp
 #                         cpp_script/robots/mcorin/transforms.cpp 
