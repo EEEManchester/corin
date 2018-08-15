@@ -113,9 +113,9 @@ class RvizSnapshot:
 					p_foot.append(world_CoM_X_foot.copy())
 			
 			## Gravity vector wrt base orientation 
-			gv = mX(self.Robot.XHd.world_X_base[:3,:3], np.array([0,0,G]))
+			# gv = mX(self.Robot.XHd.world_X_base[:3,:3], np.array([0,0,G]))
 			gv = np.array([0,0,G])
-			print 'gv ', gv
+
 			## Set surface normal vector for each contact wrt world frame according to path
 			for j in range(0,3):
 				if (abs(self.footholds[j].xp[i].item(1))<0.4):
@@ -138,8 +138,8 @@ class RvizSnapshot:
 														self.Robot.CRBI, self.Robot.Gait.cs, self.snorm )
 			joint_torque = self.Robot.force_to_torque(foot_force)
 			# print np.round(self.snorm,3)
-			# print 'Fworld ', np.round(foot_force[0:3].flatten(),3)
-			# print 'Torque ', np.round(joint_torque[0:3],3)
+			# print 'Fworld ', np.round(foot_force[15:18].flatten(),3)
+			# print 'Torque ', np.round(joint_torque[15:18],3)
 			self.publish(self.CoB[i], qp)
 			i += 1
 			raw_input('continue')
