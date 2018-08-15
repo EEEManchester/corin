@@ -262,7 +262,7 @@ class RobotState:
 		""" compute joint torque from foot force """
 
 		tau = []
-
+		
 		for j in range(0,6):
 			# Transform foot force from world to hip frame
 			self.Leg[j].XHd.update_world_X_coxa(self.XHd.world_X_base)
@@ -275,6 +275,8 @@ class RobotState:
 			for z in range(0,3):
 				tau.append(tau_leg.item(z))
 
+			# if (j==0):
+			# 	print 'Fhip ', np.round(self.Leg[j].F6d.coxa_X_foot[:3].flatten(),3)
 		if (len(tau)==18):
 			return tau
 		else:

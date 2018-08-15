@@ -3,6 +3,7 @@
 
 
 	<xacro:property name="PI" value="3.1415926535897931"/>
+	<xacro:property name="link_scale" value="1.289"  />
 
 	<!-- standard distances -->
 	<xacro:property name="trunk_x" value="0.23"/> 		<!-- distance between front & back  joints -->

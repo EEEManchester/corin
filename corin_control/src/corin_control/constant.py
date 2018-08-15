@@ -8,6 +8,8 @@ import sys; sys.dont_write_bytecode = True
 import numpy as np
 from stance_selection import *
 
+# Constants
+PI = np.pi
 # Main name
 ROBOT_NS = "corin"
 
@@ -17,8 +19,8 @@ ROBOT_NS = "corin"
 # Link Length, Mass
 BODY_MASS = 1.48
 L1 = 0.060;	L1_MASS = 0.040
-L2 = 0.150;	L2_MASS = 0.350
-L3 = 0.150;	L3_MASS = 0.116
+L2 = 0.194;	L2_MASS = 0.350 # ORIGIINAL L2 = 0.15 m
+L3 = 0.194;	L3_MASS = 0.116
 
 LEG_MASS = L1_MASS + L2_MASS + L3_MASS
 ROBOT_MASS = 5.0#BODY_MASS + LEG_MASS*6

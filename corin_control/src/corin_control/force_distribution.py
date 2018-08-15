@@ -43,8 +43,26 @@ class QPForceDistribution():
 		print sol['x']
 		# return sol
 
+	def compute_tangent(self, snorm):
+		# Find first tangential vector
+		if (snorm[0] == 0):
+			t1 = np.array([1,0,0])
+		elif (snorm[1] == 0):
+			t1 = np.array([0,1,0])
+		elif (snorm[2] == 0):
+			t1 = np.array([0,0,1])
+		else:
+			# set x,y to 1
+			t1 = np.array([1, 1, -1.0 * (snorm[0] + snorm[1])/snorm[2]])
+			t1 = t1/np.linalg.norm(t1)
+
+		# Find second tangential vector
+		t2 = np.cross(snorm,t1)
+
+		return t1, t2
+
 	# def resolve_force(self, v3ca, w3ca, p_foot, Ig, contact):
-	def resolve_force(self, v3gv, v3ca, w3ca, p_foot, x_com, Ig_com, gphase):
+	def resolve_force(self, v3gv, v3ca, w3ca, p_foot, x_com, Ig_com, gphase, snorm=0):
 		""" QP problem to resolve foot force distribution 
 			Input: 	v3gv: Re(1x3) gravity vector
 					v3ca: Re(1x3) linear acceleration for body
@@ -53,6 +71,7 @@ class QPForceDistribution():
 					x_com: Re(3x1) CoM position from base
 					Ig_com: Re(3x3) Composite Rigid Body Intertia
 					gphase: Re(6) gait phase of legs
+					snorm: Re(3c) surface normal vector for each leg
 			Output: force_vector, Re(18) 							"""
 
 		## Declare variables
@@ -61,7 +80,7 @@ class QPForceDistribution():
 		xa = matrix(v3ca, (3,1), tc='d') 	# CoM linear acceleration
 		wa = matrix(w3ca, (3,1), tc='d') 	# angular base acceleration
 		ig = matrix(Ig_com, tc='d') 		# centroidal moment of inertia
-		mu = 1.0; 							# Coefficient of friction
+		mu = 0.5; 							# Coefficient of friction
 
 		## Linear equality (system equation)
 		A = matrix(np.zeros((6,3*n_contact)), (6,3*n_contact), tc='d')
@@ -72,7 +91,7 @@ class QPForceDistribution():
 			A[3:6,(i*3):(i*3+3)] = mtf.skew(p_foot[i])
 		
 		## =================== Bounded Force ============================ ##
-		f_min = 1.
+		f_min = 0.
 		f_max = 20.
 
 		D  = np.zeros(6);
@@ -80,7 +99,7 @@ class QPForceDistribution():
 		D[5] = f_max
 		inq_D = D
 		
-		## Interpolate upper and lower boundary
+		## Interpolate upper and lower boundary of inequality constraint
 		for i in range(0,n_contact-1):
 			# ## Test for interpolation
 			# if (i==4 and n_contact == 6):
@@ -94,13 +113,42 @@ class QPForceDistribution():
 			inq_D = np.hstack((inq_D, D))
 		inq_D = matrix(inq_D, tc='d')
 
-		C = matrix([ [1,-1,0,0,0,0],[0,0,1,-1,0,0],[-mu,-mu,-mu,-mu,-1,1] ])
+		## Friction cone coefficient - TODO: SET BASED ON SURFACE NORMAL
 		inq_C = matrix(np.zeros((6*n_contact, 3*n_contact)), tc='d')
 		
 		for i in range(0,n_contact):
-			inq_C[(i*6):(i+1)*6,(i*3):(i+1)*3] = C
+			
+			# Compute according to surface normal
+			if (snorm is not 0):
+				sinst = snorm[i*3:i*3+3]
+				C = np.zeros((6,3))
 
-		## Method 3: Using system equation with weightage
+				## Surface normal direction
+				t1, t2 = self.compute_tangent(sinst.flatten())
+
+				# print 't1 ', t1, t2
+				C[0,:] = -mu*sinst.flatten() + t1
+				C[1,:] = -mu*sinst.flatten() + t2
+				C[2,:] = -(mu*sinst.flatten() + t1)
+				C[3,:] = -(mu*sinst.flatten() + t2)
+				C[4,:] = -sinst.flatten()
+				C[5,:] =  sinst.flatten()
+				inq_C[(i*6):(i+1)*6,(i*3):(i+1)*3] = matrix(C, tc='d')
+				if (i==0):
+					print t1, t2
+					print C
+					print D
+			else:
+				C = matrix([ [1,-1,0,0,0,0],[0,0,1,-1,0,0],[-mu,-mu,-mu,-mu,-1,1] ])
+				inq_C[(i*6):(i+1)*6,(i*3):(i+1)*3] = C
+
+			# if (i == 2):
+			# 	print sinst.flatten(), mX(rot_Y(PI/2), sinst.flatten())
+			# 	print t1, t2
+		# print np.round(C_old,3)
+		# print np.round(C,3)
+
+		## Method A: Using system equation with weightage
 		s_weight = np.array([1, 1, 1, 1, 1, 1]);
 		S = matrix(np.diag(s_weight), tc='d');
 
@@ -108,9 +156,9 @@ class QPForceDistribution():
 		q = (-2*b.T*S*A).T
 
 		## Set Solver parameters
-		solvers.options['abstol']  = 1e-6
-		solvers.options['reltol']  = 1e-6
-		solvers.options['feastol'] = 1e-6
+		solvers.options['abstol']  = 1e-10
+		solvers.options['reltol']  = 1e-10
+		solvers.options['feastol'] = 1e-10
 		solvers.options['show_progress'] = False
 
 		## Solve QP problem
@@ -119,7 +167,7 @@ class QPForceDistribution():
 		# print np.round(np.array(sol['x']).transpose(),4)
 		# print A*sol['x']
 
-		## Method 4: Method 3 with regularization on joint torque
+		## Method B: Method 3 with regularization on joint torque
 		# alpha = 0.01
 		# w_weight = np.array([5, 50, 2])*10e-3;
 		# S = matrix(np.diag(w_weight), tc='d');
@@ -150,14 +198,14 @@ class QPForceDistribution():
 		self.d_moment = np.array(ig*wa)
 		# error_forces = ROBOT_MASS*(xa+gv) - sum_forces
 		# error_moment = ig*wa - sum_moment
-		
-		# print np.transpose(np.round(sum_forces,5) )
-		# print np.transpose(np.round(ROBOT_MASS*(xa+gv),5))
+		print np.round(force_vector.flatten(),3)
+		print 'Fcomp: ', np.transpose(np.round(self.sum_forces,5) )
+		print 'Forig: ', np.transpose(np.round(ROBOT_MASS*(xa+gv),5))
 		# print np.transpose(np.round(error_forces,4))
-		# print np.transpose(np.round(ig*wa,5))
-		# print np.round(sum_moment,5)
+		print 'Mcomp: ', np.round(self.sum_moment.flatten(),5)
+		print 'Morig: ', np.transpose(np.round(ig*wa,5))
 		# print np.transpose(np.round(error_moment,4))
-		# print '========================================='
+		print '========================================='
 		
 		return force_vector
 
@@ -165,22 +213,29 @@ qprog = QPForceDistribution()
 ## Body linear and angular parameters
 
 Ig_com = np.eye(3)
-xb_com = np.array([0,0,0]) 
-x_com = np.array([1.0,0.5,0])
-w_com = np.array([0.,0.,0.])
+xb_com = np.array([0.,0.,0.]) 
+xa_com = np.array([.0,0.,0.])
+wa_com = np.array([0.,0.,0.])
 
 ## Foot position
-p1 = np.array([ [0.125] ,[0.285],[-0.1] ])
-p2 = np.array([ [0.00]  ,[0.285],[-0.1] ])
-p3 = np.array([ [-0.125],[0.285],[-0.1] ])
+p1 = np.array([ [0.125] ,[ 0.285],[ 0.1] ])
+p2 = np.array([ [0.00]  ,[ 0.285],[ 0.1] ])
+p3 = np.array([ [-0.125],[ 0.285],[ 0.1] ])
 p4 = np.array([ [0.125] ,[-0.285],[-0.1] ])
 p5 = np.array([ [0.00]  ,[-0.285],[-0.1] ])
 p6 = np.array([ [-0.125],[-0.285],[-0.1] ])
 
-p_foot = [p1, p3, p5] 			# leg position wrt CoM expressed in world frame
-contacts = [0,1,0,1,0,1]
-gvset = np.array([0,0,1])
-force_vector = qprog.resolve_force(gvset, x_com, w_com, p_foot, xb_com, Ig_com, contacts)
+p_foot = [p1, p2, p3, p4, p5, p6] 			# leg position wrt CoM expressed in world frame
+contacts = [0,0,0,0,0,0]
+gvset = mX(rot_X(0), np.array([0,0,1])) #np.array([0,0,1])
+print gvset
+snorm = np.zeros((18,1))
+for i in range(0,3):
+	# snorm[i*3:i*3+3] = mX(rot_X(PI/2.),np.array([0,0,1])).reshape((3,1))
+	snorm[i*3:i*3+3] = np.array([0.,-1.,0.]).reshape((3,1))
+for i in range(3,6):
+	snorm[i*3:i*3+3] = np.array([0,0,1]).reshape((3,1))
+force_vector = qprog.resolve_force(gvset, xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, snorm)
 
 
 
