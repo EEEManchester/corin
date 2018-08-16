@@ -365,6 +365,5 @@ def validate_orthogonal(A, B, C):
 
 snorm = np.array([-1,0.,0])
 snorm = snorm/np.linalg.norm(snorm)
-t1, t2 = find_tangent(snorm)
-print t1, t2
-validate_orthogonal(snorm, t1, t2)
+
+print np.zeros(6)

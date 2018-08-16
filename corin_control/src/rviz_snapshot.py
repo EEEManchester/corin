@@ -75,13 +75,13 @@ class RvizSnapshot:
 		# for i in range(0,len(self.CoB)):
 		i = 0
 		while (i != len(self.CoB) and not rospy.is_shutdown()):
+
 			self.Robot.P6d.world_X_base = self.CoB[i].reshape((6,1))
 			# self.Robot.P6d.world_X_base[5] = 0
 			self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
 			
 			self.Visualizer.publish_robot((self.CoB[i]))
 
-			# norm = [0]*6
 			qp = []
 			err_list = [0]*6
 			for j in range(0,6):
@@ -126,12 +126,12 @@ class RvizSnapshot:
 			for j in range(3,6):
 				if (abs(self.footholds[j].xp[i].item(1))<1.12):
 					self.snorm[j*3:j*3+3] = np.array([-1,0,0]).reshape((3,1))	# chimney wall
-					self.snorm[j*3:j*3+3] = np.array([0,0,1]).reshape((3,1)) 	# wall walking ground
+					# self.snorm[j*3:j*3+3] = np.array([0,0,1]).reshape((3,1)) 	# wall walking ground
 				else:
 					self.snorm[j*3:j*3+3] = np.array([0,1,0]).reshape((3,1))
 					
 			# print np.round(self.footholds[1].xp[i],6), np.round(self.footholds[3].xp[i],6)
-			# print self.snorm.flatten()
+			print self.snorm.flatten()
 			## Resolve forces and compute joint torque
 			foot_force = self.ForceDist.resolve_force(gv, v3ca, v3wa, p_foot, 
 														self.Robot.P6c.base_X_CoM[:3], 
@@ -139,7 +139,7 @@ class RvizSnapshot:
 			joint_torque = self.Robot.force_to_torque(foot_force)
 			# print np.round(self.snorm,3)
 			# print 'Fworld ', np.round(foot_force[15:18].flatten(),3)
-			# print 'Torque ', np.round(joint_torque[15:18],3)
+			print 'Torque ', np.round(joint_torque[15:18],3)
 			self.publish(self.CoB[i], qp)
 			i += 1
 			raw_input('continue')
@@ -148,8 +148,8 @@ if __name__ == "__main__":
 
 	rviz = RvizSnapshot()
 	
-	# rviz.load_file('chimney_medRes.csv')
-	rviz.load_file('wall_medRes.csv')
+	rviz.load_file('chimney_medRes.csv')
+	# rviz.load_file('wall_medRes.csv')
 
 	rviz.visualise_motion_plan()
 	raw_input('Start motion!')

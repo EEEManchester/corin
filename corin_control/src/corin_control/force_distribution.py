@@ -134,10 +134,10 @@ class QPForceDistribution():
 				C[4,:] = -sinst.flatten()
 				C[5,:] =  sinst.flatten()
 				inq_C[(i*6):(i+1)*6,(i*3):(i+1)*3] = matrix(C, tc='d')
-				if (i==0):
-					print t1, t2
-					print C
-					print D
+				# if (i==0):
+				# 	print t1, t2
+				# 	print C
+				# 	print D
 			else:
 				C = matrix([ [1,-1,0,0,0,0],[0,0,1,-1,0,0],[-mu,-mu,-mu,-mu,-1,1] ])
 				inq_C[(i*6):(i+1)*6,(i*3):(i+1)*3] = C
@@ -198,14 +198,14 @@ class QPForceDistribution():
 		self.d_moment = np.array(ig*wa)
 		# error_forces = ROBOT_MASS*(xa+gv) - sum_forces
 		# error_moment = ig*wa - sum_moment
-		print np.round(force_vector.flatten(),3)
+		# print np.round(force_vector.flatten(),3)
 		print 'Fcomp: ', np.transpose(np.round(self.sum_forces,5) )
 		print 'Forig: ', np.transpose(np.round(ROBOT_MASS*(xa+gv),5))
-		# print np.transpose(np.round(error_forces,4))
-		print 'Mcomp: ', np.round(self.sum_moment.flatten(),5)
-		print 'Morig: ', np.transpose(np.round(ig*wa,5))
-		# print np.transpose(np.round(error_moment,4))
-		print '========================================='
+		# # print np.transpose(np.round(error_forces,4))
+		# print 'Mcomp: ', np.round(self.sum_moment.flatten(),5)
+		# print 'Morig: ', np.transpose(np.round(ig*wa,5))
+		# # print np.transpose(np.round(error_moment,4))
+		# print '========================================='
 		
 		return force_vector
 
@@ -228,14 +228,14 @@ p6 = np.array([ [-0.125],[-0.285],[-0.1] ])
 p_foot = [p1, p2, p3, p4, p5, p6] 			# leg position wrt CoM expressed in world frame
 contacts = [0,0,0,0,0,0]
 gvset = mX(rot_X(0), np.array([0,0,1])) #np.array([0,0,1])
-print gvset
+# print gvset
 snorm = np.zeros((18,1))
 for i in range(0,3):
 	# snorm[i*3:i*3+3] = mX(rot_X(PI/2.),np.array([0,0,1])).reshape((3,1))
 	snorm[i*3:i*3+3] = np.array([0.,-1.,0.]).reshape((3,1))
 for i in range(3,6):
 	snorm[i*3:i*3+3] = np.array([0,0,1]).reshape((3,1))
-force_vector = qprog.resolve_force(gvset, xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, snorm)
+# force_vector = qprog.resolve_force(gvset, xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, snorm)
 
 
 
