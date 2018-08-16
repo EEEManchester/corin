@@ -32,7 +32,7 @@ class Vector6D:
 		self.world_X_RM_foot = np.zeros(Column6D)
 		self.world_X_RR_foot = np.zeros(Column6D)
 
-		self.base_X_CoM 	= np.zeros(Column6D)
+		self.base_X_CoM   = np.zeros(Column6D)
 		self.base_X_coxa  = np.zeros(Column6D)
 		self.base_X_foot  = np.zeros(Column6D)
 		self.base_X_AEP   = np.zeros(Column6D)

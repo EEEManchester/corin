@@ -33,17 +33,6 @@ for q in range(0,91,10):
 # Plot.plot_3d(x_cob[:,0],x_cob[:,1],x_cob[:,2])
 # Plot.plot_2d(x_cob[1],x_cob[2])
 
-def func1(a, xlist):
-	def in_func1():
-		print 'nested function'
-		print a, xlist[a]
-
-	print 'in func 1'
-	if (a == 1):
-		in_func1()
-	else:
-		print 'returning'
-
 a = np.array([0.2,-0.1,-0.1])
 b = np.array([0.2, 0.1,-0.1])
 
@@ -185,7 +174,8 @@ class PathPlanner:
 		self.name = 'This'
 
 	def testf(self):
-		print Map.c
+		# print Map.c
+		pass
 
 import numpy as np
 from scipy.optimize import linprog
@@ -363,10 +353,17 @@ def test_func(*argv):
 	else:
 		raise Exception
 
-try:
-	out = test_func("asdf",2,3,4)
-except:
-	print 'exception'
 
-Jv = np.zeros((3,3))
-print Jv
+
+
+
+def validate_orthogonal(A, B, C):
+	v1 = np.dot(A,B)
+	v2 = np.dot(A,C)
+	v3 = np.dot(B,C)
+	print 'validate: ', v1, v2, v3
+
+snorm = np.array([-1,0.,0])
+snorm = snorm/np.linalg.norm(snorm)
+
+print np.zeros(6)

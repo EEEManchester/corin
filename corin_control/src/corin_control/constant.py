@@ -8,6 +8,8 @@ import sys; sys.dont_write_bytecode = True
 import numpy as np
 from stance_selection import *
 
+# Constants
+PI = np.pi
 # Main name
 ROBOT_NS = "corin"
 
@@ -17,8 +19,8 @@ ROBOT_NS = "corin"
 # Link Length, Mass
 BODY_MASS = 1.48
 L1 = 0.060;	L1_MASS = 0.040
-L2 = 0.150;	L2_MASS = 0.350
-L3 = 0.150;	L3_MASS = 0.116
+L2 = 0.194;	L2_MASS = 0.350 # ORIGIINAL L2 = 0.15 m
+L3 = 0.194;	L3_MASS = 0.116
 
 LEG_MASS = L1_MASS + L2_MASS + L3_MASS
 ROBOT_MASS = 5.0#BODY_MASS + LEG_MASS*6
@@ -53,7 +55,7 @@ ROT_BASE_X_LEG = [ROT_BASE_X_LF, ROT_BASE_X_LM, ROT_BASE_X_LR,
 TRN_BASE_X_LEG = [	(COXA_X,COXA_Y) ,(0.,COXA_Y) ,(-COXA_X,COXA_Y),\
 					(COXA_X,-COXA_Y),(0.,-COXA_Y),(-COXA_X,-COXA_Y)]
 
-g 	 = 9.81 	# Gravity
+G 	 = 9.81 	# Gravity
 M_KC = 16.06 	# MX64 motor torque constant
 
 # Joint numbering used in transforms.py
@@ -121,7 +123,7 @@ STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
 ## ================================================================ ##
 
 ## these gait parameters can be changed during runtime
-GAIT_TYPE 	 = 1 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+GAIT_TYPE 	 = 4 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 GAIT_TPHASE	 = 2.0 	# default period per gait phase
 STEP_HEIGHT  = 0.08	# default step height, z
 STEP_STROKE  = 0.1 	# default step stroke

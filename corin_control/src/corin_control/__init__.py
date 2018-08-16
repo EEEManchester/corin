@@ -10,6 +10,7 @@ from matrix_transforms 	import *			# SE(3) transformation library
 import plotgraph as Plot 					# library for plotting 
 
 from force_distribution import *			# class for force distribution
+from trajectory_optimization import *
 
 import time
 import warnings

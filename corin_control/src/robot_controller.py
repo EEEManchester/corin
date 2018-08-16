@@ -40,7 +40,7 @@ from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import Pose
 
 from corin_msgs.msg import MotionPlan as RosMotionPlan
-
+from corin_msgs.msg import LoggingState
 #####################################################################
 
 class CorinManager:
@@ -146,6 +146,7 @@ class CorinManager:
 		##***************** PUBLISHERS ***************##
 		self.setpoint_pub_ = rospy.Publisher('/corin/setpoint_states', JointState, queue_size=1)	# LOGGING publisher
 		self.trajectory_pub_ = rospy.Publisher('/corin/motion_plan', RosMotionPlan, queue_size=1)	# LOGGING publisher
+		self.log_pub_ = rospy.Publisher('/corin/log_states', LoggingState, queue_size=1)	# LOGGING publisher
 
 		## Hardware Specific Publishers ##
 		if (ROBOT_NS == 'corin' and (self.interface == 'gazebo' or 
@@ -558,9 +559,7 @@ class CorinManager:
 							self.Robot.Leg[j].KDL.knee_up = False
 						else:
 							self.Robot.Leg[j].KDL.knee_up = True
-					# else:
-					# 	self.Robot.Leg[j].KDL.knee_up = False
-
+					
 					if (svalid is False):
 						# set invalid if trajectory unfeasible for leg's kinematic
 						self.Robot.invalid = True
@@ -628,33 +627,50 @@ class CorinManager:
 				
 				mp = RosMotionPlan(setpoint = qtrac, gait_phase = self.Robot.Gait.cs)
 
-				# Compute CRBI and CoM, then compute foot force distribution and joint torque
+				logstate = LoggingState()
+				logstate.positions = v3cp.flatten().tolist() + v3wp.flatten().tolist() + qd.xp.tolist()
+				logstate.velocities = v3cv.flatten().tolist() + v3wv.flatten().tolist() + qd.xv.tolist()
+				logstate.accelerations = v3ca.flatten().tolist() + v3wa.flatten().tolist() + qd.xa.tolist()
+				## Compute CRBI and CoM, then compute foot force distribution and joint torque
 				# if (self.rbim_serv_.available):
 				# 	try:
 				# 		resp1 = self.rbim_serv_.call(mp)
 				# 		rbim_valid = True
+						# self.Robot.update_com_crbi(resp1.CoM, resp1.CRBI)
 				# 	except:
 				# 		rbim_valid = False
-
-				# 	if (rbim_valid):
-				# 		self.Robot.update_com_crbi(resp1.CoM, resp1.CRBI)
-					
-				# 		p_foot = []
-				# 		for j in range(0,6):
-				# 			if (self.Robot.Gait.cs[j] == 0):
-				# 				world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3], 
-				# 					  					(-self.Robot.P6c.base_X_CoM[:3].flatten()+self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
-				# 				p_foot.append(world_CoM_X_foot.copy())
+				## Next two lines bypasses service call
+				if (True):
+					rbim_valid = True
+					if (rbim_valid):
+						
+						p_foot = []
+						for j in range(0,6):
+							if (self.Robot.Gait.cs[j] == 0):
+								world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3], 
+									  					(-self.Robot.P6c.base_X_CoM[:3].flatten()+self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
+								p_foot.append(world_CoM_X_foot.copy())
 							
-				# 		foot_force = self.ForceDist.resolve_force(v3ca, v3wa, p_foot, 
-				# 													self.Robot.P6c.base_X_CoM[:3], 
-				# 													self.Robot.CRBI, self.Robot.Gait.cs )
-				# 		joint_torque = self.Robot.force_to_torque(foot_force)
+						# Gravity vector wrt base orientation
+						gv = mX(rotation_zyx(self.Robot.P6d.world_X_base[3:6]),np.array([0,0,G]))
 
-				# 		## update logging parameters
-				# 		qlog.effort = np.zeros(6).flatten().tolist() + joint_torque
-				# 		qtrac.effort = np.zeros(6).flatten().tolist() + joint_torque
-				# 		mp = RosMotionPlan(setpoint = qtrac, gait_phase = self.Robot.Gait.cs)
+						foot_force = self.ForceDist.resolve_force(gv, v3ca, v3wa, p_foot, 
+																	self.Robot.P6c.base_X_CoM[:3], 
+																	self.Robot.CRBI, self.Robot.Gait.cs )
+						joint_torque = self.Robot.force_to_torque(foot_force)
+
+						## update logging parameters
+						qlog.effort = np.zeros(6).flatten().tolist() + joint_torque
+						qtrac.effort = np.zeros(6).flatten().tolist() + joint_torque
+						mp = RosMotionPlan(setpoint = qtrac, gait_phase = self.Robot.Gait.cs)
+
+						logstate.effort = np.zeros(6).flatten().tolist() + joint_torque
+						logstate.forces = np.zeros(6).flatten().tolist() + foot_force.flatten().tolist()
+						logstate.qp_sum_forces  = self.ForceDist.sum_forces.flatten().tolist()
+						logstate.qp_sum_moments = self.ForceDist.sum_moment.flatten().tolist()
+						logstate.qp_desired_forces  = self.ForceDist.d_forces.flatten().tolist()
+						logstate.qp_desired_moments = self.ForceDist.d_moment.flatten().tolist()
+						self.log_pub_.publish(logstate)
 				
 				# publish appended joint angles if motion valid
 				self.publish_topics(qd, qlog, mp)
@@ -737,11 +753,11 @@ class CorinManager:
 				print 'Planning path...'
 				self.Robot.support_mode = False
 
-				# ps = (10,13); pf = (15,13)	# Short straight Line
+				ps = (10,13); pf = (16,13)	# Short straight Line
 				# ps = (10,14); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
 				# ps = (10,13); pf = (25,21)	# G2W - Left side up
-				ps = (10,13); pf = (40,13)	# full wall or chimney 
+				# ps = (10,13); pf = (40,13)	# full wall or chimney 
 				# ps = (10,13); pf = (72,13) 	# wall and chimney demo
 
 				## Set robot to starting position in default configuration
@@ -756,28 +772,95 @@ class CorinManager:
 				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 
 				self.Robot._initialise()
-				
+	
 				if (self.grid_serv_.available):
-					start = Pose()
-					goal  = Pose()
-					start.position.x = ps[0]*self.GridMap.resolution
-					start.position.y = ps[1]*self.GridMap.resolution
-					goal.position.x = pf[0]*self.GridMap.resolution
-					goal.position.y = pf[1]*self.GridMap.resolution
+					if (self.GridMap.get_index_exists(ps) and self.GridMap.get_index_exists(pf)):
+						start = Pose()
+						goal  = Pose()
+						start.position.x = ps[0]*self.GridMap.resolution
+						start.position.y = ps[1]*self.GridMap.resolution
+						goal.position.x = pf[0]*self.GridMap.resolution
+						goal.position.y = pf[1]*self.GridMap.resolution
 
-					try:
-						print 'Requesting Planning service'
-						path_generat = self.grid_serv_.call(start, goal)
-						plan_exist = True
-					except:
-						plan_exist = False
-					
-					if (plan_exist):
-						motion_plan  = planpath_to_motionplan(path_generat)
-						if (motion_plan is not None):
-							if (self.main_controller(motion_plan)):
-								self.Robot.alternate_phase()
+						try:
+							print 'Requesting Planning service'
+							path_generat = self.grid_serv_.call(start, goal)
+							plan_exist = True
+						except:
+							plan_exist = False
+						
+						if (plan_exist):
+							motion_plan  = planpath_to_motionplan(path_generat)
+							if (motion_plan is not None):
+								print len(motion_plan.qb.X.t)
+								motion_plan = self.optimize_trajectory(motion_plan)
+								if (self.main_controller(motion_plan)):
+									self.Robot.alternate_phase()
+					else:
+						print "Start or End goal out of bounds!"
 				else:
 					print 'Planning service unavailable, exiting...'
+
 		else:
 			rospy.sleep(0.5)
+
+	def optimize_trajectory(self, motion_plan):
+
+		qprog = QPTrajectoryOptimization()
+		x_cog_0 = list(self.Robot.P6c.world_X_base[0:3].flatten())
+		
+		t = [] 
+		cp = []  
+		cv = [] 
+		ca = [] 
+		for i in range(0,len(motion_plan.qbp)):
+			x_cog_1 = motion_plan.qbp[i][0:3]
+			print 'i: ', i
+			footholds = []
+			gphase = motion_plan.gait_phase[i]
+			for j in range(0,6):
+				if (gphase[j] == 0):
+					# For first support stance - QUICK FIX
+					if (i == 0):
+						footholds.append(self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+					else:
+						# print j, motion_plan.f_world_X_foot[j].unstack()
+						footholds.append(motion_plan.f_world_X_foot[j].unstack().flatten())
+			# print np.round(footholds,4)
+			# print np.round(x_cog_0,4)
+			# print np.round(x_cog_1,4)
+			new_trajectory = qprog.solve_quintic(x_cog_0, x_cog_1, footholds);
+			ti, cpi, cvi, cai = qprog.interpolate_spline_quintic(CTR_INTV)
+
+			## Remove index 0 for subsequent trajectory
+			if (i != 0):
+				ti.pop(0)
+				cpi.pop(0)
+				cvi.pop(0)
+				cai.pop(0)
+			
+			## Concatenate segments together
+			t += [x+(i*GAIT_TPHASE) for x in ti]
+			cp += cpi
+			cv += cvi
+			ca += cai
+			print '===================================='
+			## Update CoG
+			x_cog_0 = list(x_cog_1)
+
+		# Plot.plot_2d(t, cp)
+		# Plot.plot_2d(t, cv)
+		# Plot.plot_2d(t, ca)
+
+		## Replace trajectory in motion_plan
+		# print len(motion_plan.qb.X.xp), np.shape(motion_plan.qb.X.xp)
+		# print np.round(motion_plan.qb.X.xp,3)
+		motion_plan.qb.X.t = t
+		motion_plan.qb.X.xp = np.array(cp) - self.Robot.P6c.world_X_base[0:3].flatten()
+		motion_plan.qb.X.xv = np.array(cv)
+		motion_plan.qb.X.xa = np.array(ca)
+		# print len(motion_plan.qb.X.xp), np.shape(motion_plan.qb.X.xp)
+		# print np.round(motion_plan.qb.X.xp,3)
+
+		return motion_plan
+

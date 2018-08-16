@@ -199,13 +199,24 @@ class GridMap:
 				grid_p = (int(np.floor(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
 			else:
 				grid_p = (int(np.floor(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
+			# Check if cell within bound
+			if (self.get_index_exists(grid_p)):
+				return self.get_index(info, grid_p)
+			else:
+				return None
 		except ValueError:	
 			print 'get_cell ValueError: ', p, j
-		# if (j==1 or j==0):
-		# 	print 'get cell ', j, grid_p
-		# Return cell characteristic
-		return self.get_index(info, grid_p)
+	
+	def get_index_exists(self, p):
+		""" Checks if cell index exists or out of bounds """
 		
+		try:
+			self.Map.nodes[p]
+			return True
+		except KeyError, e:
+			print 'Index %s out of bounds'%e
+			return False
+
 	def get_index(self, info, p):
 		""" Returns cell characteristic at index p """
 		
@@ -721,10 +732,12 @@ class GridMap:
 		plt.tight_layout()
 		plt.show() 
 		# fig_manager.resize(*fig_manager.window.maxsize())
+
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
 # gmap = GridMap('flat')
+# print gmap.get_index_exists((34,0))
 # a, b = gmap.graph_attributes_to_nparray("norm")
 # print a
 # print len(a)

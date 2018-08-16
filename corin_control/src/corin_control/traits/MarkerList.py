@@ -14,6 +14,7 @@ class MarkerList():
 		else:
 			self.t  = data[0]
 			self.xp = data[1]
+		self.index = 0
 
 	def append(self, data):
 		self.t  += data.t 
@@ -21,3 +22,12 @@ class MarkerList():
 
 	def reverse(self):
 		self.xp = list(reversed(self.xp))
+
+	def unstack(self):
+		self.index += 1
+		return self.xp[self.index-1]
+
+	def reset(self):
+		self.t  = []
+		self.xp = []
+		self.index = 0

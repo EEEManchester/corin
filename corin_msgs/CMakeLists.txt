@@ -27,6 +27,7 @@ find_package(catkin REQUIRED COMPONENTS
    MotionPlan.msg
    GridMap.msg
    GridMapInfo.msg
+   LoggingState.msg
   )
 
  add_service_files(
