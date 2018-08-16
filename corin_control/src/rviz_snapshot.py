@@ -140,7 +140,14 @@ class RvizSnapshot:
 			# print np.round(self.snorm,3)
 			# print 'Fworld ', np.round(foot_force[15:18].flatten(),3)
 			print 'Torque ', np.round(joint_torque[15:18],3)
+			
 			self.publish(self.CoB[i], qp)
+			fforce_local = np.zeros((18,1))
+			for j in range(0,6):
+				self.Robot.Leg[j].XHd.update_base_X_foot(qp[j*3:j*3+3])
+				R_world_X_foot = np.transpose(mX(self.Robot.XHd.world_X_base[:3,:3], self.Robot.Leg[j].XHd.base_X_foot[:3,:3]))
+				fforce_local[j*3:j*3+3] = mX(R_world_X_foot, foot_force[j*3:j*3+3])
+			self.Visualizer.publish_foot_force(self.Robot.Gait.cs, fforce_local)
 			i += 1
 			raw_input('continue')
 
