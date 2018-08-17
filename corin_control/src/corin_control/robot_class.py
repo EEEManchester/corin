@@ -275,7 +275,7 @@ class RobotState:
 			for z in range(0,3):
 				tau.append(tau_leg.item(z))
 
-			# if (j==5 or j==3):
+			# if (j==1):
 			# 	print j, ' Fwor ', np.round(self.Leg[j].F6d.world_X_foot[:3].flatten(),3)
 			# 	print j, ' Fhip ', np.round(self.Leg[j].F6d.coxa_X_foot[:3].flatten(),3)
 			# 	print j, ' tau  ', np.round(tau_leg.flatten(),3)

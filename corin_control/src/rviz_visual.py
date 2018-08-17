@@ -94,7 +94,7 @@ class RvizVisualise:
 							 2) forces: Re^3c, list of contact forces 	"""
 
 		counter = 0
-		for j in range(0,1):
+		for j in range(0,6):
 			if (cstate[j] == 0):
 				data = WrenchStamped()
 				data.header.frame_id = LEG_FORCE_FRAME[j]
@@ -102,5 +102,6 @@ class RvizVisualise:
 				data.wrench.force.y = forces[counter+1]
 				data.wrench.force.z = forces[counter+2]
 				self.wrench_pub_[j].publish(data)
-
+				# if j==1:
+				# 	print np.round(forces[counter:counter+3].flatten(),3)
 				counter += 3

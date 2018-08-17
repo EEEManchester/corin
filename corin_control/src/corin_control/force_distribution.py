@@ -199,8 +199,8 @@ class QPForceDistribution():
 		# error_forces = ROBOT_MASS*(xa+gv) - sum_forces
 		# error_moment = ig*wa - sum_moment
 		# print np.round(force_vector.flatten(),3)
-		print 'Fcomp: ', np.transpose(np.round(self.sum_forces,5) )
-		print 'Forig: ', np.transpose(np.round(ROBOT_MASS*(xa+gv),5))
+		# print 'Fcomp: ', np.transpose(np.round(self.sum_forces,5) )
+		# print 'Forig: ', np.transpose(np.round(ROBOT_MASS*(xa+gv),5))
 		# # print np.transpose(np.round(error_forces,4))
 		# print 'Mcomp: ', np.round(self.sum_moment.flatten(),5)
 		# print 'Morig: ', np.transpose(np.round(ig*wa,5))
@@ -214,7 +214,7 @@ qprog = QPForceDistribution()
 
 Ig_com = np.eye(3)
 xb_com = np.array([0.,0.,0.]) 
-xa_com = np.array([.0,0.,0.])
+xa_com = np.array([0.5,0.,0.])
 wa_com = np.array([0.,0.,0.])
 
 ## Foot position
@@ -227,7 +227,7 @@ p6 = np.array([ [-0.125],[-0.285],[-0.1] ])
 
 p_foot = [p1, p2, p3, p4, p5, p6] 			# leg position wrt CoM expressed in world frame
 contacts = [0,0,0,0,0,0]
-gvset = mX(rot_X(0), np.array([0,0,1])) #np.array([0,0,1])
+gvset = np.array([0,0,1])
 # print gvset
 snorm = np.zeros((18,1))
 for i in range(0,3):
@@ -236,7 +236,7 @@ for i in range(0,3):
 for i in range(3,6):
 	snorm[i*3:i*3+3] = np.array([0,0,1]).reshape((3,1))
 # force_vector = qprog.resolve_force(gvset, xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, snorm)
-
+# print np.round(-force_vector.flatten(),3)
 
 
 # f = open('qp_discont.csv', 'w')

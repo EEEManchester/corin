@@ -5,6 +5,7 @@
 import rospy
 from corin_control import *			# library modules to include
 from rviz_visual import *
+from corin_msgs.msg import LoggingState
 
 import csv
 import numpy as np
@@ -27,6 +28,7 @@ class RvizSnapshot:
 		
 	def __initialise_topics__(self):
 		self.joint_pub_ = rospy.Publisher(ROBOT_NS + '/joint_states', JointState, queue_size=1)
+		self.log_pub_ = rospy.Publisher('/corin/log_states', LoggingState, queue_size=1)	# LOGGING publisher
 
 	def __initialise_variables__(self):
 		for j in range(0,6):
@@ -42,7 +44,7 @@ class RvizSnapshot:
 			dqp.position.append(qp[n])			# joint angle
 		self.joint_pub_.publish(dqp)
 
-		rospy.sleep(0.4)
+		# rospy.sleep(0.4)
 
 	def load_file(self, filename):
 		print 'Reading file: ', filename
@@ -125,38 +127,56 @@ class RvizSnapshot:
 
 			for j in range(3,6):
 				if (abs(self.footholds[j].xp[i].item(1))<1.12):
-					self.snorm[j*3:j*3+3] = np.array([-1,0,0]).reshape((3,1))	# chimney wall
-					# self.snorm[j*3:j*3+3] = np.array([0,0,1]).reshape((3,1)) 	# wall walking ground
+					# self.snorm[j*3:j*3+3] = np.array([-1,0,0]).reshape((3,1))	# chimney wall
+					self.snorm[j*3:j*3+3] = np.array([0,0,1]).reshape((3,1)) 	# wall walking ground
 				else:
 					self.snorm[j*3:j*3+3] = np.array([0,1,0]).reshape((3,1))
-					
-			# print np.round(self.footholds[1].xp[i],6), np.round(self.footholds[3].xp[i],6)
-			print self.snorm.flatten()
+			
 			## Resolve forces and compute joint torque
 			foot_force = self.ForceDist.resolve_force(gv, v3ca, v3wa, p_foot, 
 														self.Robot.P6c.base_X_CoM[:3], 
 														self.Robot.CRBI, self.Robot.Gait.cs, self.snorm )
-			joint_torque = self.Robot.force_to_torque(foot_force)
+			joint_torque = self.Robot.force_to_torque(-foot_force)
 			# print np.round(self.snorm,3)
 			# print 'Fworld ', np.round(foot_force[15:18].flatten(),3)
-			print 'Torque ', np.round(joint_torque[15:18],3)
+			# print 'Torque ', np.round(joint_torque[15:18],3)
 			
 			self.publish(self.CoB[i], qp)
+			rospy.sleep(0.1)
 			fforce_local = np.zeros((18,1))
 			for j in range(0,6):
 				self.Robot.Leg[j].XHd.update_base_X_foot(qp[j*3:j*3+3])
 				R_world_X_foot = np.transpose(mX(self.Robot.XHd.world_X_base[:3,:3], self.Robot.Leg[j].XHd.base_X_foot[:3,:3]))
-				fforce_local[j*3:j*3+3] = mX(R_world_X_foot, foot_force[j*3:j*3+3])
-			self.Visualizer.publish_foot_force(self.Robot.Gait.cs, fforce_local)
+				fforce_local[j*3:j*3+3] = mX(R_world_X_foot, -foot_force[j*3:j*3+3])
+				# if j==1:
+				# 	print np.round(fforce_local[j*3:j*3+3],3)
+			## Visualise foot force
+			for v in range(0,2):
+				self.Visualizer.publish_foot_force(self.Robot.Gait.cs, fforce_local)
+
+			## Data Logging
+			logstate = LoggingState()
+			logstate.positions = self.CoB[i].tolist() + qp
+			logstate.velocities = [0]*24
+			logstate.accelerations = [0]*24
+			logstate.effort = np.zeros(6).flatten().tolist() + joint_torque
+			logstate.forces = np.zeros(6).flatten().tolist() + foot_force.flatten().tolist()
+			logstate.qp_sum_forces  = self.ForceDist.sum_forces.flatten().tolist()
+			logstate.qp_sum_moments = self.ForceDist.sum_moment.flatten().tolist()
+			logstate.qp_desired_forces  = self.ForceDist.d_forces.flatten().tolist()
+			logstate.qp_desired_moments = self.ForceDist.d_moment.flatten().tolist()
+			self.log_pub_.publish(logstate)
+
+			# rospy.sleep(0.05)
 			i += 1
-			raw_input('continue')
+			# raw_input('continue')
 
 if __name__ == "__main__":
 
 	rviz = RvizSnapshot()
 	
-	rviz.load_file('chimney_medRes.csv')
-	# rviz.load_file('wall_medRes.csv')
+	# rviz.load_file('chimney_highRes_unopt.csv')
+	rviz.load_file('wall_medRes.csv')
 
 	rviz.visualise_motion_plan()
 	raw_input('Start motion!')
