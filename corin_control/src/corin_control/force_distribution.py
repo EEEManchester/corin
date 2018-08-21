@@ -92,7 +92,7 @@ class QPForceDistribution():
 		
 		## =================== Bounded Force ============================ ##
 		f_min = 0.
-		f_max = 20.
+		f_max = 40.
 
 		D  = np.zeros(6);
 		D[4] = f_min
@@ -180,7 +180,7 @@ class QPForceDistribution():
 		for i in range(0,6):
 			if (gphase[i] == 0):
 				for j in range(0,3):
-					force_vector[i*3+j,0] = sol['x'][qc]
+					force_vector[i*3+j,0] = -sol['x'][qc]
 					qc += 1
 			else:
 				for j in range(0,3):
@@ -194,17 +194,16 @@ class QPForceDistribution():
 				self.sum_forces += force_vector[i*3:i*3+3]
 				self.sum_moment += np.cross( p_foot[fcounter].reshape(1,3), force_vector[i*3:i*3+3].reshape(1,3)).reshape(3,1)
 				fcounter += 1
+				# print np.round(force_vector[i*3:i*3+3].flatten(),3)
 		self.d_forces = np.array(ROBOT_MASS*(xa+gv))
 		self.d_moment = np.array(ig*wa)
+		# print 'Comp: ', np.round(A*sol['x'],3).flatten()
+		# print 'Orig: ', np.round(b,3).flatten()
 		# error_forces = ROBOT_MASS*(xa+gv) - sum_forces
 		# error_moment = ig*wa - sum_moment
 		# print np.round(force_vector.flatten(),3)
-		# print 'Fcomp: ', np.transpose(np.round(self.sum_forces,5) )
-		# print 'Forig: ', np.transpose(np.round(ROBOT_MASS*(xa+gv),5))
-		# # print np.transpose(np.round(error_forces,4))
-		# print 'Mcomp: ', np.round(self.sum_moment.flatten(),5)
-		# print 'Morig: ', np.transpose(np.round(ig*wa,5))
-		# # print np.transpose(np.round(error_moment,4))
+		# print np.transpose(np.round(error_forces,4))
+		# print np.transpose(np.round(error_moment,4))
 		# print '========================================='
 		
 		return force_vector

@@ -13,22 +13,6 @@ from geometry_msgs.msg import WrenchStamped
 from grid_planner_core.numpy_to_rosmsg import *
 from corin_control.constant import *
 
-LEG_FORCE_NAME = {}
-LEG_FORCE_NAME[0] = 'LF_foot_force'
-LEG_FORCE_NAME[1] = 'LM_foot_force'
-LEG_FORCE_NAME[2] = 'LR_foot_force'
-LEG_FORCE_NAME[3] = 'RF_foot_force'
-LEG_FORCE_NAME[4] = 'RM_foot_force'
-LEG_FORCE_NAME[5] = 'RR_foot_force'
-
-LEG_FORCE_FRAME = {}
-LEG_FORCE_FRAME[0] = 'lf_foot'
-LEG_FORCE_FRAME[1] = 'lm_foot'
-LEG_FORCE_FRAME[2] = 'lr_foot'
-LEG_FORCE_FRAME[3] = 'rf_foot'
-LEG_FORCE_FRAME[4] = 'rm_foot'
-LEG_FORCE_FRAME[5] = 'rr_foot'
-
 class RvizVisualise:
 	def __init__(self):
 		self.fr_fix = "world"

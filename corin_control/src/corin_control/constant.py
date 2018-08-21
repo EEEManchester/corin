@@ -19,11 +19,11 @@ ROBOT_NS = "corin"
 # Link Length, Mass
 BODY_MASS = 1.48
 L1 = 0.060;	L1_MASS = 0.040
-L2 = 0.175;	L2_MASS = 0.350 # ORIGIINAL L2 = 0.15 m; chimney 0.194; wall 0.168
-L3 = 0.175;	L3_MASS = 0.116
+L2 = 0.195;	L2_MASS = 0.350 # ORIGIINAL L2 = 0.15 m; chimney 0.194; wall 0.17
+L3 = 0.195;	L3_MASS = 0.116
 
 LEG_MASS = L1_MASS + L2_MASS + L3_MASS
-ROBOT_MASS = 5.0#BODY_MASS + LEG_MASS*6
+ROBOT_MASS = BODY_MASS + LEG_MASS*6
 
 # Link Centre of Mass reference from parent frame
 BODY_COM = [0.0, 0.0, 0.0]
@@ -184,3 +184,19 @@ JOINT_NAME[16] = 'rr_q2_joint'
 JOINT_NAME[17] = 'rr_q3_joint'
 
 ROBOT_STATE = ['x','y','z','r','p','y']
+
+LEG_FORCE_NAME = {}
+LEG_FORCE_NAME[0] = 'LF_foot_force'
+LEG_FORCE_NAME[1] = 'LM_foot_force'
+LEG_FORCE_NAME[2] = 'LR_foot_force'
+LEG_FORCE_NAME[3] = 'RF_foot_force'
+LEG_FORCE_NAME[4] = 'RM_foot_force'
+LEG_FORCE_NAME[5] = 'RR_foot_force'
+
+LEG_FORCE_FRAME = {}
+LEG_FORCE_FRAME[0] = 'lf_foot'
+LEG_FORCE_FRAME[1] = 'lm_foot'
+LEG_FORCE_FRAME[2] = 'lr_foot'
+LEG_FORCE_FRAME[3] = 'rf_foot'
+LEG_FORCE_FRAME[4] = 'rm_foot'
+LEG_FORCE_FRAME[5] = 'rr_foot'
