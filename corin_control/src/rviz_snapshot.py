@@ -114,7 +114,7 @@ class RvizSnapshot:
 					world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3], 
 						  					(-self.Robot.P6c.base_X_CoM[:3].flatten()+self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
 					p_foot.append(world_CoM_X_foot.copy())
-			
+					print np.round(world_CoM_X_foot.flatten(),3)
 			## Gravity vector wrt base orientation 
 			# gv = mX(self.Robot.XHd.world_X_base[:3,:3], np.array([0,0,G]))
 			gv = np.array([0,0,G])
@@ -140,8 +140,8 @@ class RvizSnapshot:
 														self.Robot.P6c.base_X_CoM[:3], 
 														self.Robot.CRBI, self.Robot.Gait.cs, self.snorm )
 			joint_torque = self.Robot.force_to_torque(-foot_force)
-			for j in range(0,6):
-				print np.round(qp[j*3:j*3+3],3), np.round(joint_torque[j*3:j*3+3],3)
+			# for j in range(0,6):
+			# 	print np.round(qp[j*3:j*3+3],3), np.round(joint_torque[j*3:j*3+3],3)
 				
 			# print np.round(self.snorm,3)
 			# print 'Fworld ', np.round(foot_force[15:18].flatten(),3)
@@ -177,15 +177,16 @@ class RvizSnapshot:
 			i += 1
 			print self.snorm.flatten()
 			# print np.round(self.CoB[i][5]*180./np.pi,3)
-			# raw_input('continue')
+			raw_input('continue')
 
 if __name__ == "__main__":
 
 	rviz = RvizSnapshot()
 	
-	rviz.load_file('chimney_highRes.csv')
+	rviz.load_file('chimney_highRes_opt_narrow.csv')
 	# rviz.load_file('wall_medRes.csv')
 
 	rviz.visualise_motion_plan()
 	raw_input('Start motion!')
-	rviz.cycle_snapshot()
+	for i in range(0,1):
+		rviz.cycle_snapshot()

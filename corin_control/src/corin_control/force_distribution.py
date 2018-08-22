@@ -80,7 +80,7 @@ class QPForceDistribution():
 		xa = matrix(v3ca, (3,1), tc='d') 	# CoM linear acceleration
 		wa = matrix(w3ca, (3,1), tc='d') 	# angular base acceleration
 		ig = matrix(Ig_com, tc='d') 		# centroidal moment of inertia
-		mu = 0.5; 							# Coefficient of friction
+		mu = 1.0; 							# Coefficient of friction
 
 		## Linear equality (system equation)
 		A = matrix(np.zeros((6,3*n_contact)), (6,3*n_contact), tc='d')
@@ -197,8 +197,8 @@ class QPForceDistribution():
 				# print np.round(force_vector[i*3:i*3+3].flatten(),3)
 		self.d_forces = np.array(ROBOT_MASS*(xa+gv))
 		self.d_moment = np.array(ig*wa)
-		# print 'Comp: ', np.round(A*sol['x'],3).flatten()
-		# print 'Orig: ', np.round(b,3).flatten()
+		print 'Comp: ', np.round(A*sol['x'],3).flatten()
+		print 'Orig: ', np.round(b,3).flatten()
 		# error_forces = ROBOT_MASS*(xa+gv) - sum_forces
 		# error_moment = ig*wa - sum_moment
 		# print np.round(force_vector.flatten(),3)
