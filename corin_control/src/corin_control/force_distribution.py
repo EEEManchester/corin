@@ -141,7 +141,7 @@ class QPForceDistribution():
 			else:
 				C = matrix([ [1,-1,0,0,0,0],[0,0,1,-1,0,0],[-mu,-mu,-mu,-mu,-1,1] ])
 				inq_C[(i*6):(i+1)*6,(i*3):(i+1)*3] = C
-
+		
 			# if (i == 2):
 			# 	print sinst.flatten(), mX(rot_Y(PI/2), sinst.flatten())
 			# 	print t1, t2
@@ -213,30 +213,36 @@ qprog = QPForceDistribution()
 
 Ig_com = np.eye(3)
 xb_com = np.array([0.,0.,0.]) 
-xa_com = np.array([0.5,0.,0.])
+xa_com = np.array([0.,0.,0.])
 wa_com = np.array([0.,0.,0.])
 
 ## Foot position
-p1 = np.array([ [0.125] ,[ 0.285],[ 0.1] ])
-p2 = np.array([ [0.00]  ,[ 0.285],[ 0.1] ])
-p3 = np.array([ [-0.125],[ 0.285],[ 0.1] ])
-p4 = np.array([ [0.125] ,[-0.285],[-0.1] ])
-p5 = np.array([ [0.00]  ,[-0.285],[-0.1] ])
-p6 = np.array([ [-0.125],[-0.285],[-0.1] ])
+# p1 = np.array([ [0.125] ,[ 0.285],[ 0.1] ])
+# p2 = np.array([ [0.00]  ,[ 0.285],[ 0.1] ])
+# p3 = np.array([ [-0.125],[ 0.285],[ 0.1] ])
+# p4 = np.array([ [0.125] ,[-0.285],[-0.1] ])
+# p5 = np.array([ [0.00]  ,[-0.285],[-0.1] ])
+# p6 = np.array([ [-0.125],[-0.285],[-0.1] ])
+p1 = np.array([ [0.075] ,[ 0.31],[ 0.05] ])
+p2 = np.array([ [0.00]  ,[ 0.31],[ 0.05] ])
+p3 = np.array([ [-0.075],[ 0.31],[ 0.05] ])
+p4 = np.array([ [0.115] ,[-0.31],[ 0.05] ])
+p5 = np.array([ [0.00]  ,[-0.31],[ 0.05] ])
+p6 = np.array([ [-0.115],[-0.31],[ 0.05] ])
 
 p_foot = [p1, p2, p3, p4, p5, p6] 			# leg position wrt CoM expressed in world frame
 contacts = [0,0,0,0,0,0]
-gvset = np.array([0,0,1])
+gvset = np.array([0,0,9.81])
 # print gvset
 snorm = np.zeros((18,1))
 for i in range(0,3):
 	# snorm[i*3:i*3+3] = mX(rot_X(PI/2.),np.array([0,0,1])).reshape((3,1))
 	snorm[i*3:i*3+3] = np.array([0.,-1.,0.]).reshape((3,1))
 for i in range(3,6):
-	snorm[i*3:i*3+3] = np.array([0,0,1]).reshape((3,1))
-# force_vector = qprog.resolve_force(gvset, xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, snorm)
-# print np.round(-force_vector.flatten(),3)
+	snorm[i*3:i*3+3] = np.array([0,1,0]).reshape((3,1))
 
+force_vector = qprog.resolve_force(gvset, xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, snorm)
+print np.round(-force_vector.flatten(),5)
 
 # f = open('qp_discont.csv', 'w')
 
