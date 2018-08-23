@@ -32,6 +32,7 @@ class GridMap:
 		self.G_free = nx.Graph()
 		self.G_wall = nx.Graph()
 		self.G_hole = nx.Graph()
+		self.viz_offset = np.zeros(3)
 
 		if (map_name is not None):
 			self.__initialise_graph__(map_name)
@@ -60,6 +61,11 @@ class GridMap:
 						pass
 					try:
 						map_hole = map_list['Map'][map_name]['hole']
+					except:
+						pass
+					try:
+						voff = map_list['Map'][map_name]['offset']
+						self.viz_offset = np.array([voff['x'],voff['y'],voff['z']])
 					except:
 						pass
 					
@@ -736,7 +742,7 @@ class GridMap:
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-# gmap = GridMap('flat')
+# gmap = GridMap('wall_convex_corner')
 # print gmap.get_index_exists((34,0))
 # a, b = gmap.graph_attributes_to_nparray("norm")
 # print a

@@ -3,7 +3,7 @@
 
 
 	<xacro:property name="PI" value="3.1415926535897931"/>
-	<xacro:property name="link_scale" value="1.289"  />
+	<xacro:property name="link_scale" value="1.067"  /> 	<!-- chimney: 1.267/1.067		wall:1.12  -->
 
 	<!-- standard distances -->
 	<xacro:property name="trunk_x" value="0.23"/> 		<!-- distance between front & back  joints -->
@@ -66,7 +66,7 @@
 	<xacro:property name="femur_i_zz"  value="0.000051"  />
 
 	<!--  Tibia assembly -->
-	<xacro:property name="tibia_l" value="0.134" />
+	<xacro:property name="tibia_l" value="0.15" />
 	<xacro:property name="tibia_w" value="0.04" />
 	<xacro:property name="tibia_d" value="0.025" />
 	<xacro:property name="tibia_cl" value="0.06" />
