@@ -60,7 +60,7 @@ class RvizSnapshot:
 				for j in range(0,6):
 					self.footholds[j].t.append(counter)
 					# self.footholds[j].xp.append( np.asarray(map(lambda x: float(x), row[6+j*3:6+(j*3)+3])) )
-					mod_foothold = np.asarray(map(lambda x: float(x), row[6+j*3:6+(j*3)+3])) + np.array([0.,0.,0.05])
+					mod_foothold = np.asarray(map(lambda x: float(x), row[6+j*3:6+(j*3)+3]))# + np.array([0.,0.,0.05])
 					self.footholds[j].xp.append(mod_foothold)
 				counter += 1
 			# print self.CoB
@@ -86,6 +86,9 @@ class RvizSnapshot:
 			self.Visualizer.publish_robot((self.CoB[i]))
 
 			qp = []
+			phip_X_foot = [] 	# TEMP
+			pworld_X_foot = []	# TEMP
+
 			err_list = [0]*6
 			for j in range(0,6):
 				# Transform world_X_foot to hip_X_foot
@@ -97,19 +100,24 @@ class RvizSnapshot:
 																v3_X_m(self.Robot.Leg[j].XHd.base_X_foot[:3,3]))[:3,3]
 
 				error, qpd, qvd, qad = self.Robot.Leg[j].tf_task_X_joint(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3])
-				
+
 				if (error == 0):
 					for z in range(0,3):
 						qp.append(qpd.item(z))
+
+						phip_X_foot.append(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3].item(z))
+						pworld_X_foot.append(self.footholds[j].xp[i].item(z))
 				else:
 					print 'Error on leg ', j
 
 			## Set some variables to default values
 			v3ca = v3wa = np.array([0,0,0])
 			self.Robot.Gait.cs = [0]*6
+			self.Robot.qd = qp
 
 			p_foot = []
 			for j in range(0,6):
+				## Append for legs in support mode only
 				if (self.Robot.Gait.cs[j] == 0):
 					world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3], 
 						  					(-self.Robot.P6c.base_X_CoM[:3].flatten()+self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
@@ -130,7 +138,7 @@ class RvizSnapshot:
 						self.snorm[j*3:j*3+3] = np.array([1,0,0]).reshape((3,1))
 
 			for j in range(3,6):
-				if (abs(self.footholds[j].xp[i].item(1))<1.02): # wide: 1.12; narrow: 1.02
+				if (abs(self.footholds[j].xp[i].item(1))<1.12): # wide: 1.12; narrow: 1.02
 					self.snorm[j*3:j*3+3] = np.array([-1,0,0]).reshape((3,1))	# chimney wall
 					# self.snorm[j*3:j*3+3] = np.array([0,0,1]).reshape((3,1)) 	# wall walking ground
 				else:
@@ -141,37 +149,39 @@ class RvizSnapshot:
 														self.Robot.P6c.base_X_CoM[:3], 
 														self.Robot.CRBI, self.Robot.Gait.cs, self.snorm )
 			joint_torque = self.Robot.force_to_torque(-foot_force)
-			# for j in range(0,6):
-			# 	print np.round(qp[j*3:j*3+3],3), np.round(joint_torque[j*3:j*3+3],3)
-				
-			# print np.round(self.snorm,3)
-			# print 'Fworld ', np.round(foot_force[15:18].flatten(),3)
-			# print 'Torque ', np.round(joint_torque[15:18],3)
+			
 			for xi in range(0,2):
 				self.publish(self.CoB[i], qp)
 			rospy.sleep(0.1)
+
 			fforce_local = np.zeros((18,1))
+			fforce_hip   = np.zeros((18,1))
+
 			for j in range(0,6):
 				self.Robot.Leg[j].XHd.update_base_X_foot(qp[j*3:j*3+3])
 				R_world_X_foot = np.transpose(mX(self.Robot.XHd.world_X_base[:3,:3], self.Robot.Leg[j].XHd.base_X_foot[:3,:3]))
 				fforce_local[j*3:j*3+3] = mX(R_world_X_foot, foot_force[j*3:j*3+3])
-				# if j==1:
-				# 	print np.round(fforce_local[j*3:j*3+3],3)
+
+				## Force in hip frame -  for logging
+				# fforce_hip[j*3:j*3+3] = self.Robot.Leg[j].F6d.coxa_X_foot[:3]
+			
 			## Visualise foot force
 			for v in range(0,2):
 				self.Visualizer.publish_foot_force(self.Robot.Gait.cs, fforce_local)
-
+			# print np.round(phip_X_foot,3)
 			## Data Logging
 			logstate = LoggingState()
 			logstate.positions = self.CoB[i].tolist() + qp
-			logstate.velocities = [0]*24
-			logstate.accelerations = [0]*24
+			logstate.velocities = [0]*6 + pworld_X_foot
+			logstate.accelerations = [0]*6 + phip_X_foot
 			logstate.effort = np.zeros(6).flatten().tolist() + joint_torque
 			logstate.forces = np.zeros(6).flatten().tolist() + foot_force.flatten().tolist()
+			# logstate.forces = np.zeros(6).flatten().tolist() + fforce_hip.flatten().tolist()
 			logstate.qp_sum_forces  = self.ForceDist.sum_forces.flatten().tolist()
 			logstate.qp_sum_moments = self.ForceDist.sum_moment.flatten().tolist()
 			logstate.qp_desired_forces  = self.ForceDist.d_forces.flatten().tolist()
-			logstate.qp_desired_moments = self.ForceDist.d_moment.flatten().tolist()
+			# logstate.qp_desired_moments = self.ForceDist.d_moment.flatten().tolist()
+			logstate.qp_desired_moments = self.snorm.flatten().tolist()
 			self.log_pub_.publish(logstate)
 
 			# rospy.sleep(0.05)
@@ -184,7 +194,7 @@ if __name__ == "__main__":
 
 	rviz = RvizSnapshot()
 	
-	rviz.load_file('chimney_highRes_opt_narrow.csv')
+	rviz.load_file('chimney_highRes_opt_working.csv')
 	# rviz.load_file('wall_medRes.csv')
 
 	rviz.visualise_motion_plan()
