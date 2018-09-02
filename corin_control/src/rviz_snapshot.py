@@ -114,7 +114,7 @@ class RvizSnapshot:
 					world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3], 
 						  					(-self.Robot.P6c.base_X_CoM[:3].flatten()+self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
 					p_foot.append(world_CoM_X_foot.copy())
-					print np.round(world_CoM_X_foot.flatten(),3)
+					
 			## Gravity vector wrt base orientation 
 			# gv = mX(self.Robot.XHd.world_X_base[:3,:3], np.array([0,0,G]))
 			gv = np.array([0,0,G])
@@ -125,11 +125,12 @@ class RvizSnapshot:
 					self.snorm[j*3:j*3+3] = np.array([1,0,0]).reshape((3,1))
 				else:
 					self.snorm[j*3:j*3+3] = np.array([0,-1,0]).reshape((3,1))
+					# hardcode for LR leg normal at final instance 
 					if (j==2 and i==len(self.CoB)-1):
 						self.snorm[j*3:j*3+3] = np.array([1,0,0]).reshape((3,1))
 
 			for j in range(3,6):
-				if (abs(self.footholds[j].xp[i].item(1))<1.12):
+				if (abs(self.footholds[j].xp[i].item(1))<1.02): # wide: 1.12; narrow: 1.02
 					self.snorm[j*3:j*3+3] = np.array([-1,0,0]).reshape((3,1))	# chimney wall
 					# self.snorm[j*3:j*3+3] = np.array([0,0,1]).reshape((3,1)) 	# wall walking ground
 				else:
@@ -175,7 +176,7 @@ class RvizSnapshot:
 
 			# rospy.sleep(0.05)
 			i += 1
-			print self.snorm.flatten()
+			
 			# print np.round(self.CoB[i][5]*180./np.pi,3)
 			# raw_input('continue')
 

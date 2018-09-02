@@ -199,10 +199,10 @@ def foothold_list_to_marker_array(path_arr, stamp=None, frame_id=None):
 			mark.pose.orientation.y = 0.0;
 			mark.pose.orientation.z = 0.0;
 			mark.pose.orientation.w = 1.0;
-			mark.scale.x = 0.03
-			mark.scale.y = 0.03
-			mark.scale.z = 0.03
-			mark.color.a = 1.0; # transparency level
+			mark.scale.x = 0.01
+			mark.scale.y = 0.01
+			mark.scale.z = 0.01
+			mark.color.a = 0.5; # transparency level
 			# colour scheme for each foot
 			if (j == 0):
 				mark.color.r = 1.0;
@@ -317,8 +317,11 @@ type_mappings = [(PointField.INT8, np.dtype('int8')), (PointField.UINT8, np.dtyp
 pftype_to_nptype = dict(type_mappings)
 nptype_to_pftype = dict((nptype, pftype) for pftype, nptype in type_mappings)
 
-def point_cloud_array_mapping(data):
+def point_cloud_array_mapping(data, offset=None):
     """ remaps from 3D array to required output form """
+
+    if (offset is None):
+    	offset = np.zeros(3)
 
     npoints = len(data[0])
     points_arr = np.zeros((npoints,), dtype=[
@@ -329,9 +332,9 @@ def point_cloud_array_mapping(data):
                         ('g', np.uint8),
                         ('b', np.uint8)])
     
-    points_arr['x'] = data[0]
-    points_arr['y'] = data[1]
-    points_arr['z'] = data[2] - 0.015
+    points_arr['x'] = data[0] + offset[0]
+    points_arr['y'] = data[1] + offset[1]
+    points_arr['z'] = data[2] - 0.015 + offset[2]
     points_arr['r'] = 0
     points_arr['g'] = 0
     points_arr['b'] = 255

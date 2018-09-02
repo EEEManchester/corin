@@ -80,7 +80,7 @@ class QPForceDistribution():
 		xa = matrix(v3ca, (3,1), tc='d') 	# CoM linear acceleration
 		wa = matrix(w3ca, (3,1), tc='d') 	# angular base acceleration
 		ig = matrix(Ig_com, tc='d') 		# centroidal moment of inertia
-		mu = 1.0; 							# Coefficient of friction
+		mu = 0.5; 							# Coefficient of friction
 
 		## Linear equality (system equation)
 		A = matrix(np.zeros((6,3*n_contact)), (6,3*n_contact), tc='d')
@@ -89,10 +89,10 @@ class QPForceDistribution():
 		for i in range(0, n_contact):	
 			A[:3,(i*3):(i*3+3)]  = np.eye(3)
 			A[3:6,(i*3):(i*3+3)] = mtf.skew(p_foot[i])
-		
+			
 		## =================== Bounded Force ============================ ##
 		f_min = 0.
-		f_max = 40.
+		f_max = 45.
 
 		D  = np.zeros(6);
 		D[4] = f_min
@@ -154,11 +154,11 @@ class QPForceDistribution():
 
 		H = 2*A.T*S*A
 		q = (-2*b.T*S*A).T
-
+		
 		## Set Solver parameters
-		solvers.options['abstol']  = 1e-10
-		solvers.options['reltol']  = 1e-10
-		solvers.options['feastol'] = 1e-10
+		solvers.options['abstol']  = 1e-16
+		solvers.options['reltol']  = 1e-16
+		solvers.options['feastol'] = 1e-16
 		solvers.options['show_progress'] = False
 
 		## Solve QP problem

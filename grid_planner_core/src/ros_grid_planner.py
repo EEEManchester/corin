@@ -127,7 +127,7 @@ class GridMapRos:
 	def convert_graph_to_pointcloud(self):
 		""" converts graph to pointcloud2 """
 
-		arr_mapped_data  = point_cloud_array_mapping(self.GridMap.graph_to_nparray())
+		arr_mapped_data  = point_cloud_array_mapping(self.GridMap.graph_to_nparray(), self.GridMap.viz_offset)
 		self.point_cloud = array_to_pointcloud2(arr_mapped_data, rospy.Time.now(), "world")
 
 	def loop_cycle(self):
@@ -136,8 +136,9 @@ class GridMapRos:
 
 if __name__ == "__main__":
 
-	RosGridMap = GridMapRos("flat")
-	
+	# RosGridMap = GridMapRos("wall_convex_corner")
+	RosGridMap = GridMapRos("chimney_corner")
+
 	print "ROS Grid Map Planner Initialised"
 	
 	## ==================================================== ##
