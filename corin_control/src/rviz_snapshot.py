@@ -177,13 +177,13 @@ class RvizSnapshot:
 			i += 1
 			print self.snorm.flatten()
 			# print np.round(self.CoB[i][5]*180./np.pi,3)
-			raw_input('continue')
+			# raw_input('continue')
 
 if __name__ == "__main__":
 
 	rviz = RvizSnapshot()
 	
-	rviz.load_file('chimney_highRes_opt_narrow.csv')
+	rviz.load_file('chimney_highRes_opt.csv')
 	# rviz.load_file('wall_medRes.csv')
 
 	rviz.visualise_motion_plan()

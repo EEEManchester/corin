@@ -163,7 +163,10 @@ class QPForceDistribution():
 
 		## Solve QP problem
 		sol = solvers.qp(H,q, inq_C, inq_D) 
-
+		# print sol
+		# print np.round(sol['x'],3).flatten()
+		# sol = solvers.coneqp(H,q, inq_C, inq_D) 
+		# print np.round(sol['x'],3).flatten()
 		# print np.round(np.array(sol['x']).transpose(),4)
 		# print A*sol['x']
 
@@ -242,7 +245,7 @@ for i in range(3,6):
 	snorm[i*3:i*3+3] = np.array([0,1,0]).reshape((3,1))
 
 force_vector = qprog.resolve_force(gvset, xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, snorm)
-print np.round(-force_vector.flatten(),5)
+# print np.round(-force_vector.flatten(),5)
 
 # f = open('qp_discont.csv', 'w')
 
