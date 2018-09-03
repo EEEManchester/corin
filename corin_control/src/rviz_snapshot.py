@@ -23,6 +23,8 @@ class RvizSnapshot:
 		self.Robot = robot_class.RobotState()
 		self.ForceDist = QPForceDistribution()
 
+		self.joint_states = []
+
 		self.__initialise_variables__()
 		self.__initialise_topics__()
 		
@@ -62,10 +64,19 @@ class RvizSnapshot:
 					# self.footholds[j].xp.append( np.asarray(map(lambda x: float(x), row[6+j*3:6+(j*3)+3])) )
 					mod_foothold = np.asarray(map(lambda x: float(x), row[6+j*3:6+(j*3)+3]))# + np.array([0.,0.,0.05])
 					self.footholds[j].xp.append(mod_foothold)
+				
+				self.joint_states.append( np.asarray(map(lambda x: float(x), row[24:42])) )
+				
 				counter += 1
+			
 			# print self.CoB
 			# print '======================'
 			# print (self.footholds[0].xp)
+		try:
+			if not self.joint_states[0]:
+				self.joint_states = []
+		except:
+			pass
 
 	def visualise_motion_plan(self):
 
@@ -73,9 +84,13 @@ class RvizSnapshot:
 		self.Visualizer.publish_path(self.CoB)
 		self.Visualizer.publish_footholds(self.footholds)
 
+		if self.joint_states:
+			for xi in range(0,3):
+				self.publish(self.CoB[0], self.joint_states[0])
+				rospy.sleep(0.5)
+
 	def cycle_snapshot(self):
 
-		# for i in range(0,len(self.CoB)):
 		i = 0
 		while (i != len(self.CoB) and not rospy.is_shutdown()):
 
@@ -83,7 +98,7 @@ class RvizSnapshot:
 			# self.Robot.P6d.world_X_base[5] = 0
 			self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
 			
-			self.Visualizer.publish_robot((self.CoB[i]))
+			# self.Visualizer.publish_robot((self.CoB[i]))
 
 			qp = []
 			phip_X_foot = [] 	# TEMP
@@ -190,14 +205,30 @@ class RvizSnapshot:
 			# print np.round(self.CoB[i][5]*180./np.pi,3)
 			# raw_input('continue')
 
+	def cycle_states(self):
+		""" Publishes joint states directly """
+
+		i = 0
+		while (i != len(self.CoB) and not rospy.is_shutdown()):
+			
+			for xi in range(0,2):
+				self.publish(self.CoB[i], self.joint_states[i])
+			rospy.sleep(0.1)
+			i += 1
+			# raw_input('cont')
+			rospy.sleep(0.5)
+
 if __name__ == "__main__":
 
 	rviz = RvizSnapshot()
 	
-	rviz.load_file('chimney_highRes_opt_working.csv')
-	# rviz.load_file('wall_medRes.csv')
+	# rviz.load_file('chimney_cheight_0d1.csv')
+	# rviz.load_file('wall_highRes_convex.csv')
+	# rviz.load_file('wall_medRes_concave.csv')
+	rviz.load_file('wall_medRes_convex.csv')
 
 	rviz.visualise_motion_plan()
 	raw_input('Start motion!')
-	for i in range(0,1):
-		rviz.cycle_snapshot()
+	for i in range(0,5):
+		# rviz.cycle_snapshot()
+		rviz.cycle_states()
