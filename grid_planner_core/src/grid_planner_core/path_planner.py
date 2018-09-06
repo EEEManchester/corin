@@ -845,7 +845,8 @@ class PathPlanner:
 
 		## Cycle through trajectory
 		while (i != len(base_path.X.t)):
-			# print i, ' Gait phase ', self.Robot.Gait.cs 
+			print '=================================================='
+			print i, ' ', len(base_path.X.t), ' Gait phase ', self.Robot.Gait.cs 
 			leg_exceed = None
 			bound_exceed = False 	# reset suspension flag
 			ig = i 					# last count which gait changes
@@ -890,7 +891,7 @@ class PathPlanner:
 								break
 
 							if (bound_exceed == True):
-								# print 'bound exceed on ', j, ' at n=', i
+								print 'bound exceed on ', j, ' at n=', i
 								leg_exceed = j
 								break
 
@@ -911,8 +912,8 @@ class PathPlanner:
 							break_count += 1
 							# print 'break count ', break_count
 							if (break_count == 10):
-								print 'Inifinite loop'
-								raw_input('Local minima - invalid solution')
+								print 'Inifinite loop ', i
+								raw_input('Local minima - invalid solution at ')
 								return None
 						else:
 							break_n = i
@@ -999,6 +1000,7 @@ class PathPlanner:
 					if (i == len(base_path.X.t)):
 						v3_uv = np.zeros(3)
 					else:
+
 						snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_NRP[:3,3], j) 	# Get surface normal
 						v3_uv = compute_vector_heading(v3cp, v3cp_prev, snorm)
 
@@ -1008,7 +1010,7 @@ class PathPlanner:
 							except:
 								v3cp_nex = np.zeros((3,1))
 							v3_uv = compute_vector_heading(v3cp_nex, v3cp_prev, snorm)
-					
+							
 					if (self.T_GND_X_WALL):
 						v3_uv = np.zeros(3)
 
@@ -1016,12 +1018,19 @@ class PathPlanner:
 					
 					self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + \
 																		np.nan_to_num(v3_uv*self.Robot.Gait.step_stroke/2.)
-					self.Robot.Leg[j].XHd.base_X_AEP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
-																	self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3:4])
+					self.Robot.Leg[j].XHd.base_X_AEP[0:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
+																													self.Robot.Leg[j].XHd.world_base_X_AEP[0:3,3:4])
+					self.Robot.Leg[j].XHd.base_X_AEP[3,3] = 1
 					self.Robot.Leg[j].XHd.base_X_NRP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
 																	self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4])
 					self.Robot.Leg[j].XHd.world_X_foot = mX(self.Robot.XHd.world_X_base, 
 																self.Robot.Leg[j].XHd.base_X_AEP)
+					
+					# print np.round(self.Robot.XHd.world_X_base,3)
+					# print np.round(self.Robot.Leg[j].XHd.world_base_X_AEP,3)
+					# print np.round(self.Robot.Leg[j].XHd.base_X_NRP,3)
+					# print np.round(self.Robot.Leg[j].XHd.world_X_foot,3)
+					
 					# if (j==5):
 					# 	print 'wbXn: ', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
 					# 	print 'wbXa: ', np.round(self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3],3)
@@ -1032,6 +1041,7 @@ class PathPlanner:
 					# 	print 'wXf:  ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
 
 					## Get cell height in (x,y) location of world_X_foot
+					
 					cell_h = np.array([0., 0., self.GridMap.get_cell('height', self.Robot.Leg[j].XHd.world_X_foot[:3,3], j)])
 					
 					## Cell height above threshold gets ignored as this requires advanced motions
@@ -1039,7 +1049,8 @@ class PathPlanner:
 						self.Robot.Leg[j].XHd.world_X_foot[2,3] = cell_h.item(2) 	# set z-component to cell height
 
 					elif (abs(cell_h.item(2)) > 0.1 and self.W_GND is True):
-						print 'Search for next valid foothold for ', j, cell_h.item(2), np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
+						print 'Search for next valid foothold for leg ', j, 'because cell value ', cell_h.item(2) 
+						print np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3), (self.Robot.Leg[j].XHd.world_X_foot[0,3]/self.GridMap.resolution, self.Robot.Leg[j].XHd.world_X_foot[1,3]/self.GridMap.resolution)
 						# print np.round(self.Robot.XHd.world_X_base[:3,3],3)
 						# self.Robot.Leg[j].XHd.world_X_foot[:3,3] = self.find_valid_foothold(self.Robot.Leg[j].XHd.world_X_foot[:3,3], j)
 						self.Robot.Leg[j].XHd.world_X_foot[:3,3] = self.find_valid_foothold(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + 
@@ -1773,8 +1784,9 @@ class PathPlanner:
 		base_path = PathGenerator.generate_base_path(x_cob, w_cob, tn)
 
 		# Plot.plot_2d_multiple(1,wn_com.t,wn_com.xp*180/np.pi)
-		# Plot.plot_2d_multiple(1,base_path.X.t,base_path.X.xp)#, base_path.W.xv)
-		
+		# Plot.plot_2d_multiple(1,base_path.X.t,base_path.X.xp)
+		# Plot.plot_2d_multiple(1,base_path.W.t,base_path.W.xp)
+
 		return base_path
 
 	def plot_primitive_graph(self):
@@ -1787,7 +1799,7 @@ class PathPlanner:
 ## ================================================================================================ ##
 
 ## Create map and plan path
-# grid_map = GridMap('iros_demo')
+# grid_map = GridMap('iros_part1_demo')
 # planner = PathPlanner(grid_map)
 # planner.plot_primitive_graph()
 

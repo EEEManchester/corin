@@ -119,5 +119,5 @@ if __name__ == "__main__":
 	
 	a = [1,1,0]
 
-	if -1 in a:
-		print 'yes'
+	a = np.eye(4)
+	# print np.dot(a[:3,:3],np.array([[1],[2],[3]]))

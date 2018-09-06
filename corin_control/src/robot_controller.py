@@ -759,7 +759,8 @@ class CorinManager:
 				# ps = (10,13); pf = (25,21)	# G2W - Left side up
 				# ps = (10,13); pf = (40,13)	# full wall or chimney 
 				# ps = (10,13); pf = (72,13) 	# wall and chimney demo
-				ps = (10,15); pf = (150,10) 	# IROS demo
+				# ps = (10,15); pf = (150,10) 	# IROS demo
+				ps = (10,15); pf = (52,12) 	# IROS - past chimney
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,

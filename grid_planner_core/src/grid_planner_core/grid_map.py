@@ -693,7 +693,7 @@ class GridMap:
 		# m_chim = dict(zip(self.GM_chim, self.GM_chim))
 
 		# Grid map & obstacles
-		plt.style.use('presentation')
+		# plt.style.use('presentation')
 		nsize  = 20	# size of nodes
 		labels = False 	# label on nodes
 
@@ -752,7 +752,7 @@ class GridMap:
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-# gmap = GridMap('wall_convex_corner')
+# gmap = GridMap('iros_part1_demo')
 # print gmap.get_index_exists((34,0))
 # a, b = gmap.graph_attributes_to_nparray("norm")
 # print a
@@ -760,7 +760,7 @@ class GridMap:
 # sp = np.array([0.6015, 0.1391, -0.])
 # p = (19,21)
 # print gmap.get_median_width([p[0]*gmap.resolution,p[1]*gmap.resolution])
-# gmap.graph_representation(gprim=(0,0))
+# gmap.graph_representation()
 # print range(10/2,0,-1)
 # [(20, 5), (20, 6), (21, 6), (21, 5), (20, 5), (19, 5), (19, 6), (19, 7), (20, 7), (21, 7), (21, 6), (21, 5), (20, 5), (19, 5), (20, 5), (21, 5)]
 

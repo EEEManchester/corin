@@ -139,7 +139,7 @@ class GridMapRos:
 if __name__ == "__main__":
 
 	# RosGridMap = GridMapRos("wall_convex_corner")
-	RosGridMap = GridMapRos("iros_demo")
+	RosGridMap = GridMapRos("iros_part1_demo")
 
 	print "ROS Grid Map Planner Initialised"
 	
@@ -156,7 +156,7 @@ if __name__ == "__main__":
 	# 	print "Service call failed: %s"%e
 
 	## Path Planning
-	ps = (10,15); pf = (150,10)
+	ps = (10,15); pf = (18,12) #(150,10)
 	rospy.wait_for_service('GridMap/query_map')
 	try:
 		start = Pose()

@@ -70,6 +70,14 @@ Map:
     hole:
       i1: { s1: [25,2], s2: [42,22], sh: -1}
 
+  iros_part1_demo:
+    size: { sx: 1.21, sy: 1.27} #{ sx: 1.9, sy: 1.27}
+    wall:
+      i1: { s1: [0,0],  s2: [40,1], sh: 1}
+      i2: { s1: [20,23], s2: [40,25], sh: 1}
+    hole:
+      i1: { s1: [25,2], s2: [40,22], sh: -1}
+
   wall_convex_corner:
     offset: {x: 0.02, y: -0.86, z: 0.0}
     size: { sx: 1.01, sy: 1.01}
