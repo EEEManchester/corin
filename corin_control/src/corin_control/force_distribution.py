@@ -92,7 +92,7 @@ class QPForceDistribution():
 			
 		## =================== Bounded Force ============================ ##
 		f_min = 0.
-		f_max = 45.
+		f_max = 40.
 
 		D  = np.zeros(6);
 		D[4] = f_min
@@ -156,9 +156,9 @@ class QPForceDistribution():
 		q = (-2*b.T*S*A).T
 		
 		## Set Solver parameters
-		solvers.options['abstol']  = 1e-16
-		solvers.options['reltol']  = 1e-16
-		solvers.options['feastol'] = 1e-16
+		solvers.options['abstol']  = 1e-10
+		solvers.options['reltol']  = 1e-10
+		solvers.options['feastol'] = 1e-10
 		solvers.options['show_progress'] = False
 
 		## Solve QP problem

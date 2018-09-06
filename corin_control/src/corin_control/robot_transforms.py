@@ -382,9 +382,10 @@ class ArrayHomogeneousTransform:
 q1 = 0.5
 q2 = 0.
 q3 = 0.
-XH = ArrayHomogeneousTransform(1)
+XH = ArrayHomogeneousTransform(3)
 XH.update_base_X_foot(np.array([0.5,0.,0.]))
 XH.update_coxa_X_foot(np.array([0.5,0.,0.]))
+print np.round(XH.base_X_coxa,3)
 # print np.round(XH.base_X_foot[:3,:3],3)
 # print np.round(XH.coxa_X_foot[:3,:3],3)
 # print np.round(mX(rot_Z(q1), rot_X(PI/2), rot_Z(q2), rot_Z(q3)),3)

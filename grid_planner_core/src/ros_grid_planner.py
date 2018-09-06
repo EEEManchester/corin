@@ -30,6 +30,8 @@ class GridMapRos:
 
 		self.__hotstart_initialise__()
 
+		self.Planner.plot_primitive_graph()
+
 	def __hotstart_initialise__(self):
 		self.__initialise_topics__()
 		self.__initialise_services__()
@@ -83,10 +85,10 @@ class GridMapRos:
 
 		print "SERVICE - Path Planning"
 		# convert to index position
-		ps = (int(req.start.position.x/self.GridMap.resolution), 
-					int(req.start.position.y/self.GridMap.resolution))
-		pf = (int(req.goal.position.x/self.GridMap.resolution), 
-					int(req.goal.position.y/self.GridMap.resolution))
+		ps = (int(np.round(req.start.position.x/self.GridMap.resolution)), 
+					int(np.round(req.start.position.y/self.GridMap.resolution)))
+		pf = (int(np.round(req.goal.position.x/self.GridMap.resolution)), 
+					int(np.round(req.goal.position.y/self.GridMap.resolution)))
 		print ps, pf
 		if (self.GridMap.get_index_exists(ps) and self.GridMap.get_index_exists(pf)):
 			self.initialise_robot_state(ps, pf)
@@ -137,7 +139,7 @@ class GridMapRos:
 if __name__ == "__main__":
 
 	# RosGridMap = GridMapRos("wall_convex_corner")
-	RosGridMap = GridMapRos("chimney_corner")
+	RosGridMap = GridMapRos("iros_demo")
 
 	print "ROS Grid Map Planner Initialised"
 	
@@ -154,23 +156,23 @@ if __name__ == "__main__":
 	# 	print "Service call failed: %s"%e
 
 	## Path Planning
-	# ps = (10,13); pf = (20,13)
-	# rospy.wait_for_service('GridMap/query_map')
-	# try:
-	# 	start = Pose()
-	# 	goal  = Pose()
-	# 	start.position.x = ps[0]*RosGridMap.GridMap.resolution
-	# 	start.position.y = ps[1]*RosGridMap.GridMap.resolution
-	# 	goal.position.x = pf[0]*RosGridMap.GridMap.resolution
-	# 	goal.position.y = pf[1]*RosGridMap.GridMap.resolution
+	ps = (10,15); pf = (150,10)
+	rospy.wait_for_service('GridMap/query_map')
+	try:
+		start = Pose()
+		goal  = Pose()
+		start.position.x = ps[0]*RosGridMap.GridMap.resolution
+		start.position.y = ps[1]*RosGridMap.GridMap.resolution
+		goal.position.x = pf[0]*RosGridMap.GridMap.resolution
+		goal.position.y = pf[1]*RosGridMap.GridMap.resolution
 
-	# 	path_planner = rospy.ServiceProxy('GridMap/query_map', PlanPath)
-	# 	path_planned = path_planner(start, goal)
+		path_planner = rospy.ServiceProxy('GridMap/query_map', PlanPath)
+		path_planned = path_planner(start, goal)
 
 	# 	mplan = planpath_to_motionplan(path_planned)
 		
-	# except rospy.ServiceException, e:
-	# 	print "Service call failed: %s"%e
+	except rospy.ServiceException, e:
+		print "Service call failed: %s"%e
 
 	while (not rospy.is_shutdown()):
 		RosGridMap.loop_cycle()
