@@ -753,12 +753,13 @@ class CorinManager:
 				print 'Planning path...'
 				self.Robot.support_mode = False
 
-				ps = (10,13); pf = (16,13)	# Short straight Line
+				# ps = (10,13); pf = (16,13)	# Short straight Line
 				# ps = (10,14); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
 				# ps = (10,13); pf = (25,21)	# G2W - Left side up
 				# ps = (10,13); pf = (40,13)	# full wall or chimney 
 				# ps = (10,13); pf = (72,13) 	# wall and chimney demo
+				ps = (10,15); pf = (150,10) 	# IROS demo
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,
@@ -781,8 +782,8 @@ class CorinManager:
 						start.position.y = ps[1]*self.GridMap.resolution
 						goal.position.x = pf[0]*self.GridMap.resolution
 						goal.position.y = pf[1]*self.GridMap.resolution
-
-						try:
+						print start.position.x, start.position.y
+						try:	
 							print 'Requesting Planning service'
 							path_generat = self.grid_serv_.call(start, goal)
 							plan_exist = True

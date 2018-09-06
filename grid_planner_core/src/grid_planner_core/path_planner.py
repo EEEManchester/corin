@@ -48,7 +48,7 @@ MAX_WP = 0.62 	# maximum wall walking footprint
 MIN_CFW = 0.60 	# minimum footprint width for chimney
 MAX_CFW = 0.73 	# maximum footprint width for chimney
 
-TEST_POINT = (25,5)
+TEST_POINT = (20,21)
 
 class BodyposeTable:
 	def __init__(self):
@@ -401,7 +401,7 @@ class PathPlanner:
 					
 				# continues to check boundary edges only if internal boundary valid
 				if (self.check_area_collision(p, fp_area, yaw) is True):
-
+					
 					for i in range(0,6):
 						# Foot central position - TODO: YAW DEPENDANT
 						pxi = p[0] + int(np.round( (pw_leg[i][0]*np.cos(yaw)-pw_leg[i][1]*np.sin(yaw))/self.GridMap.resolution))
@@ -411,14 +411,16 @@ class PathPlanner:
 						for x in range(0, self.rblg_gd[0]):
 							# Set leg foothold - TODO: YAW DEPENDANT
 							if (i<3):
-								pf1 = (pxi-ix_off+x, p[1]+by_min+d)
-								pf2 = (pxi-ix_off+x, p[1]+by_min+d-1)
-								# if (p==TEST_POINT):
-								# 	print i, p, d, pf1, pf2
+								pf1 = (pxi-ix_off+x, p[1]+by_min+d) 	# external from robot
+								pf2 = (pxi-ix_off+x, p[1]+by_min+d-1) 	# internal from robot
+								if (p==TEST_POINT):
+									print pf1, pf2, self.GridMap.Map.nodes[pf1]['height'], self.GridMap.Map.nodes[pf2]['height']
 							else:
-								pf1 = (pxi-ix_off+x, p[1]-(by_min+d-1))
-								pf2 = (pxi-ix_off+x, p[1]-(by_min+d))
-								
+								pf1 = (pxi-ix_off+x, p[1]-(by_min+d))
+								pf2 = (pxi-ix_off+x, p[1]-(by_min+d-1))
+								# if (p==TEST_POINT):
+									# print i, p, d, pf1, pf2
+									# print pf1, pf2, self.GridMap.Map.nodes[pf1]['height'], self.GridMap.Map.nodes[pf2]['height']
 							try:
 								if (self.GridMap.Map.nodes[pf1]['height']==1 and self.GridMap.Map.nodes[pf2]['height']==1):
 									LA[i] = -1;
@@ -428,8 +430,8 @@ class PathPlanner:
 							except KeyError:
 								LA[i] = -1;
 								break
-					# if (p==TEST_POINT):
-					# 	print 'flag: ', fp_area, LA
+					if (p==TEST_POINT):
+						print 'flag: ', fp_area, LA
 
 					## valid if THREE legs on wall have footholds and ground are all ground
 					if (np.amin(LA) < 0):
@@ -443,6 +445,10 @@ class PathPlanner:
 						elif (all(LA[3:6]) and LA[:3] == [0]*3):
 							# RHS wall walking
 							ER_edge = motion_valid = True
+						elif -1 in LA:
+							print 'earlier did not catch'
+						elif (all(LA[:3]) or all(LA[3:6])):
+							motion_valid = True
 
 					# Exit loop if valid configuration exists
 					if (motion_valid):
@@ -452,8 +458,8 @@ class PathPlanner:
 				# Exit search as internal boundary violated
 				else:
 					break
-		# if (p==TEST_POINT):
-		# 	print 'this: ', p, motion_valid, width
+		if (p==TEST_POINT):
+			print 'this: ', p, motion_valid, width
 		return motion_valid, width
 
 	def chimney_walking(self, p, yaw=0):
@@ -1771,12 +1777,17 @@ class PathPlanner:
 		
 		return base_path
 
+	def plot_primitive_graph(self):
+
+		prim = [self.GM_walk, self.GM_wall, self.GM_chim]
+		self.GridMap.graph_representation(gprim=prim)
 
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
 
 ## Create map and plan path
-# grid_map = GridMap('hole_demo')
+# grid_map = GridMap('iros_demo')
 # planner = PathPlanner(grid_map)
+# planner.plot_primitive_graph()
 

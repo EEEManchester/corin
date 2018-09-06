@@ -678,8 +678,9 @@ class GridMap:
 
 		return point_list
 
-	def graph_representation(self, gpath=None):
+	def graph_representation(self,**options):
 		""" Plots graph functions """
+
 
 		# dictionary of node names->positions
 		p_map  = dict(zip(self.Map, self.Map))
@@ -702,14 +703,23 @@ class GridMap:
 		nx.draw_networkx(self.G_wall, p_wall, with_labels=labels, node_size=nsize, node_color='#ff0000', width=0.0, node_shape="s");
 		# Holes 
 		nx.draw_networkx(self.G_hole, p_hole, with_labels=labels, node_size=nsize, node_color='#663300', width=0.0, node_shape="s");
-
+		
 		# Motion primitives
+		if (options.get('gprim') is not None):
+			gprim = options.get('gprim')
+			m_walk = dict(zip(gprim[0], gprim[0]))
+			m_wall = dict(zip(gprim[1], gprim[1]))
+			m_chim = dict(zip(gprim[2], gprim[2]))
+		
+			nx.draw_networkx(gprim[0],m_walk,with_labels=labels,node_size=nsize, node_color='#ff6600',	width=0.0);
+			nx.draw_networkx(gprim[1],m_wall,with_labels=labels,node_size=nsize, node_color='#00ccff',	width=0.0);
+			nx.draw_networkx(gprim[2],m_chim,with_labels=labels,node_size=nsize, node_color='#66ff00',	width=0.0);
 		# nx.draw_networkx(self.GM_walk,m_walk,with_labels=labels,node_size=nsize, node_color='#ff6600',	width=0.0);
 		# nx.draw_networkx(self.GM_wall,m_wall,with_labels=labels,node_size=nsize, node_color='#00ccff',	width=0.0);
 		# nx.draw_networkx(self.GM_chim,m_chim,with_labels=labels,node_size=nsize, node_color='#66ff00',	width=0.0);
 
 		# Feasible path - single point
-		if (gpath is not None):
+		if options.get("gpath") is not None:
 			p_path = dict(zip(gpath, gpath))
 			if (type(gpath) == list):
 				gpath = nx.path_graph(gpath)
@@ -750,7 +760,7 @@ class GridMap:
 # sp = np.array([0.6015, 0.1391, -0.])
 # p = (19,21)
 # print gmap.get_median_width([p[0]*gmap.resolution,p[1]*gmap.resolution])
-# gmap.graph_representation()
+# gmap.graph_representation(gprim=(0,0))
 # print range(10/2,0,-1)
 # [(20, 5), (20, 6), (21, 6), (21, 5), (20, 5), (19, 5), (19, 6), (19, 7), (20, 7), (21, 7), (21, 6), (21, 5), (20, 5), (19, 5), (20, 5), (21, 5)]
 

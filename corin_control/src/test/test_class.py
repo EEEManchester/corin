@@ -116,5 +116,8 @@ if __name__ == "__main__":
 
 	a = np.array([1,2,1])
 	b = np.array([2,2,2])
-	print a*b
-	print np.cross(a,b)
+	
+	a = [1,1,0]
+
+	if -1 in a:
+		print 'yes'
