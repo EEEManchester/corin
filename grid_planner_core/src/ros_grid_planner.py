@@ -30,7 +30,7 @@ class GridMapRos:
 
 		self.__hotstart_initialise__()
 
-		self.Planner.plot_primitive_graph()
+		# self.Planner.plot_primitive_graph()
 
 	def __hotstart_initialise__(self):
 		self.__initialise_topics__()
