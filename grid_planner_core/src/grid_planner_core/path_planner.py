@@ -716,9 +716,10 @@ class PathPlanner:
 	def find_valid_foothold(self, sp, j):
 		""" Find lowest valid foothold in leg grid area """
 		# print 'area sp: ', np.round(sp,4)
-		footholds = self.GridMap.square_spiral_search(sp, (3,3), j)
+		# footholds = self.GridMap.square_spiral_search(sp, (3,3), j)
+		footholds = self.GridMap.search_area(sp, (3,3), j)
 		cost = np.zeros(len(footholds))
-		# print footholds
+		
 		for i in range(0, len(footholds)):
 			cost[i] = self.GridMap.get_index('height', footholds[i])
 			if (cost[i] == 0):
@@ -912,7 +913,7 @@ class PathPlanner:
 							break_count += 1
 							# print 'break count ', break_count
 							if (break_count == 10):
-								print 'Inifinite loop ', i
+								print 'Infinite loop ', i
 								raw_input('Local minima - invalid solution at ')
 								return None
 						else:
@@ -1050,7 +1051,7 @@ class PathPlanner:
 
 					elif (abs(cell_h.item(2)) > 0.1 and self.W_GND is True):
 						print 'Search for next valid foothold for leg ', j, 'because cell value ', cell_h.item(2) 
-						print np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3), (self.Robot.Leg[j].XHd.world_X_foot[0,3]/self.GridMap.resolution, self.Robot.Leg[j].XHd.world_X_foot[1,3]/self.GridMap.resolution)
+						print np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3) #, self.GridMap.getIndex(self.Robot.Leg[j].XHd.world_X_foot[:2,3],j)
 						# print np.round(self.Robot.XHd.world_X_base[:3,3],3)
 						# self.Robot.Leg[j].XHd.world_X_foot[:3,3] = self.find_valid_foothold(self.Robot.Leg[j].XHd.world_X_foot[:3,3], j)
 						self.Robot.Leg[j].XHd.world_X_foot[:3,3] = self.find_valid_foothold(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + 

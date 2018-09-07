@@ -19,8 +19,8 @@ ROBOT_NS = "corin"
 # Link Length, Mass
 BODY_MASS = 1.48
 L1 = 0.060;	L1_MASS = 0.040
-L2 = 0.146;	L2_MASS = 0.350 # ORIGIINAL L2 = 0.15 m; chimney 0.194; wall 0.17
-L3 = 0.146;	L3_MASS = 0.116
+L2 = 0.15;	L2_MASS = 0.350 # ORIGIINAL L2 = 0.15 m; chimney 0.194; wall 0.17
+L3 = 0.15;	L3_MASS = 0.116
 
 LEG_MASS = L1_MASS + L2_MASS + L3_MASS
 ROBOT_MASS = BODY_MASS + LEG_MASS*6
@@ -108,7 +108,7 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 ##                       Stance parameters 	 						##
 ## ================================================================ ##
 
-BOUND_FACTOR = 1.05 	# boundary constraint for leg workplane space
+BOUND_FACTOR = 1.1 	# boundary constraint for leg workplane space
 LEG_CLEAR 	 = 0.06 	# clearance between leg workplane boundaries
 STANCE_WIDTH = 0.208		# ori: 0.21, chimney: 0.27, 0.31 for tripod
 BODY_HEIGHT  = 0.1		# ori: 0.10, chimney: 0.0
