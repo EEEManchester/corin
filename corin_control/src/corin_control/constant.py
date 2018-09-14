@@ -71,8 +71,8 @@ RF_Q3_JOINT = 11;	RM_Q3_JOINT = 14;	RR_Q3_JOINT = 17;
 ## 		Motion Planning		##
 ## ------------------------ ##
 # Foothold area (m) - MP
-LEG_AREA_LX = 0.15#0.09
-LEG_AREA_LY = 0.15#0.06
+LEG_AREA_LX = 0.15
+LEG_AREA_LY = 0.15
 
 # Roll threshold for width clearance detection
 ROLL_TH = 1.0
@@ -110,8 +110,8 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 
 BOUND_FACTOR = 1.1 	# boundary constraint for leg workplane space
 LEG_CLEAR 	 = 0.06 	# clearance between leg workplane boundaries
-STANCE_WIDTH = 0.208		# ori: 0.21, chimney: 0.27, 0.31 for tripod
-BODY_HEIGHT  = 0.1		# ori: 0.10, chimney: 0.0
+STANCE_WIDTH = 0.21		# ori: 0.21, chimney: 0.27, 0.31 for tripod
+BODY_HEIGHT  = 0.15		# ori: 0.10, chimney: 0.0
 # Offset for front and rear legs
 TETA_F = 0.;
 TETA_R = -TETA_F;
@@ -128,7 +128,7 @@ GAIT_TPHASE	 = 2.0 	# default period per gait phase
 STEP_HEIGHT  = 0.08	# default step height, z
 STEP_STROKE  = 0.1 	# default step stroke
 
-BASE_MAX_LINEAR_VELOCITY  = 0.02	# maximum base velocity, m/s - walking: 0.025
+BASE_MAX_LINEAR_VELOCITY  = 0.015	# maximum base velocity, m/s - walking: 0.025
 BASE_MAX_ANGULAR_VELOCITY = 0.01	# maximum base velocity, rad/s
 
 ## ================================================================ ##

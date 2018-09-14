@@ -121,3 +121,9 @@ if __name__ == "__main__":
 
 	a = np.eye(4)
 	# print np.dot(a[:3,:3],np.array([[1],[2],[3]]))
+
+	a = np.array([1,2,3])
+	b = np.array([4,5,6])
+
+	print a.flatten().tolist() + b.flatten().tolist()
+	

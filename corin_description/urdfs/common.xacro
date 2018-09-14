@@ -3,7 +3,7 @@
 
 
 	<xacro:property name="PI" value="3.1415926535897931"/>
-	<xacro:property name="link_scale" value="0.974"  /> 	<!-- chimney: 1.267/1.067		wall:1.12  -->
+	<xacro:property name="link_scale" value="0.7"  /> 	<!-- chimney: 1.267/1.067		wall:1.12/0.974  -->
 
 	<!-- standard distances -->
 	<xacro:property name="trunk_x" value="0.23"/> 		<!-- distance between front & back  joints -->

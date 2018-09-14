@@ -209,11 +209,12 @@ class RvizSnapshot:
 		""" Publishes joint states directly """
 
 		i = 0
+		
 		while (i != len(self.CoB) and not rospy.is_shutdown()):
-			
 			for xi in range(0,2):
 				self.publish(self.CoB[i], self.joint_states[i])
 			rospy.sleep(0.1)
+				
 			i += 1
 			# raw_input('cont')
 			rospy.sleep(0.5)
@@ -222,10 +223,10 @@ if __name__ == "__main__":
 
 	rviz = RvizSnapshot()
 
-	# rviz.load_file('chimney_cheight_0d1.csv')
+	# rviz.load_file('chimney_new_01.csv')
 	# rviz.load_file('wall_highRes_convex.csv')
-	# rviz.load_file('wall_medRes_concave.csv')
-	rviz.load_file('wall_medRes_convex.csv')
+	rviz.load_file('wall_medRes_concave.csv')
+	# rviz.load_file('wall_medRes_convex.csv')
 	
 	rviz.visualise_motion_plan()
 	raw_input('Start motion!')

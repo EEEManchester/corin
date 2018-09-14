@@ -200,8 +200,8 @@ class QPForceDistribution():
 				# print np.round(force_vector[i*3:i*3+3].flatten(),3)
 		self.d_forces = np.array(ROBOT_MASS*(xa+gv))
 		self.d_moment = np.array(ig*wa)
-		print 'Comp: ', np.round(A*sol['x'],3).flatten()
-		print 'Orig: ', np.round(b,3).flatten()
+		# print 'Comp: ', np.round(A*sol['x'],3).flatten()
+		# print 'Orig: ', np.round(b,3).flatten()
 		# error_forces = ROBOT_MASS*(xa+gv) - sum_forces
 		# error_moment = ig*wa - sum_moment
 		# print np.round(force_vector.flatten(),3)

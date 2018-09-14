@@ -48,7 +48,7 @@ MAX_WP = 0.62 	# maximum wall walking footprint
 MIN_CFW = 0.60 	# minimum footprint width for chimney
 MAX_CFW = 0.73 	# maximum footprint width for chimney
 
-TEST_POINT = (20,21)
+TEST_POINT = (25,5)
 
 class BodyposeTable:
 	def __init__(self):
@@ -401,7 +401,7 @@ class PathPlanner:
 					
 				# continues to check boundary edges only if internal boundary valid
 				if (self.check_area_collision(p, fp_area, yaw) is True):
-					
+
 					for i in range(0,6):
 						# Foot central position - TODO: YAW DEPENDANT
 						pxi = p[0] + int(np.round( (pw_leg[i][0]*np.cos(yaw)-pw_leg[i][1]*np.sin(yaw))/self.GridMap.resolution))
@@ -411,16 +411,14 @@ class PathPlanner:
 						for x in range(0, self.rblg_gd[0]):
 							# Set leg foothold - TODO: YAW DEPENDANT
 							if (i<3):
-								pf1 = (pxi-ix_off+x, p[1]+by_min+d) 	# external from robot
-								pf2 = (pxi-ix_off+x, p[1]+by_min+d-1) 	# internal from robot
-								if (p==TEST_POINT):
-									print pf1, pf2, self.GridMap.Map.nodes[pf1]['height'], self.GridMap.Map.nodes[pf2]['height']
-							else:
-								pf1 = (pxi-ix_off+x, p[1]-(by_min+d))
-								pf2 = (pxi-ix_off+x, p[1]-(by_min+d-1))
+								pf1 = (pxi-ix_off+x, p[1]+by_min+d)
+								pf2 = (pxi-ix_off+x, p[1]+by_min+d-1)
 								# if (p==TEST_POINT):
-									# print i, p, d, pf1, pf2
-									# print pf1, pf2, self.GridMap.Map.nodes[pf1]['height'], self.GridMap.Map.nodes[pf2]['height']
+								# 	print i, p, d, pf1, pf2
+							else:
+								pf1 = (pxi-ix_off+x, p[1]-(by_min+d-1))
+								pf2 = (pxi-ix_off+x, p[1]-(by_min+d))
+								
 							try:
 								if (self.GridMap.Map.nodes[pf1]['height']==1 and self.GridMap.Map.nodes[pf2]['height']==1):
 									LA[i] = -1;
@@ -430,8 +428,8 @@ class PathPlanner:
 							except KeyError:
 								LA[i] = -1;
 								break
-					if (p==TEST_POINT):
-						print 'flag: ', fp_area, LA
+					# if (p==TEST_POINT):
+					# 	print 'flag: ', fp_area, LA
 
 					## valid if THREE legs on wall have footholds and ground are all ground
 					if (np.amin(LA) < 0):
@@ -445,10 +443,6 @@ class PathPlanner:
 						elif (all(LA[3:6]) and LA[:3] == [0]*3):
 							# RHS wall walking
 							ER_edge = motion_valid = True
-						elif -1 in LA:
-							print 'earlier did not catch'
-						elif (all(LA[:3]) or all(LA[3:6])):
-							motion_valid = True
 
 					# Exit loop if valid configuration exists
 					if (motion_valid):
@@ -458,8 +452,8 @@ class PathPlanner:
 				# Exit search as internal boundary violated
 				else:
 					break
-		if (p==TEST_POINT):
-			print 'this: ', p, motion_valid, width
+		# if (p==TEST_POINT):
+		# 	print 'this: ', p, motion_valid, width
 		return motion_valid, width
 
 	def chimney_walking(self, p, yaw=0):
@@ -716,10 +710,9 @@ class PathPlanner:
 	def find_valid_foothold(self, sp, j):
 		""" Find lowest valid foothold in leg grid area """
 		# print 'area sp: ', np.round(sp,4)
-		# footholds = self.GridMap.square_spiral_search(sp, (3,3), j)
-		footholds = self.GridMap.search_area(sp, (3,3), j)
+		footholds = self.GridMap.square_spiral_search(sp, (3,3), j)
 		cost = np.zeros(len(footholds))
-		
+		# print footholds
 		for i in range(0, len(footholds)):
 			cost[i] = self.GridMap.get_index('height', footholds[i])
 			if (cost[i] == 0):
@@ -846,8 +839,7 @@ class PathPlanner:
 
 		## Cycle through trajectory
 		while (i != len(base_path.X.t)):
-			print '=================================================='
-			print i, ' ', len(base_path.X.t), ' Gait phase ', self.Robot.Gait.cs 
+			# print i, ' Gait phase ', self.Robot.Gait.cs 
 			leg_exceed = None
 			bound_exceed = False 	# reset suspension flag
 			ig = i 					# last count which gait changes
@@ -892,7 +884,7 @@ class PathPlanner:
 								break
 
 							if (bound_exceed == True):
-								print 'bound exceed on ', j, ' at n=', i
+								# print 'bound exceed on ', j, ' at n=', i
 								leg_exceed = j
 								break
 
@@ -913,8 +905,8 @@ class PathPlanner:
 							break_count += 1
 							# print 'break count ', break_count
 							if (break_count == 10):
-								print 'Infinite loop ', i
-								raw_input('Local minima - invalid solution at ')
+								print 'Inifinite loop'
+								raw_input('Local minima - invalid solution')
 								return None
 						else:
 							break_n = i
@@ -1001,7 +993,6 @@ class PathPlanner:
 					if (i == len(base_path.X.t)):
 						v3_uv = np.zeros(3)
 					else:
-
 						snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_NRP[:3,3], j) 	# Get surface normal
 						v3_uv = compute_vector_heading(v3cp, v3cp_prev, snorm)
 
@@ -1011,7 +1002,7 @@ class PathPlanner:
 							except:
 								v3cp_nex = np.zeros((3,1))
 							v3_uv = compute_vector_heading(v3cp_nex, v3cp_prev, snorm)
-							
+					
 					if (self.T_GND_X_WALL):
 						v3_uv = np.zeros(3)
 
@@ -1019,19 +1010,12 @@ class PathPlanner:
 					
 					self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + \
 																		np.nan_to_num(v3_uv*self.Robot.Gait.step_stroke/2.)
-					self.Robot.Leg[j].XHd.base_X_AEP[0:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
-																													self.Robot.Leg[j].XHd.world_base_X_AEP[0:3,3:4])
-					self.Robot.Leg[j].XHd.base_X_AEP[3,3] = 1
+					self.Robot.Leg[j].XHd.base_X_AEP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
+																	self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3:4])
 					self.Robot.Leg[j].XHd.base_X_NRP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
 																	self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4])
 					self.Robot.Leg[j].XHd.world_X_foot = mX(self.Robot.XHd.world_X_base, 
 																self.Robot.Leg[j].XHd.base_X_AEP)
-					
-					# print np.round(self.Robot.XHd.world_X_base,3)
-					# print np.round(self.Robot.Leg[j].XHd.world_base_X_AEP,3)
-					# print np.round(self.Robot.Leg[j].XHd.base_X_NRP,3)
-					# print np.round(self.Robot.Leg[j].XHd.world_X_foot,3)
-					
 					# if (j==5):
 					# 	print 'wbXn: ', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
 					# 	print 'wbXa: ', np.round(self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3],3)
@@ -1042,7 +1026,6 @@ class PathPlanner:
 					# 	print 'wXf:  ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
 
 					## Get cell height in (x,y) location of world_X_foot
-					
 					cell_h = np.array([0., 0., self.GridMap.get_cell('height', self.Robot.Leg[j].XHd.world_X_foot[:3,3], j)])
 					
 					## Cell height above threshold gets ignored as this requires advanced motions
@@ -1050,8 +1033,7 @@ class PathPlanner:
 						self.Robot.Leg[j].XHd.world_X_foot[2,3] = cell_h.item(2) 	# set z-component to cell height
 
 					elif (abs(cell_h.item(2)) > 0.1 and self.W_GND is True):
-						print 'Search for next valid foothold for leg ', j, 'because cell value ', cell_h.item(2) 
-						print np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3) #, self.GridMap.getIndex(self.Robot.Leg[j].XHd.world_X_foot[:2,3],j)
+						print 'Search for next valid foothold for ', j, cell_h.item(2), np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
 						# print np.round(self.Robot.XHd.world_X_base[:3,3],3)
 						# self.Robot.Leg[j].XHd.world_X_foot[:3,3] = self.find_valid_foothold(self.Robot.Leg[j].XHd.world_X_foot[:3,3], j)
 						self.Robot.Leg[j].XHd.world_X_foot[:3,3] = self.find_valid_foothold(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + 
@@ -1785,22 +1767,16 @@ class PathPlanner:
 		base_path = PathGenerator.generate_base_path(x_cob, w_cob, tn)
 
 		# Plot.plot_2d_multiple(1,wn_com.t,wn_com.xp*180/np.pi)
-		# Plot.plot_2d_multiple(1,base_path.X.t,base_path.X.xp)
-		# Plot.plot_2d_multiple(1,base_path.W.t,base_path.W.xp)
-
+		# Plot.plot_2d_multiple(1,base_path.X.t,base_path.X.xp)#, base_path.W.xv)
+		
 		return base_path
 
-	def plot_primitive_graph(self):
-
-		prim = [self.GM_walk, self.GM_wall, self.GM_chim]
-		self.GridMap.graph_representation(gprim=prim)
 
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
 
 ## Create map and plan path
-# grid_map = GridMap('iros_part1_demo')
+# grid_map = GridMap('hole_demo')
 # planner = PathPlanner(grid_map)
-# planner.plot_primitive_graph()
 

@@ -15,7 +15,6 @@ import math
 from fractions import Fraction
 from collections import OrderedDict 	# remove duplicates
 import random
-import spiral_search
 
 MAX_FLAT_H = 0.05
 MIN_FLAT_H = -0.05
@@ -29,14 +28,11 @@ class GridMap:
 		self.map_size_g = (0,0) # set map size
 		# self.map_trunc  = (2,2) # cells to truncate
 		
-		self.Spiral = spiral_search.SpiralSearch()
-
 		## Illustrations
 		self.G_free = nx.Graph()
 		self.G_wall = nx.Graph()
 		self.G_hole = nx.Graph()
 		self.viz_offset = np.zeros(3)
-
 		if (map_name is not None):
 			self.__initialise_graph__(map_name)
 
@@ -64,11 +60,6 @@ class GridMap:
 						pass
 					try:
 						map_hole = map_list['Map'][map_name]['hole']
-					except:
-						pass
-					try:
-						voff = map_list['Map'][map_name]['offset']
-						self.viz_offset = np.array([voff['x'],voff['y'],voff['z']])
 					except:
 						pass
 					
@@ -235,16 +226,6 @@ class GridMap:
 		except:
 			print 'Cell Invalid at ', p, info
 			return None
-
-	def getIndex(self, position, j):
-		""" Returns cell index at position (m) """
-
-		if (j < 3):
-			grid_p = (int(np.floor(position[0]/self.resolution)), int(np.ceil(position[1]/self.resolution)))
-		else:
-			grid_p = (int(np.floor(position[0]/self.resolution)), int(np.floor(position[1]/self.resolution)))
-
-		return grid_p
 
 	def get_map_size(self):
 		return self.map_size_g
@@ -611,7 +592,7 @@ class GridMap:
 			sp = (int(np.round(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
 		elif (j == 5):
 			sp = (int(np.ceil(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
-		orip = sp
+		
 		# sets direction based on feet
 		if (j < 3):
 			direction = 'ccw'
@@ -640,12 +621,20 @@ class GridMap:
 						for x in range(0,i):
 							sp = (sp[0],sp[1]+1)
 							point_list.append(sp)
-				# else:
-				# 	# move down
-				# 	if (i!=end-1):
-				# 		for x in range(0,i):
-				# 			sp = (sp[0],sp[1]-1)
-				# 			point_list.append(sp)
+				else:
+					# move right
+					for x in range(0,i):
+			            # skip last cell - ends in square shape
+						if (end-i==1 and i-x==1):
+							pass
+						else:
+							sp = (sp[0]+1,sp[1])
+							point_list.append(sp)
+					# move down
+					if (i!=end-1):
+						for x in range(0,i):
+							sp = (sp[0],sp[1]-1)
+							point_list.append(sp)
 
 			elif (direction == 'ccw'):
 				# sp = move_right(sp, end, i)
@@ -680,36 +669,11 @@ class GridMap:
 						for x in range(0,i):
 							sp = (sp[0],sp[1]-1)
 							point_list.append(sp)
-		print orip, point_list
+
 		return point_list
 
-	def search_area(self, p, grid_area, j):
-
-		# sets the appropriate foothold in index form
-		if (j == 0):
-			sp = (int(np.floor(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
-		elif (j == 1):
-			sp = (int(np.round(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
-		elif (j == 2):
-			sp = (int(np.ceil(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
-		elif (j == 3):
-			sp = (int(np.floor(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
-		elif (j == 4):
-			sp = (int(np.round(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
-		elif (j == 5):
-			sp = (int(np.ceil(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
-		
-		print 'Search centered at ', sp
-		result, grid_points = self.Spiral.get_grid(36)
-		# print sp, grid_points
-		for i in range(0, len(grid_points)):
-			grid_points[i] = (grid_points[i][0] + sp[0], grid_points[i][1] + sp[1])
-		# print sp, grid_points
-		return grid_points
-
-	def graph_representation(self,**options):
+	def graph_representation(self, gpath=None):
 		""" Plots graph functions """
-
 
 		# dictionary of node names->positions
 		p_map  = dict(zip(self.Map, self.Map))
@@ -722,7 +686,7 @@ class GridMap:
 		# m_chim = dict(zip(self.GM_chim, self.GM_chim))
 
 		# Grid map & obstacles
-		# plt.style.use('presentation')
+		plt.style.use('presentation')
 		nsize  = 20	# size of nodes
 		labels = False 	# label on nodes
 
@@ -732,23 +696,14 @@ class GridMap:
 		nx.draw_networkx(self.G_wall, p_wall, with_labels=labels, node_size=nsize, node_color='#ff0000', width=0.0, node_shape="s");
 		# Holes 
 		nx.draw_networkx(self.G_hole, p_hole, with_labels=labels, node_size=nsize, node_color='#663300', width=0.0, node_shape="s");
-		
+
 		# Motion primitives
-		if (options.get('gprim') is not None):
-			gprim = options.get('gprim')
-			m_walk = dict(zip(gprim[0], gprim[0]))
-			m_wall = dict(zip(gprim[1], gprim[1]))
-			m_chim = dict(zip(gprim[2], gprim[2]))
-		
-			nx.draw_networkx(gprim[0],m_walk,with_labels=labels,node_size=nsize, node_color='#ff6600',	width=0.0);
-			nx.draw_networkx(gprim[1],m_wall,with_labels=labels,node_size=nsize, node_color='#00ccff',	width=0.0);
-			nx.draw_networkx(gprim[2],m_chim,with_labels=labels,node_size=nsize, node_color='#66ff00',	width=0.0);
 		# nx.draw_networkx(self.GM_walk,m_walk,with_labels=labels,node_size=nsize, node_color='#ff6600',	width=0.0);
 		# nx.draw_networkx(self.GM_wall,m_wall,with_labels=labels,node_size=nsize, node_color='#00ccff',	width=0.0);
 		# nx.draw_networkx(self.GM_chim,m_chim,with_labels=labels,node_size=nsize, node_color='#66ff00',	width=0.0);
 
 		# Feasible path - single point
-		if options.get("gpath") is not None:
+		if (gpath is not None):
 			p_path = dict(zip(gpath, gpath))
 			if (type(gpath) == list):
 				gpath = nx.path_graph(gpath)
@@ -781,9 +736,7 @@ class GridMap:
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-# gmap = GridMap('iros_part1_demo')
-# gmap.square_spiral_search((0.72,0.66), (3,3), 3)
-# gmap.search_area((0.72,0.66), (3,3), 3)
+# gmap = GridMap('flat')
 # print gmap.get_index_exists((34,0))
 # a, b = gmap.graph_attributes_to_nparray("norm")
 # print a

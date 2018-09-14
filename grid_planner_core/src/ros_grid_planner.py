@@ -24,7 +24,7 @@ class GridMapRos:
 
 		self.namespace = 'GridMap'
 		self.GridMap = GridMap(map_name)
-		self.Planner = PathPlanner(self.GridMap)
+		# self.Planner = PathPlanner(self.GridMap)
 		self.Robot 	 = RobotState()
 		self.point_cloud = PointCloud2()
 
@@ -136,29 +136,7 @@ class GridMapRos:
 		self.map_pub_.publish(self.point_cloud)
 		rospy.sleep(2)
 
-if __name__ == "__main__":
-
-	# RosGridMap = GridMapRos("wall_convex_corner")
-	# RosGridMap = GridMapRos("iros_part1_demo")
-	RosGridMap = GridMapRos("hole_wall_demo")
-
-	print "ROS Grid Map Planner Initialised"
-	
-	## ==================================================== ##
-	## 					Test Scripts 						##
-	## ==================================================== ##
-	## Grid Map
-	# rospy.wait_for_service('GridMap/grid_map')
-	# try:
-	# 	grid_map_serv = rospy.ServiceProxy('GridMap/grid_map', GridMap)
-	# 	ros_grid_map  = grid_map_serv(String("flat"))
-	# 	print ros_grid_map
-	# except rospy.ServiceException, e:
-	# 	print "Service call failed: %s"%e
-
-	## Path Planning
-	ps = (10,13); pf = (20,13) #(150,10)
-	# ps = (10,15); pf = (18,12) #(150,10)
+def call_planner(ps, pf):
 	rospy.wait_for_service('GridMap/query_map')
 	try:
 		start = Pose()
@@ -175,6 +153,35 @@ if __name__ == "__main__":
 		
 	except rospy.ServiceException, e:
 		print "Service call failed: %s"%e
+
+if __name__ == "__main__":
+
+	RosGridMap = GridMapRos("wall_concave_corner")
+	# RosGridMap = GridMapRos("hole_demo")
+	# RosGridMap = GridMapRos("chimney_corner")
+	# RosGridMap = GridMapRos("hole_wall_demo")
+	# RosGridMap = GridMapRos("iros_part1_demo")
+	# RosGridMap = GridMapRos("iros_demo")
+	# RosGridMap = GridMapRos("flat")
+
+	print "ROS Grid Map Planner Initialised"
+	
+	## ==================================================== ##
+	## 					Test Scripts 						##
+	## ==================================================== ##
+	## Grid Map
+	# rospy.wait_for_service('GridMap/grid_map')
+	# try:
+	# 	grid_map_serv = rospy.ServiceProxy('GridMap/grid_map', GridMap)
+	# 	ros_grid_map  = grid_map_serv(String("flat"))
+	# 	print ros_grid_map
+	# except rospy.ServiceException, e:
+	# 	print "Service call failed: %s"%e
+
+	## Path Planning
+	# ps = (10,13); pf = (150,9) #IROS
+	# ps = (10,13); pf = (13,13)
+	# call_planner(ps, pf)
 
 	while (not rospy.is_shutdown()):
 		RosGridMap.loop_cycle()
