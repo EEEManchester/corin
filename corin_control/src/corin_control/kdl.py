@@ -191,7 +191,9 @@ qs = np.array([0., 0.15, -0.10])	# right side
 # print cd.flatten()
 # cd = [ 0.21, 0., -0.1]
 cd = [0.295, -0.0056, 0.1865]
-# qp = CK.leg_IK(cd)
+cd = [0.206832, 0.17355265, -0.]
+qp = CK.leg_IK(cd)
+# print qp
 # print 'q: ', qp
 # print qp
 # if (not CK.check_singularity(qp)):

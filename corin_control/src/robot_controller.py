@@ -811,18 +811,32 @@ class CorinManager:
 			elif (mode == 5):
 				rospy.wait_for_service('import_csv')
 				try:
-					start = Pose()
-					goal  = Pose()
-					start.position.x = 0
-					start.position.y = 0
-					goal.position.x = 0
-					goal.position.y = 0
-
 					path_planner = rospy.ServiceProxy('import_csv', PlanPath)
-					motion_plan = path_planner(start, goal)
+					plan_generat = path_planner(Pose(), Pose())
 					print 'succeed'
 				except:
 					print 'CSVImport Service Failed'
+				motion_plan = planpath_to_motionplan( path_planner(Pose(), Pose()) )
+				# Plot.plot_2d(motion_plan.qb.X.t, motion_plan.qb.X.xp)
+				
+				self.Robot.P6c.world_X_base = np.array([motion_plan.qb.X.xp[0][0],
+														motion_plan.qb.X.xp[0][1],
+														motion_plan.qb.X.xp[0][2],
+														motion_plan.qb.W.xp[0][0],
+														motion_plan.qb.W.xp[0][1],
+														motion_plan.qb.W.xp[0][2]]).reshape(6,1)
+				self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
+				self.Robot.P6c.world_X_base_offset = self.Robot.P6c.world_X_base.copy()
+				self.Robot.P6c.world_X_base_offset[2] = 0.
+
+				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
+				self.Robot.stance_offset = (40, -40)
+				self.Robot._initialise("chimney")
+				self.Robot.P6c.world_X_base[2] = motion_plan.qb.X.xp[0][2]
+				self.Robot.qc.position = self.Robot.qd
+				
+				if (self.main_controller(motion_plan)):
+					self.Robot.alternate_phase()
 		else:
 			rospy.sleep(0.5)
 

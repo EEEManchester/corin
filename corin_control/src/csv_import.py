@@ -45,6 +45,17 @@ class CSVimport:
 		for j in range(0,6):
 			self.footholds[j] = MarkerList()
 
+	def serv_import_csv(self, req):
+		""" Plans path given start and end position """
+
+		print "SERVICE CALL - CSVImport"
+		qbp, qbi, gphase, wXf, bXf, bXN = motionplan_to_planpath(self.motion_plan, "world")
+		
+		return PlanPathResponse(base_path = qbp, CoB = qbi, 
+												gait_phase = gphase, 
+												f_world_X_foot = wXf,
+												f_base_X_foot = bXf,
+												f_world_base_X_NRP = bXN)
 	def publish(self, CoB, qp):
 		self.Visualizer.publish_robot(CoB)
 
@@ -78,6 +89,15 @@ class CSVimport:
 				# Append for CoB
 				self.CoB.append( np.asarray(map(lambda x: float(x), row[0:6])) )
 				world_X_base.append( np.asarray(map(lambda x: float(x), row[0:6])) )
+				
+				xpoint = np.asarray(map(lambda x: float(x), row[0:3]))
+				wpoint = np.asarray(map(lambda x: float(x), row[3:6]))
+				if counter == 0:
+					x_cob = xpoint
+					w_cob = wpoint
+				else:
+					x_cob = np.vstack((x_cob, xpoint))
+					w_cob = np.vstack((w_cob, wpoint))
 
 				# Append for footholds
 				# self.footholds.append( map(lambda x: float(x), row[6:25]) )
@@ -94,22 +114,17 @@ class CSVimport:
 				
 				counter += 1
 
-		self.motion_plan.set_base_path(self.Robot.P6c.world_X_base.copy(), None, world_X_base, None)
+		# Interpolate base path
+		PathGenerator = Pathgenerator.PathGenerator() 	# path generator for robot's base
+		PathGenerator.V_MAX = 10;
+		PathGenerator.W_MAX = 10;
+
+		base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV) # Trajectory for robot's base
+		# Plot.plot_2d(base_path.X.t, base_path.X.xv)
+		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
+		self.motion_plan.set_base_path(self.Robot.P6c.world_X_base.copy(), base_path, world_X_base, None)
 		self.motion_plan.set_footholds(world_X_footholds, base_X_footholds, world_base_X_NRP)
 		self.motion_plan.set_gait(self.Robot.Gait.np, self.Robot.Gait.np)
-
-	def serv_import_csv(self, req):
-		""" Plans path given start and end position """
-
-		print "SERVICE - Import CSV"
-		print self.motion_plan.qb
-		qbp, qbi, gphase, wXf, bXf, bXN = motionplan_to_planpath(self.motion_plan, "world")
-		
-		return PlanPathResponse(base_path = qbp, CoB = qbi, 
-												gait_phase = gphase, 
-												f_world_X_foot = wXf,
-												f_base_X_foot = bXf,
-												f_world_base_X_NRP = bXN)
 
 	def visualise_motion_plan(self):
 
@@ -161,7 +176,7 @@ if __name__ == "__main__":
 	# csv_import.load_file('chimney_01.csv')
 	csv_import.load_file('chimney_01.csv')
 	
-	#call_csv_import()
+	# call_csv_import()
 	rospy.spin()
 
 	# csv_import.visualise_motion_plan()

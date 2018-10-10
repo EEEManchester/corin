@@ -580,15 +580,17 @@ def planpath_to_motionplan(plan_path):
 			motion_plan.f_world_X_foot[j].xp.append(np.array(plan_path.f_world_X_foot.data[nc_wXf*3+i*3:nc_wXf*3+i*3+3]).reshape((3,1)))
 			motion_plan.f_world_X_foot[j].t.append(i)
 		nc_wXf += plan_path.f_world_X_foot.layout.dim[j].stride
+		
+		if plan_path.f_base_X_foot.layout.dim:
+			for i in range(0, plan_path.f_base_X_foot.layout.dim[j].stride):
+				motion_plan.f_base_X_foot[j].xp.append(np.array(plan_path.f_base_X_foot.data[nc_bXf*3+i*3:nc_bXf*3+i*3+3]).reshape((3,1)))
+				motion_plan.f_base_X_foot[j].t.append(i)
+			nc_bXf += plan_path.f_base_X_foot.layout.dim[j].stride
 
-		for i in range(0, plan_path.f_base_X_foot.layout.dim[j].stride):
-			motion_plan.f_base_X_foot[j].xp.append(np.array(plan_path.f_base_X_foot.data[nc_bXf*3+i*3:nc_bXf*3+i*3+3]).reshape((3,1)))
-			motion_plan.f_base_X_foot[j].t.append(i)
-		nc_bXf += plan_path.f_base_X_foot.layout.dim[j].stride
-
-		for i in range(0, plan_path.f_world_base_X_NRP.layout.dim[j].stride):
-			motion_plan.f_world_base_X_NRP[j].xp.append(np.array(plan_path.f_world_base_X_NRP.data[nc_wbXN*3+i*3:nc_wbXN*3+i*3+3]).reshape((3,1)))
-			motion_plan.f_world_base_X_NRP[j].t.append(i)
-		nc_wbXN += plan_path.f_world_base_X_NRP.layout.dim[j].stride
+		if plan_path.f_world_base_X_NRP.layout.dim:
+			for i in range(0, plan_path.f_world_base_X_NRP.layout.dim[j].stride):
+				motion_plan.f_world_base_X_NRP[j].xp.append(np.array(plan_path.f_world_base_X_NRP.data[nc_wbXN*3+i*3:nc_wbXN*3+i*3+3]).reshape((3,1)))
+				motion_plan.f_world_base_X_NRP[j].t.append(i)
+			nc_wbXN += plan_path.f_world_base_X_NRP.layout.dim[j].stride
 
 	return motion_plan

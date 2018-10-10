@@ -59,11 +59,11 @@ class RobotState:
 
 		self._initialise()
 
-	def _initialise(self):
+	def _initialise(self, stance_type="flat"):
 		""" Initialises robot class for setting up number of legs """
 
 		self.P6c.world_X_base[2] = BODY_HEIGHT
-		leg_stance = self.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, self.stance_offset, "flat")
+		leg_stance = self.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, self.stance_offset, stance_type)
 		
 		for j in range(6):
 			self.qd = self.KDL.leg_IK(leg_stance[j])
@@ -320,11 +320,22 @@ class RobotState:
 			leg_stance[4] = np.array([ stance_width, 0, -base_height])
 			leg_stance[5] = np.array([ stance_width*np.cos(teta_r*np.pi/180), stance_width*np.sin(-teta_r*np.pi/180), -base_height ])
 
-			return leg_stance
+		elif (stance_type == "chimney"):
+			base_height = 0.
+			stance_width = 0.27
+
+			leg_stance[0] = np.array([ stance_width*np.cos(teta_f*np.pi/180), stance_width*np.sin(teta_f*np.pi/180), -base_height ])
+			leg_stance[1] = np.array([ stance_width, 0, -base_height])
+			leg_stance[2] = np.array([ stance_width*np.cos(teta_r*np.pi/180), stance_width*np.sin(teta_r*np.pi/180), -base_height ])
+			leg_stance[3] = np.array([ stance_width*np.cos(teta_f*np.pi/180), stance_width*np.sin(-teta_f*np.pi/180), -base_height ])
+			leg_stance[4] = np.array([ stance_width, 0, -base_height])
+			leg_stance[5] = np.array([ stance_width*np.cos(teta_r*np.pi/180), stance_width*np.sin(-teta_r*np.pi/180), -base_height ])
+			
 		else:
 			print 'Invalid stance selected!'
-			return None
+			leg_stance = None
 
+		return leg_stance
 ## ====================================================================================================================================== ##
 ## ====================================================================================================================================== ##
 
