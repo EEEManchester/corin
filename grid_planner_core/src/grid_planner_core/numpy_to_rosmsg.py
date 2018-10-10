@@ -434,44 +434,46 @@ def motionplan_to_planpath(motion_plan, frame_id=None):
 	bXf = Float64MultiArray()
 	bXN = Float64MultiArray()
 	
-	for i in range(0, len(motion_plan.qb.X.t)):
+	if motion_plan.qb is not None:
+		for i in range(0, len(motion_plan.qb.X.t)):
+			
+			gtf = Transform()
+			vtf = Twist()
+			atf = Twist()
+
+			gtf.translation.x = motion_plan.qb.X.xp[i][0]
+			gtf.translation.y = motion_plan.qb.X.xp[i][1]
+			gtf.translation.z = motion_plan.qb.X.xp[i][2]
+			gtf.rotation.x = motion_plan.qb.W.xp[i][0]
+			gtf.rotation.y = motion_plan.qb.W.xp[i][1]
+			gtf.rotation.z = motion_plan.qb.W.xp[i][2]
+
+			vtf.linear.x = motion_plan.qb.X.xv[i][0]
+			vtf.linear.y = motion_plan.qb.X.xv[i][1]
+			vtf.linear.z = motion_plan.qb.X.xv[i][2]
+			vtf.angular.x = motion_plan.qb.W.xv[i][0]
+			vtf.angular.y = motion_plan.qb.W.xv[i][1]
+			vtf.angular.z = motion_plan.qb.W.xv[i][2]
 		
-		gtf = Transform()
-		vtf = Twist()
-		atf = Twist()
+			atf.linear.x = motion_plan.qb.X.xa[i][0]
+			atf.linear.y = motion_plan.qb.X.xa[i][1]
+			atf.linear.z = motion_plan.qb.X.xa[i][2]
+			atf.angular.x = motion_plan.qb.W.xa[i][0]
+			atf.angular.y = motion_plan.qb.W.xa[i][1]
+			atf.angular.z = motion_plan.qb.W.xa[i][2]
 
-		gtf.translation.x = motion_plan.qb.X.xp[i][0]
-		gtf.translation.y = motion_plan.qb.X.xp[i][1]
-		gtf.translation.z = motion_plan.qb.X.xp[i][2]
-		gtf.rotation.x = motion_plan.qb.W.xp[i][0]
-		gtf.rotation.y = motion_plan.qb.W.xp[i][1]
-		gtf.rotation.z = motion_plan.qb.W.xp[i][2]
-
-		vtf.linear.x = motion_plan.qb.X.xv[i][0]
-		vtf.linear.y = motion_plan.qb.X.xv[i][1]
-		vtf.linear.z = motion_plan.qb.X.xv[i][2]
-		vtf.angular.x = motion_plan.qb.W.xv[i][0]
-		vtf.angular.y = motion_plan.qb.W.xv[i][1]
-		vtf.angular.z = motion_plan.qb.W.xv[i][2]
-	
-		atf.linear.x = motion_plan.qb.X.xa[i][0]
-		atf.linear.y = motion_plan.qb.X.xa[i][1]
-		atf.linear.z = motion_plan.qb.X.xa[i][2]
-		atf.angular.x = motion_plan.qb.W.xa[i][0]
-		atf.angular.y = motion_plan.qb.W.xa[i][1]
-		atf.angular.z = motion_plan.qb.W.xa[i][2]
-
-		qbp.transforms.append(gtf)
-		qbp.velocities.append(vtf)
-		qbp.accelerations.append(atf)
-	qbp.time_from_start = rospy.Time(motion_plan.qb.X.t[1] - motion_plan.qb.X.t[0])
+			qbp.transforms.append(gtf)
+			qbp.velocities.append(vtf)
+			qbp.accelerations.append(atf)
+		qbp.time_from_start = rospy.Time(motion_plan.qb.X.t[1] - motion_plan.qb.X.t[0])
 	
 	for i in range(0, len(motion_plan.qbp)):
 		ip = PoseStamped()
 
 		if frame_id is not None:
 			ip.header.frame_id = frame_id
-		ip.header.stamp = rospy.Time(motion_plan.qb.X.t[i])
+		# ip.header.stamp = rospy.Time(motion_plan.qb.X.t[i])
+		ip.header.stamp = rospy.Time(i)
 
 		ip.pose.position.x = motion_plan.qbp[i][0]
 		ip.pose.position.y = motion_plan.qbp[i][1]
@@ -483,22 +485,25 @@ def motionplan_to_planpath(motion_plan, frame_id=None):
 
 		qbi.poses.append(ip)
 	
-	dheader, ddata = list_to_multiarray(motion_plan.gait_phase)
-	gphase.layout.dim.append(dheader)
-	gphase.data = ddata
+	if motion_plan.gait_phase is not None:
+		dheader, ddata = list_to_multiarray(motion_plan.gait_phase)
+		gphase.layout.dim.append(dheader)
+		gphase.data = ddata
 	
 	for j in range(0,6):
 		dheader, ddata = list_to_multiarray(motion_plan.f_world_X_foot[j].xp)
 		wXf.layout.dim.append(dheader)
 		wXf.data += ddata
-
-		dheader, ddata = list_to_multiarray(motion_plan.f_base_X_foot[j].xp)
-		bXf.layout.dim.append(dheader)
-		bXf.data += ddata
-
-		dheader, ddata = list_to_multiarray(motion_plan.f_world_base_X_NRP[j].xp)
-		bXN.layout.dim.append(dheader)
-		bXN.data += ddata
+		
+		if (len(motion_plan.f_base_X_foot[j].xp) != 0):
+			dheader, ddata = list_to_multiarray(motion_plan.f_base_X_foot[j].xp)
+			bXf.layout.dim.append(dheader)
+			bXf.data += ddata
+		
+		if (len(motion_plan.f_world_base_X_NRP[j].xp) != 0):
+			dheader, ddata = list_to_multiarray(motion_plan.f_world_base_X_NRP[j].xp)
+			bXN.layout.dim.append(dheader)
+			bXN.data += ddata
 
 	return qbp, qbi, gphase, wXf, bXf, bXN
 

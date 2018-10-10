@@ -37,7 +37,10 @@ class MotionPlan():
 		self.qb_bias = qbias.copy()
 		self.qb  = qb 		## TODO: duplicate this
 		self.qbp = list(qbp)
-		self.gait_phase = list(gphase)
+		if gphase is not None:
+			self.gait_phase = list(gphase)
+		else:
+			self.gait_phase = None
 
 	def set_footholds(self, wXf, bXf, bXN):
 		""" Sets the foothold for each """

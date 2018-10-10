@@ -707,13 +707,13 @@ class CorinManager:
 		
 		## check action to take
 		data = self.Action.action_to_take()
-
+		
 		if (data is not None):
 			self.Visualizer.clear_visualisation()
 
 			## Data mapping - for convenience
 			x_cob, w_cob, mode, motion_prim = data
-
+			mode = 5
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
 				print 'Going to standup'
@@ -808,6 +808,21 @@ class CorinManager:
 				else:
 					print 'Planning service unavailable, exiting...'
 
+			elif (mode == 5):
+				rospy.wait_for_service('import_csv')
+				try:
+					start = Pose()
+					goal  = Pose()
+					start.position.x = 0
+					start.position.y = 0
+					goal.position.x = 0
+					goal.position.y = 0
+
+					path_planner = rospy.ServiceProxy('import_csv', PlanPath)
+					motion_plan = path_planner(start, goal)
+					print 'succeed'
+				except:
+					print 'CSVImport Service Failed'
 		else:
 			rospy.sleep(0.5)
 

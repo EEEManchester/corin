@@ -5,7 +5,9 @@
 import rospy
 from corin_control import *			# library modules to include
 from rviz_visual import *
+
 from corin_msgs.msg import LoggingState
+from corin_msgs.srv import *
 
 import csv
 import numpy as np
@@ -21,16 +23,23 @@ class CSVimport:
 		self.Visualizer = RvizVisualise()
 
 		self.Robot = robot_class.RobotState()
-		self.ForceDist = QPForceDistribution()
+
+		self.motion_plan = MotionPlan()
 
 		self.joint_states = []
 
 		self.__initialise_variables__()
 		self.__initialise_topics__()
-		
+		self.__initialise_services__()
+
 	def __initialise_topics__(self):
-		self.joint_pub_ = rospy.Publisher(ROBOT_NS + '/joint_states', JointState, queue_size=1)
+		# self.joint_pub_ = rospy.Publisher(ROBOT_NS + '/joint_states', JointState, queue_size=1)
 		self.log_pub_ = rospy.Publisher('/corin/log_states', LoggingState, queue_size=1)	# LOGGING publisher
+
+	def __initialise_services__(self):
+		""" setup service call """
+
+		self.plan_path = rospy.Service('import_csv', PlanPath, self.serv_import_csv)
 
 	def __initialise_variables__(self):
 		for j in range(0,6):
@@ -49,6 +58,17 @@ class CSVimport:
 		# rospy.sleep(0.4)
 
 	def load_file(self, filename):
+
+		## Instantiate leg transformation class & append initial footholds
+		world_X_base = []
+		world_X_footholds = [None]*6
+		base_X_footholds  = [None]*6
+		world_base_X_NRP  = [None]*6
+		for j in range (0, 6):
+			world_X_footholds[j] = MarkerList()
+			base_X_footholds[j] = MarkerList()
+			world_base_X_NRP[j] = MarkerList()
+
 		print 'Reading file: ', filename
 		
 		with open(filename, 'rb') as csvfile:
@@ -57,6 +77,8 @@ class CSVimport:
 			for row in motion_data:
 				# Append for CoB
 				self.CoB.append( np.asarray(map(lambda x: float(x), row[0:6])) )
+				world_X_base.append( np.asarray(map(lambda x: float(x), row[0:6])) )
+
 				# Append for footholds
 				# self.footholds.append( map(lambda x: float(x), row[6:25]) )
 				for j in range(0,6):
@@ -65,18 +87,29 @@ class CSVimport:
 					mod_foothold = np.asarray(map(lambda x: float(x), row[6+j*3:6+(j*3)+3]))# + np.array([0.,0.,0.05])
 					self.footholds[j].xp.append(mod_foothold)
 				
+					world_X_footholds[j].t.append(counter*CTR_INTV)
+					world_X_footholds[j].xp.append(mod_foothold.copy())
+
 				self.joint_states.append( np.asarray(map(lambda x: float(x), row[24:42])) )
 				
 				counter += 1
-			
-			# print self.CoB
-			# print '======================'
-			# print (self.footholds[0].xp)
-		try:
-			if not self.joint_states[0]:
-				self.joint_states = []
-		except:
-			pass
+
+		self.motion_plan.set_base_path(self.Robot.P6c.world_X_base.copy(), None, world_X_base, None)
+		self.motion_plan.set_footholds(world_X_footholds, base_X_footholds, world_base_X_NRP)
+		self.motion_plan.set_gait(self.Robot.Gait.np, self.Robot.Gait.np)
+
+	def serv_import_csv(self, req):
+		""" Plans path given start and end position """
+
+		print "SERVICE - Import CSV"
+		print self.motion_plan.qb
+		qbp, qbi, gphase, wXf, bXf, bXN = motionplan_to_planpath(self.motion_plan, "world")
+		
+		return PlanPathResponse(base_path = qbp, CoB = qbi, 
+												gait_phase = gphase, 
+												f_world_X_foot = wXf,
+												f_base_X_foot = bXf,
+												f_world_base_X_NRP = bXN)
 
 	def visualise_motion_plan(self):
 
@@ -103,17 +136,36 @@ class CSVimport:
 			# raw_input('cont')
 			rospy.sleep(0.5)
 
+def call_csv_import():
+	rospy.wait_for_service('import_csv')
+	try:
+		start = Pose()
+		goal  = Pose()
+		start.position.x = 0
+		start.position.y = 0
+		goal.position.x = 0
+		goal.position.y = 0
+
+		path_planner = rospy.ServiceProxy('import_csv', PlanPath)
+		path_planned = path_planner(start, goal)
+
+	# 	mplan = planpath_to_motionplan(path_planned)
+		
+	except rospy.ServiceException, e:
+		print "Service call failed: %s"%e
+
 if __name__ == "__main__":
 
 	csv_import = CSVimport()
 
-	# rviz.load_file('chimney_new_01.csv')
-	# rviz.load_file('wall_highRes_convex.csv')
-	csv_import.load_file('chimney_highRes_opt_working.csv')
-	# rviz.load_file('wall_medRes_convex.csv')
+	# csv_import.load_file('chimney_01.csv')
+	csv_import.load_file('chimney_01.csv')
 	
-	csv_import.visualise_motion_plan()
-	raw_input('Start motion!')
-	for i in range(0,5):
-		# rviz.cycle_snapshot()
-		csv_import.cycle_states()
+	#call_csv_import()
+	rospy.spin()
+
+	# csv_import.visualise_motion_plan()
+	# raw_input('Start motion!')
+	# for i in range(0,5):
+	# 	# rviz.cycle_snapshot()
+	# 	csv_import.cycle_states()
