@@ -12,6 +12,15 @@ from corin_msgs.srv import *
 import csv
 import numpy as np
 
+def seq(start, stop, step=1):
+	n = int(round((stop - start)/float(step)))
+	if n > 1:
+		return([start + step*i for i in range(n+1)])
+	elif n == 1:
+		return([start])
+	else:
+		return([])
+
 class CSVimport:
 	def __init__(self):
 		rospy.init_node('csv_import') 		# Initialises node
@@ -119,7 +128,9 @@ class CSVimport:
 		PathGenerator.V_MAX = 10;
 		PathGenerator.W_MAX = 10;
 
-		base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV) # Trajectory for robot's base
+		t_cob = seq(0, (len(x_cob)-1)*GAIT_TPHASE*6, GAIT_TPHASE*6.)
+		base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV, t_cob) # Trajectory for robot's base
+		# print len(x_cob), len(t_cob), t_cob
 		# Plot.plot_2d(base_path.X.t, base_path.X.xv)
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 		self.motion_plan.set_base_path(self.Robot.P6c.world_X_base.copy(), base_path, world_X_base, None)

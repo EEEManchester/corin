@@ -57,13 +57,16 @@ class RobotState:
 		
 		self.CRBI = np.identity(3)
 
-		self._initialise()
-
-	def _initialise(self, stance_type="flat"):
-		""" Initialises robot class for setting up number of legs """
-
 		self.P6c.world_X_base[2] = BODY_HEIGHT
-		leg_stance = self.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, self.stance_offset, stance_type)
+		leg_stance = self.init_robot_stance()
+		# self._initialise(leg_stance)
+
+	def init_robot_stance(self, stance_type="flat"):
+		
+		self._initialise( self.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, self.stance_offset, stance_type) )
+
+	def _initialise(self, leg_stance):
+		""" Initialises robot class for setting up number of legs """
 		
 		for j in range(6):
 			self.qd = self.KDL.leg_IK(leg_stance[j])

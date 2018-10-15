@@ -7,6 +7,7 @@ import robot_class 							# class for robot states and function
 import gait_class 							# class for gait coordinator
 import path_generator as Pathgenerator 		# generates path from via points
 from matrix_transforms 	import *			# SE(3) transformation library
+from robot_transforms import *
 import plotgraph as Plot 					# library for plotting 
 
 from force_distribution import *			# class for force distribution

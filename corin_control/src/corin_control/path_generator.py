@@ -73,7 +73,7 @@ class PathGenerator():
 			t_cob = self.compute_no_via_points(x_cob)
 		elif (len(t_cob) != len(x_cob)):
 			t_cob = self.compute_no_via_points(x_cob)
-
+			
 		return x_cob, w_cob, t_cob
 
 	def generate_base_path(self, x_cob, w_cob, tn, t_cob=None):
@@ -86,8 +86,8 @@ class PathGenerator():
 			Output:	BaseTrajectory() array of linear translation and angular
 					rotation points 												"""
 
-		SplineGenerator = Bspline.SplineGenerator()	# biezer spline generator
-		# SplineGenerator = Pspline.SplineGenerator() # cubic polynomial spline generator 
+		# SplineGenerator = Bspline.SplineGenerator()	# biezer spline generator
+		SplineGenerator = Pspline.SplineGenerator() # cubic polynomial spline generator 
 
 		# generate linear or angular via points if size mismatch
 		x_cob, w_cob, t_cob = self.auto_generate_points(x_cob, w_cob, t_cob)

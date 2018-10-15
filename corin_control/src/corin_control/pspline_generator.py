@@ -298,6 +298,13 @@ class SplineGenerator:
 				xd = (x[-1][i] - x[1][i])/2
 				xnew[2][i] = x[1][i] + xd
 
+		# if (t is None):
+		# 	tnew = self.compute_time_intervals(xnew)
+		# else:
+		# 	tnew = t
+		# print xnew
+		# print tnew
+		# return xnew, tnew
 		return xnew, self.compute_time_intervals(xnew)
 
 	def generate_spline(self, x, t=None, tn=0.1):

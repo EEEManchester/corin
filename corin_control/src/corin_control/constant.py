@@ -19,8 +19,8 @@ ROBOT_NS = "corin"
 # Link Length, Mass
 BODY_MASS = 1.48
 L1 = 0.060;	L1_MASS = 0.040
-L2 = 0.15;	L2_MASS = 0.350 # ORIGIINAL L2 = 0.15 m; chimney 0.194; wall 0.17
-L3 = 0.15;	L3_MASS = 0.116
+L2 = 0.2;	L2_MASS = 0.350 # ORIGIINAL L2 = 0.15 m; chimney 0.194; wall 0.17
+L3 = 0.2;	L3_MASS = 0.116
 
 LEG_MASS = L1_MASS + L2_MASS + L3_MASS
 ROBOT_MASS = BODY_MASS + LEG_MASS*6
@@ -85,8 +85,8 @@ WALL_WIDTH_NARROW = 0.3
 ## ================================================================ ##
 ##                      Controller parameters 	 					##
 ## ================================================================ ##
-CTR_RATE 	= 50 			# controller rate for robot, Hz
-CTR_INTV 	= 1./CTR_RATE 	# controller interval for robot, s
+CTR_RATE = 50 			# controller rate for robot, Hz
+CTR_INTV = 1./CTR_RATE 	# controller interval for robot, s
 
 ## ================================================================ ##
 ##                  	Stability Parameters 						##
@@ -124,7 +124,7 @@ STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
 
 ## these gait parameters can be changed during runtime
 GAIT_TYPE 	 = 1 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
-GAIT_TPHASE	 = 1.8 	# default period per gait phase
+GAIT_TPHASE	 = 0.2 	# default period per gait phase
 STEP_HEIGHT  = 0.08	# default step height, z
 STEP_STROKE  = 0.1 	# default step stroke
 

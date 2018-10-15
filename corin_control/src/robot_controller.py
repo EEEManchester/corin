@@ -438,7 +438,10 @@ class CorinManager:
 			self.Robot.Gait.cs = next(gait_stack)
 		except:
 			pass
-
+		## Remove first foothold
+		for j in range(0,6):
+			world_X_footholds[j].xp.pop(0)
+		
 		# cycle through trajectory points until complete
 		i = 1 	# skip first point since spline has zero initial differential conditions
 		while (i != len(base_path.X.t) and not rospy.is_shutdown()):
@@ -483,7 +486,8 @@ class CorinManager:
 
 			## Variable mapping to R^(3x1) for base linear and angular time, position, velocity, acceleration
 			## Next Point along base trajectory
-			v3cp = wXbase_offset[0:3] + base_path.X.xp[i].reshape(3,1);
+			# v3cp = wXbase_offset[0:3] + base_path.X.xp[i].reshape(3,1);
+			v3cp = base_path.X.xp[i].reshape(3,1);
 			v3cv = base_path.X.xv[i].reshape(3,1);
 			v3ca = base_path.X.xa[i].reshape(3,1);
 
@@ -526,18 +530,29 @@ class CorinManager:
 						self.Robot.Leg[j].XHd.base_X_foot  = v3_X_m(base_X_footholds[j].xp.pop(0))
 						self.Robot.Leg[j].XHd.world_base_X_NRP = v3_X_m(w_base_X_NRP[j].xp.pop(0))
 						self.Robot.Leg[j].XHc.world_base_X_NRP = self.Robot.Leg[j].XHd.world_base_X_NRP.copy()
+
+						## Set bodypose in leg class
+						self.Robot.Leg[j].XH_world_X_base = self.Robot.XHd.world_X_base.copy()
+
 					except IndexError:
 						## TODO: plan on the fly. Currently set to default position
 						print 'Leg: ', j, ' No further foothold planned!', i
-						self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP.copy()
+						iahead = int(GAIT_TPHASE/CTR_INTV)
+						self.Robot.Leg[j].XH_world_X_base = transform_world_X_base(np.array([base_path.X.xp[i+iahead],
+																							 base_path.W.xp[i+iahead]]).reshape((6,1)))
+						self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base), 
+																self.Robot.Leg[j].XHd.world_X_foot)
+						# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP.copy()
 
 					## Compute average surface normal from cell surface normal at both footholds
-					sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
-					sn2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3], j)
-					
-					## Set bodypose in leg class
-					self.Robot.Leg[j].XH_world_X_base = self.Robot.XHd.world_X_base.copy()
-					
+					# sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
+					# sn2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3], j)
+					# print j, np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
+					# print j, np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],3)
+					sn1 = self.get_snorm(self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
+					sn2 = self.get_snorm(self.Robot.Leg[j].XHd.world_X_foot[0:3,3], j)
+					# print j, sn1, sn2
+
 					## Generate transfer spline
 					svalid = self.Robot.Leg[j].generate_spline('world', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
 					
@@ -582,6 +597,7 @@ class CorinManager:
 					## Determine foot position wrt base & coxa - REQ: world_X_foot position
 					if (self.control_loop == "open"):
 						self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
+					
 					elif (self.control_loop == "close"):
 						## Closed-loop control on bodypose. Move by sum of desired pose and error 
 						comp_world_X_base = transform_world_X_base(self.Robot.P6d.world_X_base + K_BP*P6e_world_X_base)
@@ -589,7 +605,11 @@ class CorinManager:
 						self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 							
 					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
-
+					# print j, ' bXw: ', np.round(self.Robot.XHd.base_X_world,3)
+					# print j, ' wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
+					# print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],3)
+					# print j, ' cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],3)
+					# print '========================================================='
 			## Task to joint space
 			qd, tXj_error = self.Robot.task_X_joint()	
 
@@ -610,9 +630,12 @@ class CorinManager:
 				# triggers only when all transfer phase legs complete and greater than zero
 				# > 0: prevents trigger during all leg support
 				if (transfer_total == leg_complete and transfer_total > 0 and leg_complete > 0):
-					self.Robot.alternate_phase(next(gait_stack))
-					
+					try:
+						self.Robot.alternate_phase(next(gait_stack))
+					except:
+						self.Robot.alternate_phase()
 					print i, self.Robot.Gait.cs, np.round(v3cp.flatten(),4)
+					print '======================================================='
 
 				## LOGGING: initialise variable and set respective data ##
 				qlog 		  = JointState()
@@ -819,25 +842,43 @@ class CorinManager:
 				motion_plan = planpath_to_motionplan( path_planner(Pose(), Pose()) )
 				# Plot.plot_2d(motion_plan.qb.X.t, motion_plan.qb.X.xp)
 				
-				self.Robot.P6c.world_X_base = np.array([motion_plan.qb.X.xp[0][0],
-														motion_plan.qb.X.xp[0][1],
-														motion_plan.qb.X.xp[0][2],
-														motion_plan.qb.W.xp[0][0],
-														motion_plan.qb.W.xp[0][1],
-														motion_plan.qb.W.xp[0][2]]).reshape(6,1)
+				self.Robot.P6c.world_X_base = np.array([motion_plan.qb.X.xp[0], 
+														motion_plan.qb.W.xp[0]]).reshape(6,1)
 				self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
 				self.Robot.P6c.world_X_base_offset = self.Robot.P6c.world_X_base.copy()
-				self.Robot.P6c.world_X_base_offset[2] = 0.
-
-				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
-				self.Robot.stance_offset = (40, -40)
-				self.Robot._initialise("chimney")
-				self.Robot.P6c.world_X_base[2] = motion_plan.qb.X.xp[0][2]
-				self.Robot.qc.position = self.Robot.qd
 				
+				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
+				self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
+				
+				# Compute foot position
+				leg_stance = [None]*6
+				for j in range(0,6):
+					# print np.round(motion_plan.f_world_X_foot[j].xp[0],3)
+					self.Robot.Leg[j].XHd.world_X_foot = v3_X_m(motion_plan.f_world_X_foot[j].xp[0])
+					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHd.world_X_foot)
+					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
+					self.Robot.Leg[j].XHc.base_X_foot = self.Robot.Leg[j].XHd.base_X_foot.copy()
+					self.Robot.Leg[j].XHc.coxa_X_foot = self.Robot.Leg[j].XHd.coxa_X_foot.copy()
+					leg_stance[j] = self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3]
+				
+				self.Robot.stance_offset = (40, -40)
+				self.Robot._initialise(leg_stance)
+				self.Robot.qc.position = self.Robot.qd
+
 				if (self.main_controller(motion_plan)):
 					self.Robot.alternate_phase()
 		else:
 			rospy.sleep(0.5)
 
-	
+	def get_snorm(self, p, j):
+		if (p[1] < -1.1 and j >= 3):
+			snorm = np.array([0.,1.,0.])
+		elif (p[1] > -1.1 and j >= 3):
+			snorm = np.array([-1.,0.,0.])
+		elif (p[1] <= -0.4 and j < 3):
+			snorm = np.array([0.,-1.,0.])
+		elif (p[1] > -0.4 and j < 3):
+			snorm = np.array([1.,0.,0.])
+		else:
+			print j, p
+		return snorm

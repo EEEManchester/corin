@@ -156,9 +156,9 @@ def call_planner(ps, pf):
 
 if __name__ == "__main__":
 
-	RosGridMap = GridMapRos("wall_concave_corner")
+	# RosGridMap = GridMapRos("wall_concave_corner")
 	# RosGridMap = GridMapRos("hole_demo")
-	# RosGridMap = GridMapRos("chimney_corner")
+	RosGridMap = GridMapRos("chimney_corner")
 	# RosGridMap = GridMapRos("hole_wall_demo")
 	# RosGridMap = GridMapRos("iros_part1_demo")
 	# RosGridMap = GridMapRos("iros_demo")
