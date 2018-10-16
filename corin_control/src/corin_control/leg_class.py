@@ -174,8 +174,10 @@ class LegClass:
 			# Use previous known state
 			xp = self.XHd.coxa_X_foot[:3,3]
 		# print self.number, ' xp: ', np.round(xp,3)
-		self.Joint.qpd = self.KDL.leg_IK(xp)
-
+		self.Joint.qpd = self.KDL.leg_IK(xp, self.number)
+		
+		if self.number==2:
+			print np.round(self.Joint.qpd,3)
 		if (self.Joint.qpd is not None):
 			# checks if joint limit exceeded and singularity occurs
 			if (self.check_joint_limit(self.Joint.qpd) is True):

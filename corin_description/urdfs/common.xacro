@@ -15,7 +15,7 @@
 	<xacro:property name="MX64_effort"    value="2.85" /> 					<!-- real: 2.85 Nm 	-->
 	<xacro:property name="MX64_velocity"  value="5.23" />
 
-	<xacro:property name="cox_joint_lim" value="1.00" />	<!-- 57deg -->
+	<xacro:property name="cox_joint_lim" value="1.05" />	<!-- 57deg -->
 	<xacro:property name="cxm_joint_lim" value="0.84" />	<!-- 48deg -->
 	<xacro:property name="fem_joint_lim" value="2.22" />	<!-- 127deg -->
 	<xacro:property name="tib_joint_lim" value="2.79" /> 	<!-- 160.5 -->

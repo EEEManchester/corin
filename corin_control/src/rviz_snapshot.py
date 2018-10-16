@@ -227,7 +227,7 @@ if __name__ == "__main__":
 	# rviz.load_file('wall_highRes_convex.csv')
 	# rviz.load_file('wall_medRes_concave.csv')
 	# rviz.load_file('wall_medRes_convex.csv')
-	rviz.load_file('wall_convex_new.csv')
+	rviz.load_file('wall_convex_02.csv')
 	# rviz.load_file('wall_concave_new.csv')
 
 	rviz.visualise_motion_plan()

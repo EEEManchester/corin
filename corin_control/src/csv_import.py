@@ -186,8 +186,8 @@ if __name__ == "__main__":
 	csv_import = CSVimport()
 
 	# csv_import.load_file('chimney_01.csv')
-	# csv_import.load_file('wall_convex_new.csv')
-	csv_import.load_file('wall_concave_new.csv')
+	csv_import.load_file('wall_convex_02.csv')
+	# csv_import.load_file('wall_concave_new.csv')
 
 	# call_csv_import()
 	rospy.spin()
