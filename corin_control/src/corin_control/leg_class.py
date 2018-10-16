@@ -173,7 +173,7 @@ class LegClass:
 		if (xp is None):
 			# Use previous known state
 			xp = self.XHd.coxa_X_foot[:3,3]
-		
+		# print self.number, ' xp: ', np.round(xp,3)
 		self.Joint.qpd = self.KDL.leg_IK(xp)
 
 		if (self.Joint.qpd is not None):

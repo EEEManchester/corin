@@ -491,7 +491,8 @@ class CorinManager:
 			v3cv = base_path.X.xv[i].reshape(3,1);
 			v3ca = base_path.X.xa[i].reshape(3,1);
 
-			v3wp = wXbase_offset[3:6] + base_path.W.xp[i].reshape(3,1);
+			# v3wp = wXbase_offset[3:6] + base_path.W.xp[i].reshape(3,1);
+			v3wp = base_path.W.xp[i].reshape(3,1);
 			v3wv = base_path.W.xv[i].reshape(3,1);
 			v3wa = base_path.W.xa[i].reshape(3,1);
 			
@@ -517,7 +518,7 @@ class CorinManager:
 			self.Robot.V6d.world_X_base = np.vstack((v3cv,v3wv)) 			# not used atm
 			self.Robot.A6d.world_X_base = np.vstack((v3ca,v3wa)) 			# not used atm
 			self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
-
+			
 			## Generate trajectory for legs in transfer phase
 			for j in range (0, self.Robot.active_legs):
 				# Transfer phase
@@ -584,7 +585,7 @@ class CorinManager:
 
 			## Compute task space foot position for all legs
 			for j in range (0, self.Robot.active_legs):
-
+				
 				## Transfer phase
 				if (self.Robot.Gait.cs[j] == 1 and self.Robot.Leg[j].feedback_state==1):
 					## Update leg position from generated leg spline
@@ -610,6 +611,7 @@ class CorinManager:
 					# print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],3)
 					# print j, ' cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],3)
 					# print '========================================================='
+				
 			## Task to joint space
 			qd, tXj_error = self.Robot.task_X_joint()	
 
@@ -870,11 +872,21 @@ class CorinManager:
 		else:
 			rospy.sleep(0.5)
 
+
 	def get_snorm(self, p, j):
-		if (p[1] < -1.1 and j >= 3):
-			snorm = np.array([0.,1.,0.])
-		elif (p[1] > -1.1 and j >= 3):
-			snorm = np.array([-1.,0.,0.])
+		## surface normal for chimney
+		# if (p[1] < -1.1 and j >= 3):
+		# 	snorm = np.array([0.,1.,0.])
+		# elif (p[1] > -1.1 and j >= 3):
+		# 	snorm = np.array([-1.,0.,0.])
+		# elif (p[1] <= -0.4 and j < 3):
+		# 	snorm = np.array([0.,-1.,0.])
+		# elif (p[1] > -0.4 and j < 3):
+		# 	snorm = np.array([1.,0.,0.])
+		# else:
+		# 	print j, p
+		if (j >= 3):
+			snorm = np.array([0.,0.,1.])
 		elif (p[1] <= -0.4 and j < 3):
 			snorm = np.array([0.,-1.,0.])
 		elif (p[1] > -0.4 and j < 3):

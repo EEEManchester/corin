@@ -30,7 +30,6 @@ find_package(catkin REQUIRED COMPONENTS
   trajectory_msgs
   visualization_msgs
   grid_planner_core
-  eigen-quadprog
 )
 
 find_package(RBDL REQUIRED)
@@ -97,14 +96,14 @@ include_directories( ${catkin_INCLUDE_DIRS}
 # target_link_libraries(jointStateServer ${catkin_LIBRARIES})
 
 # Service Server to compute CoM and CRBI
-add_executable(rigid_body_server cpp_script/service/rigid_body_server.cpp
-                                  cpp_script/service/robots/mcorin/transforms.cpp 
-                                  cpp_script/service/robots/mcorin/inertia_properties.cpp 
-                                  cpp_script/service/robots/mcorin/inverse_dynamics.cpp
-                                  cpp_script/service/robots/mcorin/jacobians.cpp
-                                  cpp_script/service/robots/mcorin/miscellaneous.cpp)
-target_link_libraries(rigid_body_server ${catkin_LIBRARIES})
-add_dependencies(rigid_body_server corin_control_gencpp)
+# add_executable(rigid_body_server cpp_script/service/rigid_body_server.cpp
+#                                   cpp_script/service/robots/mcorin/transforms.cpp 
+#                                   cpp_script/service/robots/mcorin/inertia_properties.cpp 
+#                                   cpp_script/service/robots/mcorin/inverse_dynamics.cpp
+#                                   cpp_script/service/robots/mcorin/jacobians.cpp
+#                                   cpp_script/service/robots/mcorin/miscellaneous.cpp)
+# target_link_libraries(rigid_body_server ${catkin_LIBRARIES})
+# add_dependencies(rigid_body_server corin_control_gencpp)
 
 
 # add_executable(main_node cpp_script/main_node.cpp cpp_script/force_distribution.cpp

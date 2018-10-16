@@ -131,8 +131,9 @@ class CSVimport:
 		t_cob = seq(0, (len(x_cob)-1)*GAIT_TPHASE*6, GAIT_TPHASE*6.)
 		base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV, t_cob) # Trajectory for robot's base
 		# print len(x_cob), len(t_cob), t_cob
-		# Plot.plot_2d(base_path.X.t, base_path.X.xv)
+		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
+
 		self.motion_plan.set_base_path(self.Robot.P6c.world_X_base.copy(), base_path, world_X_base, None)
 		self.motion_plan.set_footholds(world_X_footholds, base_X_footholds, world_base_X_NRP)
 		self.motion_plan.set_gait(self.Robot.Gait.np, self.Robot.Gait.np)
@@ -185,8 +186,9 @@ if __name__ == "__main__":
 	csv_import = CSVimport()
 
 	# csv_import.load_file('chimney_01.csv')
-	csv_import.load_file('chimney_01.csv')
-	
+	# csv_import.load_file('wall_convex_new.csv')
+	csv_import.load_file('wall_concave_new.csv')
+
 	# call_csv_import()
 	rospy.spin()
 
