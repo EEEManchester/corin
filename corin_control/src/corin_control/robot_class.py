@@ -106,7 +106,7 @@ class RobotState:
 
 		self.update_bodypose_state(cmode)
 		self.update_leg_state(reset, cmode)
-		# self.update_stability_margin()
+		self.update_stability_margin()
 		
 	def update_leg_state(self, reset, cmode):
 		""" update legs state """
@@ -171,23 +171,40 @@ class RobotState:
 		""" updates the current stability margin """
 
 		## Define Variables ##
-		stack_base_X_world = []
+		stack_world_bXw = []
+		stack_base_bXw = []
 
 		for j in range(6):
-			stack_base_X_world.append(self.Leg[j].XHc.world_base_X_foot[:3,3])
-		
+			stack_world_bXw.append(self.Leg[j].XHc.world_base_X_foot[:3,3])
+			stack_base_bXw.append(self.Leg[j].XHc.base_X_foot[:3,3])
+
+		# self.SM.check_angle(stack_world_bXw, self.Gait.cs)
 		# compute Longitudinal Stability Margin
-		sm = self.SM.LSM(stack_base_X_world, self.Gait.cs)
-		try:
-			if (sm[0]<=SM_MIN or sm[1]<=SM_MIN):
-				print 'Stability Violated!'
-				self.invalid = True
-			else:
-				self.invalid = False
-		except Exception, e:
-			print 'Error: ', e
-			print 'Robot Stopping'
+		valid, sm = self.SM.point_in_convex(np.zeros(3), stack_world_bXw, self.Gait.cs)
+		print 'Convex hull: ', valid, sm
+		if not valid:
+			print 'Break!'
 			self.invalid = True
+			self.SM.point_in_convex(np.zeros(3), stack_world_bXw, self.Gait.cs, True)
+		else:
+			self.invalid = False
+		
+		if sm < 0.:
+			self.invalid = True
+		# sm = self.SM.LSM(stack_world_bXw, self.Gait.cs)
+		# # print self.Gait.cs
+		# # print stack_world_bXw
+		# print 'SM: ', np.round(sm,3)
+		# try:
+		# 	if (sm[0]<=SM_MIN or sm[1]<=SM_MIN):
+		# 		print 'Stability Violated!'
+		# 		self.invalid = True
+		# 	else:
+		# 		self.invalid = False
+		# except Exception, e:
+		# 	print 'Error: ', e
+		# 	print 'Robot Stopping'
+		# 	self.invalid = True
 
 	def update_com_crbi(self, i_com, i_crbi):
 		""" remaps tuple to numpy array """

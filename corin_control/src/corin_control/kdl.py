@@ -68,20 +68,19 @@ class KDL():
 
 			q1 = np.arctan2(y,x)
 			
-			# Leg along direction of body
-			if ( (abs(np.rad2deg(q1)) >= 50.)):
-				print 'condition valid'
-				if (leg_no==0 or leg_no==3):
-					q1 = -np.deg2rad(50);
-				elif (leg_no==2):
-					q1 = np.deg2rad(50);
-					
-				else:
-					print 'Invalid condition!'
-				# theta = Leg_IK_sec(hip_X_foot(1:3,4)', j)'
-			if (leg_no==2):
-				print 'xp: ', np.round(p,3)
-				print 'q1: ', q1
+			# Leg along direction of body - wall walking cornering
+			# if ( (abs(np.rad2deg(q1)) >= 50.)):
+			# 	if (leg_no==0 or leg_no==3):
+			# 		q1 = -np.deg2rad(50);
+			# 	elif (leg_no==2):
+			# 		q1 = np.deg2rad(50);		
+			# 	else:
+			# 		# print abs(np.rad2deg(q1))
+			# 		print 'Invalid condition!'
+				
+			# if leg_no == 0:
+			# 	print 'q1 ', np.round(q1,3), np.round(p,4)
+
 			# Adding the square of element (1,4) & (2,4) in inv(H01)*Psym = T12*T23
 			c3  = ( (x*np.cos(q1) + y*np.sin(q1) - L1)**2 + z**2 -L3**2-L2**2 )/(2*L2*L3);
 			a3  = 1.0-c3**2
@@ -203,13 +202,9 @@ qs = np.array([0., 0.15, -0.10])	# right side
 # print CK.singularity_approach(qs)
 # cd = CK.leg_FK(qs)
 # print cd.flatten()
-# cd = [ 0.21, 0., -0.1]
-cd = [0.295, -0.0056, 0.1865]
-cd = [0.33, 0, 0.09]
-cd = [-0.034, -0.041, -0.198]
-qp = CK.leg_IK(cd,2)
-
-# print 'q: ', qp
+cd = [0.352 , 0.063,  0.]
+qp = CK.leg_IK(cd,0)
+print 'q: ', qp
 # print qp
 # if (not CK.check_singularity(qp)):
 # 	qd,qdd = CK.joint_speed(qp, v, a)

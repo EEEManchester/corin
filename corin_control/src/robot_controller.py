@@ -26,6 +26,9 @@ from std_msgs.msg import ByteMultiArray 	# foot contact state
 from std_msgs.msg import Float32MultiArray	# foot contact force
 from std_msgs.msg import String 			# ui control
 import tf 		 							# ROS transform library
+from geometry_msgs.msg import PolygonStamped
+from geometry_msgs.msg import Point32
+from geometry_msgs.msg import Polygon
 
 ## Services
 from service_handler import ServiceHandler
@@ -147,6 +150,8 @@ class CorinManager:
 		self.setpoint_pub_ = rospy.Publisher('/corin/setpoint_states', JointState, queue_size=1)	# LOGGING publisher
 		self.trajectory_pub_ = rospy.Publisher('/corin/motion_plan', RosMotionPlan, queue_size=1)	# LOGGING publisher
 		self.log_pub_ = rospy.Publisher('/corin/log_states', LoggingState, queue_size=1)	# LOGGING publisher
+		self.support_poly_pub_ = rospy.Publisher('/corin/support_polygon', PolygonStamped, queue_size=1) # Support polygon publisher
+		self.stability_pub_ = rospy.Publisher('/corin/stability_margin', Float64, queue_size=1) # Support polygon publisher
 
 		## Hardware Specific Publishers ##
 		if (ROBOT_NS == 'corin' and (self.interface == 'gazebo' or 
@@ -242,7 +247,8 @@ class CorinManager:
 				self.joint_pub_.publish(dqp)
 
 		self.Visualizer.publish_robot(self.Robot.P6d.world_X_base)
-
+		self.stability_pub_.publish(self.Robot.SM.min)
+		
 		## Publish setpoints to logging topic
 		if (q_log is not None):
 			self.setpoint_pub_.publish(q_log)
@@ -252,7 +258,7 @@ class CorinManager:
 		if (self.control_rate is "normal" or self.interface is 'robotis'):
 			self.rate.sleep()
 
-	def default_pose(self, stand_state=0):
+	def default_pose(self, stand_state=0, leg_stance=None):
 		""" Moves robot to nominal stance (default pose) 		 """
 		""" Input: 1) stand_state -> indicates if robot standing """
 
@@ -266,9 +272,10 @@ class CorinManager:
 		
 		print 'Moving to nominal stance....'
 		if (stand_state):
-			setpoints = Routine.shuffle_legs()
+			setpoints = Routine.shuffle_legs(leg_stance)
 		else:
-			setpoints = (range(0,6), LEG_STANCE, [0]*6, 2)
+			print 'moving here'
+			setpoints = (range(0,6), leg_stance, [0]*6, 2)
 		self.leg_level_controller(setpoints)
 		rospy.set_param(ROBOT_NS + '/standing', True)
 
@@ -326,7 +333,7 @@ class CorinManager:
 		td = 0 		# duration of trajectory
 		tv = False 	# flag if period is an array
 		nleg, leg_stance, leg_phase, period = setpoints
-
+		print 'in here'
 		## Check if time intervals is used - set trajectory duration and end time
 		try:
 			len(period)
@@ -339,33 +346,34 @@ class CorinManager:
 		# Number of points based on duration of trajectory
 		npc = int(te/CTR_INTV+1)
 		
-		try:
-			## Generate spline for each leg
+		# try:
+		## Generate spline for each leg
+		for i in range(len(nleg)):
+			j = nleg[i]
+			td = period[j][1]-period[j][0] if tv else td
+
+			self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3] = leg_stance[j]
+			# svalid = self.Robot.Leg[j].generate_spline('leg', np.array([0.,0.,1.]), np.array([0.,0.,1.]), leg_phase[j], False, td, CTR_INTV)
+			svalid = self.Robot.Leg[j].generate_spline('leg', np.array([0.,0.,1.]), np.array([0.,0.,1.]), 1, False, GAIT_TPHASE, CTR_INTV)
+			if (svalid is False):
+				self.Robot.invalid = True
+				raise Exception, "Trajectory Invalid"
+
+		## Unstack trajectory and execute
+		for p in range(0, npc):
+			ti = p*CTR_INTV 	# current time in seconds
 			for i in range(len(nleg)):
 				j = nleg[i]
-				td = period[j][1]-period[j][0] if tv else td
+				# identify start and end of transfer trajectory
+				if (ti >= period[j][0] and ti <= period[j][1]):
+					self.Robot.Leg[j].update_from_spline(); 	# set cartesian position for joint kinematics
 
-				self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3] = leg_stance[j]
-				svalid = self.Robot.Leg[j].generate_spline('leg', np.array([0.,0.,1.]), np.array([0.,0.,1.]), leg_phase[j], False, td, CTR_INTV)
-				if (svalid is False):
-					self.Robot.invalid = True
-					raise Exception, "Trajectory Invalid"
+			qd, err_list = self.Robot.task_X_joint()
+			self.publish_topics(qd)
 
-			## Unstack trajectory and execute
-			for p in range(0, npc):
-				ti = p*CTR_INTV 	# current time in seconds
-				for i in range(len(nleg)):
-					j = nleg[i]
-					# identify start and end of transfer trajectory
-					if (ti >= period[j][0] and ti <= period[j][1]):
-						self.Robot.Leg[j].update_from_spline(); 	# set cartesian position for joint kinematics
-
-				qd, err_list = self.Robot.task_X_joint()
-				self.publish_topics(qd)
-
-		except Exception, e:
-			print "Exception raised: ", e
-			return False
+		# except Exception, e:
+		# 	print "Exception raised: ", e
+		# 	return False
 
 		return True
 
@@ -579,6 +587,7 @@ class CorinManager:
 					if (svalid is False):
 						# set invalid if trajectory unfeasible for leg's kinematic
 						self.Robot.invalid = True
+						print 'Leg Transfer Trajectory Invalid'
 					else:	
 						# set flag that phase has changed
 						self.Robot.Leg[j].transfer_phase_change = True
@@ -611,7 +620,24 @@ class CorinManager:
 					# print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],3)
 					# print j, ' cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],3)
 					# print '========================================================='
-				
+			
+			## Set stability polygon
+			support_polygon = Polygon()
+			foothold_list = []
+			for j in range(0,6):
+				if (self.Robot.Gait.cs[j]==0):
+					foothold_list.append(self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
+					# Point3D = Point32()
+					# Point3D.x = self.Robot.Leg[j].XHd.world_X_foot[0,3]
+					# Point3D.y = self.Robot.Leg[j].XHd.world_X_foot[1,3]
+					# Point3D.z = self.Robot.Leg[j].XHd.world_X_foot[2,3]
+			self.Visualizer.publish_support_polygon(foothold_list)
+			# 		support_polygon.points.append(Point3D)
+			# sp_data = PolygonStamped()
+			# sp_data.header.frame_id = 'world'
+			# sp_data.polygon = support_polygon
+			# self.support_poly_pub_.publish(sp_data)
+
 			## Task to joint space
 			qd, tXj_error = self.Robot.task_X_joint()	
 
@@ -632,6 +658,24 @@ class CorinManager:
 				# triggers only when all transfer phase legs complete and greater than zero
 				# > 0: prevents trigger during all leg support
 				if (transfer_total == leg_complete and transfer_total > 0 and leg_complete > 0):
+					## Forcefully change gait sequence
+					# if i == 2400:
+					# 	self.Robot.Gait.phases = []
+					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
+					# 	self.Robot.Gait.phases.append([0,0,0,1,0,0])
+					# 	self.Robot.Gait.phases.append([0,0,0,0,0,1])
+					# 	self.Robot.Gait.phases.append([0,0,1,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,1,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([1,0,0,0,0,0])
+					# elif i==2750:
+					# 	self.Robot.Gait.phases = []
+					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
+					# 	self.Robot.Gait.phases.append([0,0,0,1,0,0])
+					# 	self.Robot.Gait.phases.append([0,0,1,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,1,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([1,0,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,0,0,0,0,1])
+						
 					try:
 						self.Robot.alternate_phase(next(gait_stack))
 					except:
@@ -866,6 +910,8 @@ class CorinManager:
 				self.Robot.stance_offset = (40, -40)
 				self.Robot._initialise(leg_stance)
 				self.Robot.qc.position = self.Robot.qd
+				# print 'moving to default'
+				# self.default_pose(0, leg_stance)
 
 				if (self.main_controller(motion_plan)):
 					self.Robot.alternate_phase()
@@ -875,22 +921,39 @@ class CorinManager:
 
 	def get_snorm(self, p, j):
 		## surface normal for chimney
-		# if (p[1] < -1.1 and j >= 3):
-		# 	snorm = np.array([0.,1.,0.])
-		# elif (p[1] > -1.1 and j >= 3):
-		# 	snorm = np.array([-1.,0.,0.])
+		# wall_outer = -1.1 	# chimney width 0.72m
+		wall_outer = -0.995 	# chimney width 0.62m
+		# wall_outer = -0.93 	# chimney width 0.535m
+		wall_inner = -0.4
+		if (p[1] < wall_outer and j >= 3):
+			snorm = np.array([0.,1.,0.])
+		elif (p[1] > wall_outer and j >= 3):
+			snorm = np.array([-1.,0.,0.])
+		elif (p[1] <= wall_inner and j < 3):
+			snorm = np.array([0.,-1.,0.])
+		elif (p[1] > wall_inner and j < 3):
+			snorm = np.array([1.,0.,0.])
+		else:
+			print j, p
+
+		## surface normal for convex wall
+		# if (j >= 3):
+		# 	snorm = np.array([0.,0.,1.])
 		# elif (p[1] <= -0.4 and j < 3):
 		# 	snorm = np.array([0.,-1.,0.])
 		# elif (p[1] > -0.4 and j < 3):
 		# 	snorm = np.array([1.,0.,0.])
 		# else:
 		# 	print j, p
-		if (j >= 3):
-			snorm = np.array([0.,0.,1.])
-		elif (p[1] <= -0.4 and j < 3):
-			snorm = np.array([0.,-1.,0.])
-		elif (p[1] > -0.4 and j < 3):
-			snorm = np.array([1.,0.,0.])
-		else:
-			print j, p
+		
+		## surface normal for concave wall
+		# if (j < 3):
+		# 	snorm = np.array([0.,0.,1.])
+		# elif (p[0] <= 0.62 and j >= 3):
+		# 	snorm = np.array([0.,1.,0.])
+		# elif (p[0] > 0.62 and j >= 3):
+		# 	snorm = np.array([-1.,0.,0.])
+		# else:
+		# 	print j, p
+
 		return snorm

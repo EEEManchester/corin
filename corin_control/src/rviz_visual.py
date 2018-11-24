@@ -23,6 +23,7 @@ class RvizVisualise:
 		self.path_pub_ = rospy.Publisher(ROBOT_NS + '/path', Path, queue_size=1)
 		self.mark_pub_ = rospy.Publisher(ROBOT_NS + '/footholds', MarkerArray, queue_size=1)	# marker array
 		self.cob_pub_  = rospy.Publisher(ROBOT_NS + '/cob', MarkerArray, queue_size=1)
+		self.sp_pub_   = rospy.Publisher(ROBOT_NS + '/support', Marker, queue_size=1)
 
 		self.wrench_pub_ = {}
 		for j in range(0,6):
@@ -89,3 +90,9 @@ class RvizVisualise:
 				# if j==1:
 				# 	print np.round(forces[counter:counter+3].flatten(),3)
 				counter += 3
+
+	def publish_support_polygon(self, footholds):
+		""" Foothold array publisher 
+			Input:  footholds: list of footholds """
+		
+		self.sp_pub_.publish(foothold_list_to_marker(footholds, rospy.Time.now(), self.fr_fix))

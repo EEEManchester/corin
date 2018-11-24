@@ -33,20 +33,20 @@ def air_suspend_legs():
 
 	return (leg_sequen, leg_stance, leg_phase, 2.3)
 
-def shuffle_legs():
+def shuffle_legs(leg_stance):
 	""" routine to shuffle legs back to NRP """
-
+	print 'Shuffle legs'
 	## Define Variables ##
-	leg_stance = LEG_STANCE
+	# leg_stance = LEG_STANCE
 	leg_sequen = range(0,6)
 	leg_phase  = [1,1,1,1,1,1]
 	leg_period = [None]*6
 
 	for j in range(0,6):
 		if (j%2 == 0): 	# even number legs
-			leg_period[j] = [0, TRAC_PERIOD]
+			leg_period[j] = [0, GAIT_TPHASE]
 		elif (j%2 == 1):
-			leg_period[j] = [TRAC_PERIOD, TRAC_PERIOD*2]
+			leg_period[j] = [GAIT_TPHASE, GAIT_TPHASE*2]
 
 	return (leg_sequen, leg_stance, leg_phase, leg_period)
 

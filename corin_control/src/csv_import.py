@@ -137,7 +137,8 @@ class CSVimport:
 		self.motion_plan.set_base_path(self.Robot.P6c.world_X_base.copy(), base_path, world_X_base, None)
 		self.motion_plan.set_footholds(world_X_footholds, base_X_footholds, world_base_X_NRP)
 		self.motion_plan.set_gait(self.Robot.Gait.np, self.Robot.Gait.np)
-
+		print self.Robot.Gait.np
+		
 	def visualise_motion_plan(self):
 
 		self.Visualizer.publish_robot(self.CoB[0])
@@ -185,9 +186,9 @@ if __name__ == "__main__":
 
 	csv_import = CSVimport()
 
-	# csv_import.load_file('chimney_01.csv')
-	csv_import.load_file('wall_convex_02.csv')
-	# csv_import.load_file('wall_concave_new.csv')
+	csv_import.load_file('chimney_08.csv')
+	# csv_import.load_file('wall_convex_02.csv')
+	# csv_import.load_file('wall_concave_02.csv')
 
 	# call_csv_import()
 	rospy.spin()

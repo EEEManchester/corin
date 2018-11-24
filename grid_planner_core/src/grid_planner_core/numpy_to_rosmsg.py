@@ -23,6 +23,7 @@ from geometry_msgs.msg import PoseStamped
 ## Marker
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
+from geometry_msgs.msg import Point
 ## PCL
 from sensor_msgs.msg import PointCloud2, PointField
 ## JointStates
@@ -274,6 +275,37 @@ def list_to_marker_array(path_arr, stamp=None, frame_id=None):
 		mark_array.markers.append(mark)
 
 	return mark_array
+
+def foothold_list_to_marker(footholds, stamp=None, frame_id=None):
+	""" Converts custom marker list to nav_msgs/Path """
+
+	## Define Variables ##
+	mark = Marker()
+	
+	if stamp is not None:
+		mark.header.stamp = stamp
+	if frame_id is not None:
+		mark.header.frame_id = frame_id
+	
+	mark.type = 11
+	mark.id = 0
+	mark.color.a = 1.0; # transparency level
+	
+	## assumes that footholds array are of the same size
+	for j in range(0,6):
+		point3d = Point()
+		if (j < len(footholds)):		
+			point3d.x = footholds[j][0]
+			point3d.y = footholds[j][1]
+			point3d.z = footholds[j][2]
+		else:
+			point3d.x = footholds[j-len(footholds)][0]
+			point3d.y = footholds[j-len(footholds)][1]
+			point3d.z = footholds[j-len(footholds)][2]
+
+		mark.points.append(point3d)
+		
+	return mark
 ## ======================================================================================================================================== ##
 ## 																Joint States																##
 ## ======================================================================================================================================== ##

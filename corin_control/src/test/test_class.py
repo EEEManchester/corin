@@ -127,3 +127,16 @@ if __name__ == "__main__":
 
 	print a.flatten().tolist() + b.flatten().tolist()
 	
+param_obs = {'FK': 1, 				# Force gain - PRIMARY tuning parameter
+			'stop:':False, 			# Flag for robot to stop
+			'q_min': -2.356, 		# min. angle of lidar (rad)
+			'q_max':  2.356, 		# max. angle of lidar (rad)
+			'q_res': 0.00581718, 	# resolution angle (rad)
+			'd_min': 0.05, 		# min. distance of data considered valid 
+			'r_min': 0.25, 		# minimum radius for robot to half (m)
+			'r_max': 0.5, 			# maximum radius where obstacle is considered (m)
+			'p_min': 5, 			# number of minimum points within threshold for robot to stop
+			'dband': 0.01, 		# deadband for sum of obstacles magnitude
+			'd_obs': 0.001, 		# magnitude between points to be considered of the same object
+			'n_obs': 3, 			# min. number of points required to be considered an obstacle
+			}

@@ -216,22 +216,24 @@ class RvizSnapshot:
 			rospy.sleep(0.1)
 				
 			i += 1
-			# raw_input('cont')
-			rospy.sleep(0.5)
+			raw_input('cont')
+			# rospy.sleep(0.5)
 
 if __name__ == "__main__":
 
 	rviz = RvizSnapshot()
 
-	# rviz.load_file('chimney_new_01.csv')
+	rviz.load_file('chimney_02.csv')
 	# rviz.load_file('wall_highRes_convex.csv')
 	# rviz.load_file('wall_medRes_concave.csv')
 	# rviz.load_file('wall_medRes_convex.csv')
-	rviz.load_file('wall_convex_02.csv')
-	# rviz.load_file('wall_concave_new.csv')
+	# rviz.load_file('wall_convex_02.csv')
+	# rviz.load_file('wall_concave_02.csv')
 
 	rviz.visualise_motion_plan()
 	raw_input('Start motion!')
-	for i in range(0,5):
+
+	rviz.cycle_states()
+	# for i in range(0,5):
 		# rviz.cycle_snapshot()
-		rviz.cycle_states()
+		# rviz.cycle_states()

@@ -109,7 +109,7 @@ class LegClass:
 			start = self.XHc.world_base_X_foot[:3,3].copy()
 			end   = mX(self.XH_world_X_base[:3,:3], self.XHd.base_X_foot[:3,3])
 			wpx, td = self.Path.interpolate_leg_path(start, end, sn1, sn2, phase, reflex, ctime)
-			
+
 			# Transform each via point from world to leg frame
 			wcp = np.zeros((len(wpx),3))
 			wcp[0] = self.XHc.coxa_X_foot[0:3,3].copy()
@@ -124,21 +124,22 @@ class LegClass:
 														sn1, sn2, phase, reflex, ctime, tn)
 
 		elif (frame is 'leg'):
-			wcp, td = self.Path.interpolate_leg_path(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3], 
-														self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3], 
+			wcp, td = self.Path.interpolate_leg_path(self.XHc.coxa_X_foot[0:3,3], 
+														self.XHd.coxa_X_foot[0:3,3], 
 														sn1, sn2, phase, reflex, ctime)
-
+		
 		self.xspline = TrajectoryPoints(self.Path.generate_leg_path(wcp, td, tn))
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)
-
+		# if self.number == 0:
+		# 	Plot.plot_2d(self.xspline.t, self.xspline.xp)
 		## checks spline for kinematic constraint
 		qt = [];	qp = [];	qv = [];	qa = [];
 
 		try:
 			for i in range(0,self.spline_length):
 				error, qpd, qvd, qad = self.tf_task_X_joint(self.xspline.xp[i],self.xspline.xv[i],self.xspline.xa[i])
-
+				
 				if (error == 0):
 					qt.append(i*CTR_INTV)
 					qp.append(qpd.tolist())
@@ -156,6 +157,8 @@ class LegClass:
 						raise ValueError
 			
 			self.qspline = JointTrajectoryPoints(18,(qt,qp,qv,qa))
+			# if self.number == 0:
+			# 	Plot.plot_2d(qt, qp)
 			return True
 
 		except ValueError:
@@ -174,10 +177,15 @@ class LegClass:
 			# Use previous known state
 			xp = self.XHd.coxa_X_foot[:3,3]
 		# print self.number, ' xp: ', np.round(xp,3)
+		prev_qpd = self.Joint.qpd.copy()
 		self.Joint.qpd = self.KDL.leg_IK(xp, self.number)
 		
-		if self.number==2:
-			print np.round(self.Joint.qpd,3)
+		# delta_qpd = self.Joint.qpd - prev_qpd
+		# if abs(delta_qpd[0]) > 1.:
+		# 	delta_qpd[0] = prev_qpd[0]
+		# 	print 'reset here'
+		# 	print np.round(delta_qpd,3)
+
 		if (self.Joint.qpd is not None):
 			# checks if joint limit exceeded and singularity occurs
 			if (self.check_joint_limit(self.Joint.qpd) is True):
