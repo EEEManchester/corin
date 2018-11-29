@@ -546,7 +546,15 @@ class CorinManager:
 					except IndexError:
 						## TODO: plan on the fly. Currently set to default position
 						print 'Leg: ', j, ' No further foothold planned!', i
-						iahead = int(GAIT_TPHASE/CTR_INTV)
+						gait_tphase = 1.0
+						iahead = int(gait_tphase/CTR_INTV)
+						## MODIFICATION FOR CHIMNEY_11.CSV
+						if i==601:
+							iahead = int(gait_tphase/CTR_INTV)*12
+							gait_tphase = 12.0
+							print 'tphase ', 12
+						else:
+							gait_tphase = 1.0
 						self.Robot.Leg[j].XH_world_X_base = transform_world_X_base(np.array([base_path.X.xp[i+iahead],
 																							 base_path.W.xp[i+iahead]]).reshape((6,1)))
 						self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base), 
@@ -563,14 +571,18 @@ class CorinManager:
 					# print j, sn1, sn2
 
 					## Generate transfer spline
-					svalid = self.Robot.Leg[j].generate_spline('world', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
+					svalid = self.Robot.Leg[j].generate_spline('world', sn1, sn2, 1, False, gait_tphase, CTR_INTV)
 					
 					## Update NRP
 					self.Robot.Leg[j].XHd.base_X_NRP[:3,3] = mX(self.Robot.XHd.base_X_world[:3,:3], 
 																self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3])
 					self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = mX(self.Robot.XHd.world_X_base[:3,:3], 
 																		self.Robot.Leg[j].XHd.base_X_foot[:3,3])
-					
+					print 'base: ', np.round(self.Robot.XHd.world_X_base[:3,3],4)
+					t_world_X_hip = mX(self.Robot.XHd.world_X_base, 
+													self.Robot.Leg[j].XHd.base_X_coxa)
+					leg_d = t_world_X_hip[:3,3] - self.Robot.Leg[j].XHd.world_X_foot[:3,3]
+					print 'delta ', np.round(leg_d,3)
 					## Identify knee up/down - first, checks only if body roll above threshold
 					if ((self.Robot.P6d.world_X_base[3] > ROLL_TH and j >= 3) or (self.Robot.P6d.world_X_base[3] < -ROLL_TH and j < 3)):
 						x_offset = np.array([COXA_X,0,0]).reshape((3,1)) 	# offset so that search at front of robot
@@ -657,30 +669,91 @@ class CorinManager:
 
 				# triggers only when all transfer phase legs complete and greater than zero
 				# > 0: prevents trigger during all leg support
+				print i
+				if (self.Robot.Gait.cs==[0,0,0,0,0,0] and i%50==0):
+					transfer_total = 1
+					leg_complete = 1
 				if (transfer_total == leg_complete and transfer_total > 0 and leg_complete > 0):
-					## Forcefully change gait sequence
-					# if i == 2400:
+					## FORCED CHANGED FOR wp=0.62 (Chimney_10.csv)
+					# if i==300:
 					# 	self.Robot.Gait.phases = []
-					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
-					# 	self.Robot.Gait.phases.append([0,0,0,1,0,0])
 					# 	self.Robot.Gait.phases.append([0,0,0,0,0,1])
-					# 	self.Robot.Gait.phases.append([0,0,1,0,0,0])
-					# 	self.Robot.Gait.phases.append([0,1,0,0,0,0])
-					# 	self.Robot.Gait.phases.append([1,0,0,0,0,0])
-					# elif i==2750:
-					# 	self.Robot.Gait.phases = []
-					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
 					# 	self.Robot.Gait.phases.append([0,0,0,1,0,0])
 					# 	self.Robot.Gait.phases.append([0,0,1,0,0,0])
 					# 	self.Robot.Gait.phases.append([0,1,0,0,0,0])
 					# 	self.Robot.Gait.phases.append([1,0,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
+					# elif i==600:
+					# 	self.Robot.Gait.phases = []
+					# 	self.Robot.Gait.phases.append([0,0,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
+					# 	self.Robot.Gait.phases.append([0,0,0,1,0,0])
+					# 	self.Robot.Gait.phases.append([0,0,1,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,1,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([1,0,0,0,0,0])
+					# elif i==2100:
+					# 	self.Robot.Gait.phases = []
 					# 	self.Robot.Gait.phases.append([0,0,0,0,0,1])
-						
+					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
+					# 	self.Robot.Gait.phases.append([0,0,0,1,0,0])
+					# 	self.Robot.Gait.phases.append([0,0,1,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,1,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([1,0,0,0,0,0])
+					## FORCED CHANGED FOR wp=0.64 (Chimney_11.csv)
+					# if i==300:
+					# 	self.Robot.Gait.phases = []
+					# 	self.Robot.Gait.phases.append([0,0,0,0,0,1])
+					# 	self.Robot.Gait.phases.append([0,0,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,0,0,1,0,0])
+					# 	self.Robot.Gait.phases.append([0,0,1,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,1,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([1,0,0,0,0,0])
+					# elif i==600:
+					# 	self.Robot.Gait.phases = []
+					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
+					# elif i==900:
+					# 	self.Robot.Gait.np = 5
+					# 	self.Robot.Gait.phases = []
+					# 	self.Robot.Gait.phases.append([0,0,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
+					# 	self.Robot.Gait.phases.append([0,0,0,1,0,0])
+					# 	self.Robot.Gait.phases.append([0,0,1,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,1,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([1,0,0,0,0,0])
+					# elif i==2100:
+					# 	self.Robot.Gait.phases = []
+					# 	self.Robot.Gait.phases.append([0,0,0,0,0,1])
+					# 	self.Robot.Gait.phases.append([0,0,1,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
+					# 	self.Robot.Gait.phases.append([0,0,0,1,0,0])
+					# 	self.Robot.Gait.phases.append([0,1,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([1,0,0,0,0,0])
+					## FORCED CHANGED FOR wp=0.66 (Chimney_12.csv)
+					if i==600:
+						self.Robot.Gait.phases = []
+						self.Robot.Gait.phases.append([0,0,0,0,1,0])
+					elif i==1200:
+						self.Robot.Gait.np = 5
+						self.Robot.Gait.phases = []
+						self.Robot.Gait.phases.append([0,0,1,0,0,0])
+						self.Robot.Gait.phases.append([0,1,0,0,0,0])
+						self.Robot.Gait.phases.append([1,0,0,0,0,0])
+						self.Robot.Gait.phases.append([0,0,0,0,0,0])
+						self.Robot.Gait.phases.append([0,0,0,0,1,0])
+						self.Robot.Gait.phases.append([0,0,0,1,0,0])
+					elif i==2100:
+						self.Robot.Gait.phases = []
+						self.Robot.Gait.phases.append([0,0,0,0,1,0])
+						self.Robot.Gait.phases.append([0,0,0,0,0,1])
+						self.Robot.Gait.phases.append([0,0,0,1,0,0])
+						self.Robot.Gait.phases.append([0,0,1,0,0,0])
+						self.Robot.Gait.phases.append([0,1,0,0,0,0])
+						self.Robot.Gait.phases.append([1,0,0,0,0,0])
 					try:
 						self.Robot.alternate_phase(next(gait_stack))
 					except:
 						self.Robot.alternate_phase()
-					print i, self.Robot.Gait.cs, np.round(v3cp.flatten(),4)
+					print i, self.Robot.Gait.cs, np.round(np.rad2deg(v3wp[2]).flatten(),4)#np.round(v3cp.flatten(),4)
 					print '======================================================='
 
 				## LOGGING: initialise variable and set respective data ##
