@@ -11,6 +11,8 @@ from sensor_msgs.msg import JointState
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
 
+import matlab.engine
+
 ROBOT_STATE = {}
 ROBOT_STATE[0] ='x'
 ROBOT_STATE[1] ='y'
@@ -71,19 +73,42 @@ def foothold_list_to_marker(footholds, stamp=None, frame_id=None):
 if __name__ == "__main__":
 	rospy.init_node('main_controller') 		#Initialises node
 	rate  = rospy.Rate(1.0/0.05)			# frequency
+	
+	print 'Starting matlab engine.....'
+	eng = matlab.engine.start_matlab()
+	print 'Engine started!'
 
 	sp_pub_   = rospy.Publisher('corin/support', Marker, queue_size=1)
 
 	rospy.sleep(0.2)
 	footholds = [(0.5,0,0),(0.7,0,0),(0.5,0.7,0),(0.4,0.5,0)]
 
-	while not rospy.is_shutdown():
-		sp_pub_.publish(foothold_list_to_marker(footholds, rospy.Time.now(), 'world'))
-		rospy.sleep(2)
+	# options = eng.optimoptions('quadprog','Algorithm','interior-point-convex','Display','none',
+ #                            'MaxIterations', 200, 
+ #                            'StepTolerance', 1e-12, 
+ #                            'ConstraintTolerance', 1e-7, 
+ #                            'OptimalityTolerance', 1e-8);
+ 	# a = matlab.double([1,4;9,16])
+ 	# b = matlab.double([2,0;1,1])
+ 	ret = eng.test_matlab(1.0,5.0)
+	print ret
+	# eng.H = [1 -1; -1 2]; 
+	# eng.f = [-2; -6];
+	# eng.A = [1 1; -1 2; 2 1];
+	# eng.b = [2; 2; 3];
+
+    # [leg_force,fval,exitflag,output,lamb] = 
+    # eng.quadprog(eng.H, eng.f, eng.A, eng.b);
+    # quadprog(eng.H,q,inq_C,inq_D,[],[],[],[],[],options);
+
+
+	# while not rospy.is_shutdown():
+
+	# 	# sp_pub_.publish(foothold_list_to_marker(footholds, rospy.Time.now(), 'world'))
+	# 	rospy.sleep(2)
 	# joint_sub_ = rospy.Subscriber('/corin/joint_states', JointState, joint_state_callback, queue_size=5)
 	#
 	# rospy.spin()
 	sp_state = JointState()
 	
-
-	print sp_state
+	eng.quit()
