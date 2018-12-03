@@ -185,8 +185,8 @@ if __name__ == "__main__":
 
 	csv_import = CSVimport()
 
-	csv_import.load_file('chimney_s054_03.csv')
-	# csv_import.load_file('chimney_sc_02.csv')
+	# csv_import.load_file('chimney_s054_03.csv')
+	csv_import.load_file('chimney_sc_02.csv')
 	# csv_import.load_file('wall_convex_02.csv')
 	# csv_import.load_file('wall_concave_02.csv')
 
