@@ -181,9 +181,9 @@ class RobotState:
 		# self.SM.check_angle(stack_world_bXw, self.Gait.cs)
 		# compute Longitudinal Stability Margin
 		valid, sm = self.SM.point_in_convex(np.zeros(3), stack_world_bXw, self.Gait.cs)
-		print 'Convex hull: ', valid, sm
+		
 		if not valid:
-			print 'Break!'
+			print 'Convex hull: ', valid, sm
 			self.invalid = True
 			self.SM.point_in_convex(np.zeros(3), stack_world_bXw, self.Gait.cs, True)
 		else:

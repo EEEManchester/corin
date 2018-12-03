@@ -104,22 +104,30 @@ Map:
       i3: { s1: [0,17], s2: [11,33], sh: -1}
 
   chimney_corner:
-    wall_height: 0.5
-    offset: {x: 0.023, y: -1.135, z: -0.2}
+    wall_height: 1.5
+    offset: {x: 0.023, y: -1.135, z: -0.4}
     size: { sx: 1.11, sy: 1.31}
     wall: 
-      i1: { s1: [0,25], s2: [12,25], sh: 0.5}
-      i2: { s1: [12,25], s2: [12,43], sh: 0.5}
+      i1: { s1: [0,25], s2: [12,25], sh: 0.9}
+      i2: { s1: [12,25], s2: [12,43], sh: 0.9}
       # i3: { s1: [0,0], s2: [37,0], sh: 0.5}   # width 0.72m
       # i4: { s1: [37,0], s2: [37,43], sh: 0.5} # width 0.72m
+      i3: { s1: [0,2], s2: [37,2], sh: 0.9}   # width 0.66m
+      i4: { s1: [35,0], s2: [35,43], sh: 0.9} # width 0.66m
       # i3: { s1: [0,3], s2: [37,3], sh: 0.5}   # width 0.62m
       # i4: { s1: [34,0], s2: [34,43], sh: 0.5} # width 0.62m
-      i3: { s1: [0,6], s2: [31,6], sh: 0.5}   # width 0.5352m
-      i4: { s1: [31,6], s2: [31,43], sh: 0.5} # width 0.5352m
+      # i3: { s1: [0,6], s2: [31,6], sh: 0.9}   # width 0.5352m
+      # i4: { s1: [31,6], s2: [31,43], sh: 0.9} # width 0.5352m
       
     hole:
-      i1: { s1: [0,7], s2: [30,24], sh: -1}   # vertical hole
-      i2: { s1: [13,25], s2: [30,43], sh: -1} # horizontal hole
+      i1: { s1: [0,3], s2: [34,24], sh: -1}   # vertical hole
+      i2: { s1: [13,25], s2: [34,43], sh: -1} # horizontal hole
       i3: { s1: [0,26], s2: [11,43], sh: -1}  # corner hole
-      i4: { s1: [0,0], s2: [37,5], sh: -1}  # vertical left hole
-      i5: { s1: [32,6], s2: [37,43], sh: -1}  # vertical left hole
+      i4: { s1: [0,0], s2: [37,1], sh: -1}  # vertical left hole
+      i5: { s1: [36,2], s2: [37,43], sh: -1}  # horizontal front hole
+
+      # i1: { s1: [0,7], s2: [30,24], sh: -1}   # vertical hole
+      # i2: { s1: [13,25], s2: [30,43], sh: -1} # horizontal hole
+      # i3: { s1: [0,26], s2: [11,43], sh: -1}  # corner hole
+      # i4: { s1: [0,0], s2: [37,5], sh: -1}  # vertical left hole
+      # i5: { s1: [32,6], s2: [37,43], sh: -1}  # vertical left hole

@@ -59,7 +59,7 @@ class CorinManager:
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
 		self.interface = "rviz"		# interface to control: gazebo, rviz or robotis hardware
-		self.control_rate = "fast" 	# run controller in various mode: 1) normal, 2) fast
+		self.control_rate = "normal" 	# run controller in various mode: 1) normal, 2) fast
 		self.control_loop = "open" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
@@ -549,12 +549,12 @@ class CorinManager:
 						gait_tphase = 1.0
 						iahead = int(gait_tphase/CTR_INTV)
 						## MODIFICATION FOR CHIMNEY_11.CSV
-						if i==601:
-							iahead = int(gait_tphase/CTR_INTV)*12
-							gait_tphase = 12.0
-							print 'tphase ', 12
-						else:
-							gait_tphase = 1.0
+						# if i==601+2400:
+						# 	iahead = int(gait_tphase/CTR_INTV)*12
+						# 	gait_tphase = 12.0
+						# 	print 'tphase ', 12
+						# else:
+						# 	gait_tphase = 1.0
 						self.Robot.Leg[j].XH_world_X_base = transform_world_X_base(np.array([base_path.X.xp[i+iahead],
 																							 base_path.W.xp[i+iahead]]).reshape((6,1)))
 						self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base), 
@@ -669,7 +669,7 @@ class CorinManager:
 
 				# triggers only when all transfer phase legs complete and greater than zero
 				# > 0: prevents trigger during all leg support
-				print i
+				# print i
 				if (self.Robot.Gait.cs==[0,0,0,0,0,0] and i%50==0):
 					transfer_total = 1
 					leg_complete = 1
@@ -728,27 +728,37 @@ class CorinManager:
 					# 	self.Robot.Gait.phases.append([0,0,0,1,0,0])
 					# 	self.Robot.Gait.phases.append([0,1,0,0,0,0])
 					# 	self.Robot.Gait.phases.append([1,0,0,0,0,0])
-					## FORCED CHANGED FOR wp=0.66 (Chimney_12.csv)
-					if i==600:
-						self.Robot.Gait.phases = []
-						self.Robot.Gait.phases.append([0,0,0,0,1,0])
-					elif i==1200:
-						self.Robot.Gait.np = 5
-						self.Robot.Gait.phases = []
-						self.Robot.Gait.phases.append([0,0,1,0,0,0])
-						self.Robot.Gait.phases.append([0,1,0,0,0,0])
-						self.Robot.Gait.phases.append([1,0,0,0,0,0])
-						self.Robot.Gait.phases.append([0,0,0,0,0,0])
-						self.Robot.Gait.phases.append([0,0,0,0,1,0])
-						self.Robot.Gait.phases.append([0,0,0,1,0,0])
-					elif i==2100:
-						self.Robot.Gait.phases = []
-						self.Robot.Gait.phases.append([0,0,0,0,1,0])
-						self.Robot.Gait.phases.append([0,0,0,0,0,1])
-						self.Robot.Gait.phases.append([0,0,0,1,0,0])
-						self.Robot.Gait.phases.append([0,0,1,0,0,0])
-						self.Robot.Gait.phases.append([0,1,0,0,0,0])
-						self.Robot.Gait.phases.append([1,0,0,0,0,0])
+
+					## FORCED CHANGED FOR wp=0.66 & wp=0.62 (Chimney_12.csv)
+					# i_offset = 2400
+					# if i==i_offset:
+					# 	self.Robot.Gait.phases = []
+					# 	self.Robot.Gait.phases.append([0,0,0,0,0,1])
+					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
+					# 	self.Robot.Gait.phases.append([0,0,1,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,1,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([1,0,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,0,0,1,0,0]) 
+					# elif i==600+i_offset:
+					# 	self.Robot.Gait.phases = []
+					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
+					# elif i==1200+i_offset:
+					# 	self.Robot.Gait.np = 5
+					# 	self.Robot.Gait.phases = []
+					# 	self.Robot.Gait.phases.append([0,0,0,1,0,0])
+					# 	self.Robot.Gait.phases.append([0,0,1,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,1,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([1,0,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,0,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
+					# elif i==2100+i_offset:
+					# 	self.Robot.Gait.phases = []
+					# 	self.Robot.Gait.phases.append([0,0,0,0,0,1])
+					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
+					# 	self.Robot.Gait.phases.append([0,0,0,1,0,0])
+					# 	self.Robot.Gait.phases.append([0,0,1,0,0,0])
+					# 	self.Robot.Gait.phases.append([0,1,0,0,0,0])
+					# 	self.Robot.Gait.phases.append([1,0,0,0,0,0])
 					try:
 						self.Robot.alternate_phase(next(gait_stack))
 					except:
@@ -995,8 +1005,8 @@ class CorinManager:
 	def get_snorm(self, p, j):
 		## surface normal for chimney
 		# wall_outer = -1.1 	# chimney width 0.72m
-		wall_outer = -0.995 	# chimney width 0.62m
-		# wall_outer = -0.93 	# chimney width 0.535m
+		# wall_outer = -0.995 	# chimney width 0.62m
+		wall_outer = -0.93 	# chimney width 0.535m
 		wall_inner = -0.4
 		if (p[1] < wall_outer and j >= 3):
 			snorm = np.array([0.,1.,0.])

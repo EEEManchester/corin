@@ -6,11 +6,9 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /Grid1
         - /Grid1/Offset1
         - /TF1/Frames1
         - /Marker1
-        - /Marker1/Status1
         - /Marker1/Namespaces1
       Splitter Ratio: 0.5
     Tree Height: 775
@@ -32,7 +30,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: PointCloud2
   - Class: corin_rviz_plugin/Control Interface
     Name: Control Interface
 Visualization Manager:
@@ -46,7 +44,7 @@ Visualization Manager:
       Reference Frame: <Fixed Frame>
       Value: true
     - Alpha: 0.5
-      Cell Size: 0.100000001
+      Cell Size: 0.5
       Class: rviz/Grid
       Color: 160; 160; 164
       Enabled: true
@@ -58,7 +56,7 @@ Visualization Manager:
       Offset:
         X: 0
         Y: 0
-        Z: 0
+        Z: -0.400000006
       Plane: XY
       Plane Cell Count: 110
       Reference Frame: <Fixed Frame>
@@ -228,9 +226,9 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: true
       Max Color: 255; 24; 3
-      Max Intensity: 0.234999999
+      Max Intensity: 0.395000011
       Min Color: 139; 139; 139
-      Min Intensity: -0.215000004
+      Min Intensity: -0.414999992
       Name: PointCloud2
       Position Transformer: XYZ
       Queue Size: 10
@@ -412,25 +410,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.683445513
+      Distance: 2.45873308
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.57842201
-        Y: -0.891034424
-        Z: 0.203793257
+        X: 0.876458943
+        Y: -0.671606064
+        Z: -0.125566855
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 1.05979681
+      Pitch: 0.909800768
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.51530457
+      Yaw: 0.247114122
     Saved: ~
 Window Geometry:
   Control Interface:
