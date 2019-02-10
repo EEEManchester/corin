@@ -101,6 +101,7 @@ class CSVimport:
 				
 				xpoint = np.asarray(map(lambda x: float(x), row[0:3]))
 				wpoint = np.asarray(map(lambda x: float(x), row[3:6]))
+				wpoint[1] = 0.0
 				if counter == 0:
 					x_cob = xpoint
 					w_cob = wpoint
@@ -138,6 +139,8 @@ class CSVimport:
 		self.motion_plan.set_footholds(world_X_footholds, base_X_footholds, world_base_X_NRP)
 		self.motion_plan.set_gait(self.Robot.Gait.np, self.Robot.Gait.np)
 		
+		print 'File read complete'
+
 	def visualise_motion_plan(self):
 
 		self.Visualizer.publish_robot(self.CoB[0])
@@ -186,10 +189,11 @@ if __name__ == "__main__":
 	csv_import = CSVimport()
 
 	# csv_import.load_file('chimney_s054_03.csv')
-	csv_import.load_file('chimney_sc_02.csv')
+	# csv_import.load_file('chimney_sc_02.csv')
 	# csv_import.load_file('wall_convex_02.csv')
 	# csv_import.load_file('wall_concave_02.csv')
-
+	csv_import.load_file('chimney_autom.csv')
+	
 	# call_csv_import()
 	rospy.spin()
 

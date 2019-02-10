@@ -127,7 +127,10 @@ class LegClass:
 			wcp, td = self.Path.interpolate_leg_path(self.XHc.coxa_X_foot[0:3,3], 
 														self.XHd.coxa_X_foot[0:3,3], 
 														sn1, sn2, phase, reflex, ctime)
-		
+		# if self.number == 4 or self.number == 0:
+		# 	print np.round(wcp,4)
+		# 	print np.round(start,4)
+		# 	print np.round(end,4)
 		self.xspline = TrajectoryPoints(self.Path.generate_leg_path(wcp, td, tn))
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)

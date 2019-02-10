@@ -32,7 +32,7 @@ find_package(catkin REQUIRED COMPONENTS
   grid_planner_core
 )
 
-find_package(RBDL REQUIRED)
+# find_package(RBDL REQUIRED)
 find_package(Eigen REQUIRED)
 
 catkin_python_setup()
@@ -79,7 +79,7 @@ catkin_package(
   CATKIN_DEPENDS
   message_runtime
   actionlib
-  DEPENDS Boost Eigen rbdl
+  DEPENDS Boost Eigen #rbdl
 )
 
 ###########
@@ -89,7 +89,8 @@ catkin_package(
 include_directories( ${catkin_INCLUDE_DIRS} 
                       ${Boost_INCLUDE_DIRS} 
                       ${Eigen_INCLUDE_DIRS} 
-                      ${RBDL_INCLUDE_DIR})
+                      #${RBDL_INCLUDE_DIR}
+                      )
 
 # add_executable(jointStateServer cpp_script/service/jointStateServer.cpp)
 # add_dependencies(jointStateServer corin_control_gencpp)
