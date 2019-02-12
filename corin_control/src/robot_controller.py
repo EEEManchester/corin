@@ -485,7 +485,7 @@ class CorinManager:
 				self.Robot.Leg[j].P6_world_X_base = self.Robot.P6c.world_X_base.copy()
 			
 			#########################################################################
-			self.Robot.suspend = False
+			# self.Robot.suspend = False
 			## suppress trajectory counter as body support suspended
 			if (self.Robot.suspend == True):
 				i -= 1
@@ -547,35 +547,22 @@ class CorinManager:
 					except IndexError:
 						## TODO: plan on the fly. Currently set to default position
 						print 'Leg: ', j, ' No further foothold planned!', i
-						gait_tphase = 1.0
-						iahead = int(gait_tphase/CTR_INTV)
-						## MODIFICATION FOR CHIMNEY_11.CSV
-						# if i==751:
-						if i==2751:
-							n_phases = 10
-							iahead = int(gait_tphase/CTR_INTV)*n_phases
-							gait_tphase = float(n_phases)
-							print 'tphase ', n_phases
-						else:
-							gait_tphase = 1.0
-
-						# Get bodypose at end of gait phase
+						iahead = int(GAIT_TPHASE/CTR_INTV)
+						
+						# Get bodypose at end of gait phase, or end of trajectory
 						try:
 							x_ahead = base_path.X.xp[i+iahead]
 							w_ahead = base_path.W.xp[i+iahead]
 						except IndexError:
-							x_ahead = base_path.X.xp[i+iahead-1]
-							w_ahead = base_path.W.xp[i+iahead-1]
+							x_ahead = base_path.X.xp[-1]
+							w_ahead = base_path.W.xp[-1]
 						
-						print w_ahead
 						self.Robot.Leg[j].XH_world_X_base = transform_world_X_base(np.array([x_ahead,
 																							 w_ahead]).reshape((6,1)))
 						self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base), 
 																self.Robot.Leg[j].XHd.world_X_foot)
 						# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP.copy()
-						if j==4:
-							print 'desired: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
-							print self.Robot.Leg[j].XH_world_X_base
+						
 					## Compute average surface normal from cell surface normal at both footholds
 					# sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
 					# sn2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3], j)
@@ -650,16 +637,16 @@ class CorinManager:
 					# print '========================================================='
 			
 			## Set stability polygon
-			support_polygon = Polygon()
-			foothold_list = []
-			for j in range(0,6):
-				if (self.Robot.Gait.cs[j]==0):
-					foothold_list.append(self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
+			# support_polygon = Polygon()
+			# foothold_list = []
+			# for j in range(0,6):
+			# 	if (self.Robot.Gait.cs[j]==0):
+			# 		foothold_list.append(self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
 					# Point3D = Point32()
 					# Point3D.x = self.Robot.Leg[j].XHd.world_X_foot[0,3]
 					# Point3D.y = self.Robot.Leg[j].XHd.world_X_foot[1,3]
 					# Point3D.z = self.Robot.Leg[j].XHd.world_X_foot[2,3]
-			self.Visualizer.publish_support_polygon(foothold_list)
+			# self.Visualizer.publish_support_polygon(foothold_list)
 			# 		support_polygon.points.append(Point3D)
 			# sp_data = PolygonStamped()
 			# sp_data.header.frame_id = 'world'
@@ -685,48 +672,7 @@ class CorinManager:
 
 				# triggers only when all transfer phase legs complete and greater than zero
 				# > 0: prevents trigger during all leg support
-				# print i
-				if (self.Robot.Gait.cs==[0,0,0,0,0,0] and i%50==0):
-					transfer_total = 1
-					leg_complete = 1
 				if (transfer_total == leg_complete and transfer_total > 0 and leg_complete > 0):
-					
-					## FORCED CHANGED FOR wp=0.66 & wp=0.62 (Chimney_12.csv)
-					# i_offset = 600 # starts from 29deg - heuristic
-					i_offset = 2700 	# starts from 0deg
-					if i==i_offset:
-						self.Robot.Gait.phases = []
-						self.Robot.Gait.phases.append([0,0,1,0,0,0])
-						# self.Robot.Gait.phases.append([0,1,0,0,0,0])
-						# self.Robot.Gait.phases.append([1,0,0,0,0,0])
-						self.Robot.Gait.phases.append([0,0,0,0,1,0])
-						self.Robot.Gait.phases.append([0,0,0,1,0,0])
-					elif i==i_offset+600:
-						self.Robot.Gait.np = 5 	# reset gait cycle because previous cycle has only 5 phases
-						self.Robot.Gait.phases = []
-						self.Robot.Gait.phases.append([0,0,0,0,0,0])
-						self.Robot.Gait.phases.append([0,0,0,0,1,0])
-						self.Robot.Gait.phases.append([0,0,0,1,0,0])
-						self.Robot.Gait.phases.append([0,0,1,0,0,0])
-						self.Robot.Gait.phases.append([0,1,0,0,0,0])
-						self.Robot.Gait.phases.append([1,0,0,0,0,0])
-						
-					elif i==i_offset+1500:
-						self.Robot.Gait.phases = []
-						self.Robot.Gait.phases.append([0,0,0,0,1,0])
-						self.Robot.Gait.phases.append([0,0,0,1,0,0])
-						self.Robot.Gait.phases.append([0,0,0,0,0,1])
-						self.Robot.Gait.phases.append([0,0,1,0,0,0])
-						self.Robot.Gait.phases.append([0,1,0,0,0,0])
-						self.Robot.Gait.phases.append([1,0,0,0,0,0])
-					elif i==i_offset+2100:
-						self.Robot.Gait.phases = []
-						self.Robot.Gait.phases.append([0,0,0,0,0,1])
-						self.Robot.Gait.phases.append([0,0,0,0,1,0])
-						self.Robot.Gait.phases.append([0,0,0,1,0,0])
-						self.Robot.Gait.phases.append([0,0,1,0,0,0])
-						self.Robot.Gait.phases.append([0,1,0,0,0,0])
-						self.Robot.Gait.phases.append([1,0,0,0,0,0])
 					try:
 						self.Robot.alternate_phase(next(gait_stack))
 					except:
