@@ -727,35 +727,6 @@ class CorinManager:
 						self.Robot.Gait.phases.append([0,0,1,0,0,0])
 						self.Robot.Gait.phases.append([0,1,0,0,0,0])
 						self.Robot.Gait.phases.append([1,0,0,0,0,0])
-					# i_offset = 2400
-					# if i==i_offset:
-					# 	self.Robot.Gait.phases = []
-					# 	self.Robot.Gait.phases.append([0,0,0,0,0,1])
-					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
-					# 	self.Robot.Gait.phases.append([0,0,1,0,0,0])
-					# 	self.Robot.Gait.phases.append([0,1,0,0,0,0])
-					# 	self.Robot.Gait.phases.append([1,0,0,0,0,0])
-					# 	self.Robot.Gait.phases.append([0,0,0,1,0,0]) 
-					# elif i==600+i_offset:
-					# 	self.Robot.Gait.phases = []
-					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
-					# elif i==1200+i_offset:
-					# 	self.Robot.Gait.np = 5
-					# 	self.Robot.Gait.phases = []
-					# 	self.Robot.Gait.phases.append([0,0,0,1,0,0])
-					# 	self.Robot.Gait.phases.append([0,0,1,0,0,0])
-					# 	self.Robot.Gait.phases.append([0,1,0,0,0,0])
-					# 	self.Robot.Gait.phases.append([1,0,0,0,0,0])
-					# 	self.Robot.Gait.phases.append([0,0,0,0,0,0])
-					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
-					# elif i==2100+i_offset:
-					# 	self.Robot.Gait.phases = []
-					# 	self.Robot.Gait.phases.append([0,0,0,0,0,1])
-					# 	self.Robot.Gait.phases.append([0,0,0,0,1,0])
-					# 	self.Robot.Gait.phases.append([0,0,0,1,0,0])
-					# 	self.Robot.Gait.phases.append([0,0,1,0,0,0])
-					# 	self.Robot.Gait.phases.append([0,1,0,0,0,0])
-					# 	self.Robot.Gait.phases.append([1,0,0,0,0,0])
 					try:
 						self.Robot.alternate_phase(next(gait_stack))
 					except:
