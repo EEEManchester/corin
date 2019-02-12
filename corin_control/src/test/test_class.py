@@ -125,7 +125,7 @@ if __name__ == "__main__":
 	a = np.array([1,2,3])
 	b = np.array([4,5,6])
 
-	print a.flatten().tolist() + b.flatten().tolist()
+	# print a.flatten().tolist() + b.flatten().tolist()
 	
 param_obs = {'FK': 1, 				# Force gain - PRIMARY tuning parameter
 			'stop:':False, 			# Flag for robot to stop
@@ -140,3 +140,9 @@ param_obs = {'FK': 1, 				# Force gain - PRIMARY tuning parameter
 			'd_obs': 0.001, 		# magnitude between points to be considered of the same object
 			'n_obs': 3, 			# min. number of points required to be considered an obstacle
 			}
+
+foothold_list = []
+foothold_list.append(np.array([1,1,1]))
+foothold_list.append(np.array([2,2,2]))
+for j in foothold_list:
+	print j

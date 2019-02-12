@@ -8,7 +8,7 @@ import tf
 from sensor_msgs.msg import PointCloud2
 from nav_msgs.msg import Path
 from visualization_msgs.msg import MarkerArray, Marker
-from geometry_msgs.msg import WrenchStamped
+from geometry_msgs.msg import WrenchStamped, PolygonStamped, Point32
 
 from grid_planner_core.numpy_to_rosmsg import *
 from corin_control.constant import *
@@ -19,11 +19,11 @@ class RvizVisualise:
 		self.fr_robot = "trunk"
 
 		##***************** PUBLISHERS ***************##
-		self.map_pub_  = rospy.Publisher(ROBOT_NS + '/point_cloud', PointCloud2, queue_size=1)
-		self.path_pub_ = rospy.Publisher(ROBOT_NS + '/path', Path, queue_size=1)
-		self.mark_pub_ = rospy.Publisher(ROBOT_NS + '/footholds', MarkerArray, queue_size=1)	# marker array
-		self.cob_pub_  = rospy.Publisher(ROBOT_NS + '/cob', MarkerArray, queue_size=1)
-		self.sp_pub_   = rospy.Publisher(ROBOT_NS + '/support', Marker, queue_size=1)
+		self.map_pub_  = rospy.Publisher(ROBOT_NS + '/point_cloud', PointCloud2, queue_size=1) 	# grid map
+		self.path_pub_ = rospy.Publisher(ROBOT_NS + '/path', Path, queue_size=1) 				# splined path
+		self.mark_pub_ = rospy.Publisher(ROBOT_NS + '/footholds', MarkerArray, queue_size=1)	# fooholds
+		self.cob_pub_  = rospy.Publisher(ROBOT_NS + '/cob', MarkerArray, queue_size=1) 			# CoB position
+		self.poly_pub_ = rospy.Publisher(ROBOT_NS + '/support_polygon', PolygonStamped, queue_size=1) # Support polygon
 
 		self.wrench_pub_ = {}
 		for j in range(0,6):
@@ -47,7 +47,7 @@ class RvizVisualise:
 		self.cob_pub_.publish(clear_marker)
 		self.path_pub_.publish(clear_path)
 
-	def publish_robot(self, qb):
+	def publish_robot_pose(self, qb):
 		""" Robot transform publisher """
 		# print 'pub: ', np.round(qb[:3].flatten(),4)
 		quat = tf.transformations.quaternion_from_euler(qb[3].copy(), qb[4].copy(), qb[5].copy())
@@ -95,4 +95,26 @@ class RvizVisualise:
 		""" Foothold array publisher 
 			Input:  footholds: list of footholds """
 		
-		self.sp_pub_.publish(foothold_list_to_marker(footholds, rospy.Time.now(), self.fr_fix))
+		poly = PolygonStamped()
+		poly.header.stamp = rospy.Time.now()
+		poly.header.frame_id = self.fr_fix
+		for f in footholds:
+			p = Point32()
+			p.x = f[0]
+			p.y = f[1]
+			p.z = f[2]
+			poly.polygon.points.append(p)
+			
+		self.poly_pub_.publish(poly)
+
+	def show_motion_plan(self, robot_pose, path, footholds):
+		""" Publishes the motion plan
+			Input: 	robot_pose: robot's current pose
+					path: the path for the robot to travel
+					footholds: footholds for all six legs 	"""
+
+		for c in range(0,3):
+			self.publish_robot_pose(robot_pose)
+			self.publish_path(path)
+			self.publish_footholds(footholds)
+			rospy.sleep(0.2)

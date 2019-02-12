@@ -27,46 +27,25 @@ Eigen::MatrixXd CRBI(JointState qpr);
   ========================================================================*/
 
 // Service to return motor state and torque for a leg i.e. three motor state and torque
-bool getInertiaState(corin_msgs::RigidBody::Request  &req,
+bool getCRBI(corin_msgs::RigidBody::Request  &req,
                     corin_msgs::RigidBody::Response &res)
 {
-  // res.jointState  = current_jointState;                       // motor state
-  if ( (req.motionPlan.setpoint.positions.size() == 24) && 
-          (req.motionPlan.setpoint.velocities.size() == 24) &&
-          (req.motionPlan.setpoint.accelerations.size() == 24) &&
-          (req.motionPlan.gait_phase.size() == 6)  )
+  if (req.motionPlan.setpoint.positions.size() == 18)
     {
       cout << " data valid " << endl;
 
-      JointState qpr, qvr, qar;                       // reference joint state
-      
+      JointState qpr, qvr, qar;   // reference joint state      
       HomogeneousTransforms xH;
-      
-
-      Eigen::MatrixXd qbpr, qbvr, qbar;   // base reference states
-      Eigen::MatrixXi gait_phase;         // reference gait phase
-      qbpr = qbvr = qbar = Eigen::MatrixXd::Zero(6,1);
-      gait_phase = Eigen::MatrixXi::Zero(6,1);
-
-      // Update Robot State
-      for (int i=0; i < 6; i++){
-        // cout << req.motionPlan.setpoint.positions[i] << endl;
-        qbpr(i) = req.motionPlan.setpoint.positions[i];
-        qbvr(i) = req.motionPlan.setpoint.velocities[i];
-        qbar(i) = req.motionPlan.setpoint.accelerations[i];
-        gait_phase(i) = req.motionPlan.gait_phase[i];
-      }
 
       // Leg joint angles
-      for (int i=6; i < 24; i++){    
-        qpr(i-6) = req.motionPlan.setpoint.positions[i];         // rcg: reference joint space position
-        qvr(i-6) = req.motionPlan.setpoint.velocities[i];        // rcg: reference joint space velocity
-        qar(i-6) = req.motionPlan.setpoint.accelerations[i];     // joint space acceleration
-      }
+      for (int i=6; i < 24; i++)  
+        qpr(i-6) = req.positions[i];
 
       // compute CoM location Re^3
       auto x_com = getWholeBodyCOM(inertias, qpr, xH);
+      // compute Composite Rigid Body Inertia Matrix
       auto crbim = CRBI(qpr);
+
       cout << crbim << endl;
       // remap from eigen to vector
       std::vector<double> vec_xcom(x_com.data(), x_com.data() + x_com.rows() * x_com.cols());
@@ -76,9 +55,7 @@ bool getInertiaState(corin_msgs::RigidBody::Request  &req,
       res.CRBI = vec_crbi;
     }
   else
-    cout << "data size less" << endl;
-  
-
+    cout << "data size invalid" << endl;
   //ROS_INFO("Request processed");
 
   return true;
@@ -127,7 +104,7 @@ int main(int argc, char **argv)
   ros::NodeHandle nh_;
   
   //---service server---//
-  ros::ServiceServer rigid_body_serv_ = nh_.advertiseService("/corin/get_rigid_body_matrix", getInertiaState);
+  ros::ServiceServer rigid_body_serv_ = nh_.advertiseService("/corin/get_rigid_body_matrix", getCRBI);
 
   ROS_INFO("Ready to get inertia states");
 

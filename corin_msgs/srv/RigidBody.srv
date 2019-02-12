@@ -1,4 +1,5 @@
-corin_msgs/MotionPlan motionPlan
+# corin_msgs/MotionPlan motionPlan
+float64[] positions
 ---
 float64[] CoM
 float64[] CRBI

@@ -9,8 +9,8 @@ import robot_controller as Control_Framework
 
 if __name__ == "__main__":
 
-	manager = Control_Framework.CorinManager(True)
-
+	# manager = Control_Framework.CorinManager(True)
+	manager = Control_Framework.RobotController(True)
 	rospy.loginfo('Robot Ready!')
 	
 	# rospy.set_param('/corin/bodypose', True)
