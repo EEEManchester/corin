@@ -202,7 +202,7 @@ qs = np.array([0., 0.15, -0.10])	# right side
 # print CK.singularity_approach(qs)
 # cd = CK.leg_FK(qs)
 # print cd.flatten()
-cd = [0.3059 , -0.192,  0.]
+cd = [0.3059 , -0.0,  0.]
 qp = CK.leg_IK(cd,0)
 # print 'q: ', qp
 # print qp
