@@ -29,7 +29,7 @@ class RobotController(CorinManager):
 		w_base_X_NRP = motion_plan.f_world_base_X_NRP
 		world_X_footholds = motion_plan.f_world_X_foot
 		base_X_footholds  = motion_plan.f_base_X_foot
-		
+		# print world_X_footholds[5].xp
 		## Publish motion plan
 		self.Visualizer.show_motion_plan(self.Robot.P6c.world_X_base, motion_plan.qbp, motion_plan.f_world_X_foot)
 		if (self.interface == 'rviz'):
@@ -38,8 +38,8 @@ class RobotController(CorinManager):
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 		
 		## Remove current foothold (visualization purpose)
-		for j in range(0,6):
-			world_X_footholds[j].xp.pop(0)
+		# for j in range(0,6):
+		# 	world_X_footholds[j].xp.pop(0)
 
 		## User input
 		print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
@@ -101,13 +101,13 @@ class RobotController(CorinManager):
 
 			## Variable mapping to R^(3x1) for base linear and angular time, position, velocity, acceleration
 			## Next Point along base trajectory
-			# v3cp = wXbase_offset[0:3] + base_path.X.xp[i].reshape(3,1);
-			v3cp = base_path.X.xp[i].reshape(3,1);
+			v3cp = wXbase_offset[0:3] + base_path.X.xp[i].reshape(3,1); 	# GRID PLAN: base trajectory in world frame
+			# v3cp = base_path.X.xp[i].reshape(3,1); 	# CORNERING: base trajectory relative to world frame
 			v3cv = base_path.X.xv[i].reshape(3,1);
 			v3ca = base_path.X.xa[i].reshape(3,1);
 
-			# v3wp = wXbase_offset[3:6] + base_path.W.xp[i].reshape(3,1);
-			v3wp = base_path.W.xp[i].reshape(3,1);
+			v3wp = wXbase_offset[3:6] + base_path.W.xp[i].reshape(3,1);
+			# v3wp = base_path.W.xp[i].reshape(3,1);
 			v3wv = base_path.W.xv[i].reshape(3,1);
 			v3wa = base_path.W.xa[i].reshape(3,1);
 			
@@ -133,7 +133,8 @@ class RobotController(CorinManager):
 			self.Robot.V6d.world_X_base = np.vstack((v3cv,v3wv)) 			# not used atm
 			self.Robot.A6d.world_X_base = np.vstack((v3ca,v3wa)) 			# not used atm
 			self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
-			
+			print np.round(self.Robot.P6d.world_X_base,4)
+			print np.round(self.Robot.XHd.base_X_world,4)
 			## Generate trajectory for legs in transfer phase
 			for j in range (0, self.Robot.active_legs):
 				# Transfer phase
@@ -152,7 +153,7 @@ class RobotController(CorinManager):
 
 					except IndexError:
 						## TODO: plan on the fly. Currently set to default position
-						# print 'Leg: ', j, ' No further foothold planned!', i
+						print 'Leg: ', j, ' No further foothold planned!', i
 						iahead = int(GAIT_TPHASE/CTR_INTV)
 						# Get bodypose at end of gait phase, or end of trajectory
 						try:
@@ -169,13 +170,14 @@ class RobotController(CorinManager):
 						# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP.copy()
 						
 					## Compute average surface normal from cell surface normal at both footholds
-					# sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
-					# sn2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3], j)
-					# print j, np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
-					# print j, np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],3)
-					sn1 = self.get_snorm(self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
-					sn2 = self.get_snorm(self.Robot.Leg[j].XHd.world_X_foot[0:3,3], j)
-					# print j, sn1, sn2
+					sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
+					sn2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3], j)
+					# Following two lines used for cornering
+					# sn1 = self.get_snorm(self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j) 	
+					# sn2 = self.get_snorm(self.Robot.Leg[j].XHd.world_X_foot[0:3,3], j)
+					print j, np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
+					print j, np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],3)
+					print j, sn1, sn2
 
 					## Generate transfer spline
 					svalid = self.Robot.Leg[j].generate_spline('world', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
@@ -230,19 +232,12 @@ class RobotController(CorinManager):
 						self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 							
 					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
-					# print j, ' bXw: ', np.round(self.Robot.XHd.base_X_world,3)
-					# print j, ' wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
-					# print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],3)
-					# print j, ' cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],3)
-					# print '========================================================='
+					print j, ' bXw: \n', np.round(self.Robot.XHd.base_X_world,3)
+					print j, ' wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
+					print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],3)
+					print j, ' cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],3)
+					print '========================================================='
 			
-			## Set stability polygon
-			foothold_list = []
-			for j in [0,1,2,5,4,3]:
-				if (self.Robot.Gait.cs[j]==0):
-					foothold_list.append(self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
-			self.Visualizer.publish_support_polygon(foothold_list)
-
 			## Task to joint space
 			qd, tXj_error = self.Robot.task_X_joint()	
 
@@ -274,8 +269,11 @@ class RobotController(CorinManager):
 				qlog = self.set_log_values(v3cp, v3cv, v3ca, v3wp, v3wv, v3wa, qd)
 
 				## Compute foot force distribution
-				qlog = self.compute_foot_force_distribution(qd.xp, v3ca, v3wa, qlog)
-				
+				# qlog = self.compute_foot_force_distribution(qd.xp, v3ca, v3wa, qlog)
+
+				## View stability polygon
+				self.visualize_support_polygon()
+
 				## Publish joint angles if motion valid
 				self.publish_topics(qd, qlog)
 				qd_prev = JointTrajectoryPoints(18,(qd.t, qd.xp, qd.xv, qd.xa))

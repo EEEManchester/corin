@@ -616,6 +616,7 @@ class GridMap:
 		
 		# Motion primitives
 		if (options.get('gprim') is not None):
+			print 'in prim'
 			gprim = options.get('gprim')
 			m_walk = dict(zip(gprim[0], gprim[0]))
 			m_wall = dict(zip(gprim[1], gprim[1]))

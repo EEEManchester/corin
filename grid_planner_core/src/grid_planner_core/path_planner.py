@@ -1774,7 +1774,7 @@ class PathPlanner:
 			base_pose = np.array([self.base_map.nodes[e]['pose'][1:4]])
 			base_pose[0] = self.base_map.nodes[path[0]]['pose'][1]
 			w_cob = np.vstack((w_cob, base_pose))
-			print 'wcob ', self.base_map.nodes[e]['pose']
+			# print 'wcob ', self.base_map.nodes[e]['pose']
 			# print e, (np.round(e[0]*self.GridMap.resolution,3), np.round(e[1]*self.GridMap.resolution,3))
 		# print 'wcob ', self.base_map.nodes[path[0]]['pose']
 		# print w_cob

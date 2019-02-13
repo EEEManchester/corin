@@ -417,7 +417,7 @@ class CorinManager:
 
 			## Data mapping - for convenience
 			x_cob, w_cob, mode, motion_prim = data
-			mode = 5
+			mode = 4
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
 				print 'Going to standup'
@@ -462,8 +462,8 @@ class CorinManager:
 				print 'Planning path...'
 				self.Robot.support_mode = False
 
-				ps = (10,13); pf = (20,13)	# Short straight Line
-				# ps = (10,14); pf = (10,20)	# G2W - Left side up
+				# ps = (10,13); pf = (13,13)	# Short straight Line
+				ps = (10,13); pf = (10,14)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
 				# ps = (10,13); pf = (25,21)	# G2W - Left side up
 				# ps = (10,13); pf = (40,13)	# full wall or chimney 
@@ -483,7 +483,7 @@ class CorinManager:
 				self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
 				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 
-				self.Robot._initialise()
+				self.Robot.init_robot_stance()
 	
 				if (self.grid_serv_.available):
 					if (self.GridMap.get_index_exists(ps) and self.GridMap.get_index_exists(pf)):
@@ -601,3 +601,12 @@ class CorinManager:
 		qlog.accelerations = v3ca.flatten().tolist() + v3wa.flatten().tolist() + qd.xa.tolist()
 
 		return qlog
+
+	def visualize_support_polygon(self):
+		""" extracts the legs in support phase for generating the support polygon in RViZ """
+
+		foothold_list = []
+		for j in [0,1,2,5,4,3]:
+			if (self.Robot.Gait.cs[j]==0):
+				foothold_list.append(self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
+		self.Visualizer.publish_support_polygon(foothold_list)

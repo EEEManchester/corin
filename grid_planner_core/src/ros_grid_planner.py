@@ -24,7 +24,7 @@ class GridMapRos:
 
 		self.namespace = 'GridMap'
 		self.GridMap = GridMap(map_name)
-		# self.Planner = PathPlanner(self.GridMap)
+		self.Planner = PathPlanner(self.GridMap)
 		self.Robot 	 = RobotState()
 		self.point_cloud = PointCloud2()
 
@@ -69,7 +69,7 @@ class GridMapRos:
 		self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
 		self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 
-		self.Robot._initialise()
+		self.Robot.init_robot_stance()
 
 	def serv_set_grid_map(self, req):
 		""" Set to selected grid map """
@@ -162,14 +162,16 @@ if __name__ == "__main__":
 	# RosGridMap = GridMapRos("iros_part1_demo")
 	# RosGridMap = GridMapRos("iros_demo")
 	# RosGridMap = GridMapRos("flat")
+	RosGridMap = GridMapRos("wall_demo_left")
 
 	## Illustration for Cornering
-	RosGridMap = GridMapRos("chimney_corner")
+	# RosGridMap = GridMapRos("chimney_corner")
 	# RosGridMap = GridMapRos("wall_concave_corner")
 	# RosGridMap = GridMapRos("wall_convex_corner")
 
 	print "ROS Grid Map Planner Initialised"
 	
+	# RosGridMap.Planner.plot_primitive_graph()
 	## ==================================================== ##
 	## 					Test Scripts 						##
 	## ==================================================== ##
@@ -184,8 +186,10 @@ if __name__ == "__main__":
 
 	## Path Planning
 	# ps = (10,13); pf = (150,9) #IROS
-	# ps = (10,13); pf = (13,13)
-	# call_planner(ps, pf)
+	ps = (10,13); 
+	pf = (10,15)
+	# pf = (15,13)
+	call_planner(ps, pf)
 
 	while (not rospy.is_shutdown()):
 		RosGridMap.loop_cycle()
