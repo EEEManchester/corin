@@ -30,6 +30,8 @@ class GridMapRos:
 
 		self.__hotstart_initialise__()
 
+		# self.Planner.plot_primitive_graph()
+
 	def __hotstart_initialise__(self):
 		self.__initialise_topics__()
 		self.__initialise_services__()
@@ -68,16 +70,7 @@ class GridMapRos:
 		self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 
 		self.Robot.init_robot_stance()
-
-	def path_planning(self, ps, pf):
-		# ps = (int(start[0]/self.GridMap.resolution), 
-		# 	  int(start[1]/self.GridMap.resolution))
-		# pf = (int(goal[0]/self.GridMap.resolution), 
-		# 	  int(goal[1]/self.GridMap.resolution))
-		
-		self.initialise_robot_state(ps, pf)
-
-		motion_plan = self.Planner.generate_motion_plan(self.Robot, start=ps, end=pf)
+		# self.Robot._initialise()
 
 	def serv_set_grid_map(self, req):
 		""" Set to selected grid map """
@@ -93,21 +86,25 @@ class GridMapRos:
 
 		print "SERVICE - Path Planning"
 		# convert to index position
-		ps = (int(req.start.position.x/self.GridMap.resolution), 
-					int(req.start.position.y/self.GridMap.resolution))
-		pf = (int(req.goal.position.x/self.GridMap.resolution), 
-					int(req.goal.position.y/self.GridMap.resolution))
+		ps = (int(np.round(req.start.position.x/self.GridMap.resolution)), 
+					int(np.round(req.start.position.y/self.GridMap.resolution)))
+		pf = (int(np.round(req.goal.position.x/self.GridMap.resolution)), 
+					int(np.round(req.goal.position.y/self.GridMap.resolution)))
 		print ps, pf
-		self.initialise_robot_state(ps, pf)
+		if (self.GridMap.get_index_exists(ps) and self.GridMap.get_index_exists(pf)):
+			self.initialise_robot_state(ps, pf)
 
-		motion_plan = self.Planner.generate_motion_plan(self.Robot, start=ps, end=pf)
-		qbp, qbi, gphase, wXf, bXf, bXN = motionplan_to_planpath(motion_plan, "world")
-		
-		return PlanPathResponse(base_path = qbp, CoB = qbi, 
-															gait_phase = gphase, 
-															f_world_X_foot = wXf,
-															f_base_X_foot = bXf,
-															f_world_base_X_NRP = bXN)
+			motion_plan = self.Planner.generate_motion_plan(self.Robot, start=ps, end=pf)
+			qbp, qbi, gphase, wXf, bXf, bXN = motionplan_to_planpath(motion_plan, "world")
+			
+			return PlanPathResponse(base_path = qbp, CoB = qbi, 
+																gait_phase = gphase, 
+																f_world_X_foot = wXf,
+																f_base_X_foot = bXf,
+																f_world_base_X_NRP = bXN)
+		else:
+			print "Start or End goal out of bounds!"
+			return None
 
 	def serv_get_grid_map(self, req):
 		""" Returns grid map """
@@ -133,19 +130,49 @@ class GridMapRos:
 	def convert_graph_to_pointcloud(self):
 		""" converts graph to pointcloud2 """
 
-		arr_mapped_data  = point_cloud_array_mapping(self.GridMap.graph_to_nparray())
+		arr_mapped_data  = point_cloud_array_mapping(self.GridMap.graph_to_nparray(), self.GridMap.viz_offset)
 		self.point_cloud = array_to_pointcloud2(arr_mapped_data, rospy.Time.now(), "world")
 
 	def loop_cycle(self):
 		self.map_pub_.publish(self.point_cloud)
 		rospy.sleep(2)
 
+def call_planner(ps, pf):
+	rospy.wait_for_service('GridMap/query_map')
+	try:
+		start = Pose()
+		goal  = Pose()
+		start.position.x = ps[0]*RosGridMap.GridMap.resolution
+		start.position.y = ps[1]*RosGridMap.GridMap.resolution
+		goal.position.x = pf[0]*RosGridMap.GridMap.resolution
+		goal.position.y = pf[1]*RosGridMap.GridMap.resolution
+
+		path_planner = rospy.ServiceProxy('GridMap/query_map', PlanPath)
+		path_planned = path_planner(start, goal)
+
+	# 	mplan = planpath_to_motionplan(path_planned)
+		
+	except rospy.ServiceException, e:
+		print "Service call failed: %s"%e
+
 if __name__ == "__main__":
 
-	RosGridMap = GridMapRos("wall_demo_left")
 	
+	# RosGridMap = GridMapRos("hole_demo")
+	# RosGridMap = GridMapRos("hole_wall_demo")
+	# RosGridMap = GridMapRos("iros_part1_demo")
+	# RosGridMap = GridMapRos("iros_demo")
+	# RosGridMap = GridMapRos("flat")
+	RosGridMap = GridMapRos("wall_demo_left")
+
+	## Illustration for Cornering
+	# RosGridMap = GridMapRos("chimney_corner")
+	# RosGridMap = GridMapRos("wall_concave_corner")
+	# RosGridMap = GridMapRos("wall_convex_corner")
+
 	print "ROS Grid Map Planner Initialised"
 	
+	# RosGridMap.Planner.plot_primitive_graph()
 	## ==================================================== ##
 	## 					Test Scripts 						##
 	## ==================================================== ##
@@ -159,23 +186,11 @@ if __name__ == "__main__":
 	# 	print "Service call failed: %s"%e
 
 	## Path Planning
-	ps = (10,13); pf = (10,16)
-	RosGridMap.path_planning(ps, pf)
-	# rospy.wait_for_service('GridMap/query_map')
-	# try:
-	# 	start = Pose()
-	# 	goal  = Pose()
-	# 	start.position.x = ps[0]*RosGridMap.GridMap.resolution
-	# 	start.position.y = ps[1]*RosGridMap.GridMap.resolution
-	# 	goal.position.x = pf[0]*RosGridMap.GridMap.resolution
-	# 	goal.position.y = pf[1]*RosGridMap.GridMap.resolution
-
-	# 	path_planner = rospy.ServiceProxy('GridMap/query_map', PlanPath)
-	# 	path_planned = path_planner(start, goal)
-
-	# # 	mplan = planpath_to_motionplan(path_planned)
-	# except rospy.ServiceException, e:
-	# 	print "Service call failed: %s"%e
+	# ps = (10,13); pf = (150,9) #IROS
+	ps = (10,13); 
+	# pf = (10,16)
+	pf = (15,13)
+	# call_planner(ps, pf)
 
 	while (not rospy.is_shutdown()):
 		RosGridMap.loop_cycle()

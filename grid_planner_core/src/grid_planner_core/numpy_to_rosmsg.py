@@ -23,6 +23,7 @@ from geometry_msgs.msg import PoseStamped
 ## Marker
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
+from geometry_msgs.msg import Point
 ## PCL
 from sensor_msgs.msg import PointCloud2, PointField
 ## JointStates
@@ -199,10 +200,10 @@ def foothold_list_to_marker_array(path_arr, stamp=None, frame_id=None):
 			mark.pose.orientation.y = 0.0;
 			mark.pose.orientation.z = 0.0;
 			mark.pose.orientation.w = 1.0;
-			mark.scale.x = 0.03
-			mark.scale.y = 0.03
-			mark.scale.z = 0.03
-			mark.color.a = 1.0; # transparency level
+			mark.scale.x = 0.01
+			mark.scale.y = 0.01
+			mark.scale.z = 0.01
+			mark.color.a = 0.5; # transparency level
 			# colour scheme for each foot
 			if (j == 0):
 				mark.color.r = 1.0;
@@ -274,6 +275,37 @@ def list_to_marker_array(path_arr, stamp=None, frame_id=None):
 		mark_array.markers.append(mark)
 
 	return mark_array
+
+def foothold_list_to_marker(footholds, stamp=None, frame_id=None):
+	""" Converts custom marker list to nav_msgs/Path """
+
+	## Define Variables ##
+	mark = Marker()
+	
+	if stamp is not None:
+		mark.header.stamp = stamp
+	if frame_id is not None:
+		mark.header.frame_id = frame_id
+	
+	mark.type = 11
+	mark.id = 0
+	mark.color.a = 1.0; # transparency level
+	
+	## assumes that footholds array are of the same size
+	for j in range(0,6):
+		point3d = Point()
+		if (j < len(footholds)):		
+			point3d.x = footholds[j][0]
+			point3d.y = footholds[j][1]
+			point3d.z = footholds[j][2]
+		else:
+			point3d.x = footholds[j-len(footholds)][0]
+			point3d.y = footholds[j-len(footholds)][1]
+			point3d.z = footholds[j-len(footholds)][2]
+
+		mark.points.append(point3d)
+		
+	return mark
 ## ======================================================================================================================================== ##
 ## 																Joint States																##
 ## ======================================================================================================================================== ##
@@ -317,8 +349,11 @@ type_mappings = [(PointField.INT8, np.dtype('int8')), (PointField.UINT8, np.dtyp
 pftype_to_nptype = dict(type_mappings)
 nptype_to_pftype = dict((nptype, pftype) for pftype, nptype in type_mappings)
 
-def point_cloud_array_mapping(data):
+def point_cloud_array_mapping(data, offset=None):
     """ remaps from 3D array to required output form """
+
+    if (offset is None):
+    	offset = np.zeros(3)
 
     npoints = len(data[0])
     points_arr = np.zeros((npoints,), dtype=[
@@ -329,9 +364,9 @@ def point_cloud_array_mapping(data):
                         ('g', np.uint8),
                         ('b', np.uint8)])
     
-    points_arr['x'] = data[0]
-    points_arr['y'] = data[1]
-    points_arr['z'] = data[2] - 0.015
+    points_arr['x'] = data[0] + offset[0]
+    points_arr['y'] = data[1] + offset[1]
+    points_arr['z'] = data[2] - 0.015 + offset[2]
     points_arr['r'] = 0
     points_arr['g'] = 0
     points_arr['b'] = 255
@@ -431,44 +466,46 @@ def motionplan_to_planpath(motion_plan, frame_id=None):
 	bXf = Float64MultiArray()
 	bXN = Float64MultiArray()
 	
-	for i in range(0, len(motion_plan.qb.X.t)):
+	if motion_plan.qb is not None:
+		for i in range(0, len(motion_plan.qb.X.t)):
+			
+			gtf = Transform()
+			vtf = Twist()
+			atf = Twist()
+
+			gtf.translation.x = motion_plan.qb.X.xp[i][0]
+			gtf.translation.y = motion_plan.qb.X.xp[i][1]
+			gtf.translation.z = motion_plan.qb.X.xp[i][2]
+			gtf.rotation.x = motion_plan.qb.W.xp[i][0]
+			gtf.rotation.y = motion_plan.qb.W.xp[i][1]
+			gtf.rotation.z = motion_plan.qb.W.xp[i][2]
+
+			vtf.linear.x = motion_plan.qb.X.xv[i][0]
+			vtf.linear.y = motion_plan.qb.X.xv[i][1]
+			vtf.linear.z = motion_plan.qb.X.xv[i][2]
+			vtf.angular.x = motion_plan.qb.W.xv[i][0]
+			vtf.angular.y = motion_plan.qb.W.xv[i][1]
+			vtf.angular.z = motion_plan.qb.W.xv[i][2]
 		
-		gtf = Transform()
-		vtf = Twist()
-		atf = Twist()
+			atf.linear.x = motion_plan.qb.X.xa[i][0]
+			atf.linear.y = motion_plan.qb.X.xa[i][1]
+			atf.linear.z = motion_plan.qb.X.xa[i][2]
+			atf.angular.x = motion_plan.qb.W.xa[i][0]
+			atf.angular.y = motion_plan.qb.W.xa[i][1]
+			atf.angular.z = motion_plan.qb.W.xa[i][2]
 
-		gtf.translation.x = motion_plan.qb.X.xp[i][0]
-		gtf.translation.y = motion_plan.qb.X.xp[i][1]
-		gtf.translation.z = motion_plan.qb.X.xp[i][2]
-		gtf.rotation.x = motion_plan.qb.W.xp[i][0]
-		gtf.rotation.y = motion_plan.qb.W.xp[i][1]
-		gtf.rotation.z = motion_plan.qb.W.xp[i][2]
-
-		vtf.linear.x = motion_plan.qb.X.xv[i][0]
-		vtf.linear.y = motion_plan.qb.X.xv[i][1]
-		vtf.linear.z = motion_plan.qb.X.xv[i][2]
-		vtf.angular.x = motion_plan.qb.W.xv[i][0]
-		vtf.angular.y = motion_plan.qb.W.xv[i][1]
-		vtf.angular.z = motion_plan.qb.W.xv[i][2]
-	
-		atf.linear.x = motion_plan.qb.X.xa[i][0]
-		atf.linear.y = motion_plan.qb.X.xa[i][1]
-		atf.linear.z = motion_plan.qb.X.xa[i][2]
-		atf.angular.x = motion_plan.qb.W.xa[i][0]
-		atf.angular.y = motion_plan.qb.W.xa[i][1]
-		atf.angular.z = motion_plan.qb.W.xa[i][2]
-
-		qbp.transforms.append(gtf)
-		qbp.velocities.append(vtf)
-		qbp.accelerations.append(atf)
-	qbp.time_from_start = rospy.Time(motion_plan.qb.X.t[1] - motion_plan.qb.X.t[0])
+			qbp.transforms.append(gtf)
+			qbp.velocities.append(vtf)
+			qbp.accelerations.append(atf)
+		qbp.time_from_start = rospy.Time(motion_plan.qb.X.t[1] - motion_plan.qb.X.t[0])
 	
 	for i in range(0, len(motion_plan.qbp)):
 		ip = PoseStamped()
 
 		if frame_id is not None:
 			ip.header.frame_id = frame_id
-		ip.header.stamp = rospy.Time(motion_plan.qb.X.t[i])
+		# ip.header.stamp = rospy.Time(motion_plan.qb.X.t[i])
+		ip.header.stamp = rospy.Time(i)
 
 		ip.pose.position.x = motion_plan.qbp[i][0]
 		ip.pose.position.y = motion_plan.qbp[i][1]
@@ -480,22 +517,25 @@ def motionplan_to_planpath(motion_plan, frame_id=None):
 
 		qbi.poses.append(ip)
 	
-	dheader, ddata = list_to_multiarray(motion_plan.gait_phase)
-	gphase.layout.dim.append(dheader)
-	gphase.data = ddata
+	if motion_plan.gait_phase is not None:
+		dheader, ddata = list_to_multiarray(motion_plan.gait_phase)
+		gphase.layout.dim.append(dheader)
+		gphase.data = ddata
 	
 	for j in range(0,6):
 		dheader, ddata = list_to_multiarray(motion_plan.f_world_X_foot[j].xp)
 		wXf.layout.dim.append(dheader)
 		wXf.data += ddata
-
-		dheader, ddata = list_to_multiarray(motion_plan.f_base_X_foot[j].xp)
-		bXf.layout.dim.append(dheader)
-		bXf.data += ddata
-
-		dheader, ddata = list_to_multiarray(motion_plan.f_world_base_X_NRP[j].xp)
-		bXN.layout.dim.append(dheader)
-		bXN.data += ddata
+		
+		if (len(motion_plan.f_base_X_foot[j].xp) != 0):
+			dheader, ddata = list_to_multiarray(motion_plan.f_base_X_foot[j].xp)
+			bXf.layout.dim.append(dheader)
+			bXf.data += ddata
+		
+		if (len(motion_plan.f_world_base_X_NRP[j].xp) != 0):
+			dheader, ddata = list_to_multiarray(motion_plan.f_world_base_X_NRP[j].xp)
+			bXN.layout.dim.append(dheader)
+			bXN.data += ddata
 
 	return qbp, qbi, gphase, wXf, bXf, bXN
 
@@ -572,15 +612,17 @@ def planpath_to_motionplan(plan_path):
 			motion_plan.f_world_X_foot[j].xp.append(np.array(plan_path.f_world_X_foot.data[nc_wXf*3+i*3:nc_wXf*3+i*3+3]).reshape((3,1)))
 			motion_plan.f_world_X_foot[j].t.append(i)
 		nc_wXf += plan_path.f_world_X_foot.layout.dim[j].stride
+		
+		if plan_path.f_base_X_foot.layout.dim:
+			for i in range(0, plan_path.f_base_X_foot.layout.dim[j].stride):
+				motion_plan.f_base_X_foot[j].xp.append(np.array(plan_path.f_base_X_foot.data[nc_bXf*3+i*3:nc_bXf*3+i*3+3]).reshape((3,1)))
+				motion_plan.f_base_X_foot[j].t.append(i)
+			nc_bXf += plan_path.f_base_X_foot.layout.dim[j].stride
 
-		for i in range(0, plan_path.f_base_X_foot.layout.dim[j].stride):
-			motion_plan.f_base_X_foot[j].xp.append(np.array(plan_path.f_base_X_foot.data[nc_bXf*3+i*3:nc_bXf*3+i*3+3]).reshape((3,1)))
-			motion_plan.f_base_X_foot[j].t.append(i)
-		nc_bXf += plan_path.f_base_X_foot.layout.dim[j].stride
-
-		for i in range(0, plan_path.f_world_base_X_NRP.layout.dim[j].stride):
-			motion_plan.f_world_base_X_NRP[j].xp.append(np.array(plan_path.f_world_base_X_NRP.data[nc_wbXN*3+i*3:nc_wbXN*3+i*3+3]).reshape((3,1)))
-			motion_plan.f_world_base_X_NRP[j].t.append(i)
-		nc_wbXN += plan_path.f_world_base_X_NRP.layout.dim[j].stride
+		if plan_path.f_world_base_X_NRP.layout.dim:
+			for i in range(0, plan_path.f_world_base_X_NRP.layout.dim[j].stride):
+				motion_plan.f_world_base_X_NRP[j].xp.append(np.array(plan_path.f_world_base_X_NRP.data[nc_wbXN*3+i*3:nc_wbXN*3+i*3+3]).reshape((3,1)))
+				motion_plan.f_world_base_X_NRP[j].t.append(i)
+			nc_wbXN += plan_path.f_world_base_X_NRP.layout.dim[j].stride
 
 	return motion_plan

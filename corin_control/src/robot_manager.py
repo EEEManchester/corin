@@ -5,7 +5,6 @@ __version__ = '1.0'
 __author__  = 'Wei Cheah'
 
 import sys; sys.dont_write_bytecode = True
-from itertools import cycle
 
 ## Personal libraries
 from corin_control import *			# library modules to include
@@ -462,8 +461,8 @@ class CorinManager:
 				print 'Planning path...'
 				self.Robot.support_mode = False
 
-				# ps = (10,13); pf = (13,13)	# Short straight Line
-				ps = (10,13); pf = (10,14)	# G2W - Left side up
+				ps = (10,13); pf = (13,13)	# Short straight Line
+				# ps = (10,13); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
 				# ps = (10,13); pf = (25,21)	# G2W - Left side up
 				# ps = (10,13); pf = (40,13)	# full wall or chimney 

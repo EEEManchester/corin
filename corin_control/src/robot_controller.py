@@ -5,6 +5,7 @@ __version__ = '1.0'
 __author__  = 'Wei Cheah'
 
 import sys; sys.dont_write_bytecode = True
+from itertools import cycle
 
 from robot_manager import CorinManager
 from corin_control import *			# library modules to include
@@ -29,7 +30,7 @@ class RobotController(CorinManager):
 		w_base_X_NRP = motion_plan.f_world_base_X_NRP
 		world_X_footholds = motion_plan.f_world_X_foot
 		base_X_footholds  = motion_plan.f_base_X_foot
-		# print world_X_footholds[5].xp
+		
 		## Publish motion plan
 		self.Visualizer.show_motion_plan(self.Robot.P6c.world_X_base, motion_plan.qbp, motion_plan.f_world_X_foot)
 		if (self.interface == 'rviz'):
@@ -37,9 +38,11 @@ class RobotController(CorinManager):
 		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 		
-		## Remove current foothold (visualization purpose)
-		# for j in range(0,6):
-		# 	world_X_footholds[j].xp.pop(0)
+		## Remove initial set of footholds (visualization purpose)
+		for j in range(0,6):
+			world_X_footholds[j].xp.pop(0)
+			base_X_footholds[j].xp.pop(0)
+			w_base_X_NRP[j].xp.pop(0)
 
 		## User input
 		print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
@@ -55,8 +58,8 @@ class RobotController(CorinManager):
 			gait_stack = cycle(gait_phase)
 			self.Robot.Gait.cs = next(gait_stack)
 		except:
-			pass
-
+			print 'No defined gait phases, using periodic'
+			
 		## Cycle through trajectory points until complete
 		i = 1 	# skip first point since spline has zero initial differential conditions
 		while (i != len(base_path.X.t) and not rospy.is_shutdown()):
@@ -133,8 +136,7 @@ class RobotController(CorinManager):
 			self.Robot.V6d.world_X_base = np.vstack((v3cv,v3wv)) 			# not used atm
 			self.Robot.A6d.world_X_base = np.vstack((v3ca,v3wa)) 			# not used atm
 			self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
-			print np.round(self.Robot.P6d.world_X_base,4)
-			print np.round(self.Robot.XHd.base_X_world,4)
+
 			## Generate trajectory for legs in transfer phase
 			for j in range (0, self.Robot.active_legs):
 				# Transfer phase
@@ -175,9 +177,9 @@ class RobotController(CorinManager):
 					# Following two lines used for cornering
 					# sn1 = self.get_snorm(self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j) 	
 					# sn2 = self.get_snorm(self.Robot.Leg[j].XHd.world_X_foot[0:3,3], j)
-					print j, np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
-					print j, np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],3)
-					print j, sn1, sn2
+					# print j, np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
+					# print j, np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],3)
+					# print j, sn1, sn2
 
 					## Generate transfer spline
 					svalid = self.Robot.Leg[j].generate_spline('world', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
@@ -232,11 +234,11 @@ class RobotController(CorinManager):
 						self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 							
 					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
-					print j, ' bXw: \n', np.round(self.Robot.XHd.base_X_world,3)
-					print j, ' wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
-					print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],3)
-					print j, ' cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],3)
-					print '========================================================='
+					# print j, ' bXw: \n', np.round(self.Robot.XHd.base_X_world,3)
+					# print j, ' wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
+					# print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],3)
+					# print j, ' cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],3)
+					# print '========================================================='
 			
 			## Task to joint space
 			qd, tXj_error = self.Robot.task_X_joint()	
@@ -260,6 +262,7 @@ class RobotController(CorinManager):
 				if (transfer_total == leg_complete and transfer_total > 0 and leg_complete > 0):
 					try:
 						self.Robot.alternate_phase(next(gait_stack))
+						print 'unstacked'
 					except:
 						self.Robot.alternate_phase()
 					print i, self.Robot.Gait.cs, np.round(np.rad2deg(v3wp[2]).flatten(),4)
