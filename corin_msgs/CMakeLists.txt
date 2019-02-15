@@ -24,17 +24,17 @@ find_package(catkin REQUIRED COMPONENTS
 ################################################################################
  add_message_files(
    FILES
-   MotionPlan.msg
-   GridMap.msg
-   GridMapInfo.msg
+   # MotionPlan.msg
+   # GridMap.msg
+   # GridMapInfo.msg
    LoggingState.msg
   )
 
  add_service_files(
    FILES
-   PlanPath.srv   # Grid path planning
-   GetGridMap.srv    # Grid map
-   GenericString.srv # Generic string service, SISO
+   #PlanPath.srv   # Grid path planning
+   #GetGridMap.srv    # Grid map
+   # GenericString.srv # Generic string service, SISO
    JointState.srv
    Imu.srv
    UiState.srv    # user interface

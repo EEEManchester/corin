@@ -663,8 +663,8 @@ class GridMap:
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-gmap = GridMap('iros_part1_demo')
-print gmap.get_cell('height', np.array([0.747,0.168,0]), 3)
+# gmap = GridMap('iros_part1_demo')
+# print gmap.get_cell('height', np.array([0.747,0.168,0]), 3)
 # print gmap.get_cell('height', np.array([0.72,0.06,0]), 3)
 # gmap.square_spiral_search((0.72,0.66), (3,3), 3)
 # gmap.search_area((0.72,0.66), (3,3), 3)

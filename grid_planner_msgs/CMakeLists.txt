@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(grid_planner_core)
+project(grid_planner_msgs)
 
 ## Add support for C++11, supported in ROS Kinetic and newer
 add_definitions(-std=c++11)
@@ -22,25 +22,26 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
 )
 
-find_package(Eigen REQUIRED)
+# find_package(Eigen REQUIRED)
 
-catkin_python_setup()
+# catkin_python_setup()
 
 ################################################################################
 # Declare ROS messages, services and actions
 ################################################################################
- # add_message_files(
- #   FILES
- #   MotionPlan.msg
- #   GridMap.msg
- #   GridMapInfo.msg
- #  )
+ add_message_files(
+   FILES
+   MotionPlan.msg
+   GridMap.msg
+   GridMapInfo.msg
+  )
 
- # add_service_files(
- #  FILES
- #    PlanPath.srv   # Grid path planning
- #    GetGridMap.srv    # Grid map
- # )
+ add_service_files(
+  FILES
+    PlanPath.srv   # Grid path planning
+    GetGridMap.srv    # Grid map
+    GenericString.srv
+ )
 
 ## Generate actions in the 'action' folder
 # add_action_files(

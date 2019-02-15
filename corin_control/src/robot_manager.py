@@ -33,7 +33,7 @@ from geometry_msgs.msg import Polygon
 from service_handler import ServiceHandler
 # from corin_control.srv import UiState 	# NOT USED
 from corin_msgs.srv import RigidBody # compute CRBI & CoM
-from corin_msgs.srv import PlanPath
+from grid_planner_msgs.srv import PlanPath
 
 ## Robotis ROS msgs for joint control
 from robotis_controller_msgs.msg import SyncWriteMultiFloat
@@ -41,7 +41,7 @@ from robotis_controller_msgs.msg import SyncWriteMultiFloat
 from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import Pose
 
-from corin_msgs.msg import MotionPlan as RosMotionPlan
+# from grid_planner_msgs.msg import MotionPlan as RosMotionPlan
 from corin_msgs.msg import LoggingState
 
 #####################################################################
@@ -416,7 +416,7 @@ class CorinManager:
 
 			## Data mapping - for convenience
 			x_cob, w_cob, mode, motion_prim = data
-			mode = 4
+			mode = 5
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
 				print 'Going to standup'
@@ -512,14 +512,15 @@ class CorinManager:
 					print 'Planning service unavailable, exiting...'
 
 			elif (mode == 5):
-				rospy.wait_for_service('import_csv')
+				rospy.wait_for_service(ROBOT_NS + '/import_motion_plan', 1.0)
 				try:
-					path_planner = rospy.ServiceProxy('import_csv', PlanPath)
-					plan_generat = path_planner(Pose(), Pose())
-					print 'succeed'
+					path_planner = rospy.ServiceProxy(ROBOT_NS + '/import_motion_plan', PlanPath)
+					motion_plan  = planpath_to_motionplan( path_planner(Pose(), Pose(), String('data.yaml')) )
+					print 'Motion plan service imported!'
 				except:
-					print 'CSVImport Service Failed'
-				motion_plan = planpath_to_motionplan( path_planner(Pose(), Pose()) )
+					print 'Motion plan service call error!'
+				# motion_plan = planpath_to_motionplan( path_planner(Pose(), Pose()) )
+				# motion_plan = planpath_to_motionplan(plan_generat)
 				# Plot.plot_2d(motion_plan.qb.X.t, motion_plan.qb.X.xp)
 				
 				self.Robot.P6c.world_X_base = np.array([motion_plan.qb.X.xp[0], 
@@ -530,7 +531,7 @@ class CorinManager:
 				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 				self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
 				
-				# Compute foot position
+				# Update to new current foot position
 				leg_stance = [None]*6
 				for j in range(0,6):
 					# print np.round(motion_plan.f_world_X_foot[j].xp[0],3)

@@ -3,6 +3,7 @@
 import os.path
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import yaml
 
 import rospy
 
@@ -13,8 +14,8 @@ from grid_planner_core.numpy_to_rosmsg import *
 from corin_control.robot_class import RobotState
 from corin_control.constant import *
 
-from corin_msgs.msg import GridMap as RosGridMapMsg
-from corin_msgs.srv import *
+from grid_planner_msgs.msg import GridMap as RosGridMapMsg
+from grid_planner_msgs.srv import *#PlanPath
 from std_msgs.msg import *
 # from numpy_to_rosmsg import * 	# convert numpy to ros messages
 
@@ -134,8 +135,73 @@ class GridMapRos:
 		self.point_cloud = array_to_pointcloud2(arr_mapped_data, rospy.Time.now(), "world")
 
 	def loop_cycle(self):
+		""" keeps the node looping """
+
 		self.map_pub_.publish(self.point_cloud)
 		rospy.sleep(2)
+
+	def save_to_yaml(self):
+		""" Saves the motion plan in a yaml file """
+		
+		def path_to_list(path):
+			tlist = []; plist = []; vlist = []; alist = [];
+			for i in range(len(path.xp)):
+				tlist.append(path.t[i].tolist())
+				plist.append(path.xp[i].tolist())
+				vlist.append(path.xv[i].tolist())
+				alist.append(path.xa[i].tolist())
+
+			return tlist, plist, vlist, alist
+
+		def footholds_to_list(footholds):
+
+			footlist = [None]*6
+			for j in range(6):
+				footlist[j] = [footholds[j].xp[0].tolist()]
+				for i in range(1, len(footholds[j].xp)):
+					footlist[j].append(footholds[j].xp[i].tolist()) 
+			return footlist
+
+		def array_list_to_list(array):
+			newlist = [];
+			for i in range(len(array)):
+				newlist.append(array[i].tolist())
+			return newlist
+
+		mapname = self.GridMap.map_name
+		print 'Saving to yaml....'
+
+		xt, xp, xv, xa = path_to_list(self.Planner.motion_plan.qb.X)
+		wt, wp, wv, wa = path_to_list(self.Planner.motion_plan.qb.W)
+		wXf = footholds_to_list(self.Planner.motion_plan.f_world_X_foot)
+		bXf = footholds_to_list(self.Planner.motion_plan.f_base_X_foot)
+		bXn = footholds_to_list(self.Planner.motion_plan.f_world_base_X_NRP)
+		cob = array_list_to_list(self.Planner.motion_plan.qbp)
+
+		data = dict(map=mapname, 
+					start = dict(x = self.Planner.start[0]*RosGridMap.GridMap.resolution,
+								 y = self.Planner.start[1]*RosGridMap.GridMap.resolution,
+								 z = self.Planner.base_map.nodes[self.Planner.start]['pose'][0]),
+					goal = dict(x = self.Planner.goal[0]*RosGridMap.GridMap.resolution,
+								y = self.Planner.goal[1]*RosGridMap.GridMap.resolution),
+					path_x_t = xt,
+					path_x_xp = xp,
+					path_x_xv = xv,
+					path_x_xa = xa,
+					path_w_xp = wp,
+					path_w_xv = wv,
+					path_w_xa = wa,
+					cob = cob,
+					wXf = wXf,
+					bXf = bXf,
+					bXn = bXn,
+					gphase = self.Planner.motion_plan.gait_phase
+					)
+		print self.Planner.motion_plan.f_world_base_X_NRP[4].xp
+		filename = 'data.yaml'
+		with open(filename, 'w') as outfile:
+			yaml.dump(data, outfile, default_flow_style=None)
+		print 'Motion plan saved!'
 
 def call_planner(ps, pf):
 	rospy.wait_for_service('GridMap/query_map')
@@ -148,9 +214,10 @@ def call_planner(ps, pf):
 		goal.position.y = pf[1]*RosGridMap.GridMap.resolution
 
 		path_planner = rospy.ServiceProxy('GridMap/query_map', PlanPath)
-		path_planned = path_planner(start, goal)
+		path_planned = path_planner(start, goal, String())
 
-	# 	mplan = planpath_to_motionplan(path_planned)
+		# mplan = planpath_to_motionplan(path_planned)
+		# print mplan
 		
 	except rospy.ServiceException, e:
 		print "Service call failed: %s"%e
@@ -190,7 +257,9 @@ if __name__ == "__main__":
 	ps = (10,13); 
 	# pf = (10,16)
 	pf = (15,13)
-	# call_planner(ps, pf)
+	call_planner(ps, pf)
+
+	RosGridMap.save_to_yaml()
 
 	while (not rospy.is_shutdown()):
 		RosGridMap.loop_cycle()

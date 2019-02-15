@@ -7,7 +7,7 @@ sys.dont_write_bytecode = True
 import numpy as np
 from matrix_transforms import *
 from enum import Enum 
-
+import yaml
 
 dglobe = 2
 
@@ -142,7 +142,19 @@ param_obs = {'FK': 1, 				# Force gain - PRIMARY tuning parameter
 			}
 
 foothold_list = []
-foothold_list.append(np.array([1,1,1]))
-foothold_list.append(np.array([2,2,2]))
-for j in foothold_list:
-	print j
+foothold_list.append(np.array([1.0,1,1]))
+foothold_list.append(np.array([2,2.0,2]))
+for j in range(len(foothold_list)):
+	# print j
+	foothold_list[j] = foothold_list[j].tolist()
+# foothold_list = [1,1,1,1,2,3,4]
+# foothold_list = [ [1,2,3],[2,3,4]]
+print foothold_list
+
+data = dict(
+    grid = str(foothold_list[0])
+)
+
+filename = 'data.yaml'
+with open(filename, 'w') as outfile:
+    yaml.dump(data, outfile, default_flow_style=False)

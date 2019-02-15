@@ -21,12 +21,7 @@ import csv
 
 ## Global variables ##
 POSE_TABLE = {}
-# BODY_HEIGHT = 0.1
-# COXA_X = 0.115
-# COXA_Y = 0.09
-# COXA_Z = 0.0
-# TRN_BASE_X_LEG = [	(COXA_X,COXA_Y) ,(0.,COXA_Y) ,(-COXA_X,COXA_Y),\
-# 					(COXA_X,-COXA_Y),(0.,-COXA_Y),(-COXA_X,-COXA_Y)]
+
 ## Foot position from base
 p_base_X_lf_foot = ( 0.244, 0.24)
 p_base_X_lm_foot = (    0., 0.29)

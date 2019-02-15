@@ -11,7 +11,7 @@ from sensor_msgs.msg import JointState
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
 
-import matlab.engine
+# import matlab.engine
 
 ROBOT_STATE = {}
 ROBOT_STATE[0] ='x'
@@ -75,7 +75,7 @@ if __name__ == "__main__":
 	rate  = rospy.Rate(1.0/0.05)			# frequency
 	
 	print 'Starting matlab engine.....'
-	eng = matlab.engine.start_matlab()
+	# eng = matlab.engine.start_matlab()
 	print 'Engine started!'
 
 	sp_pub_   = rospy.Publisher('corin/support', Marker, queue_size=1)
