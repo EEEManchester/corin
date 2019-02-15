@@ -43,12 +43,6 @@ find_package(catkin REQUIRED COMPONENTS
     GenericString.srv
  )
 
-## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-# )
-
 ## Generate added messages and services with any dependencies listed here
  generate_messages(
    DEPENDENCIES       # Or other packages containing msgs

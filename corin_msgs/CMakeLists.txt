@@ -24,28 +24,16 @@ find_package(catkin REQUIRED COMPONENTS
 ################################################################################
  add_message_files(
    FILES
-   # MotionPlan.msg
-   # GridMap.msg
-   # GridMapInfo.msg
    LoggingState.msg
   )
 
  add_service_files(
    FILES
-   #PlanPath.srv   # Grid path planning
-   #GetGridMap.srv    # Grid map
-   # GenericString.srv # Generic string service, SISO
    JointState.srv
    Imu.srv
    UiState.srv    # user interface
    RigidBody.srv  # CRBI and CoM
  )
-
-## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-# )
 
 ## Generate added messages and services with any dependencies listed here
  generate_messages(
