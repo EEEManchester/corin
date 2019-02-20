@@ -2,6 +2,12 @@ Map:
   flat:
     size: { sx: 1.00, sy: 0.8}
   
+  wall_transition:
+    size: { sx: 0.8, sy: 0.8}
+    wall: 
+      i1: { s1: [0,0],  s2: [26,1], sh: 1}
+      i2: { s1: [0,25], s2: [26,26], sh: 1}
+
   wall_demo_left:
     size: { sx: 1.57, sy: 0.8}
     wall: 

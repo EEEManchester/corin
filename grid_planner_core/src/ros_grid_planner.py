@@ -197,7 +197,7 @@ class GridMapRos:
 					bXn = bXn,
 					gphase = self.Planner.motion_plan.gait_phase
 					)
-		print self.Planner.motion_plan.f_world_base_X_NRP[4].xp
+		
 		filename = 'data.yaml'
 		with open(filename, 'w') as outfile:
 			yaml.dump(data, outfile, default_flow_style=None)
@@ -230,7 +230,7 @@ if __name__ == "__main__":
 	# RosGridMap = GridMapRos("iros_part1_demo")
 	# RosGridMap = GridMapRos("iros_demo")
 	# RosGridMap = GridMapRos("flat")
-	RosGridMap = GridMapRos("wall_demo_left")
+	RosGridMap = GridMapRos("wall_transition")
 
 	## Illustration for Cornering
 	# RosGridMap = GridMapRos("chimney_corner")
@@ -255,11 +255,11 @@ if __name__ == "__main__":
 	## Path Planning
 	# ps = (10,13); pf = (150,9) #IROS
 	ps = (10,13); 
-	# pf = (10,16)
-	pf = (15,13)
+	pf = (10,20)
+	# pf = (15,13)
 	call_planner(ps, pf)
 
-	RosGridMap.save_to_yaml()
+	# RosGridMap.save_to_yaml()
 
 	while (not rospy.is_shutdown()):
 		RosGridMap.loop_cycle()

@@ -134,8 +134,8 @@ class BodyposeTable:
 				# 	print wall_world_base_X_NRP[1]
 			fp_w = gnd_world_base_X_NRP[1][1] + wall_world_base_X_NRP[1][1]
 			
-			POSE_TABLE[fs+i] = {"footprint":np.array([0.27, fp_w, fp_h]), 
-								"bodypose":np.array([0.,0., fp_h, np.round(qr,3),0.,0.]),
+			POSE_TABLE[fs+i] = {"footprint":np.array([0.27, fp_w, fp_h]),  	# footprint length, width, height
+								"bodypose":np.array([0.,0., fp_h, np.round(qr,3),0.,0.]), 	# bodypose in 6D
 								"ground":gnd_world_base_X_NRP,
 								"wall": wall_world_base_X_NRP }
 
@@ -175,9 +175,11 @@ class BodyposeTable:
 
 		return selection
 
-tb = BodyposeTable()
+# tb = BodyposeTable()
 # for i in tb.table:
 # 	print tb.table[i]["footprint"]
+# 	print tb.table[i]["bodypose"]
+# 	print '========================='
 class PathPlanner:
 	def __init__(self, Map):
 		self.GridMap = Map
@@ -755,11 +757,16 @@ class PathPlanner:
 			world_ground_X_femur = mX(world_ground_X_base, self.Robot.Leg[j].XHd.base_X_femur)
 
 			hy = world_ground_X_femur[2,3] - L3 - 0. 		# h_femur_X_tibia
-			yy = np.sqrt((L2**2 - hy**2)) 				# world horizontal distance from femur to foot
+			yy = np.sqrt((L2**2 - hy**2)) 					# world horizontal distance from femur to foot
 			by = np.cos(v3wp[0])*(COXA_Y + L1) 				# world horizontal distance from base to femur 
 			sy = by + yy									# y_base_X_foot - leg frame
-			py = sy*np.sin(np.deg2rad(ROT_BASE_X_LEG[j]+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
-			
+			if self.W_GND:
+				py = sy*np.sin(np.deg2rad(ROT_BASE_X_LEG[j]+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
+			else:
+				if (j>=3):
+					py = sy*np.sin(np.deg2rad(-90.0+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
+				else:
+					py = sy*np.sin(np.deg2rad(90.0+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
 			# Create temp array, which is the new base to foot position, wrt world frame
 			# The x-component uses the base frame NRP so that it remains the same
 
@@ -769,6 +776,10 @@ class PathPlanner:
 			self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4] = mX(rot_Z(v3wp[2]), temp)
 			self.Robot.Leg[j].XHd.world_X_NRP[:3,3] = np.round( (v3cp + self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4]).flatten(),4)
 			
+			print j, '\t', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
+			print by, yy, sy
+			print ROT_BASE_X_LEG[j], LEG_OFFSET[j]
+
 		def compute_wall_footholds(d_wall):
 			""" Compute footholds for legs in wall contact """
 
@@ -795,10 +806,11 @@ class PathPlanner:
 				stance = self.Robot.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, leg_offset, "flat")
 				self.Robot.Gait.set_step_stroke(stance, LEG_CLEAR, STEP_STROKE)
 
-				for j in [0,2,3,5]:
+				# for j in [0,2,3,5]:
+				for j in range(6):
 					self.Robot.Leg[j].XHd.update_base_X_NRP(self.Robot.KDL.leg_IK(stance[j]))
-					self.Robot.Leg[j].XHd.update_world_base_X_NRP(self.Robot.P6c.world_X_base)
-
+					self.Robot.Leg[j].XHd.update_world_base_X_NRP(self.Robot.P6c.world_X_base) 
+					
 				return stance
 
 		def set_selected_leg_stance(leg_offset):
@@ -816,7 +828,7 @@ class PathPlanner:
 
 		if (self.W_GND is False):
 			leg_stance = set_leg_stance()
-		
+
 		gphase_intv  = [] 						# intervals in which gait phase changes
 		gait_phase	 = []
 		world_X_base = []
@@ -961,7 +973,6 @@ class PathPlanner:
 									set_selected_leg_stance((40.,-40.))
 								else:
 									compute_wall_footholds(self.di_wall)
-
 						else:
 							# RHS going up
 							if (j >= 3):
@@ -992,6 +1003,8 @@ class PathPlanner:
 					else:
 						self.Robot.Leg[j].XHd.update_world_base_X_NRP(P6d_world_X_base)
 
+					
+
 					## 2) Compute magnitude & vector direction
 					if (i == len(base_path.X.t)):
 						v3_uv = np.zeros(3)
@@ -1010,8 +1023,11 @@ class PathPlanner:
 					if (self.T_GND_X_WALL):
 						v3_uv = np.zeros(3)
 
+					# if (j>=3):
+					# 	print 'wbXn: ', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
+					# 	print 'bXn:  ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],3)
+
 					## 3) Compute AEP wrt base and world frame
-					
 					self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + \
 																		np.nan_to_num(v3_uv*self.Robot.Gait.step_stroke/2.)
 					self.Robot.Leg[j].XHd.base_X_AEP[0:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
@@ -1030,24 +1046,23 @@ class PathPlanner:
 						self.Robot.Leg[j].XHd.world_X_foot[2,3] = cell_h.item(2) 	# set z-component to cell height
 
 					elif (abs(cell_h.item(2)) > 0.1 and self.W_GND is True):
-						if j==3:
-							print 'Search for next valid foothold for leg ', j, 'because cell value ', cell_h.item(2) 
-							print 'ori: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3) #, self.GridMap.getIndex(self.Robot.Leg[j].XHd.world_X_foot[:2,3],j)
+						# if j==3:
+						# 	print 'Search for next valid foothold for leg ', j, 'because cell value ', cell_h.item(2) 
+						# 	print 'ori: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3) #, self.GridMap.getIndex(self.Robot.Leg[j].XHd.world_X_foot[:2,3],j)
 						# print np.round(self.Robot.XHd.world_X_base[:3,3],3)
 						# self.Robot.Leg[j].XHd.world_X_foot[:3,3] = self.find_valid_foothold(self.Robot.Leg[j].XHd.world_X_foot[:3,3], j)
 						self.Robot.Leg[j].XHd.world_X_foot[:3,3] = self.find_valid_foothold(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + 
 																							self.Robot.XHd.world_X_base[:3,3], j)
-						if j==3:
-							print 'new: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
-					if (j==3):
-					# 	print 'wbXn: ', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
-					# 	print 'wbXa: ', np.round(self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3],3)
-					# 	print 'bXa:  ', np.round(self.Robot.Leg[j].XHd.base_X_AEP[:3,3],3)
-					# 	print 'bXn:  ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],3)
+						# if j==3:
+						# 	print 'new: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
+					# if (j>=3):
+						# print 'wbXn: ', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
+						# print 'wbXa: ', np.round(self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3],3)
+						# print 'bXa:  ', np.round(self.Robot.Leg[j].XHd.base_X_AEP[:3,3],3)
 					# 	print 'wXb:  ', np.round(self.Robot.XHd.world_X_base[:3,3],3)
 					# 	# print mX(self.Robot.XHd.world_X_base, self.Robot.Leg[j].XHd.base_X_AEP)
-						print 'wXf:  ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
-						print 'cell: ', cell_h
+						# print 'wXf:  ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
+						# print 'cell: ', cell_h
 
 					## Check if foothold valid for chimney transition
 					elif (self.T_GND_X_CHIM is True):
@@ -1216,8 +1231,8 @@ class PathPlanner:
 	def routine_motion(self, p1, p2, routine=None, tn=0.1):
 		""" Routine for moving pose and leg to desired stances """
 
-		Q_BASE = 20. 	# base angle to rotate for wall transition
-		H_BASE = 0.15	# base height to move to
+		Q_BASE = 4.5 	# base angle to rotate for wall transition
+		H_BASE = 0.116	# base height to move to
 		
 		PathGenerator = path_generator.PathGenerator()
 
@@ -1275,7 +1290,8 @@ class PathPlanner:
 			qi = self.base_map.nodes[p1]['pose'][1]
 			qf = delta_w*np.deg2rad(Q_BASE)
 			
-			qrange = range(0,int(Q_BASE),4)
+			# qrange = range(0,int(Q_BASE),4)
+			qrange = range(0,int(20),4)
 
 			delta_q = (qf-qi)/(len(qrange)-1)
 			delta_x = (xf-xi)/(len(qrange)-1)
@@ -1299,7 +1315,7 @@ class PathPlanner:
 				x_cob = np.vstack(( x_cob, xd ))
 				w_cob = np.vstack(( w_cob, np.array([wd, 0., 0.]) ))
 				t_cob = np.hstack(( t_cob, i*total_time/(2*(len(qrange)-1)) ))
-			# print x_cob
+			
 			# print t_cob
 			
 			PathGenerator.V_MAX = PathGenerator.W_MAX = 100

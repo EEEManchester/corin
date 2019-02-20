@@ -197,7 +197,7 @@ class CorinManager:
 	def __initialise_services__(self):
 		""" Initialises services used in manager """
 
-		self.grid_serv_ = ServiceHandler('GridMap/query_map', PlanPath)
+		self.grid_serv_ = ServiceHandler('/GridMap/query_map', PlanPath)
 		self.rbim_serv_ = ServiceHandler('/corin/get_rigid_body_matrix', RigidBody)
 		
 	def publish_topics(self, q, qlog=None, q_trac=None):
@@ -416,7 +416,7 @@ class CorinManager:
 
 			## Data mapping - for convenience
 			x_cob, w_cob, mode, motion_prim = data
-			mode = 5
+			mode = 4
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
 				print 'Going to standup'
@@ -461,7 +461,7 @@ class CorinManager:
 				print 'Planning path...'
 				self.Robot.support_mode = False
 
-				ps = (10,13); pf = (13,13)	# Short straight Line
+				# ps = (10,13); pf = (13,13)	# Short straight Line
 				# ps = (10,13); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
 				# ps = (10,13); pf = (25,21)	# G2W - Left side up
@@ -469,7 +469,7 @@ class CorinManager:
 				# ps = (10,13); pf = (20,13) 	# wall and chimney demo
 				# ps = (10,15); pf = (150,10) 	# IROS demo
 				# ps = (10,15); pf = (17,12) 	# IROS - past chimney
-				# ps = (10,12); pf = (20,12)
+				ps = (10,13); pf = (10,20)
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,
@@ -495,11 +495,12 @@ class CorinManager:
 						print start.position.x, start.position.y
 						try:	
 							print 'Requesting Planning service'
-							path_generat = self.grid_serv_.call(start, goal)
+							path_generat = self.grid_serv_.call(start, goal, String())
 							plan_exist = True
 						except:
 							plan_exist = False
-						
+							print 'Planning Service Failed!'
+
 						if (plan_exist):
 							motion_plan  = planpath_to_motionplan(path_generat)
 							if (motion_plan is not None):
