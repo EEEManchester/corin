@@ -101,7 +101,7 @@ class RobotState:
 
 		self.update_bodypose_state(cmode)
 		self.update_leg_state(reset, cmode)
-		# self.update_stability_margin()
+		self.update_stability_margin()
 		
 	def update_leg_state(self, reset, cmode):
 		""" update legs state """
@@ -175,7 +175,8 @@ class RobotState:
 		sm = self.SM.LSM(stack_base_X_world, self.Gait.cs)
 		try:
 			if (sm[0]<=SM_MIN or sm[1]<=SM_MIN):
-				print 'Stability Violated!'
+				print 'Stability Violated! ', sm
+				print stack_base_X_world
 				self.invalid = True
 			else:
 				self.invalid = False

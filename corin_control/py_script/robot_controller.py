@@ -129,7 +129,8 @@ class CorinManager:
 
 		##***************** PUBLISHERS ***************##
 		self.setpoint_pub_ = rospy.Publisher('/corin/setpoint_states', JointState, queue_size=1)	# LOGGING publisher
-		
+		self.sm_pub_ = rospy.Publisher('/corin/sm', Float64, queue_size=1)	# stability margin publisher
+
 		## Hardware Specific Publishers ##
 		if (ROBOT_NS == 'corin' and (self.interface == 'gazebo' or 
 									 self.interface == 'rviz' or
@@ -219,6 +220,7 @@ class CorinManager:
 
 		self.Visualizer.publish_robot(self.Robot.P6d.world_X_base)
 
+		self.sm_pub_.publish(Float64(self.Robot.SM.sm.min()))
 		## Publish setpoints to logging topic
 		if (q_log is not None):
 			self.setpoint_pub_.publish(q_log)

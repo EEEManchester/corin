@@ -738,7 +738,13 @@ class PathPlanner:
 			by = np.cos(v3wp[0])*(COXA_Y + L1) 				# world horizontal distance from base to femur 
 			sy = by + yy									# y_base_X_foot - leg frame
 			py = sy*np.sin(np.deg2rad(ROT_BASE_X_LEG[j]+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
-			
+			# if self.W_GND:
+			# 	py = sy*np.sin(np.deg2rad(ROT_BASE_X_LEG[j]+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
+			# else:
+			# 	if (j>=3):
+			# 		py = sy*np.sin(np.deg2rad(-90.0+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
+			# 	else:
+			# 		py = sy*np.sin(np.deg2rad(90.0+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
 			# Create temp array, which is the new base to foot position, wrt world frame
 			# The x-component uses the base frame NRP so that it remains the same
 
@@ -825,6 +831,7 @@ class PathPlanner:
 			# print i, ' Gait phase ', self.Robot.Gait.cs 
 			leg_exceed = None
 			bound_exceed = False 	# reset suspension flag
+			stability_exceed = False
 			ig = i 					# last count which gait changes
 
 			# Cycles through one gait phase for support legs
@@ -848,6 +855,8 @@ class PathPlanner:
 																	self.Robot.Leg[j].XHd.world_X_foot)
 							self.Robot.Leg[j].XHd.world_base_X_foot = mX(world_X_base_rot, 
 																			self.Robot.Leg[j].XHd.base_X_foot)
+							
+							## 1) Check PEP limit
 							bound_exceed = self.Robot.Leg[j].check_boundary_limit(self.Robot.Leg[j].XHd.world_base_X_foot,
 																					self.Robot.Leg[j].XHd.world_base_X_NRP,
 																					self.Robot.Gait.step_stroke)
@@ -855,6 +864,8 @@ class PathPlanner:
 							# 	print 'wbXf: ', np.round(self.Robot.Leg[j].XHd.world_base_X_foot[:3,3],3)
 							# 	print 'wbXn: ', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
 							# 	print self.Robot.Gait.step_stroke
+
+							## 2) Check leg kinematic limit
 							base_X_q2 = mX(self.Robot.Leg[j].XHd.base_X_coxa, v3_X_m(np.array([L1,0.,0.])))
 							world_base_X_q2 = mX(world_X_base_rot, base_X_q2)
 							world_q2_X_foot = self.Robot.Leg[j].XHd.world_base_X_foot[:3,3] - world_base_X_q2[:3,3]
@@ -866,6 +877,30 @@ class PathPlanner:
 								leg_exceed = j
 								break
 
+							## 3) Check stability margin
+							# stack_base_X_world = []
+							# for jint in range(6):
+							# 	stack_base_X_world.append(self.Robot.Leg[jint].XHd.world_base_X_foot[:3,3])
+							# sm = self.Robot.SM.LSM(stack_base_X_world, self.Robot.Gait.cs)
+							# try:
+							# 	if (sm[0]<=SM_MIN or sm[1]<=SM_MIN):
+							# 		print 'Stability Violated!'
+							# 		raw_input('Stability Violated')
+							# 		self.invalid = True
+							# 	else:
+							# 		self.invalid = False
+							# except Exception, e:
+							# 	print 'Error: ', e
+							# 	print 'Robot Stopping'
+							# 	self.invalid = True
+
+							# if self.Robot.invalid:
+							# 	print 'Stability margin exceeded on ', j, ' at n=', i
+							# 	bound_exceed = True
+							# 	leg_exceed = j
+							# 	break
+
+							## Check if any constraints violated
 							if (bound_exceed == True):
 								print 'bound exceed on ', j, ' at n=', i
 								leg_exceed = j
@@ -1809,6 +1844,6 @@ class PathPlanner:
 ## ================================================================================================ ##
 
 ## Create map and plan path
-grid_map = GridMap('wall_hole_demo')
-planner = PathPlanner(grid_map)
-planner.graph_primitive()
+# grid_map = GridMap('wall_hole_demo')
+# planner = PathPlanner(grid_map)
+# planner.graph_primitive()
