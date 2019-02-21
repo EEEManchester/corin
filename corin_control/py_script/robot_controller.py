@@ -41,7 +41,7 @@ class CorinManager:
 
 		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.Action	= control_interface.ControlInterface()	# control action class	
-		self.GridMap  = GridMap('flat')
+		self.GridMap  = GridMap('wall_hole_demo')
 		self.PathPlan = PathPlanner(self.GridMap)
 
 		self.resting   = False 		# Flag indicating robot standing or resting
@@ -670,7 +670,7 @@ class CorinManager:
 				# ps = (10,14); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
 				# ps = (10,13); pf = (41,13)	# Wall up and down again
-				# ps = (10,13); pf = (72,13) 	# full demo
+				ps = (10,13); pf = (72,13) 	# full demo
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,

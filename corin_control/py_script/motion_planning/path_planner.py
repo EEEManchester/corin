@@ -1759,9 +1759,10 @@ class PathPlanner:
 				# raw_input('continue')
 				
 				## High level preview
-				# gpath = nx.path_graph(list_gpath)
+				gpath = nx.path_graph(list_gpath)
 				# self.GridMap.graph_representation(gpath)
-				
+				# self.GridMap.graph_representation()
+
 				## Convert path from cell index to Re^3 format 
 				x_cob, w_cob = self.GridMap.get_path_to_nparray(list_gpath, start)
 
@@ -1797,11 +1798,17 @@ class PathPlanner:
 		## Split path according to motion primitive
 		return self.post_process_path(list_gpath, Robot.P6c.world_X_base.flatten())
 
+	def graph_primitive(self):
+		self.process_map_on_primitive() # finds path then use motion primitives to fit in
+		self.remove_motion_edges(self.base_map) 	# remove edges linked to invalid cells
+		self.GridMap.set_edge_cost(self.base_map)	# assign cost to edge
+		self.GridMap.graph_primitive(self.GM_walk, self.GM_wall, self.GM_chim)
+
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
 
 ## Create map and plan path
-# grid_map = GridMap('hole_demo')
-# planner = PathPlanner(grid_map)
-
+grid_map = GridMap('wall_hole_demo')
+planner = PathPlanner(grid_map)
+planner.graph_primitive()

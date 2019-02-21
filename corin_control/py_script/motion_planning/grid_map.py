@@ -27,6 +27,11 @@ class GridMap:
 		self.G_wall = nx.Graph()
 		self.G_hole = nx.Graph()
 
+		## Motiom primitives illustrations
+		# self.GM_walk = nx.Graph()
+		# self.GM_wall = nx.Graph()
+		# self.GM_chim = nx.Graph()
+
 		self.__initialise_graph__(map_name)
 
 	def __load_map__(self, map_name):
@@ -586,26 +591,19 @@ class GridMap:
 		p_hole = dict(zip(self.G_hole, self.G_hole))
 		# p_path = dict(zip(self.Gfree, self.Gfree))
 
-		# m_walk = dict(zip(self.GM_walk, self.GM_walk))
-		# m_wall = dict(zip(self.GM_wall, self.GM_wall))
-		# m_chim = dict(zip(self.GM_chim, self.GM_chim))
-
 		# Grid map & obstacles
-		plt.style.use('presentation')
-		nsize  = 20	# size of nodes
+		# plt.style.use('presentation')
+		nsize  = 50	# size of nodes
 		labels = False 	# label on nodes
 
 		# Map
-		ax = nx.draw_networkx(self.Map, p_map, with_labels=labels, node_size=nsize, node_color='0.9', width=0.0, alpha=1.0, node_shape="s");
-		# Wall
-		nx.draw_networkx(self.G_wall, p_wall, with_labels=labels, node_size=nsize, node_color='#ff0000', width=0.0, node_shape="s");
-		# Holes 
-		nx.draw_networkx(self.G_hole, p_hole, with_labels=labels, node_size=nsize, node_color='#663300', width=0.0, node_shape="s");
+		# ax = nx.draw_networkx(self.Map, p_map, with_labels=labels, node_size=nsize, node_color='0.9', width=0.0, alpha=1.0, node_shape="s", edgecolors="none");
+		# # Wall
+		# nx.draw_networkx(self.G_wall, p_wall, with_labels=labels, node_size=nsize, node_color='#ff0000', width=0.0, node_shape="s", edgecolors="none");
+		# # Holes 
+		# nx.draw_networkx(self.G_hole, p_hole, with_labels=labels, node_size=nsize, node_color='#663300', width=0.0, node_shape="s", edgecolors="none");
 
-		# Motion primitives
-		# nx.draw_networkx(self.GM_walk,m_walk,with_labels=labels,node_size=nsize, node_color='#ff6600',	width=0.0);
-		# nx.draw_networkx(self.GM_wall,m_wall,with_labels=labels,node_size=nsize, node_color='#00ccff',	width=0.0);
-		# nx.draw_networkx(self.GM_chim,m_chim,with_labels=labels,node_size=nsize, node_color='#66ff00',	width=0.0);
+		
 
 		# Feasible path - single point
 		if (gpath is not None):
@@ -613,7 +611,7 @@ class GridMap:
 			if (type(gpath) == list):
 				gpath = nx.path_graph(gpath)
 		
-			nx.draw_networkx(gpath, p_path, with_labels=labels, node_size=10, node_color='#ff33ff', edge_color='#ff33ff', alpha=1.0, width=1.0);
+			nx.draw_networkx(gpath, p_path, with_labels=labels, node_size=25, node_color='#ff33ff', edge_color='#ff33ff', alpha=1.0, width=3.0, edgecolors="none");
 
 		# else:
 		# 	# Feasible path - single point
@@ -637,6 +635,26 @@ class GridMap:
 		plt.tight_layout()
 		plt.show() 
 		# fig_manager.resize(*fig_manager.window.maxsize())
+
+	def graph_primitive(self, GM_walk, GM_wall, GM_chim):
+
+		m_walk = dict(zip(GM_walk, GM_walk))
+		m_wall = dict(zip(GM_wall, GM_wall))
+		m_chim = dict(zip(GM_chim, GM_chim))
+		
+		nsize  = 50	# size of nodes
+		labels = False 	# label on nodes
+		print GM_walk
+		# Motion primitives
+		nx.draw_networkx(GM_walk, m_walk, with_labels=labels, node_size=nsize, node_color='#ff6600',	width=0.0, edgecolors="none");
+		nx.draw_networkx(GM_wall, m_wall, with_labels=labels, node_size=nsize, node_color='#00ccff',	width=0.0, edgecolors="none");
+		nx.draw_networkx(GM_chim, m_chim, with_labels=labels, node_size=nsize, node_color='#66ff00',	width=0.0, edgecolors="none");
+
+		plt.grid('on');		 plt.grid(which='major', linestyle=':', linewidth='0.5', color='black')
+		plt.xlabel('x, [1]')
+		plt.ylabel('y, [1]')
+		plt.tight_layout()
+		plt.show() 
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
