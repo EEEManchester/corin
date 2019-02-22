@@ -172,9 +172,10 @@ class RobotState:
 			stack_base_X_world.append(self.Leg[j].XHc.world_base_X_foot[:3,3])
 		
 		# compute Longitudinal Stability Margin
-		sm = self.SM.LSM(stack_base_X_world, self.Gait.cs)
+		# sm = self.SM.LSM(stack_base_X_world, self.Gait.cs)
+		sm = self.SM.point_in_convex(np.zeros(3), stack_base_X_world, self.Gait.cs)
 		try:
-			if (sm[0]<=SM_MIN or sm[1]<=SM_MIN):
+			if not sm[0]:
 				print 'Stability Violated! ', sm
 				print stack_base_X_world
 				self.invalid = True

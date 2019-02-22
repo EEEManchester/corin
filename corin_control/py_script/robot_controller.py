@@ -220,7 +220,7 @@ class CorinManager:
 
 		self.Visualizer.publish_robot(self.Robot.P6d.world_X_base)
 
-		self.sm_pub_.publish(Float64(self.Robot.SM.sm.min()))
+		self.sm_pub_.publish(Float64(self.Robot.SM.min))
 		## Publish setpoints to logging topic
 		if (q_log is not None):
 			self.setpoint_pub_.publish(q_log)

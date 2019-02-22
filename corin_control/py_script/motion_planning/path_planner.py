@@ -737,14 +737,15 @@ class PathPlanner:
 			yy = np.sqrt((L2**2 - hy**2)) 				# world horizontal distance from femur to foot
 			by = np.cos(v3wp[0])*(COXA_Y + L1) 				# world horizontal distance from base to femur 
 			sy = by + yy									# y_base_X_foot - leg frame
-			py = sy*np.sin(np.deg2rad(ROT_BASE_X_LEG[j]+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
-			# if self.W_GND:
-			# 	py = sy*np.sin(np.deg2rad(ROT_BASE_X_LEG[j]+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
-			# else:
-			# 	if (j>=3):
-			# 		py = sy*np.sin(np.deg2rad(-90.0+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
-			# 	else:
-			# 		py = sy*np.sin(np.deg2rad(90.0+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
+			# py = sy*np.sin(np.deg2rad(ROT_BASE_X_LEG[j]+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
+			if self.W_GND:
+				py = sy*np.sin(np.deg2rad(ROT_BASE_X_LEG[j]+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
+			else:
+				if (j>=3):
+					py = sy*np.sin(np.deg2rad(-90.0+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
+				else:
+					py = sy*np.sin(np.deg2rad(90.0+LEG_OFFSET[j])) 	# y_base_X_foot - world frame
+
 			# Create temp array, which is the new base to foot position, wrt world frame
 			# The x-component uses the base frame NRP so that it remains the same
 
@@ -871,40 +872,42 @@ class PathPlanner:
 							world_q2_X_foot = self.Robot.Leg[j].XHd.world_base_X_foot[:3,3] - world_base_X_q2[:3,3]
 							mag = np.sqrt(world_q2_X_foot[1]**2 + world_q2_X_foot[2]**2)
 							
-							if (mag > (L2+L3-0.005)):
+							if (mag > (L2+L3-0.003)):
 								print 'leg length exceeded on ', j, ' at n=', i, mag
 								bound_exceed = True
 								leg_exceed = j
 								break
 
-							## 3) Check stability margin
-							# stack_base_X_world = []
-							# for jint in range(6):
-							# 	stack_base_X_world.append(self.Robot.Leg[jint].XHd.world_base_X_foot[:3,3])
-							# sm = self.Robot.SM.LSM(stack_base_X_world, self.Robot.Gait.cs)
-							# try:
-							# 	if (sm[0]<=SM_MIN or sm[1]<=SM_MIN):
-							# 		print 'Stability Violated!'
-							# 		raw_input('Stability Violated')
-							# 		self.invalid = True
-							# 	else:
-							# 		self.invalid = False
-							# except Exception, e:
-							# 	print 'Error: ', e
-							# 	print 'Robot Stopping'
-							# 	self.invalid = True
-
-							# if self.Robot.invalid:
-							# 	print 'Stability margin exceeded on ', j, ' at n=', i
-							# 	bound_exceed = True
-							# 	leg_exceed = j
-							# 	break
+							
 
 							## Check if any constraints violated
 							if (bound_exceed == True):
 								print 'bound exceed on ', j, ' at n=', i
 								leg_exceed = j
 								break
+
+					## 3) Check stability margin
+					stack_base_X_world = []
+					for jint in range(6):
+						stack_base_X_world.append(self.Robot.Leg[jint].XHd.world_base_X_foot[:3,3])
+					sm = self.Robot.SM.point_in_convex(np.zeros(3), stack_base_X_world, self.Robot.Gait.cs)
+					try:
+						if not sm[0]:
+							print 'Stability Violated! ', sm
+							print stack_base_X_world
+							self.invalid = True
+						else:
+							self.invalid = False
+					except Exception, e:
+						print 'Error: ', e
+						print 'Robot Stopping'
+						self.invalid = True
+
+					if self.Robot.invalid:
+						print 'Stability margin exceeded on ', j, ' at n=', i
+						bound_exceed = True
+						leg_exceed = j
+						break
 
 					if (bound_exceed is True):
 						if (i == break_n):

@@ -19,7 +19,9 @@ def shortest_distance(p1, p2):
 class StabilityMargin():
 	def __init__(self):
 		self.sm = np.zeros(2) 	# current stability margin
-
+		self.valid = True
+		self.min = 0.0
+		
 	def support_leg_identification(self, leg_phase):
 		""" Identifies front and rear legs in support phase """ 
 		p_state = []
@@ -117,11 +119,11 @@ class StabilityMargin():
 		
 		self.min = min(darr) if self.valid else -min(darr)
 		
-		plt.plot(vertices[:,0], vertices[:,1], 'o')
-		plt.plot(p[0], p[1], '*')
-		for simplex in hull.simplices:
-			plt.plot(vertices[simplex, 0], vertices[simplex, 1], 'k-')
-		plt.show()
+		# plt.plot(vertices[:,0], vertices[:,1], 'o')
+		# plt.plot(p[0], p[1], '*')
+		# for simplex in hull.simplices:
+		# 	plt.plot(vertices[simplex, 0], vertices[simplex, 1], 'k-')
+		# plt.show()
 
 		return self.valid, self.min #de_hull.find_simplex(p[0:2])>=0
 
@@ -132,19 +134,19 @@ class StabilityMargin():
 ## 												TESTING 											##
 ## ================================================================================================ ##
 
-BASE_X_LF_FOOT = np.array([0., 2., 0.1])
-BASE_X_LM_FOOT = np.array([0., 2., 0.1])
-BASE_X_LR_FOOT = np.array([-1., 2., 0.1])
-BASE_X_RF_FOOT = np.array([-0.1,-2., 0.1])
-BASE_X_RM_FOOT = np.array([0.,-2., 0.1])
-BASE_X_RR_FOOT = np.array([-0.5,-2., 0.1])
+BASE_X_LF_FOOT = np.array([ 0.05,  2., 0.1])
+BASE_X_LM_FOOT = np.array([ 0.0,  2., 0.1])
+BASE_X_LR_FOOT = np.array([-0.1,  2., 0.1])
+BASE_X_RF_FOOT = np.array([ 0.1, -2., 0.1])
+BASE_X_RM_FOOT = np.array([-0.1,  -2., 0.1])
+BASE_X_RR_FOOT = np.array([-0.1, -2., 0.1])
 
 Legs = [BASE_X_LF_FOOT, BASE_X_LM_FOOT, BASE_X_LR_FOOT,
 		BASE_X_RF_FOOT, BASE_X_RM_FOOT, BASE_X_RR_FOOT]
 
-leg_phase = [0,0,0,0,0,0]
+leg_phase = [0,0,0,1,0,0]
 p = np.zeros(3)
 
 SM = StabilityMargin()
-print SM.LSM(Legs, leg_phase)
-print SM.point_in_convex(p, Legs, leg_phase)
+# print SM.LSM(Legs, leg_phase)
+# print SM.point_in_convex(p, Legs, leg_phase)
