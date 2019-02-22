@@ -20,6 +20,7 @@ if __name__ == "__main__":
 
 	## Create map and plan path
 	GridPlanner = GridMap('wall_hole_demo')
+	# GridPlanner = GridMap('wall_transition')
 	
 	## Convert to ROS point cloud and visualise in RVIZ
 	map_arr   = point_cloud_array_mapping(GridPlanner.graph_to_nparray())

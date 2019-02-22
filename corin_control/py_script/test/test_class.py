@@ -5,7 +5,7 @@ sys.path.insert(0, '/home/wilson/catkin_ws/src/corin/corin_control/py_script/lib
 sys.dont_write_bytecode = True
 
 import numpy as np
-from matrix_transforms import *
+# from matrix_transforms import *
 from enum import Enum 
 
 
@@ -108,7 +108,12 @@ if __name__ == "__main__":
 		cy[i] = test[i][1] 
 		cz[i] = test[i][2] 
 	
-	a = np.eye(3)
-	print a
-	a[1,1] = 5
-	print a
+
+	v3_dv = np.array([1., 0., 0.]) #(v3cp - v3cp_prev).flatten() 			# direction vector from previous to current CoB
+	snorm = np.array([0., -1., 0.])
+	v3_pv = v3_dv - (np.dot(v3_dv,snorm))*snorm 	# project direction vector onto plane
+	m1_dv = np.linalg.norm(v3_pv) 					# magnitude of direction vector
+
+	print v3_pv
+	print (np.dot(v3_dv,snorm))*snorm
+	print np.dot(v3_dv,snorm)

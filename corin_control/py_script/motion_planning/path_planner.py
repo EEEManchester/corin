@@ -4,7 +4,7 @@
 """ 
 
 import sys; sys.dont_write_bytecode = True
-sys.path.insert(0, '/home/wilson/catkin_ws/src/corin/corin_control/py_script')
+sys.path.insert(0, '/home/wei/catkin_ws/src/corin/corin_control/py_script')
 from library import *			# library modules to include 
 from grid_map import *
 
@@ -873,7 +873,7 @@ class PathPlanner:
 							mag = np.sqrt(world_q2_X_foot[1]**2 + world_q2_X_foot[2]**2)
 							
 							if (mag > (L2+L3-0.003)):
-								print 'leg length exceeded on ', j, ' at n=', i, mag
+								# print 'leg length exceeded on ', j, ' at n=', i, mag
 								bound_exceed = True
 								leg_exceed = j
 								break
@@ -882,7 +882,7 @@ class PathPlanner:
 
 							## Check if any constraints violated
 							if (bound_exceed == True):
-								print 'bound exceed on ', j, ' at n=', i
+								# print 'bound exceed on ', j, ' at n=', i
 								leg_exceed = j
 								break
 
@@ -934,7 +934,7 @@ class PathPlanner:
 			world_X_base.append(P6d_world_X_base.flatten())
 			gphase_intv.append(i)
 			gait_phase.append(self.Robot.Gait.cs)
-			print self.Robot.Gait.cs
+			# print self.Robot.Gait.cs
 			# print 'qbp:: ', np.round(P6d_world_X_base.reshape(1,6),3), i
 
 			## Set foothold for legs in transfer phase
@@ -1025,14 +1025,15 @@ class PathPlanner:
 																	self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4])
 					self.Robot.Leg[j].XHd.world_X_foot = mX(self.Robot.XHd.world_X_base, 
 																self.Robot.Leg[j].XHd.base_X_AEP)
-					# if (j==5):
+					# if (j==4):
+					# 	print 'dvec: ', np.round(v3_uv,3) 
 					# 	print 'wbXn: ', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
 					# 	print 'wbXa: ', np.round(self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3],3)
 					# 	print 'bXa:  ', np.round(self.Robot.Leg[j].XHd.base_X_AEP[:3,3],3)
 					# 	print 'bXn:  ', np.round(self.Robot.Leg[j].XHd.base_X_NRP[:3,3],3)
 					# 	print 'wXb:  ', np.round(self.Robot.XHd.world_X_base[:3,3],3)
 					# 	# print mX(self.Robot.XHd.world_X_base, self.Robot.Leg[j].XHd.base_X_AEP)
-					# 	print 'wXf:  ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
+						# print 'wXf:  ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
 
 					## Get cell height in (x,y) location of world_X_foot
 					cell_h = np.array([0., 0., self.GridMap.get_cell('height', self.Robot.Leg[j].XHd.world_X_foot[:3,3], j)])
@@ -1592,7 +1593,7 @@ class PathPlanner:
 				path_01 = self.routine_motion(sp, sp,'reset_stance')
 				motion_plan.append(self.foothold_planner(path_01))
 				self.T_GND_X_CHIM = self.W_CHIM = True
-				self.Robot.Gait.set_gait_type(4)
+				self.Robot.Gait.set_gait_type(1)
 
 			elif (m[0]==1 and m[1]==0):
 				## Chimney to Walk ##
@@ -1762,8 +1763,8 @@ class PathPlanner:
 		sum_footholds = 0
 		for j in range(0,6):
 			sum_footholds += len(motion_plan.f_world_X_foot[j].xp)
-		print 'no. footholds: ', sum_footholds
-		print 'time: ', motion_plan.qb.X.t[-1]
+		# print 'no. footholds: ', sum_footholds
+		# print 'time: ', motion_plan.qb.X.t[-1]
 		
 		# print len(path.X.t)
 		# Plot.plot_2d(path.X.t,path.X.xp)

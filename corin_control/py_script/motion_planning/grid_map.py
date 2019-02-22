@@ -596,14 +596,17 @@ class GridMap:
 		nsize  = 50	# size of nodes
 		labels = False 	# label on nodes
 
-		# Map
-		# ax = nx.draw_networkx(self.Map, p_map, with_labels=labels, node_size=nsize, node_color='0.9', width=0.0, alpha=1.0, node_shape="s", edgecolors="none");
-		# # Wall
-		# nx.draw_networkx(self.G_wall, p_wall, with_labels=labels, node_size=nsize, node_color='#ff0000', width=0.0, node_shape="s", edgecolors="none");
-		# # Holes 
-		# nx.draw_networkx(self.G_hole, p_hole, with_labels=labels, node_size=nsize, node_color='#663300', width=0.0, node_shape="s", edgecolors="none");
+		# Set figure size
+		plt.rcParams['figure.figsize'] = (12.0, 4.5)
+		plt.rcParams['font.family'] = ['cmr10']
+		plt.rcParams['font.size'] = 20
 
-		
+		# Map
+		ax = nx.draw_networkx(self.Map, p_map, with_labels=labels, node_size=nsize, node_color='0.9', width=0.0, alpha=1.0, node_shape="s", edgecolors="none");
+		# Wall
+		nx.draw_networkx(self.G_wall, p_wall, with_labels=labels, node_size=nsize, node_color='#ff0000', width=0.0, node_shape="s", edgecolors="none");
+		# Holes 
+		nx.draw_networkx(self.G_hole, p_hole, with_labels=labels, node_size=nsize, node_color='#663300', width=0.0, node_shape="s", edgecolors="none");
 
 		# Feasible path - single point
 		if (gpath is not None):
@@ -625,15 +628,26 @@ class GridMap:
 		# minor_ticks = np.arange(0, 9+1, 0.5)
 		# plt.xticks(minor_ticks)
 
-		plt.xlabel('x, [1]')
-		plt.ylabel('y, [1]')
+		xaxis_label = range(0,90,10)
+		plt.xticks(xaxis_label, [x*0.03 for x in xaxis_label])
+		yaxis_label = range(0,30,5)
+		plt.yticks(yaxis_label, [x*0.03 for x in yaxis_label])
+
+		plt.xlabel('x, m')
+		plt.ylabel('y, m')
+
+		axes = plt.gca()
+		axes.set_xlim([-1,85])
+		axes.set_ylim([-1,27])
 
 		# maximise plot window
 		# print plt.get_backend()
 		# mng = plt.get_current_fig_manager()
 		# mng.resize(*mng.window.maxsize())
+
 		plt.tight_layout()
 		plt.show() 
+		
 		# fig_manager.resize(*fig_manager.window.maxsize())
 
 	def graph_primitive(self, GM_walk, GM_wall, GM_chim):
@@ -644,11 +658,19 @@ class GridMap:
 		
 		nsize  = 50	# size of nodes
 		labels = False 	# label on nodes
-		print GM_walk
+		
+		plt.rcParams['figure.figsize'] = (12.0, 4.5)
+		plt.rcParams['font.family'] = ['cmr10']
+		plt.rcParams['font.size'] = 20
+
 		# Motion primitives
 		nx.draw_networkx(GM_walk, m_walk, with_labels=labels, node_size=nsize, node_color='#ff6600',	width=0.0, edgecolors="none");
 		nx.draw_networkx(GM_wall, m_wall, with_labels=labels, node_size=nsize, node_color='#00ccff',	width=0.0, edgecolors="none");
 		nx.draw_networkx(GM_chim, m_chim, with_labels=labels, node_size=nsize, node_color='#66ff00',	width=0.0, edgecolors="none");
+
+		axes = plt.gca()
+		axes.set_xlim([-1,85])
+		axes.set_ylim([-1,27])
 
 		plt.grid('on');		 plt.grid(which='major', linestyle=':', linewidth='0.5', color='black')
 		plt.xlabel('x, [1]')
@@ -658,9 +680,7 @@ class GridMap:
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-# gmap = GridMap('hole_demo')
-# sp = np.array([0.6015, 0.1391, -0.])
-
+# gmap = GridMap('wall_hole_demo')
 # gmap.graph_representation()
 
 # [(20, 5), (20, 6), (21, 6), (21, 5), (20, 5), (19, 5), (19, 6), (19, 7), (20, 7), (21, 7), (21, 6), (21, 5), (20, 5), (19, 5), (20, 5), (21, 5)]
