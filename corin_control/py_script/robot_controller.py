@@ -47,7 +47,7 @@ class CorinManager:
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
 		self.interface = "rviz"		# interface to control: gazebo, rviz or robotis hardware
-		self.control_rate = "normal" 	# run controller in various mode: 1) normal, 2) fast
+		self.control_rate = "fast" 	# run controller in various mode: 1) normal, 2) fast
 		self.control_loop = "open" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
@@ -669,7 +669,7 @@ class CorinManager:
 				self.Robot.support_mode = False
 
 				# ps = (10,13); pf = (13,13)	# Short straight Line
-				# ps = (10,14); pf = (10,20)	# G2W - Left side up
+				# ps = (10,13); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
 				# ps = (10,13); pf = (41,13)	# Wall up and down again
 				ps = (10,13); pf = (75,13) 	# full demo

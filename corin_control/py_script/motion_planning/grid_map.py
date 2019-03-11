@@ -582,7 +582,7 @@ class GridMap:
 
 		return point_list
 
-	def graph_representation(self, gpath=None):
+	def graph_representation(self, gpath=None, mpath=None):
 		""" Plots graph functions """
 
 		# dictionary of node names->positions
@@ -608,6 +608,8 @@ class GridMap:
 		# Holes 
 		nx.draw_networkx(self.G_hole, p_hole, with_labels=labels, node_size=nsize, node_color='#663300', width=0.0, node_shape="s", edgecolors="none");
 
+		
+
 		# Feasible path - single point
 		if (gpath is not None):
 			p_path = dict(zip(gpath, gpath))
@@ -616,6 +618,14 @@ class GridMap:
 		
 			nx.draw_networkx(gpath, p_path, with_labels=labels, node_size=25, node_color='#ff33ff', edge_color='#ff33ff', alpha=1.0, width=3.0, edgecolors="none");
 
+		if (mpath is not None):
+			
+			p_path = dict(zip(mpath, mpath))
+			if (type(mpath) == list):
+				mpath = nx.path_graph(mpath)
+		
+			nx.draw_networkx(mpath, p_path, with_labels=labels, node_size=25, node_color='#0000ff', edge_color='#0000ff', alpha=1.0, width=3.0, edgecolors="none");
+			print mpath
 		# else:
 		# 	# Feasible path - single point
 		# 	# nx.draw_networkx(gpath,p_fin, with_labels=labels,node_size=20,node_color='#ff6600',edge_color='#ff6600',alpha=1.0,width=5.0);

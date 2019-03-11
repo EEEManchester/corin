@@ -198,6 +198,9 @@ class PathPlanner:
 
 		self.di_wall = 0. 	# distance from base to wall
 
+		self.ori_path = None
+		self.mod_path = []
+
 		self.__initialise_graph__()
 
 	def __initialise_graph__(self):
@@ -1503,6 +1506,9 @@ class PathPlanner:
 						
 						self.T_GND_X_WALL = self.W_GND = False
 
+						## TODO: AUTOMOATE THIS
+						self.mod_path += [(11,7),(11,8),(11,9),(11,10),(11,11)]
+
 					if (self.T_WALL_X_GND):
 						# qr = self.base_map.nodes[sp]['pose'][1]
 						print 'Interpolating transition ...', sp, ep
@@ -1523,7 +1529,10 @@ class PathPlanner:
 
 						self.W_WALL = self.T_WALL_X_GND = False
 						self.W_GND  = True
-						
+
+						## TODO: AUTOMATE THIS
+						self.mod_path += [(37,7),(37,8),(37,9),(37,10),(37,11)]
+
 			## ============================================================================ ##
 
 			## Check transition instances
@@ -1532,6 +1541,7 @@ class PathPlanner:
 				# First, plan path and foothold for ground walking
 				if (len(temp_path) > 1):
 					print 'Interpolating Wg prior to Ww...', temp_path[0], temp_path[-1]
+					self.mod_path += temp_path
 					path_01 = self.path_interpolation(temp_path)
 					plan_01 = self.foothold_planner(path_01)
 					motion_plan.append(plan_01)
@@ -1561,6 +1571,7 @@ class PathPlanner:
 							temp_path = map(lambda x: (x[0],temp_path[0][1]) , temp_path)
 						temp_path = list(OrderedDict.fromkeys(temp_path))
 						print 'new temp path ', temp_path
+						self.mod_path += temp_path
 						path_01 = self.path_interpolation(temp_path)
 						plan_01 = self.foothold_planner(path_01)
 						motion_plan.append(plan_01)
@@ -1577,6 +1588,7 @@ class PathPlanner:
 				# First, plan path and foothold for ground walking
 				if (len(temp_path) > 1):
 					print 'Interpolating Wg prior to Wc...', temp_path
+					self.mod_path += temp_path
 					path_01 = self.path_interpolation(temp_path)
 					plan_01 = self.foothold_planner(path_01)
 					motion_plan.append(plan_01)
@@ -1606,13 +1618,14 @@ class PathPlanner:
 				else:
 					# First, plan path and foothold for ground walking
 					if (len(temp_path) > 1):
-
+						self.mod_path += temp_path
 						print 'Interpolating Wc prior to Wg... ',
 						# Segmentise temp_path
 						for n in temp_path:
 							temp_path = map(lambda x: (x[0],temp_path[0][1]) , temp_path)
 						temp_path = list(OrderedDict.fromkeys(temp_path))
 						print temp_path
+						self.mod_path += temp_path
 						path_01 = self.path_interpolation(temp_path)
 						plan_01 = self.foothold_planner(path_01)
 						motion_plan.append(plan_01)
@@ -1672,6 +1685,9 @@ class PathPlanner:
 			print 'Transiton pt. 3: '
 			path_01 = self.transition_routine('Gnd_X_Wall', sp, ep)
 			motion_plan.append(self.foothold_planner(path_01))
+			
+			self.mod_path += temp_path
+
 
 		elif (self.T_WALL_X_GND):
 		 	print 'Final interpolation, Ww-g: '
@@ -1715,6 +1731,7 @@ class PathPlanner:
 
 		if (len(temp_path) > 1):
 			print 'Secondary Final interpolation, Wg: ', temp_path
+			self.mod_path += temp_path
 			path_01 = self.path_interpolation(temp_path)
 			plan_01 = self.foothold_planner(path_01)
 			motion_plan.append(plan_01)
@@ -1777,6 +1794,12 @@ class PathPlanner:
 		# plt.grid('on');
 		# plt.show()
 		
+		self.mod_path += [(73, 13), (74, 13), (75, 13)]
+		opath = nx.path_graph(self.ori_path)
+		mpath = nx.path_graph(self.mod_path)
+		self.GridMap.graph_representation(opath, mpath)
+		# self.GridMap.graph_representation()
+
 		motion_plan.qb = path
 		return motion_plan
 
@@ -1792,7 +1815,7 @@ class PathPlanner:
 			end   = options.get("end")
 
 			list_gpath = self.find_base_path(start, end)
-
+			self.ori_path = list_gpath
 			if (list_gpath is not None):
 				print 'Path Found: ', list_gpath
 				# raw_input('continue')

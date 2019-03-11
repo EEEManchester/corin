@@ -114,6 +114,12 @@ if __name__ == "__main__":
 	v3_pv = v3_dv - (np.dot(v3_dv,snorm))*snorm 	# project direction vector onto plane
 	m1_dv = np.linalg.norm(v3_pv) 					# magnitude of direction vector
 
-	print v3_pv
-	print (np.dot(v3_dv,snorm))*snorm
-	print np.dot(v3_dv,snorm)
+	# print v3_pv
+	# print (np.dot(v3_dv,snorm))*snorm
+	# print np.dot(v3_dv,snorm)
+
+	a = (11,12)
+	b = (11,6)
+
+	d = b[1] - a[1]
+	
