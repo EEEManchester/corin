@@ -139,7 +139,7 @@ class CorinManager:
 
 		## Set map to that available in service
 		try:
-			self.GridMap.set_map(rospy.get_param('GridMap/map_name'))
+			self.GridMap.set_map(rospy.get_param('/GridMap/map_name'))
 		except Exception, e:
 			print 'Grid Map has not been set'
 
@@ -416,7 +416,7 @@ class CorinManager:
 
 			## Data mapping - for convenience
 			x_cob, w_cob, mode, motion_prim = data
-			mode = 4
+			mode = 4 	# HARDCODED TO IMPORT MOTION PLAN
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
 				print 'Going to standup'
@@ -516,8 +516,9 @@ class CorinManager:
 				rospy.wait_for_service(ROBOT_NS + '/import_motion_plan', 1.0)
 				try:
 					path_planner = rospy.ServiceProxy(ROBOT_NS + '/import_motion_plan', PlanPath)
-					motion_plan  = planpath_to_motionplan( path_planner(Pose(), Pose(), String('data.yaml')) )
+					motion_plan  = planpath_to_motionplan( path_planner(Pose(), Pose(), String('wall_transition.yaml')) )
 					print 'Motion plan service imported!'
+					self.GridMap.set_map(rospy.get_param('/GridMap/map_name'))
 				except:
 					print 'Motion plan service call error!'
 				# motion_plan = planpath_to_motionplan( path_planner(Pose(), Pose()) )

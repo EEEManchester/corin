@@ -27,6 +27,8 @@ def seq(start, stop, step=1):
 class YamlImport:
 	def __init__(self):
 		self.motion_plan = MotionPlan()
+		self.mapname = None
+		self.cell_res = 0.0
 
 	def get_MotionPlan(self, filename):
 		""" Imports motion plan from yaml file """
@@ -34,6 +36,12 @@ class YamlImport:
 		## Reads from yaml file
 		with open(filename, 'r') as stream:
 			data = yaml.load(stream)
+
+		## Mapname
+		self.mapname  = data['map']
+		self.cell_res = data['cell_resolution'] 
+		rospy.set_param('GridMap/map_name', self.mapname)
+		rospy.set_param('GridMap/resolution', self.cell_res)
 
 		## Start & End
 		start = data['start']

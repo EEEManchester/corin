@@ -178,7 +178,8 @@ class GridMapRos:
 		bXn = footholds_to_list(self.Planner.motion_plan.f_world_base_X_NRP)
 		cob = array_list_to_list(self.Planner.motion_plan.qbp)
 
-		data = dict(map=mapname, 
+		data = dict(map=mapname,
+					cell_resolution=self.GridMap.resolution,
 					start = dict(x = self.Planner.start[0]*RosGridMap.GridMap.resolution,
 								 y = self.Planner.start[1]*RosGridMap.GridMap.resolution,
 								 z = self.Planner.base_map.nodes[self.Planner.start]['pose'][0]),
@@ -259,7 +260,7 @@ if __name__ == "__main__":
 	# pf = (15,13)
 	call_planner(ps, pf)
 
-	# RosGridMap.save_to_yaml()
+	RosGridMap.save_to_yaml()
 
 	while (not rospy.is_shutdown()):
 		RosGridMap.loop_cycle()

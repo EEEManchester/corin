@@ -1231,8 +1231,8 @@ class PathPlanner:
 	def routine_motion(self, p1, p2, routine=None, tn=0.1):
 		""" Routine for moving pose and leg to desired stances """
 
-		Q_BASE = 4.5 	# base angle to rotate for wall transition
-		H_BASE = 0.116	# base height to move to
+		Q_BASE = 20 	# base angle to rotate for wall transition
+		H_BASE = 0.15	# base height to move to
 		
 		PathGenerator = path_generator.PathGenerator()
 
