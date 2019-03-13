@@ -58,8 +58,8 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "rviz"		# interface to control: gazebo, rviz or robotis hardware
-		self.control_rate = "fast" 	# run controller in various mode: 1) normal, 2) fast
+		self.interface = "gazebo"		# interface to control: gazebo, rviz or robotis hardware
+		self.control_rate = "normal" 	# run controller in various mode: 1) normal, 2) fast
 		self.control_loop = "open" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
@@ -221,8 +221,8 @@ class CorinManager:
 						self.joint_pub_[n].publish(qp)
 					elif (self.control_rate is "fast"):
 						pass
-				self.rstate_cs_pub_.publish(array_to_pose(self.Robot.P6c.world_X_base))
-				self.rstate_ds_pub_.publish(array_to_pose(self.Robot.P6d.world_X_base))
+				# self.rstate_cs_pub_.publish(array_to_pose(self.Robot.P6c.world_X_base))
+				# self.rstate_ds_pub_.publish(array_to_pose(self.Robot.P6d.world_X_base))
 
 			elif (self.interface == 'rviz'):
 				dqp = JointState()

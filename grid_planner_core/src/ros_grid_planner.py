@@ -258,9 +258,9 @@ if __name__ == "__main__":
 	ps = (10,13); 
 	pf = (10,20)
 	# pf = (15,13)
-	call_planner(ps, pf)
+	# call_planner(ps, pf)
 
-	RosGridMap.save_to_yaml()
+	# RosGridMap.save_to_yaml()
 
 	while (not rospy.is_shutdown()):
 		RosGridMap.loop_cycle()
