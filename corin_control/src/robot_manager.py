@@ -51,14 +51,14 @@ class CorinManager:
 		rospy.init_node('CorinController') 		# Initialises node
 		self.rate 	  = rospy.Rate(CTR_RATE)	# Controller rate
 
-		self.Action	= control_interface.ControlInterface()	# control action class	
+		self.Action	= control_interface.ControlInterface()	# control action class
 		self.Robot 	= robot_class.RobotState() 				# robot class
 		self.GridMap   = GridMap()
 		self.ForceDist = QPForceDistribution()
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "gazebo"		# interface to control: gazebo, rviz or robotis hardware
+		self.interface = "robotis"		# interface to control: gazebo, rviz or robotis hardware
 		self.control_rate = "normal" 	# run controller in various mode: 1) normal, 2) fast
 		self.control_loop = "open" 	# run controller in open or closed loop
 
@@ -87,7 +87,7 @@ class CorinManager:
 	def ui_callback(self, msg):
 		""" user interface control state """
 		self.ui_state = msg.data.lower()
-		
+
 	def robot_state_callback(self, msg):
 		""" robot state from gazebo """
 
@@ -109,7 +109,7 @@ class CorinManager:
 		self.__initialise_services__()
 
 		## initialises robot transform
-		self.Visualizer.robot_broadcaster.sendTransform( (0.,0.,BODY_HEIGHT), (0.,0.,0.,1.), 
+		self.Visualizer.robot_broadcaster.sendTransform( (0.,0.,BODY_HEIGHT), (0.,0.,0.,1.),
 													rospy.Time.now(), "trunk", "world");
 		## setup RVIZ JointState topic
 		if (self.interface == 'rviz'):
@@ -151,7 +151,7 @@ class CorinManager:
 		self.stability_pub_ = rospy.Publisher('/corin/stability_margin', Float64, queue_size=1) # Stability margin publisher
 
 		## Hardware Specific Publishers ##
-		if (ROBOT_NS == 'corin' and (self.interface == 'gazebo' or 
+		if (ROBOT_NS == 'corin' and (self.interface == 'gazebo' or
 									 self.interface == 'rviz' or
 									 self.interface == 'robotis')):
 			## Publish to Gazebo
@@ -199,12 +199,12 @@ class CorinManager:
 
 		self.grid_serv_ = ServiceHandler('/GridMap/query_map', PlanPath)
 		self.rbim_serv_ = ServiceHandler('/corin/get_rigid_body_matrix', RigidBody)
-		
+
 	def publish_topics(self, q, qlog=None, q_trac=None):
 		""" Publish joint position to joint controller topics and
 			setpoint topic (for logging all setpoint states) 		"""
-		""" Input: 	1) q -> Joint setpoints (position, velocity, 
-							acceleration) 	
+		""" Input: 	1) q -> Joint setpoints (position, velocity,
+							acceleration)
 					2) qlog -> JointState msg with base and
 								joint setpoints for logging			"""
 
@@ -231,7 +231,7 @@ class CorinManager:
 					dqp.name.append(str(JOINT_NAME[n])) 	# joint name
 					dqp.position.append(q.xp[n])			# joint angle
 				self.joint_pub_.publish(dqp)
-				
+
 			elif (self.interface == 'robotis'):
 				dqp = SyncWriteMultiFloat()
 				dqp.item_name 	= str("goal_position") 	# register to start first write
@@ -245,7 +245,7 @@ class CorinManager:
 
 		self.Visualizer.publish_robot_pose(self.Robot.P6d.world_X_base)
 		self.stability_pub_.publish(self.Robot.SM.min)
-		
+
 		## Publish setpoints to logging topic
 		if (qlog is not None):
 			self.log_pub_.publish(qlog)
@@ -263,9 +263,9 @@ class CorinManager:
 			print 'Resetting stance....'
 			setpoints = Routine.air_suspend_legs()
 			self.on_start = True if self.leg_level_controller(setpoints) else False
-			
+
 		rospy.sleep(0.5)
-		
+
 		print 'Moving to nominal stance....'
 		if (stand_state):
 			# Resets leg in standup position to nominal stance
@@ -280,7 +280,7 @@ class CorinManager:
 
 	def complete_transfer_trajectory(self):
 		""" Executes remaining leg trajectories in transfer phase """
-		""" Checks remaining points on trajectory and finish off  """ 
+		""" Checks remaining points on trajectory and finish off  """
 
 		## Define Variables ##
 		sc_new = 0	# current spline count for transfer phase legs
@@ -303,11 +303,11 @@ class CorinManager:
 							self.Robot.Leg[j].update_from_spline()
 						except:
 							self.Robot.Leg[j].feedback_state = 2
-							
+
 				## Task to joint space
 				qd, err_list = self.Robot.task_X_joint()
 				self.publish_topics(qd)
-				
+
 			return True
 		except Exception, e:
 			print "Error: ", e
@@ -319,7 +319,7 @@ class CorinManager:
 		""" Generates and execute trajectory by specified desired leg position 	"""
 		""" Input: 	setpoints -> tuple of 4 items:-
 							- nleg -> list of corresponding legs to move
-							- leg_stance -> list of 3D positions for each leg 
+							- leg_stance -> list of 3D positions for each leg
 											expressed wrt leg frame
 							- leg_phase -> type of trajectory
 							- period -> timing of leg execution
@@ -340,10 +340,10 @@ class CorinManager:
 		except TypeError:
 			td = te = period
 			period = [[0.,2.]]*6 	# change period from int to list
-		
+
 		# Number of points based on duration of trajectory
 		npc = int(te/CTR_INTV+1)
-		
+
 		## Generate spline for each leg
 		for i in range(len(nleg)):
 			j = nleg[i]
@@ -355,7 +355,7 @@ class CorinManager:
 			if (svalid is False):
 				self.Robot.invalid = True
 				raise Exception, "Trajectory Invalid"
-		
+
 		## Unstack trajectory and execute
 		for p in range(0, npc-1):
 			ti = p*CTR_INTV 	# current time in seconds
@@ -383,7 +383,7 @@ class CorinManager:
 
 		## Define Variables ##
 		PathGenerator = Pathgenerator.PathGenerator() 	# path generator for robot's base
-		
+
 		# Set all legs to support mode for bodyposing, prevent AEP from being set
 		if (self.Robot.support_mode == True):
 			self.Robot.Gait.support_mode()
@@ -408,10 +408,10 @@ class CorinManager:
 
 		## update robot state prior to starting action
 		self.Robot.update_state(control_mode=self.control_rate)
-		
+
 		## check action to take
 		data = self.Action.action_to_take()
-		
+
 		if (data is not None):
 			self.Visualizer.clear_visualisation()
 
@@ -430,7 +430,7 @@ class CorinManager:
 				self.Robot.support_mode = True
 				self.Robot.suspend = False 		# clear suspension flag
 				self.path_tracking(x_cob, w_cob)
-				
+
 				self.Robot.suspend = prev_suspend
 				## Move back to nominal position
 				# self.default_pose()
@@ -466,7 +466,7 @@ class CorinManager:
 				# ps = (10,13); pf = (10,20)	# G2W - Left side up
 				# ps = (10,13); pf = (10,6)	# G2W - Right side up
 				# ps = (10,13); pf = (25,21)	# G2W - Left side up
-				# ps = (10,13); pf = (40,13)	# full wall or chimney 
+				# ps = (10,13); pf = (40,13)	# full wall or chimney
 				# ps = (10,13); pf = (20,13) 	# wall and chimney demo
 				# ps = (10,15); pf = (150,10) 	# IROS demo
 				# ps = (10,15); pf = (17,12) 	# IROS - past chimney
@@ -484,7 +484,7 @@ class CorinManager:
 				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 
 				self.Robot.init_robot_stance()
-	
+
 				if (self.grid_serv_.available):
 					if (self.GridMap.get_index_exists(ps) and self.GridMap.get_index_exists(pf)):
 						start = Pose()
@@ -494,7 +494,7 @@ class CorinManager:
 						goal.position.x = pf[0]*self.GridMap.resolution
 						goal.position.y = pf[1]*self.GridMap.resolution
 						print start.position.x, start.position.y
-						try:	
+						try:
 							print 'Requesting Planning service'
 							path_generat = self.grid_serv_.call(start, goal, String())
 							plan_exist = True
@@ -525,15 +525,15 @@ class CorinManager:
 				# motion_plan = planpath_to_motionplan( path_planner(Pose(), Pose()) )
 				# motion_plan = planpath_to_motionplan(plan_generat)
 				# Plot.plot_2d(motion_plan.qb.X.t, motion_plan.qb.X.xp)
-				
-				self.Robot.P6c.world_X_base = np.array([motion_plan.qb.X.xp[0], 
+
+				self.Robot.P6c.world_X_base = np.array([motion_plan.qb.X.xp[0],
 														motion_plan.qb.W.xp[0]]).reshape(6,1)
 				self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
 				self.Robot.P6c.world_X_base_offset = self.Robot.P6c.world_X_base.copy()
-				
+
 				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 				self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
-				
+
 				# Update to new current foot position
 				leg_stance = [None]*6
 				for j in range(0,6):
@@ -544,7 +544,7 @@ class CorinManager:
 					self.Robot.Leg[j].XHc.base_X_foot = self.Robot.Leg[j].XHd.base_X_foot.copy()
 					self.Robot.Leg[j].XHc.coxa_X_foot = self.Robot.Leg[j].XHd.coxa_X_foot.copy()
 					leg_stance[j] = self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3]
-				
+
 				self.Robot.stance_offset = (40, -40)
 				self.Robot._initialise(leg_stance)
 				self.Robot.qc.position = self.Robot.qd
@@ -582,7 +582,7 @@ class CorinManager:
 		# 	snorm = np.array([1.,0.,0.])
 		# else:
 		# 	print j, p
-		
+
 		## surface normal for concave wall
 		# if (j < 3):
 		# 	snorm = np.array([0.,0.,1.])

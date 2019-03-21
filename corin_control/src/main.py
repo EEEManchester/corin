@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" Main file for Corin """ 
+""" Main file for Corin """
 __version__ = '1.0'
 __author__  = 'Wei Cheah'
 
@@ -11,8 +11,8 @@ if __name__ == "__main__":
 
 	manager = Control_Framework.RobotController(False)
 	rospy.loginfo('Robot Ready!')
-	
-	# rospy.set_param('/corin/bodypose', True)
+
+	rospy.set_param('/corin/bodypose', True)
 	# rospy.set_param('/corin/plan_path', True)
 
 	## WIP: The following does not work
@@ -21,8 +21,7 @@ if __name__ == "__main__":
 	# rospy.set_param('/corin/walk_right', True)
 	# rospy.set_param('/corin/walk_back', True)
 	# rospy.set_param('/corin/rotate', True)
-	
+
 	## Run continuously
 	# while not rospy.is_shutdown():
 	manager.action_interface()
-	
