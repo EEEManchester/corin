@@ -31,7 +31,7 @@ def air_suspend_legs():
 	leg_stance[4] = np.array([ fix_stance, 0, fix_height])
 	leg_stance[5] = np.array([ fix_stance*np.cos(TETA_R*np.pi/180), fix_stance*np.sin(-TETA_R*np.pi/180), fix_height ])
 
-	return (leg_sequen, leg_stance, leg_phase, 2.3)
+	return (leg_sequen, leg_stance, leg_phase, 2.0)
 
 def shuffle_legs(leg_stance):
 	""" routine to shuffle legs back to NRP """

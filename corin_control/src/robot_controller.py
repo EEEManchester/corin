@@ -178,11 +178,10 @@ class RobotController(CorinManager):
 					# Following two lines used for cornering
 					# sn1 = self.get_snorm(self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j) 	
 					# sn2 = self.get_snorm(self.Robot.Leg[j].XHd.world_X_foot[0:3,3], j)
-					if (j<3):
-						print j, np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
-						print j, np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],3)
-						print j, sn1, sn2
-
+					# if (j<3):
+					# 	print j, np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
+					# 	print j, np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],3)
+					# 	print j, sn1, sn2
 					
 					## Generate transfer spline
 					svalid = self.Robot.Leg[j].generate_spline('world', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)

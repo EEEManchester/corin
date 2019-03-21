@@ -128,7 +128,7 @@ class PathGenerator():
 
 		return Trajectory6D((x_out,w_out))
 
-	def old_interpolate_leg_path(self, sp, ep, snorm, snorm2, phase=1, reflex=False, ctime=2.0, type='parabolic'):
+	def interpolate_leg_path(self, sp, ep, snorm, snorm2, phase=1, reflex=False, ctime=2.0, type='parabolic'):
 		""" Generate via points for leg trajectory (Re^3) 				"""
 		""" Input: 	1) sp -> starting position (Re^3)
 					2) ep -> end position (Re^3)
@@ -192,7 +192,7 @@ class PathGenerator():
 
 		return cpx, tdiv
 
-	def interpolate_leg_path(self, sp, ep, sn1, sn2, phase=1, reflex=False, ctime=2.0, type='parabolic'):
+	def under_development_interpolate_leg_path(self, sp, ep, sn1, sn2, phase=1, reflex=False, ctime=2.0, type='parabolic'):
 		""" Generate via points for leg trajectory (Re^3) 				"""
 		""" Input: 	1) sp -> starting position (Re^3)
 					2) ep -> end position (Re^3)

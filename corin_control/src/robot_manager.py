@@ -263,15 +263,18 @@ class CorinManager:
 			print 'Resetting stance....'
 			setpoints = Routine.air_suspend_legs()
 			self.on_start = True if self.leg_level_controller(setpoints) else False
-
+			
 		rospy.sleep(0.5)
 		
 		print 'Moving to nominal stance....'
 		if (stand_state):
+			# Resets leg in standup position to nominal stance
 			setpoints = Routine.shuffle_legs(leg_stance)
 		else:
-			print 'moving here'
+			# Stands up from sit down position
+			leg_stance = self.Robot.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, self.Robot.stance_offset, 'flat')
 			setpoints = (range(0,6), leg_stance, [0]*6, 2)
+
 		self.leg_level_controller(setpoints)
 		rospy.set_param(ROBOT_NS + '/standing', True)
 
@@ -321,7 +324,7 @@ class CorinManager:
 							- leg_phase -> type of trajectory
 							- period -> timing of leg execution
 			Output: flag -> True: execution complete, False: error occured 		"""
-
+		print 'Leg level controller'
 		self.Robot.update_state(control_mode=self.control_rate) 		# get current state
 
 		## Define Variables ##
@@ -329,7 +332,6 @@ class CorinManager:
 		td = 0 		# duration of trajectory
 		tv = False 	# flag if period is an array
 		nleg, leg_stance, leg_phase, period = setpoints
-		print 'in here'
 		## Check if time intervals is used - set trajectory duration and end time
 		try:
 			len(period)
@@ -342,7 +344,6 @@ class CorinManager:
 		# Number of points based on duration of trajectory
 		npc = int(te/CTR_INTV+1)
 		
-		# try:
 		## Generate spline for each leg
 		for i in range(len(nleg)):
 			j = nleg[i]
@@ -354,9 +355,9 @@ class CorinManager:
 			if (svalid is False):
 				self.Robot.invalid = True
 				raise Exception, "Trajectory Invalid"
-
+		
 		## Unstack trajectory and execute
-		for p in range(0, npc):
+		for p in range(0, npc-1):
 			ti = p*CTR_INTV 	# current time in seconds
 			for i in range(len(nleg)):
 				j = nleg[i]
