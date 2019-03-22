@@ -85,17 +85,17 @@ WALL_WIDTH_NARROW = 0.3
 ## ================================================================ ##
 ##                      Controller parameters 	 					##
 ## ================================================================ ##
-CTR_RATE = 50 			# controller rate for robot, Hz
+CTR_RATE = 80 			# controller rate for robot, Hz
 CTR_INTV = 1./CTR_RATE 	# controller interval for robot, s
 
 ## ================================================================ ##
 ##                  	Stability Parameters 						##
-## ================================================================ ## 
+## ================================================================ ##
 SM_MIN = 0.0
 
 ## ================================================================ ##
 ##                  Error Compensation parameters 					##
-## ================================================================ ## 
+## ================================================================ ##
 QCOMPENSATION = 0.0#33
 
 ## ================================================================ ##
@@ -124,7 +124,7 @@ STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
 
 ## these gait parameters can be changed during runtime
 GAIT_TYPE 	 = 1 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
-GAIT_TPHASE	 = 2.0 	# default period per gait phase
+GAIT_TPHASE	 = 4.0 	# default period per gait phase
 STEP_HEIGHT  = 0.04	# default step height, z
 STEP_STROKE  = 0.1 	# default step stroke
 

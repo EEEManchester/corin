@@ -43,7 +43,7 @@ lf_q3_joint :   # MX-64
    homing_offset         : 0
    max_position_limit    : 3868   #  160 deg
    min_position_limit    : 228    # -160 deg
-   velocity_limit        : 150
+   velocity_limit        : 600
    goal_position         : 230   # 0-4095
    goal_current          : 1941   # 0-1941
    goal_velocity         : 50   # 0-1023
@@ -52,7 +52,7 @@ lf_q3_joint :   # MX-64
    position_d_gain       : 0      # 0-16383
    velocity_p_gain       : 50
    velocity_i_gain       : 0
-   profile_velocity      : 40
+   profile_velocity      : 150
    profile_acceleration  : 0
 
 lm_q1_joint :   # MX-64
@@ -100,7 +100,7 @@ lm_q3_joint :   # MX-64
    homing_offset         : 0
    max_position_limit    : 3868   #  160 deg
    min_position_limit    : 228    # -160 deg
-   velocity_limit        : 150
+   velocity_limit        : 600
    goal_position         : 230   # 0-4095
    goal_current          : 1941   # 0-1941
    goal_velocity         : 50   # 0-1023
@@ -109,7 +109,7 @@ lm_q3_joint :   # MX-64
    position_d_gain       : 0      # 0-16383
    velocity_p_gain       : 50
    velocity_i_gain       : 0
-   profile_velocity      : 40
+   profile_velocity      : 150
    profile_acceleration  : 0
 
 lr_q1_joint :   # MX-64
@@ -157,7 +157,7 @@ lr_q3_joint :   # MX-64
    homing_offset         : 0
    max_position_limit    : 3868   #  160 deg
    min_position_limit    : 228    # -160 deg
-   velocity_limit        : 150
+   velocity_limit        : 600
    goal_position         : 230   # 0-4095
    goal_current          : 1941   # 0-1941
    goal_velocity         : 50   # 0-1023
@@ -166,7 +166,7 @@ lr_q3_joint :   # MX-64
    position_d_gain       : 0      # 0-16383
    velocity_p_gain       : 50
    velocity_i_gain       : 0
-   profile_velocity      : 40
+   profile_velocity      : 150
    profile_acceleration  : 0
 
 rf_q1_joint :   # MX-64
@@ -214,7 +214,7 @@ rf_q3_joint :   # MX-64
    homing_offset         : 0
    max_position_limit    : 3868   #  160 deg
    min_position_limit    : 228    # -160 deg
-   velocity_limit        : 150
+   velocity_limit        : 600
    goal_position         : 230   # 0-4095
    goal_current          : 1941   # 0-1941
    goal_velocity         : 50   # 0-1023
@@ -223,7 +223,7 @@ rf_q3_joint :   # MX-64
    position_d_gain       : 0      # 0-16383
    velocity_p_gain       : 50
    velocity_i_gain       : 0
-   profile_velocity      : 40
+   profile_velocity      : 150
    profile_acceleration  : 0
 
 rm_q1_joint :   # MX-64
@@ -271,7 +271,7 @@ rm_q3_joint :   # MX-64
    homing_offset         : 0
    max_position_limit    : 3868   #  160 deg
    min_position_limit    : 228    # -160 deg
-   velocity_limit        : 150
+   velocity_limit        : 600
    goal_position         : 230   # 0-4095
    goal_current          : 1941   # 0-1941
    goal_velocity         : 50   # 0-1023
@@ -280,7 +280,7 @@ rm_q3_joint :   # MX-64
    position_d_gain       : 0      # 0-16383
    velocity_p_gain       : 50
    velocity_i_gain       : 0
-   profile_velocity      : 40
+   profile_velocity      : 150
    profile_acceleration  : 0
 
 rr_q1_joint :   # MX-64
@@ -328,7 +328,7 @@ rr_q3_joint :   # MX-64
    homing_offset         : 0
    max_position_limit    : 3868   #  160 deg
    min_position_limit    : 228    # -160 deg
-   velocity_limit        : 150    # 3.6 rad/s
+   velocity_limit        : 600    # 3.6 rad/s
    goal_position         : 230   # 0-4095
    goal_current          : 1941   # 0-1941
    goal_velocity         : 50   # 0-1023
@@ -337,5 +337,5 @@ rr_q3_joint :   # MX-64
    position_d_gain       : 0      # 0-16383
    velocity_p_gain       : 50
    velocity_i_gain       : 0
-   profile_velocity      : 40
+   profile_velocity      : 150
    profile_acceleration  : 0

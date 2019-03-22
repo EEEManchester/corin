@@ -6,7 +6,7 @@
     <arg name="position" default="true"/>
     <arg name="effort" default="false"/>
 
-    <param name="gazebo"                   value="false"    type="bool"/>
+    <!-- <param name="gazebo"                   value="false"    type="bool"/> -->
     <param name="gazebo_robot_name"        value="corin"/>
 
     <param name="offset_file_path"         value="$(find corin_joint_manager)/config/offset.yaml"/>

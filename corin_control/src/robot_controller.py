@@ -47,6 +47,7 @@ class RobotController(CorinManager):
 		## User input
 		print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 		print 'Execute Path? '
+		print 'con in: ', self.interface, self.control_loop
 		if (self.interface == 'gazebo' or self.interface == 'robotis'):
 			raw_input('cont')
 			self.ui_state = 'play'#'hold'
@@ -86,7 +87,7 @@ class RobotController(CorinManager):
 			self.Robot.XHc.world_X_base = self.Robot.XHd.world_X_base.copy()
 			self.Robot.XHc.base_X_world = self.Robot.XHd.base_X_world.copy()
 
-			if (self.interface == 'rviz'):
+			if (self.interface == 'rviz' or self.control_loop == 'open'):
 				self.Robot.P6c.world_X_base = self.Robot.P6d.world_X_base.copy()
 			elif (self.interface != 'rviz' and self.control_loop == 'close'):
 				P6e_world_X_base = self.Robot.P6d.world_X_base - self.Robot.P6c.world_X_base

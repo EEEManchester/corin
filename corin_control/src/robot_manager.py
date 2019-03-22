@@ -273,7 +273,7 @@ class CorinManager:
 		else:
 			# Stands up from sit down position
 			leg_stance = self.Robot.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, self.Robot.stance_offset, 'flat')
-			setpoints = (range(0,6), leg_stance, [0]*6, 2)
+			setpoints = (range(0,6), leg_stance, [0]*6, GAIT_TPHASE)
 
 		self.leg_level_controller(setpoints)
 		rospy.set_param(ROBOT_NS + '/standing', True)
@@ -339,7 +339,7 @@ class CorinManager:
 			te = np.amax(period[3])
 		except TypeError:
 			td = te = period
-			period = [[0.,2.]]*6 	# change period from int to list
+			period = [[0.,4.]]*6 	# change period from int to list
 
 		# Number of points based on duration of trajectory
 		npc = int(te/CTR_INTV+1)
