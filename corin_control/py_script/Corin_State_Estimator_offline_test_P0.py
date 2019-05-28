@@ -66,15 +66,15 @@ class CorinStateTester:
         self.max_angle = 2*np.pi
         self.max_distance = 0.5
         # What to plot?!
-        self.plot_position = False #1
+        self.plot_position = True #1
         self.plot_position_stddev = False #2
         self.plot_position_error = False #5
 
-        self.plot_angles = False #3
+        self.plot_angles = True #3
         self.plot_angles_stddev = False #4
         self.plot_angles_error = False #5
 
-        self.plot_foot_position = False #7
+        self.plot_foot_position = True #7
         self.plot_p2_stddev = False #7
         self.plot_IMU_bias = False #6
         self.plot_residual = False
