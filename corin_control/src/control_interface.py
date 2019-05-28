@@ -27,12 +27,6 @@ class ControlInterface:
 		rospy.set_param('/corin/walk_up', False)	# walk up
 		rospy.set_param('/corin/walk_down', False)	# walk down
 		rospy.set_param('/corin/rotate', False)
-		
-		# rospy.set_param('/corin/g2w_transition', False)
-		# rospy.set_param('/corin/w2g_transition', False)
-		
-		# rospy.set_param('/corin/g2c_transition', False)
-		# rospy.set_param('/corin/c2g_transition', False)
 
 		rospy.set_param('/corin/plan_path', False)
 
@@ -166,6 +160,11 @@ class ControlInterface:
 		self.mode = 3
 		self.reset_flag = True
 		return x_cob, w_cob, self.mode, 'walk'
+
+	def plan_path(self, x_cob, w_cob):
+		self.mode = 4
+		self.reset_flag = True
+		return x_cob, w_cob, self.mode, 'plan'
 
 	def action_to_take(self):
 		""" Checks parameter server to identify action to take """

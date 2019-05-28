@@ -58,8 +58,8 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "robotis"		# interface to control: gazebo, rviz or robotis hardware
-		self.control_rate = "normal" 	# run controller in various mode: 1) normal, 2) fast
+		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
 		self.control_loop = "open" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
@@ -133,9 +133,9 @@ class CorinManager:
 		for j in range(0,self.Robot.active_legs):
 			self.Robot.Leg[j].feedback_state = 2 	# trajectory completed
 
-		## set control flag states
-		if (self.interface == 'rviz'):
-			self.control_loop = 'open'
+		## Override control flag states
+		# if (self.interface == 'rviz'):
+		# 	self.control_loop = 'open'
 
 		## Set map to that available in service
 		try:
@@ -147,7 +147,7 @@ class CorinManager:
 		""" Initialises publishers and subscribers """
 
 		##***************** PUBLISHERS ***************##
-		self.log_pub_ = rospy.Publisher('/corin/log_states', LoggingState, queue_size=1)		# LOGGING publisher
+		self.log_sp_pub_ = rospy.Publisher('/corin/log_setpoints', LoggingState, queue_size=1)	# LOGGING setpoint publisher
 		self.stability_pub_ = rospy.Publisher('/corin/stability_margin', Float64, queue_size=1) # Stability margin publisher
 
 		## Hardware Specific Publishers ##
@@ -198,7 +198,7 @@ class CorinManager:
 		""" Initialises services used in manager """
 
 		self.grid_serv_ = ServiceHandler('/GridMap/query_map', PlanPath)
-		self.rbim_serv_ = ServiceHandler('/corin/get_rigid_body_matrix', RigidBody)
+		self.rbim_serv_ = ServiceHandler('/Corin/get_rigid_body_matrix', RigidBody)
 
 	def publish_topics(self, q, qlog=None, q_trac=None):
 		""" Publish joint position to joint controller topics and
@@ -248,7 +248,7 @@ class CorinManager:
 
 		## Publish setpoints to logging topic
 		if (qlog is not None):
-			self.log_pub_.publish(qlog)
+			self.log_sp_pub_.publish(qlog)
 
 		## Runs controller at desired rate for normal control mode
 		if (self.control_rate is "normal" or self.interface is 'robotis'):
@@ -402,22 +402,23 @@ class CorinManager:
 		motion_plan.qb = base_path
 		self.main_controller(motion_plan)
 
-	def action_interface(self):
+	def action_interface(self, motion):
 		""" Interface for commanding robot """
 		## TODO: alternative for this - using action server
 
 		## update robot state prior to starting action
 		self.Robot.update_state(control_mode=self.control_rate)
 
-		## check action to take
+		## check action to take - rosparam server
 		data = self.Action.action_to_take()
+		print data
 
 		if (data is not None):
 			self.Visualizer.clear_visualisation()
 
 			## Data mapping - for convenience
 			x_cob, w_cob, mode, motion_prim = data
-			mode = 4 	# HARDCODED TO IMPORT MOTION PLAN
+			# mode = 4 	# HARDCODED TO IMPORT MOTION PLAN
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
 				print 'Going to standup'
@@ -440,12 +441,13 @@ class CorinManager:
 				print 'walk mode'
 				self.Robot.support_mode = False
 				## TODO: Shouldnt' have to call motion planner
-				motion_plan = self.Map.generate_motion_plan(self.Robot, path=(x_cob,w_cob))
+				# motion_plan = self.Map.generate_motion_plan(self.Robot, path=(x_cob,w_cob))
 
-				if (motion_plan is not None):
-					if (self.main_controller(motion_plan)):
-						self.Robot.alternate_phase()
-
+				# if (motion_plan is not None):
+				# 	if (self.main_controller(motion_plan)):
+				# 		self.Robot.alternate_phase()
+				self.path_tracking(x_cob, w_cob)
+				
 			elif (mode == 3):
 				if (self.resting == False): 	# rest robot
 					print 'Rest'
@@ -470,7 +472,10 @@ class CorinManager:
 				# ps = (10,13); pf = (20,13) 	# wall and chimney demo
 				# ps = (10,15); pf = (150,10) 	# IROS demo
 				# ps = (10,15); pf = (17,12) 	# IROS - past chimney
-				ps = (10,13); pf = (10,20)
+				if motion == 'transition':
+					ps = (10,13); pf = (10,20)
+				elif motion == 'forward':
+					ps = (10,13); pf = (15,13)
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,
@@ -595,13 +600,15 @@ class CorinManager:
 
 		return snorm
 
-	def set_log_values(self, v3cp, v3cv, v3ca, v3wp, v3wv, v3wa, qd):
+	def set_log_values(self, v3cp, v3cv, v3ca, v3wp, v3wv, v3wa, qd, effort=None, forces=None):
 		""" Sets the variables for logging """
 
 		qlog = LoggingState()
 		qlog.positions = v3cp.flatten().tolist() + v3wp.flatten().tolist() + qd.xp.tolist()
 		qlog.velocities = v3cv.flatten().tolist() + v3wv.flatten().tolist() + qd.xv.tolist()
 		qlog.accelerations = v3ca.flatten().tolist() + v3wa.flatten().tolist() + qd.xa.tolist()
+		qlog.effort = effort
+		qlog.forces = forces
 
 		return qlog
 

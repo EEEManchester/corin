@@ -19,7 +19,7 @@ import stability_margin as SMargin 		# stability margin evaluation
 import kdl 								# kinematic & dynamics library
 import robot_transforms					# transformation and vector class for robot
 from matrix_transforms import *			# generic transformation library
-
+import rigid_body_inertia as Rbi
 import plotgraph as Plot 				# plot library
 
 class RobotState:
@@ -32,6 +32,7 @@ class RobotState:
 		self.KDL  = kdl.KDL()
 		self.SM   = SMargin.StabilityMargin() 		# stability margin class
 		self.Gait = Gaitgen.GaitClass(GAIT_TYPE)	# gait class
+		self.Rbdl = Rbi.RigidBodyInertia()
 
 		self.invalid = False 						# robot state: invalid - do not do anything
 		self.suspend = False 						# robot state: suspend support (TODO)
@@ -54,8 +55,6 @@ class RobotState:
 		self.V6d = robot_transforms.Vector6D() 				# velocity: desired state
 		self.A6c = robot_transforms.Vector6D() 				# acceleration: current
 		self.A6d = robot_transforms.Vector6D() 				# acceleration: desired
-
-		self.CRBI = np.identity(3)
 
 		self.P6c.world_X_base[2] = BODY_HEIGHT
 		leg_stance = self.init_robot_stance()
@@ -146,6 +145,10 @@ class RobotState:
 			self.V6c.world_X_base = self.V6d.world_X_base.copy()
 			self.A6c.world_X_base = self.A6d.world_X_base.copy()
 		else:
+			## Hassan: I'm presuming the contents in this function will be changed. The next two lines are the variables 
+			## that will be used in the main code, they are a row vector of 6x1 (linear, angular) 
+			# self.P6c.world_X_base = hassan_state_estimation_output()
+			# self.V6c.world_X_base = hassan_state_estimation_output()
 			self.imu = None
 			if (self.imu is not None):
 				## quaternion to euler transformation
@@ -207,16 +210,18 @@ class RobotState:
 		# 	print 'Robot Stopping'
 		# 	self.invalid = True
 
-	def update_com_crbi(self, i_com, i_crbi):
+	def update_rbdl(self, qb, qp):
+		""" Updates robot CoM and CRBI """
+		
+		self.Rbdl.update_CRBI(qb)
+		self.Rbdl.update_CoM(qp)
 		""" remaps tuple to numpy array """
-		nc = 0
-		for i in range(0,3):
-			self.P6c.base_X_CoM[i] = i_com[i]
-			for j in range(0,3):
-				self.CRBI[i,j] = i_crbi[nc]
-				nc += 1
-		# print self.P6c.base_X_CoM
-		# print self.CRBI
+		# nc = 0
+		# for i in range(0,3):
+		# 	self.P6c.base_X_CoM[i] = i_com[i]
+		# 	for j in range(0,3):
+		# 		self.CRBI[i,j] = i_crbi[nc]
+		# 		nc += 1
 
 	def alternate_phase(self, new_phase=None):
 		""" change gait to next phase """

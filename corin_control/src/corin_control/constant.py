@@ -18,18 +18,18 @@ ROBOT_NS = "corin"
 ## ================================================================ ##
 # Link Length, Mass
 BODY_MASS = 1.48
-L1 = 0.060;	L1_MASS = 0.040
-L2 = 0.15;	L2_MASS = 0.350 # ORIGIINAL L2 = 0.15 m; chimney 0.2; wall 0.17
-L3 = 0.15;	L3_MASS = 0.116
+L1 = 0.060;	COXA_M = 0.040586;	#L1_MASS = 0.040
+L2 = 0.15;	FEMUR_M = 0.347529;	#L2_MASS = 0.350 # ORIGIINAL L2 = 0.15 m; chimney 0.2; wall 0.17
+L3 = 0.15;	TIBIA_M = 0.10313;	#L3_MASS = 0.116
 
-LEG_MASS = L1_MASS + L2_MASS + L3_MASS
+LEG_MASS = COXA_M + FEMUR_M + TIBIA_M #L1_MASS + L2_MASS + L3_MASS
 ROBOT_MASS = BODY_MASS + LEG_MASS*6
 
 # Link Centre of Mass reference from parent frame
-BODY_COM = [0.0, 0.0, 0.0]
-L1_COM   = [0.0247, 0.0, 0.0]
-L2_COM   = [0.0750, 0.0, 0.0]
-L3_COM   = [0.0887, 0.0, 0.0]
+BODY_COM = [-0.0065, 0.0, 0.0]
+L1_COM   = [0.024713, 0.0, 0.0]
+L2_COM   = [0.0750, -0.000231, 0.0]
+L3_COM   = [0.10585, 0.0, 0.0]
 
 # Joint limit
 Q1_F_LIM = 1.00     # q1 on front and rear legs
@@ -81,12 +81,22 @@ WALL_WIDTH_NARROW = 0.3
 ## 			Transition			##
 ## ----------------------------	##
 
-
 ## ================================================================ ##
 ##                      Controller parameters 	 					##
 ## ================================================================ ##
-CTR_RATE = 80 			# controller rate for robot, Hz
+CTR_RATE = 60 			# controller rate for robot, Hz
 CTR_INTV = 1./CTR_RATE 	# controller interval for robot, s
+
+## ================================================================ ##
+##                 Force Distribution parameters 	 				##
+## ================================================================ ##
+LOAD_T = 0.4	# time for leg load & unloading
+F_MAX = 40.0	# maximum force for leg
+F_MIN = 0.0		# minimum force for leg
+KPcom = np.array([1.0, 1.0, 1.0])
+KDcom = np.array([1.0, 1.0, 1.0])
+KPang = np.array([1.0, 1.0, 1.0])
+KDang = np.array([1.0, 1.0, 1.0])
 
 ## ================================================================ ##
 ##                  	Stability Parameters 						##
@@ -124,7 +134,7 @@ STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
 
 ## these gait parameters can be changed during runtime
 GAIT_TYPE 	 = 1 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
-GAIT_TPHASE	 = 4.0 	# default period per gait phase
+GAIT_TPHASE	 = 2.0 	# default period per gait phase
 STEP_HEIGHT  = 0.04	# default step height, z
 STEP_STROKE  = 0.1 	# default step stroke
 
@@ -134,7 +144,8 @@ BASE_MAX_ANGULAR_VELOCITY = 0.01	# maximum base velocity, rad/s
 ## ================================================================ ##
 ##                   Controller parameters 	 						##
 ## ================================================================ ##
-K_BP = 0.6
+K_BP = 0.2 	# base position correction gain
+
 ##########################################################################################################################################
 
 ## ================================================================ ##

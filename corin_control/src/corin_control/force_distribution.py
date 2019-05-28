@@ -61,22 +61,21 @@ class QPForceDistribution():
 
 		return t1, t2
 
-	# def resolve_force(self, v3ca, w3ca, p_foot, Ig, contact):
-	def resolve_force(self, v3gv, v3ca, w3ca, p_foot, x_com, Ig_com, gphase, snorm=0):
+	def resolve_force(self, v3ca, w3ca, p_foot, x_com, Ig_com, gphase, fmax=None, snorm=0):
 		""" QP problem to resolve foot force distribution 
-			Input: 	v3gv: Re(1x3) gravity vector
-					v3ca: Re(1x3) linear acceleration for body
+			Input: 	v3ca: Re(1x3) linear acceleration for body
 					w3ca: Re(1x3) angular acceleration for body
 					p_foot: Re(3c) array of foot position
 					x_com: Re(3x1) CoM position from base
 					Ig_com: Re(3x3) Composite Rigid Body Intertia
 					gphase: Re(6) gait phase of legs
+					fmax: Re(6) maximum force constraint for each leg 
 					snorm: Re(3c) surface normal vector for each leg
 			Output: force_vector, Re(18) 							"""
 
 		## Declare variables
 		n_contact = len(p_foot)
-		gv = matrix(v3gv, (3,1), tc='d') 	# gravitational matrix
+		gv = matrix(np.array([0.,0.,9.81]), (3,1), tc='d') 	# gravitational matrix
 		xa = matrix(v3ca, (3,1), tc='d') 	# CoM linear acceleration
 		wa = matrix(w3ca, (3,1), tc='d') 	# angular base acceleration
 		ig = matrix(Ig_com, tc='d') 		# centroidal moment of inertia
@@ -91,26 +90,21 @@ class QPForceDistribution():
 			A[3:6,(i*3):(i*3+3)] = mtf.skew(p_foot[i])
 			
 		## =================== Bounded Force ============================ ##
+		# f_min = -40.
+		# f_max = 0.
 		f_min = 0.
-		f_max = 40.
+		f_max = 50.
 
 		D  = np.zeros(6);
-		D[4] = f_min
+		D[4] = -f_min
 		D[5] = f_max
 		inq_D = D
 		
 		## Interpolate upper and lower boundary of inequality constraint
-		for i in range(0,n_contact-1):
-			# ## Test for interpolation
-			# if (i==4 and n_contact == 6):
-			# 	print 'yes'
-			# 	D[5] = (f_max/10.)*(10 - count_i)	
-			# 	D[5] = 20
-			# else:
-			# 	D[5] = 20
-
-			## do not touch
+		for i in range(0, n_contact-1):
+			D[5] = fmax[i]
 			inq_D = np.hstack((inq_D, D))
+
 		inq_D = matrix(inq_D, tc='d')
 
 		## Friction cone coefficient - TODO: SET BASED ON SURFACE NORMAL
@@ -126,18 +120,23 @@ class QPForceDistribution():
 				## Surface normal direction
 				t1, t2 = self.compute_tangent(sinst.flatten())
 
-				# print 't1 ', t1, t2
 				C[0,:] = -mu*sinst.flatten() + t1
 				C[1,:] = -mu*sinst.flatten() + t2
 				C[2,:] = -(mu*sinst.flatten() + t1)
 				C[3,:] = -(mu*sinst.flatten() + t2)
 				C[4,:] = -sinst.flatten()
 				C[5,:] =  sinst.flatten()
+				# C[0,:] = t1 + mu*sinst.flatten()
+				# C[1,:] = t2 + mu*sinst.flatten()
+				# C[2,:] = -t1 + mu*sinst.flatten()
+				# C[3,:] = -t2 + mu*sinst.flatten()
+				# C[4,:] = -sinst.flatten()
+				# C[5,:] = sinst.flatten()
 				inq_C[(i*6):(i+1)*6,(i*3):(i+1)*3] = matrix(C, tc='d')
 				# if (i==0):
-				# 	print t1, t2
-				# 	print C
-				# 	print D
+					# print t1, t2
+					# print C	
+					# print D
 			else:
 				C = matrix([ [1,-1,0,0,0,0],[0,0,1,-1,0,0],[-mu,-mu,-mu,-mu,-1,1] ])
 				inq_C[(i*6):(i+1)*6,(i*3):(i+1)*3] = C
@@ -163,12 +162,14 @@ class QPForceDistribution():
 
 		## Solve QP problem
 		sol = solvers.qp(H,q, inq_C, inq_D) 
-		# print sol
+		# print np.round(A*sol['x'] - b,3)
+		# print np.transpose(np.round(sol['x'],3))
 		# print np.round(sol['x'],3).flatten()
 		# sol = solvers.coneqp(H,q, inq_C, inq_D) 
 		# print np.round(sol['x'],3).flatten()
 		# print np.round(np.array(sol['x']).transpose(),4)
 		# print A*sol['x']
+		# print inq_C[0:6,0:3]*sol['x'][0:3] - inq_D[0:6]
 
 		## Method B: Method 3 with regularization on joint torque
 		# alpha = 0.01
@@ -197,14 +198,16 @@ class QPForceDistribution():
 				self.sum_forces += force_vector[i*3:i*3+3]
 				self.sum_moment += np.cross( p_foot[fcounter].reshape(1,3), force_vector[i*3:i*3+3].reshape(1,3)).reshape(3,1)
 				fcounter += 1
-				# print np.round(force_vector[i*3:i*3+3].flatten(),3)
+				# print np.round(np.transpose(np.round(force_vector[i*3:i*3+3],3)),3)
+
 		self.d_forces = np.array(ROBOT_MASS*(xa+gv))
 		self.d_moment = np.array(ig*wa)
 		# print 'Comp: ', np.round(A*sol['x'],3).flatten()
 		# print 'Orig: ', np.round(b,3).flatten()
-		# error_forces = ROBOT_MASS*(xa+gv) - sum_forces
-		# error_moment = ig*wa - sum_moment
+		error_forces = ROBOT_MASS*(xa+gv) + self.sum_forces
+		error_moment = ig*wa - self.sum_moment
 		# print np.round(force_vector.flatten(),3)
+		# print np.transpose(np.round(self.sum_forces,3))
 		# print np.transpose(np.round(error_forces,4))
 		# print np.transpose(np.round(error_moment,4))
 		# print '========================================='
@@ -216,36 +219,37 @@ qprog = QPForceDistribution()
 
 Ig_com = np.eye(3)
 xb_com = np.array([0.,0.,0.]) 
-xa_com = np.array([0.,0.,0.])
+xa_com = np.array([1.,1.,0.])
 wa_com = np.array([0.,0.,0.])
 
-## Foot position
+## Foot position - CoM to foot wrt world frame
 # p1 = np.array([ [0.125] ,[ 0.285],[ 0.1] ])
 # p2 = np.array([ [0.00]  ,[ 0.285],[ 0.1] ])
 # p3 = np.array([ [-0.125],[ 0.285],[ 0.1] ])
 # p4 = np.array([ [0.125] ,[-0.285],[-0.1] ])
 # p5 = np.array([ [0.00]  ,[-0.285],[-0.1] ])
 # p6 = np.array([ [-0.125],[-0.285],[-0.1] ])
-p1 = np.array([ [0.075] ,[ 0.31],[ 0.05] ])
-p2 = np.array([ [0.00]  ,[ 0.31],[ 0.05] ])
-p3 = np.array([ [-0.075],[ 0.31],[ 0.05] ])
-p4 = np.array([ [0.115] ,[-0.31],[ 0.05] ])
-p5 = np.array([ [0.00]  ,[-0.31],[ 0.05] ])
-p6 = np.array([ [-0.115],[-0.31],[ 0.05] ])
+p1 = np.array([ [0.075] ,[ 0.31],[ -0.05] ])
+p2 = np.array([ [0.00]  ,[ 0.31],[ -0.05] ])
+p3 = np.array([ [-0.075],[ 0.31],[ -0.05] ])
+p4 = np.array([ [0.115] ,[-0.31],[ -0.05] ])
+p5 = np.array([ [0.00]  ,[-0.31],[ -0.05] ])
+p6 = np.array([ [-0.115],[-0.31],[ -0.05] ])
 
 p_foot = [p1, p2, p3, p4, p5, p6] 			# leg position wrt CoM expressed in world frame
 contacts = [0,0,0,0,0,0]
 gvset = np.array([0,0,9.81])
-# print gvset
+
 snorm = np.zeros((18,1))
 for i in range(0,3):
 	# snorm[i*3:i*3+3] = mX(rot_X(PI/2.),np.array([0,0,1])).reshape((3,1))
-	snorm[i*3:i*3+3] = np.array([0.,-1.,0.]).reshape((3,1))
+	snorm[i*3:i*3+3] = np.array([0., 0., 1.]).reshape((3,1))
 for i in range(3,6):
-	snorm[i*3:i*3+3] = np.array([0,1,0]).reshape((3,1))
+	snorm[i*3:i*3+3] = np.array([0., 0., 1.]).reshape((3,1))
 
-force_vector = qprog.resolve_force(gvset, xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, snorm)
-# print np.round(-force_vector.flatten(),5)
+farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,2.]
+force_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr)
+# print np.round(force_vector.flatten(),5)
 
 # f = open('qp_discont.csv', 'w')
 

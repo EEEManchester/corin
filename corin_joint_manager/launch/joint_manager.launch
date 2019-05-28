@@ -2,7 +2,7 @@
 
 <launch>
 
-    <arg name="gazebo" default="false"/>
+    <arg name="gazebo" default="true"/>
     <arg name="position" default="true"/>
     <arg name="effort" default="false"/>
 

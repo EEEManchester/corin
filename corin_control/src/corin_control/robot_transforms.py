@@ -17,6 +17,7 @@ from matrix_transforms import *
 
 Column6D = (6,1)
 
+
 def deg2rad(q):
 	return (q*np.pi/180.)
 
@@ -385,7 +386,7 @@ q3 = 0.
 XH = ArrayHomogeneousTransform(3)
 XH.update_base_X_foot(np.array([0.5,0.,0.]))
 XH.update_coxa_X_foot(np.array([0.5,0.,0.]))
-print np.round(XH.base_X_coxa,3)
+# print np.round(XH.base_X_coxa,3)
 # print np.round(XH.base_X_foot[:3,:3],3)
 # print np.round(XH.coxa_X_foot[:3,:3],3)
 # print np.round(mX(rot_Z(q1), rot_X(PI/2), rot_Z(q2), rot_Z(q3)),3)
@@ -573,7 +574,7 @@ class HomogeneousTransform:
 		self.update_RM_coxa_X_RM_foot(q)
 		self.update_RR_coxa_X_RR_foot(q)
 
-		self.update_LF_coxa_X_LF_COM(q)
+		# self.update_LF_coxa_X_LF_COM(q)
 		self.update_base_X_COM()
 
 	def update_base_X_COM(self):
@@ -582,33 +583,33 @@ class HomogeneousTransform:
 		self.base_X_COM[1:3] = BODY_COM[1] + LEG_MASS*(self.LF_COM[1,3])
 		self.base_X_COM[2:3] = BODY_COM[2] + LEG_MASS*(self.LF_COM[2,3])
 
-	def update_LF_coxa_X_LF_COM(self,q):
-		# TODO: check against solidworks
-		q1_sin = np.sin(q[LF_Q1_JOINT])
-		q2_sin = np.sin(q[LF_Q2_JOINT])
-		q3_sin = np.sin(q[LF_Q3_JOINT])
-		q1_cos = np.cos(q[LF_Q1_JOINT])
-		q2_cos = np.cos(q[LF_Q2_JOINT])
-		q3_cos = np.cos(q[LF_Q3_JOINT])
+	# def update_LF_coxa_X_LF_COM(self,q):
+	# 	# TODO: check against solidworks
+	# 	q1_sin = np.sin(q[LF_Q1_JOINT])
+	# 	q2_sin = np.sin(q[LF_Q2_JOINT])
+	# 	q3_sin = np.sin(q[LF_Q3_JOINT])
+	# 	q1_cos = np.cos(q[LF_Q1_JOINT])
+	# 	q2_cos = np.cos(q[LF_Q2_JOINT])
+	# 	q3_cos = np.cos(q[LF_Q3_JOINT])
 
-		self.LF_coxa_X_coxa_COM[0,3] = L1_COM[0]*q1_cos - L1_COM[1]*q1_sin
-		self.LF_coxa_X_coxa_COM[1,3] = L1_COM[1]*q1_sin + L1_COM[0]*q1_cos
-		self.LF_coxa_X_coxa_COM[2,3] = L1_COM[2]
+	# 	self.LF_coxa_X_coxa_COM[0,3] = L1_COM[0]*q1_cos - L1_COM[1]*q1_sin
+	# 	self.LF_coxa_X_coxa_COM[1,3] = L1_COM[1]*q1_sin + L1_COM[0]*q1_cos
+	# 	self.LF_coxa_X_coxa_COM[2,3] = L1_COM[2]
 
-		self.LF_coxa_X_femur_COM[0,3] = L1*q1_cos + L2_COM[0]*q1_cos*q2_cos - L2_COM[1]*q1_cos*q2_sin + L2_COM[2]*q1_sin
-		self.LF_coxa_X_femur_COM[1,3] = L1*q1_sin + L2_COM[0]*q1_sin*q2_cos - L2_COM[1]*q1_sin*q2_sin - L2_COM[2]*q1_cos
-		self.LF_coxa_X_femur_COM[2,3] = L2_COM[0]*q2_sin + L2_COM[1]*q2_cos
+	# 	self.LF_coxa_X_femur_COM[0,3] = L1*q1_cos + L2_COM[0]*q1_cos*q2_cos - L2_COM[1]*q1_cos*q2_sin + L2_COM[2]*q1_sin
+	# 	self.LF_coxa_X_femur_COM[1,3] = L1*q1_sin + L2_COM[0]*q1_sin*q2_cos - L2_COM[1]*q1_sin*q2_sin - L2_COM[2]*q1_cos
+	# 	self.LF_coxa_X_femur_COM[2,3] = L2_COM[0]*q2_sin + L2_COM[1]*q2_cos
 
-		self.LF_coxa_X_tibia_COM[0,3] = (L1*q1_cos + L2*q1_cos*q2_cos + L3_COM[0]*q1_cos*q2_cos*q3_cos - L3_COM[0]*q1_cos*q2_sin*q3_sin +
-												L3_COM[2]*q1_sin - L3_COM[1]*q1_cos*q2_cos*q3_sin - L3_COM[1]*q1_cos*q2_sin*q3_cos)
-		self.LF_coxa_X_tibia_COM[1,3] = (L1*q1_sin + L2*q1_sin*q2_cos + L3_COM[0]*q1_sin*q2_cos*q3_cos - L3_COM[0]*q1_sin*q2_sin*q3_sin
-		 										- L3_COM[1]*q1_sin*q2_cos*q3_sin - L3_COM[1]*q1_sin*q2_sin*q3_cos - L3_COM[1]*q1_cos)
-		self.LF_coxa_X_tibia_COM[2,3] = (L2*q2_sin + L3_COM[0]*q2_sin*q3_cos + L3_COM[0]*q2_cos*q3_sin + L3_COM[1]*q2_cos*q3_cos - 
-												L3_COM[1]*q2_sin*q3_sin)
+	# 	self.LF_coxa_X_tibia_COM[0,3] = (L1*q1_cos + L2*q1_cos*q2_cos + L3_COM[0]*q1_cos*q2_cos*q3_cos - L3_COM[0]*q1_cos*q2_sin*q3_sin +
+	# 											L3_COM[2]*q1_sin - L3_COM[1]*q1_cos*q2_cos*q3_sin - L3_COM[1]*q1_cos*q2_sin*q3_cos)
+	# 	self.LF_coxa_X_tibia_COM[1,3] = (L1*q1_sin + L2*q1_sin*q2_cos + L3_COM[0]*q1_sin*q2_cos*q3_cos - L3_COM[0]*q1_sin*q2_sin*q3_sin
+	# 	 										- L3_COM[1]*q1_sin*q2_cos*q3_sin - L3_COM[1]*q1_sin*q2_sin*q3_cos - L3_COM[1]*q1_cos)
+	# 	self.LF_coxa_X_tibia_COM[2,3] = (L2*q2_sin + L3_COM[0]*q2_sin*q3_cos + L3_COM[0]*q2_cos*q3_sin + L3_COM[1]*q2_cos*q3_cos - 
+	# 											L3_COM[1]*q2_sin*q3_sin)
 
-		self.LF_COM[0,3] = (L1_MASS*self.LF_coxa_X_coxa_COM[0,3] + L2_MASS*self.LF_coxa_X_femur_COM[0,3] + L3_MASS*self.LF_coxa_X_tibia_COM[0,3])/LEG_MASS
-		self.LF_COM[1,3] = (L1_MASS*self.LF_coxa_X_coxa_COM[1,3] + L2_MASS*self.LF_coxa_X_femur_COM[1,3] + L3_MASS*self.LF_coxa_X_tibia_COM[1,3])/LEG_MASS
-		self.LF_COM[2,3] = (L1_MASS*self.LF_coxa_X_coxa_COM[2,3] + L2_MASS*self.LF_coxa_X_femur_COM[2,3] + L3_MASS*self.LF_coxa_X_tibia_COM[2,3])/LEG_MASS
+	# 	self.LF_COM[0,3] = (L1_MASS*self.LF_coxa_X_coxa_COM[0,3] + L2_MASS*self.LF_coxa_X_femur_COM[0,3] + L3_MASS*self.LF_coxa_X_tibia_COM[0,3])/LEG_MASS
+	# 	self.LF_COM[1,3] = (L1_MASS*self.LF_coxa_X_coxa_COM[1,3] + L2_MASS*self.LF_coxa_X_femur_COM[1,3] + L3_MASS*self.LF_coxa_X_tibia_COM[1,3])/LEG_MASS
+	# 	self.LF_COM[2,3] = (L1_MASS*self.LF_coxa_X_coxa_COM[2,3] + L2_MASS*self.LF_coxa_X_femur_COM[2,3] + L3_MASS*self.LF_coxa_X_tibia_COM[2,3])/LEG_MASS
 
 	def update_world_X_base(self,q):
 		# rotates in sequence x, y, z in world frame 
@@ -1135,7 +1136,9 @@ class HomogeneousTransform:
 		self.base_X_RR_edge_4[0,3] = self.base_X_RR_foot[0,3] + (-LEG_AREA_LX/2)
 		self.base_X_RR_edge_4[1,3] = self.base_X_RR_foot[1,3] + (-LEG_AREA_LY/2)
 
-def transform_world_X_base(q):
+def vec6d_to_se3(q):
+	# transform_world_X_base()
+	
 	# rotates in sequence x, y, z in world frame 
 	tx = q[0]
 	ty = q[1]
@@ -1162,6 +1165,7 @@ def transform_world_X_base(q):
 	world_X_base[2,3] =  tz
 
 	return world_X_base
+
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
