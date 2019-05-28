@@ -609,6 +609,11 @@ class CorinManager:
 		qlog.accelerations = v3ca.flatten().tolist() + v3wa.flatten().tolist() + qd.xa.tolist()
 		qlog.effort = effort
 		qlog.forces = forces
+		
+		qlog.qp_sum_forces = self.ForceDist.sum_forces.flatten().tolist()
+		qlog.qp_sum_moments = self.ForceDist.sum_moments.flatten().tolist()
+		qlog.qp_desired_forces = self.ForceDist.desired_forces.flatten().tolist()
+		qlog.qp_desired_moments = self.ForceDist.desired_moments.flatten().tolist()
 
 		return qlog
 

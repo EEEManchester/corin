@@ -90,7 +90,7 @@ CTR_INTV = 1./CTR_RATE 	# controller interval for robot, s
 ## ================================================================ ##
 ##                 Force Distribution parameters 	 				##
 ## ================================================================ ##
-LOAD_T = 0.4	# time for leg load & unloading
+LOAD_T = 1.0	# time for leg load & unloading
 F_MAX = 40.0	# maximum force for leg
 F_MIN = 0.0		# minimum force for leg
 KPcom = np.array([1.0, 1.0, 1.0])

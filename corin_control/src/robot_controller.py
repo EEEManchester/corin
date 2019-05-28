@@ -85,7 +85,7 @@ class RobotController(CorinManager):
 
 			if (self.interface == 'rviz' or self.control_loop == 'open'):
 				self.Robot.P6c.world_X_base = self.Robot.P6d.world_X_base.copy()
-			
+
 			P6e_world_X_base = self.Robot.P6d.world_X_base - self.Robot.P6c.world_X_base
 			V6e_world_X_base = self.Robot.V6d.world_X_base - self.Robot.V6c.world_X_base
 
@@ -143,6 +143,7 @@ class RobotController(CorinManager):
 				if tload == iload+1:
 					tload = 1
 					state_machine = 'motion'
+					# raw_input('To Motion!')
 					print 'Motion ...'
 				else:
 					# reduce max force for legs that will be in transfer phase 
@@ -159,12 +160,13 @@ class RobotController(CorinManager):
 				if tload == iload+1:
 					tload = 1
 					state_machine = 'unload'
+					# raw_input('To Unload!')
 					print 'Unloading ...'
 				else:
 					# reduce max force for legs that will be in transfer phase 
 					fmax = tload*F_MAX/float(iload)
 					for j in range(0,6):
-						fmax_lim[j] = fmax if (self.Robot.Gait.cs[j] == 1) else F_MAX 
+						fmax_lim[j] = fmax if (self.Robot.Gait.ps[j] == 1) else F_MAX 
 					tload += 1
 
 			elif state_machine ==  'motion':
@@ -308,6 +310,7 @@ class RobotController(CorinManager):
 						self.Robot.alternate_phase()
 					state_machine = 'load'
 					print 'Loading ...'
+					# raw_input('To Loading!')
 					print i, self.Robot.Gait.cs, np.round(np.rad2deg(v3wp[2]).flatten(),4)
 					print '======================================================='
 
