@@ -36,8 +36,8 @@ class CorinManager:
 
 		self.resting   = False 	# Flag indicating robot standing or resting
 		self.on_start  = False 	# variable for resetting to leg suspended in air
-		self.interface = "rviz"	# interface to control: gazebo, rviz or robotis hardware
-		self.control_mode = "fast" # run controller in various mode: 1) normal, 2) fast
+		self.interface = "gazebo"	# interface to control: gazebo, rviz or robotis hardware
+		self.control_mode = "normal" # run controller in various mode: 1) normal, 2) fast
 
 		self.__initialise__()
 
@@ -67,7 +67,7 @@ class CorinManager:
 		self.__initialise_topics__()
 
 		## initialises robot transform
-		self.robot_broadcaster.sendTransform( (0.,0.,BODY_HEIGHT), (0.,0.,0.,1.), 
+		self.robot_broadcaster.sendTransform( (0.,0.,BODY_HEIGHT), (0.,0.,0.,1.),
 													rospy.Time.now(), "trunk", "world");
 		## setup RVIZ JointState topic
 		if (self.interface == 'rviz'):
@@ -96,9 +96,9 @@ class CorinManager:
 
 		##***************** PUBLISHERS ***************##
 		self.setpoint_pub_ = rospy.Publisher('/corin/setpoint_states', JointState, queue_size=1)	# LOGGING publisher
-		
+
 		## Hardware Specific Publishers ##
-		if (ROBOT_NS == 'corin' and (self.interface == 'gazebo' or 
+		if (ROBOT_NS == 'corin' and (self.interface == 'gazebo' or
 									 self.interface == 'rviz' or
 									 self.interface == 'robotis')):
 			## Publish to Gazebo
@@ -138,13 +138,13 @@ class CorinManager:
 		elif (self.interface == 'robotis'):
 			self.joint_sub_  = rospy.Subscriber('robotis/present_joint_states', JointState, self.joint_state_callback, queue_size=5)
 
-		rospy.sleep(0.5) # sleep for short while for topics to be initiated properly
+		rospy.sleep(1.5) # sleep for short while for topics to be initiated properly
 
 	def publish_topics(self, q, q_log=None):
 		""" Publish joint position to joint controller topics and
 			setpoint topic (for logging all setpoint states) 		"""
-		""" Input: 	1) q -> Joint setpoints (position, velocity, 
-							acceleration) 	
+		""" Input: 	1) q -> Joint setpoints (position, velocity,
+							acceleration)
 					2) q_log -> JointState msg with base and
 								joint setpoints for logging			"""
 
@@ -169,7 +169,7 @@ class CorinManager:
 					dqp.name.append(str(JOINT_NAME[n])) 	# joint name
 					dqp.position.append(q.xp[n])			# joint angle
 				self.joint_pub_.publish(dqp)
-				
+
 			elif (self.interface == 'robotis'):
 				dqp = SyncWriteMultiFloat()
 				dqp.item_name 	= str("goal_position") 	# register to start first write
@@ -182,8 +182,8 @@ class CorinManager:
 				self.joint_pub_.publish(dqp)
 
 		qb = self.Robot.P6c.world_X_base.copy()
-		self.robot_broadcaster.sendTransform( (qb[0],qb[1],qb[2]), 
-												tf.transformations.quaternion_from_euler(qb[3],	qb[4], qb[5]), 
+		self.robot_broadcaster.sendTransform( (qb[0],qb[1],qb[2]),
+												tf.transformations.quaternion_from_euler(qb[3],	qb[4], qb[5]),
 												rospy.Time.now(), "trunk", "world");
 
 		## Publish setpoints to logging topic
@@ -191,7 +191,7 @@ class CorinManager:
 			self.setpoint_pub_.publish(q_log)
 
 		## Runs controller at desired rate for normal control mode
-		if (self.control_mode is "normal" and self.interface is not 'robotis'):
+		if (self.control_mode is "normal" or self.interface is 'robotis'):
 			self.rate.sleep()
 
 	def default_pose(self, stand_state=0):
@@ -205,7 +205,7 @@ class CorinManager:
 			self.on_start = True if self.leg_level_controller(setpoints) else False
 
 		rospy.sleep(0.5)
-		
+
 		print 'Moving to nominal stance....'
 		if (stand_state):
 			setpoints = Routine.shuffle_legs()
@@ -216,7 +216,7 @@ class CorinManager:
 
 	def complete_transfer_trajectory(self):
 		""" Executes remaining leg trajectories in transfer phase """
-		""" Checks remaining points on trajectory and finish off  """ 
+		""" Checks remaining points on trajectory and finish off  """
 
 		## Define Variables ##
 		sc_new = 0	# current spline count for transfer phase legs
@@ -239,11 +239,11 @@ class CorinManager:
 							self.Robot.Leg[j].update_from_spline()
 						except:
 							self.Robot.Leg[j].feedback_state = 2
-							
+
 				## Task to joint space
 				qd = self.Robot.task_X_joint()
 				self.publish_topics(qd)
-				
+
 			return True
 		except Exception, e:
 			print "Error: ", e
@@ -255,7 +255,7 @@ class CorinManager:
 		""" Generates and execute trajectory by specified desired leg position 	"""
 		""" Input: 	setpoints -> tuple of 4 items:-
 							- nleg -> list of corresponding legs to move
-							- leg_stance -> list of 3D positions for each leg 
+							- leg_stance -> list of 3D positions for each leg
 											expressed wrt leg frame
 							- leg_phase -> type of trajectory
 							- period -> timing of leg execution
@@ -277,10 +277,10 @@ class CorinManager:
 		except TypeError:
 			td = te = period
 			period = [[0.,2.]]*6 	# change period from int to list
-		
+
 		# Number of points based on duration of trajectory
 		npc = int(te/CTR_INTV+1)
-		
+
 		try:
 			## Generate spline for each leg
 			for i in range(len(nleg)):
@@ -314,7 +314,7 @@ class CorinManager:
 
 	def foothold_selection(self, base_path):
 		""" Computes foothold based on generated path 	"""
-		""" Input: 1) path -> linear and angular path 
+		""" Input: 1) path -> linear and angular path
 			Output: Foothold array 						"""
 
 		## Define Variables ##
@@ -326,7 +326,7 @@ class CorinManager:
 		world_X_footholds = [None]*6
 		base_X_footholds  = [None]*6
 
-		Gait.cs = list(self.Robot.Gait.cs) 	# update local gait current state 
+		Gait.cs = list(self.Robot.Gait.cs) 	# update local gait current state
 		Gait.gphase = self.Robot.Gait.gphase
 		v3cp_prev = self.Robot.P6c.world_X_base[0:3].copy()	# previous CoB position
 		v3wp_prev = self.Robot.P6c.world_X_base[3:6].copy()	# previous CoB orientation
@@ -348,12 +348,12 @@ class CorinManager:
 		## Returns as footholds remain fixed for full support mode
 		if (self.Robot.support_mode is True):
 			return world_X_base, world_X_footholds, base_X_footholds
-		
+
 		## Cycle through trajectory
 		while (i != len(base_path.X.t) and not rospy.is_shutdown()):
 			print i, ' Gait phase ', Gait.cs
 			bound_exceed = False
-			
+
 			# cycles through one gait phase
 			for m in range(0,int(GAIT_TPHASE*CTR_RATE)+1):
 
@@ -376,7 +376,7 @@ class CorinManager:
 							Leg[j].world_base_X_foot = mX(world_X_base_rot, Leg[j].base_X_foot)
 							bound_exceed = self.Robot.Leg[j].check_boundary_limit(Leg[j].world_base_X_foot,
 																					Leg[j].world_base_X_NRP)
-							
+
 							if (bound_exceed == True):
 								print 'bound exceed on ', j, ' at ', i, i*CTR_INTV
 								break
@@ -384,7 +384,7 @@ class CorinManager:
 					if (bound_exceed is True):
 						## To break through two layers of loops
 						break
-					else:	
+					else:
 						i += 1
 
 				except IndexError:
@@ -404,13 +404,13 @@ class CorinManager:
 					v3_dv = v3cp - v3cp_prev 			# direction vector from previous to current CoB
 					m1_dv = np.linalg.norm(v3_dv) 		# magnitude of direction vector
 					v3_uv = np.nan_to_num(v3_dv/m1_dv) 	# unit vector direction
-					
-					## compute AEP wrt base and world frame					
+
+					## compute AEP wrt base and world frame
 					Leg[j].world_base_X_AEP[:3,3:4] = Leg[j].world_base_X_NRP[:3,3:4] + (v3_uv*STEP_STROKE/2.)
 					Leg[j].base_X_AEP[:3,3:4] = mX(XHd.base_X_world[:3,:3], Leg[j].world_base_X_AEP[:3,3:4])
 
 					Leg[j].world_X_foot = mX(XHd.world_X_base, Leg[j].base_X_AEP)
-					
+
 					## Get cell height in (x,y) location of world_X_foot
 					cell_h = np.array([0.,0.,0.])			# TODO: unstack height from map
 					Leg[j].world_X_foot[2,3] = cell_h[2] 	# set z-component to cell height
@@ -421,10 +421,10 @@ class CorinManager:
 					## Stack to array
 					world_X_footholds[j].t.append(i*CTR_INTV)
 					world_X_footholds[j].xp.append(Leg[j].world_X_foot[:3,3:4].copy())
-					
+
 					base_X_footholds[j].t.append(i*CTR_INTV)
 					base_X_footholds[j].xp.append(Leg[j].base_X_AEP[:3,3:4].copy())
-					
+
 					# if (j==0):
 					# 	print 'v3_uv: ', (v3_uv*STEP_STROKE/2.).flatten()
 					# 	print 'wbXn:  ', np.round(Leg[j].world_base_X_NRP[:3,3],4)
@@ -455,8 +455,10 @@ class CorinManager:
 		wXbase_offset = self.Robot.P6c.world_X_base.copy()
 
 		# Trajectory for robot's base
-		base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV) 
-		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
+		base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV)
+		#Plot.plot_2d(base_path.X.t, base_path.X.xp)
+		#Plot.plot_2d(base_path.X.t, base_path.X.xv)
+		#HASSAN#Plot.plot_2d(base_path.X.t, base_path.X.xa)
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 
 		# Set all legs to support mode for bodyposing, prevent AEP from being set
@@ -467,32 +469,32 @@ class CorinManager:
 
 		## Plan foothold for robot
 		world_X_base, world_X_footholds, base_X_footholds = self.foothold_selection(base_path)
-		
+
 		## TODO: add preview of motion here
 
-		## publish multiple times to ensure it is published 
-		for c in range(0,3):
-			self.robot_broadcaster.sendTransform( (wXbase_offset[0],wXbase_offset[1],wXbase_offset[2]), 
-													tf.transformations.quaternion_from_euler(wXbase_offset[3].copy(), 
-																								wXbase_offset[4].copy(), 
-																								wXbase_offset[5].copy()), 
-													rospy.Time.now(), "trunk", "world") ;
-			self.path_pub_.publish(array_to_path(base_path, rospy.Time.now(), "world", wXbase_offset))
-			self.mark_pub_.publish(list_to_marker_array(world_X_footholds, rospy.Time.now(), "world"))
-			self.joint_pub_.publish(array_to_joint_states(self.Robot.qc.position, rospy.Time.now(), ""))
-			rospy.sleep(0.2)
+		## publish multiple times to ensure it is published
+		# for c in range(0,3):
+		# 	self.robot_broadcaster.sendTransform( (wXbase_offset[0],wXbase_offset[1],wXbase_offset[2]),
+		# 											tf.transformations.quaternion_from_euler(wXbase_offset[3].copy(),
+		# 																						wXbase_offset[4].copy(),
+		# 																						wXbase_offset[5].copy()),
+		# 											rospy.Time.now(), "trunk", "world") ;
+		# 	self.path_pub_.publish(array_to_path(base_path, rospy.Time.now(), "world", wXbase_offset))
+		# 	self.mark_pub_.publish(list_to_marker_array(world_X_footholds, rospy.Time.now(), "world"))
+			# self.joint_pub_.publish(array_to_joint_states(self.Robot.qc.position, rospy.Time.now(), ""))
+			# rospy.sleep(0.2)
 
 		## User input: Returns if path rejected
 		print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 		key_input = raw_input('Execute Path? (Accept-y Reject-n) : ')
 		if (key_input.lower() == 'n'):
 			return
-		
+
 		# cycle through trajectory points until complete
 		i = 1 	# skip first point since spline has zero initial differential conditions
 		while (i != len(base_path.X.t) and not rospy.is_shutdown()):
 			# print 'counting: ', i, len(base_path.X.t)
-			
+
 			## suppress trajectory counter as body support suspended
 			if (self.Robot.suspend == True):
 				i -= 1
@@ -517,10 +519,10 @@ class CorinManager:
 			## ============================================================================================================================== ##
 			## Execution of command ##
 			## ==================== ##
-			
-			## Update robot state
+
+			## Update robot CURRENT state
 			self.Robot.update_state(control_mode=self.control_mode)
-			
+
 			#########################################################################
 			## overwrite - TC: use IMU data
 			self.Robot.XHc.world_X_base = self.Robot.XHd.world_X_base.copy()
@@ -528,7 +530,7 @@ class CorinManager:
 			self.Robot.P6c.world_X_base = np.array([v3cp,v3wp]).reshape(6,1).copy()
 			#########################################################################
 
-			## Update robot's desired position, velocity & acceleration to next point on spline
+			## SETPOINT: Update robot's desired position, velocity & acceleration to next point on spline
 			self.Robot.XHd.update_world_X_base(np.vstack((v3cp,v3wp)))
 			self.Robot.V6d.world_X_base = np.vstack((v3cv,v3wv)) 	# not used atm
 			self.Robot.A6d.world_X_base = np.vstack((v3ca,v3wa)) 	# not used atm
@@ -555,7 +557,7 @@ class CorinManager:
 					## generate transfer spline
 					svalid = self.Robot.Leg[j].generate_spline(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3], self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],
 																self.Robot.Leg[j].qsurface, 1, False, GAIT_TPHASE, CTR_INTV)
-					
+
 					# if (j==1):
 					# 	print 'wXf: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],4)
 					# 	print 'c cXf: ', np.round(self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3],4)
@@ -564,7 +566,7 @@ class CorinManager:
 					if (svalid is False):
 						# set invalid if trajectory unfeasible for leg's kinematic
 						self.Robot.invalid = True
-					else:	
+					else:
 						# set flag that phase has changed
 						self.Robot.Leg[j].transfer_phase_change = True
 
@@ -585,15 +587,15 @@ class CorinManager:
 					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
 
 			## Task to joint space
-			qd = self.Robot.task_X_joint()	
-			
+			qd = self.Robot.task_X_joint()
+
 			if (self.Robot.invalid == True):
 				print 'Error Occured, robot invalid!'
 				## TODO: recovery routine
 				break
 			else:
 				# ends gait phase early if transfer phase completes - TODO: ANOTHER WAY?
-				transfer_total = 0; 	
+				transfer_total = 0;
 				leg_complete   = 0;
 
 				for j in range(0,6):
@@ -613,18 +615,18 @@ class CorinManager:
 				qlog.name 	  = ROBOT_STATE + JOINT_NAME
 				qlog.position = v3cp.flatten().tolist() + v3wp.flatten().tolist() + qd.xp.tolist()
 				qlog.velocity = v3cv.flatten().tolist() + v3wv.flatten().tolist() + qd.xv.tolist()
-				
+
 				# publish appended joint angles if motion valid
 				self.publish_topics(qd, qlog)
-				
+
 				i += 1
 			## ============================================================================================================================== ##
-			
+
 		if (self.Robot.invalid is False):
 			# Finish off transfer legs trajectory onto ground
 			self.complete_transfer_trajectory()
 			self.Robot.update_state(control_mode=self.control_mode)
-			
+
 			print 'Trajectory executed'
 			print 'Desired Goal: ', np.round(base_path.X.xp[-1],4), np.round(base_path.W.xp[-1],4)
 			print 'Tracked Goal: ', np.round(cob_X_desired.flatten(),4), np.round(cob_W_desired.flatten(),4)
@@ -637,8 +639,8 @@ class CorinManager:
 
 		## update robot state prior to starting action
 		self.Robot.update_state(control_mode=self.control_mode)
-		
-		## check action to take
+
+		## check action to take - Control INterface class
 		data = self.Action.action_to_take()
 
 		if (data is not None):
@@ -675,7 +677,7 @@ class CorinManager:
 			elif (mode == 2):
 				print 'walk mode'
 				self.Robot.support_mode = False
-				
+
 				self.trajectory_tracking(x_cob, w_cob)
 				self.Robot.alternate_phase()
 

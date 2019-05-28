@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-""" Robot class for specifying robot parameters and robot updates 
+""" Robot class for specifying robot parameters and robot updates
  	Indexing for leg starts with 0, 1 .... 5
-""" 
+"""
 
 import sys; sys.dont_write_bytecode = True
 
@@ -27,7 +27,7 @@ class RobotState:
 		self.qc  = None;	# ROS JointState class for all joints
 		self.qd  = None; 	# Vector array (Re^18x1) for joint position
 		self.imu = None;	# ROS IMU class
-		
+
 		self.Leg  = [] 								# leg class
 		self.Gait = Gaitgen.GaitClass(GAIT_TYPE)	# gait class
 		self.KDL  = kdl.KDL()
@@ -51,7 +51,7 @@ class RobotState:
 		self.V6d = robot_transforms.Vector6D() 				# velocity: desired state
 		self.A6c = robot_transforms.Vector6D() 				# acceleration: current
 		self.A6d = robot_transforms.Vector6D() 				# acceleration: desired
-		
+
 		self._initialise()
 
 	def _initialise(self):
@@ -80,10 +80,10 @@ class RobotState:
 			self.Leg[j].XHc.world_base_X_PEP = self.Leg[j].XHc.base_X_PEP.copy()
 
 		self.task_X_joint()
-		print ">> INITIALISED ROBOT CLASS"
+		# print ">> INITIALISED ROBOT CLASS"
 
 	def update_state(self,**options):
-		""" update robot state using readings from topics """ 
+		""" update robot state using readings from topics """
 
 		reset = True if options.get("reset") == True else False
 		cmode = "fast" if options.get("control_mode") == "fast" else "normal"
@@ -91,7 +91,7 @@ class RobotState:
 		self.update_bodypose_state(cmode)
 		self.update_leg_state(reset, cmode)
 		# self.update_stability_margin()
-		
+
 	def update_leg_state(self, reset, cmode):
 		""" update legs state """
 		## TODO: INTEGRATE HW FORCE SENSOR READINGS
@@ -113,19 +113,19 @@ class RobotState:
 
 		# update leg states and check if boundary exceeded
 		for j in range(0,self.active_legs):
-			
+
 			bstate = self.Leg[j].update_joint_state(wXb, qpc[offset+j*3:offset+(j*3)+3], reset)
 			cstate = self.Leg[j].update_force_state(self.cstate[j], self.cforce[j*3:(j*3)+3])
 
 			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
 				self.suspend = True
 				# print 'Suspend ', j, bstate
-				
+
 		# print '-------------------------------------------------------'
 
 	def update_bodypose_state(self, cmode):
 		""" update imu state """
-		## TODO: INCLUDE STATE ESTIMATION
+		## TODO: INCLUDE STATE ESTIMATION - HASSAN, WORK YOUR MAGIC HERE (HEHE!)
 
 		if (cmode == "fast"):
 			## Updates robot state using setpoints
@@ -133,14 +133,14 @@ class RobotState:
 			self.V6c.world_X_base = self.V6d.world_X_base.copy()
 			self.A6c.world_X_base = self.A6d.world_X_base.copy()
 		else:
-			self.imu = None
-			if (self.imu is not None):
+			#self.imu = None
+			if (False and self.imu is not None):
 				## quaternion to euler transformation
 				rpy = np.array(euler_from_quaternion([self.imu.orientation.w, self.imu.orientation.x,
 														 self.imu.orientation.y, self.imu.orientation.z], 'sxyz')).reshape(3,1)
 				wv3 = np.array([ [self.imu.angular_velocity.x], 	[self.imu.angular_velocity.y], 	  [self.imu.angular_velocity.z] ])
 				ca3 = np.array([ [self.imu.linear_acceleration.x], 	[self.imu.linear_acceleration.y], [self.imu.linear_acceleration.z] ])
-			
+
 				## state estimation
 				xyz = np.zeros((3,1))
 				## Updates robot state based on measured states
@@ -162,7 +162,7 @@ class RobotState:
 
 		for j in range(6):
 			stack_base_X_world.append(self.Leg[j].XHc.world_base_X_foot[:3,3])
-		
+
 		# compute Longitudinal Stability Margin
 		sm = self.SM.LSM(stack_base_X_world, self.Gait.cs)
 		try:
@@ -178,7 +178,7 @@ class RobotState:
 
 	def alternate_phase(self):
 		""" change gait to next phase """
-		
+
 		self.Gait.change_phase()
 
 		# update robot leg phase_change
@@ -186,7 +186,7 @@ class RobotState:
 			if (self.Gait.cs[j] == 1):
 				self.Leg[j].transfer_phase_change = False
 				# self.Leg[j].XHc.update_world_X_foot(mx_world_X_base, q_compensated) 	# consider updating only once when contact is true
-			elif (self.Gait.cs[j] == 0): 
+			elif (self.Gait.cs[j] == 0):
 				if (self.Gait.cs[j] != self.Gait.ps[j]):
 					# print 'updating Leg ', j
 					self.Leg[j].XHc.update_world_X_foot(self.XHc.world_X_base) 	# updating continuously results in drift
@@ -195,7 +195,7 @@ class RobotState:
 		# raw_input('cont')
 
 	def task_X_joint(self,legs_phase=None): # TODO - to be revisited
-		""" Convert all leg task space to joint space 		"""								
+		""" Convert all leg task space to joint space 		"""
 		""" Output: joint space setpoint for all joints		"""
 
 		## Define variables ##
@@ -203,7 +203,7 @@ class RobotState:
 		qp = []
 		qv = []
 		qa = []
-		
+
 		for j in range(0,6):
 			error, qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
 
@@ -238,5 +238,3 @@ class RobotState:
 # robot = RobotState()
 ## ====================================================================================================================================== ##
 ## ====================================================================================================================================== ##
-
-

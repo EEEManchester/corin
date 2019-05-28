@@ -80,11 +80,11 @@ CTR_INTV 	= 1./CTR_RATE 	# controller interval for robot, s
 ##                       Gait parameters 	 						##
 ## ================================================================ ##
 
-GAIT_TYPE 	 = 3 		# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+GAIT_TYPE 	 = 1 		# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 BODY_HEIGHT  = 0.1		# ori: 0.10, chimney: 0.0
 STANCE_WIDTH = 0.21		# ori: 0.21, chimney: 0.27, 0.31 for tripod
-STEP_STROKE  = 0.08		# step size, x, 	default 0.07
-STEP_HEIGHT  = 0.1 		# step height, z 	default 0.05
+STEP_STROKE  = 0.07		# step size, x, 	default 0.07
+STEP_HEIGHT  = 0.12 		# step height, z 	default 0.05
 GAIT_TPHASE	 = 2.0 		# period per gait phase
 
 BASE_MAX_LINEAR_VELOCITY  = 0.04	# maximum base velocity, m/s - walking: 0.025
@@ -95,12 +95,12 @@ BASE_MAX_ANGULAR_VELOCITY = 0.1		# maximum base velocity, rad/s
 
 ## ================================================================ ##
 ##                  	Stability Parameters 						##
-## ================================================================ ## 
+## ================================================================ ##
 SM_MIN = 0.05
 
 ## ================================================================ ##
 ##                  Error Compensation parameters 					##
-## ================================================================ ## 
+## ================================================================ ##
 QCOMPENSATION = 0.0#33
 
 ## ================================================================ ##
@@ -168,4 +168,3 @@ JOINT_NAME[16] = 'rr_q2_joint'
 JOINT_NAME[17] = 'rr_q3_joint'
 
 ROBOT_STATE = ['x','y','z','r','p','y']
-

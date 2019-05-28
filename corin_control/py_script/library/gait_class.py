@@ -33,16 +33,16 @@ class GaitClass:
 						'beta': Fraction(5, 6),
 						'dphase': Fraction(1, 5),
 						'phase':np.matrix([ Fraction(6, 6), Fraction(5, 6), Fraction(4, 6), Fraction(3, 6), Fraction(2, 6), Fraction(1, 6) ])}
-			
 
-		elif self.gait_type == 2:	
+
+		elif self.gait_type == 2:
 			self.gait = np.matrix([	[Fraction(3, 4), Fraction(3, 4), Fraction(3, 4), Fraction(3, 4), Fraction(3, 4), Fraction(3, 4)],
 									[Fraction(4, 4), Fraction(3, 4), Fraction(2, 4), Fraction(2, 4), Fraction(1, 4), Fraction(4, 4)]])
 			self.gdic = {'name': "ripple",
 						'beta': Fraction(3, 4),
 						'dphase': Fraction(1, 3),
 						'phase':np.matrix([ Fraction(4, 4), Fraction(3, 4), Fraction(2, 4), Fraction(2, 4), Fraction(1, 4), Fraction(4, 4) ])}
-		
+
 		elif self.gait_type == 3:
 			self.gait = np.matrix([	[Fraction(2, 3), Fraction(2, 3), Fraction(2, 3), Fraction(2, 3), Fraction(2, 3), Fraction(2, 3)],
 									[Fraction(3, 3), Fraction(2, 3), Fraction(1, 3), Fraction(2, 3), Fraction(1, 3), Fraction(3, 3)]])
@@ -50,7 +50,7 @@ class GaitClass:
 						'beta': Fraction(2, 3),
 						'dphase': Fraction(1, 2),
 						'phase':np.matrix([ Fraction(3, 3), Fraction(2, 3), Fraction(1, 3), Fraction(2, 3), Fraction(1, 3), Fraction(3, 3) ])}
-		
+
 		elif self.gait_type == 4:
 			self.gait = np.matrix([	[Fraction(1, 2), Fraction(1, 2), Fraction(1, 2), Fraction(1, 2), Fraction(1, 2), Fraction(1, 2)],
 									[Fraction(1, 1), Fraction(1, 2), Fraction(1, 1), Fraction(1, 2), Fraction(1, 1), Fraction(1, 2)]])
@@ -65,7 +65,7 @@ class GaitClass:
 			self.gait_dutyFactor()
 			self.change_phase()
 			self.ps = copy.deepcopy(self.cs)
-			print '>> INITIALISED GAIT CLASS - ', self.gdic['name']
+			# print '>> INITIALISED GAIT CLASS - ', self.gdic['name']
 		else:
 			print 'Invalid gait selected'
 
@@ -91,19 +91,19 @@ class GaitClass:
 			self.gphase = self.gdic['beta'].denominator - 1
 
 		# number of phases in a cycle
-		i = self.gphase 		
+		i = self.gphase
 
 		for n in range(0,6): 												# number of legs
 			# Condition for Leg 6 to start first - used for tetrapod and ripple due to fraction equals to 1 for leg 6
-			##### Runs once at the start 
-			if (self.gait.item(1,5)==1):	
+			##### Runs once at the start
+			if (self.gait.item(1,5)==1):
 				for k in range(0,6):
 					self.gait[1,k] = self.gait.item(1,k) + Fraction(1,self.gdic['beta'].denominator)
-					if (self.gait[1,k] > 1.0): 															# modifies for phase to be fraction 
+					if (self.gait[1,k] > 1.0): 															# modifies for phase to be fraction
 						self.gait[1,k] = self.gait[1,k] - Fraction(1,1)
 
 			## Determine Transfer or Support phase
-			if (self.gait.item(1,n).denominator < self.gdic['beta'].denominator): 									
+			if (self.gait.item(1,n).denominator < self.gdic['beta'].denominator):
 				temp_num = self.gait[1,n].numerator*self.gdic['beta'].denominator/self.gait.item(1,n).denominator
 			else:
 				temp_num = self.gait[1,n].numerator
@@ -112,9 +112,9 @@ class GaitClass:
 				self.cs[n] = 1
 			else: 						# Support Phase
 				self.cs[n] = 0
-		
+
 		gait_phase = [i,self.gdic['beta'].denominator]
-		
+
 		# increment/decrement counter for next gait phase
 		if (self.direction==True):
 			self.gphase += 1

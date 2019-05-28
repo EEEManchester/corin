@@ -18,7 +18,7 @@ class ContactForce:
 	def __init__(self):
 		rospy.init_node('contact_controller') 		#Initialises node
 		self.robot_ns = ROBOT_NS
-		self.rate 	  = rospy.Rate(200)	# frequency: 200 Hz
+		self.rate 	  = rospy.Rate(220)	# frequency: 200 Hz
 
 		self.contact_state = [None]*6 	# one for each leg
 		self.contact_force = [None]*18 	# three (xyz) for each leg
@@ -116,7 +116,7 @@ if __name__ == "__main__":
 
 	contact_manager = ContactForce()
 	print "Contact Force node Initiated"
-	
+
 	while not rospy.is_shutdown():
 		contact_manager.publish()
 		contact_manager.rate.sleep()
