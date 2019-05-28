@@ -39,6 +39,14 @@ def cvxopt_solve_qp(P, q, inq_C, inq_D):
 def quadprog_solve_qp(P, q, G=None, h=None, A=None, b=None):
 	# make sure P is symmetric and positive definite
 	qp_G = 0.5 * (P + P.transpose()) + np.eye(len(P))*(0.0000001)
+	
+	# temp = 0.5 * (P + P.transpose())
+	temp = np.dot(P.T, P)
+	print np.all(np.linalg.eigvals(qp_G) > 0)
+	print np.all(np.linalg.eigvals(temp) > 0)
+	# print qp_G[0:5,0:5]
+	# print temp[0:5,0:5]
+	# print P[0:5,0:5]
 	qp_a = -q
 	if A is not None:
 		qp_C = -np.vstack([A, G]).T
