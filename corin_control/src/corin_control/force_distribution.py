@@ -18,8 +18,51 @@ from cvxopt import solvers
 from qpsolvers import solve_qp
 import quadprog
 
-count_i = 0
-spline_count = 0.
+def isPD(B):
+    """Returns true when input is positive-definite, via Cholesky"""
+    try:
+        _ = linalg.cholesky(B)
+        return True
+    except linalg.LinAlgError:
+        return False
+
+def nearestPD(A):
+    """Find the nearest positive-definite matrix to input
+    [1] https://www.mathworks.com/matlabcentral/fileexchange/42885-nearestspd
+    [2] N.J. Higham, "Computing a nearest symmetric positive semidefinite
+    matrix" (1988): https://doi.org/10.1016/0024-3795(88)90223-6
+    """
+
+    B = (A + A.T) / 2
+    _, s, V = linalg.svd(B)
+    # B = UH: polar decomposition
+    H = np.dot(V.T, np.dot(np.diag(s), V))
+    # A2: unique positie approximation of A in the Frobenius norm
+    A2 = (B + H) / 2
+
+    A3 = (A2 + A2.T) / 2
+
+    if isPD(A3):
+        return A3
+    
+    spacing = np.spacing(linalg.norm(A))
+    # The above is different from [1]. It appears that MATLAB's `chol` Cholesky
+    # decomposition will accept matrixes with exactly 0-eigenvalue, whereas
+    # Numpy's will not. So where [1] uses `eps(mineig)` (where `eps` is Matlab
+    # for `np.spacing`), we use the above definition. CAVEAT: our `spacing`
+    # will be much larger than [1]'s `eps(mineig)`, since `mineig` is usually on
+    # the order of 1e-16, and `eps(1e-16)` is on the order of 1e-34, whereas
+    # `spacing` will, for Gaussian random matrixes of small dimension, be on
+    # othe order of 1e-16. In practice, both ways converge, as the unit test
+    # below suggests.
+    I = np.eye(A.shape[0])
+    k = 1
+    while not isPD(A3):
+        mineig = np.min(np.real(linalg.eigvals(A3)))
+        A3 += I * (-mineig * k**2 + spacing)
+        k += 1
+
+    return A3
 
 def cvxopt_solve_qp(P, q, inq_C, inq_D):
 	solvers.options['abstol']  = 1e-10
@@ -38,16 +81,10 @@ def cvxopt_solve_qp(P, q, inq_C, inq_D):
 
 def quadprog_solve_qp(P, q, G=None, h=None, A=None, b=None):
 	# make sure P is symmetric and positive definite
-	qp_G = 0.5 * (P + P.transpose()) + np.eye(len(P))*(0.0000001)
-	
-	# temp = 0.5 * (P + P.transpose())
-	temp = np.dot(P.T, P)
-	print np.all(np.linalg.eigvals(qp_G) > 0)
-	print np.all(np.linalg.eigvals(temp) > 0)
-	# print qp_G[0:5,0:5]
-	# print temp[0:5,0:5]
-	# print P[0:5,0:5]
+	# qp_G = 0.5 * (P + P.transpose()) + np.eye(len(P))*(0.0000001)
+	qp_G = nearestPD(P)
 	qp_a = -q
+
 	if A is not None:
 		qp_C = -np.vstack([A, G]).T
 		qp_b = -np.hstack([b, h])
@@ -59,31 +96,12 @@ def quadprog_solve_qp(P, q, G=None, h=None, A=None, b=None):
 	
 	return quadprog.solve_qp(qp_G, qp_a, qp_C, qp_b, meq)[0]
 
-## cvxopt input form: # P, q, G, h, None, A, b
 class QPForceDistribution():
 	def __init__(self):
 		self.sum_forces = np.zeros((3,1))
 		self.sum_moments = np.zeros((3,1))
 		self.desired_forces = np.zeros((3,1))
 		self.desired_moments = np.zeros((3,1))
-
-	def solve_example(self):
-		# setting via numpy
-		Pn = cvxmatrix(np.diag([1,0]), tc='d')
-		qn = matrix(np.array([3,4]), tc='d')
-		Gn = matrix(np.array([[-1,0],[0,-1],[-1,-3],[2,5],[3,4]]), tc='d')
-		hn = matrix(np.array([0,0,-15,100,80]), tc='d')
-
-		# direct setting
-		Pn = matrix([[1.0,0.0],[0.0,0.0]])
-		qn = matrix([3.0,4.0])
-		Gn = matrix([[-1.0,0.0,-1.0,2.0,3.0],[0.0,-1.0,-3.0,5.0,4.0]])
-		hn = matrix([0.0,0.0,-15.0,100.0,80.0])
-
-		sol = solvers.qp(Pn,qn,Gn,hn)
-
-		# print sol['x']
-		# return sol
 
 	def compute_tangent(self, snorm):
 		# Find first tangential vector
@@ -96,7 +114,7 @@ class QPForceDistribution():
 		else:
 			# set x,y to 1
 			t1 = np.array([1, 1, -1.0 * (snorm[0] + snorm[1])/snorm[2]])
-			t1 = t1/np.linalg.norm(t1)
+			t1 = t1/linalg.norm(t1)
 
 		# Find second tangential vector
 		t2 = np.cross(snorm,t1)
