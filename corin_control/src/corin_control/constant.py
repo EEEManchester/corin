@@ -88,6 +88,11 @@ CTR_RATE = 60 			# controller rate for robot, Hz
 CTR_INTV = 1./CTR_RATE 	# controller interval for robot, s
 
 ## ================================================================ ##
+##                   State estimation parameters  		 			##
+## ================================================================ ##
+IMU_RATE = 192 			# IMU publishing rate, Hz
+
+## ================================================================ ##
 ##                 Force Distribution parameters 	 				##
 ## ================================================================ ##
 LOAD_T = 0.4	# time for leg load & unloading

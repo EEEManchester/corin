@@ -68,8 +68,8 @@
         <gravity>1</gravity>
       </link>
     </model>
-   
-    
+
+
     <physics type='ode'>
       <simbody>
         <accuracy>0.005</accuracy>
@@ -126,4 +126,3 @@
 
 
 </sdf>
-

@@ -21,6 +21,9 @@ import robot_transforms					# transformation and vector class for robot
 from matrix_transforms import *			# generic transformation library
 import rigid_body_inertia as Rbi
 import plotgraph as Plot 				# plot library
+from state_estimator import StateEstimator  # EKF-based state estimation class
+from time import sleep
+
 
 class RobotState:
 	def __init__(self):
@@ -33,7 +36,7 @@ class RobotState:
 		self.SM   = SMargin.StabilityMargin() 		# stability margin class
 		self.Gait = Gaitgen.GaitClass(GAIT_TYPE)	# gait class
 		self.Rbdl = Rbi.RigidBodyInertia()
-
+		self.state_estimator = StateEstimator(self, 1./IMU_RATE)   # declare during update_state(reset)
 		self.invalid = False 						# robot state: invalid - do not do anything
 		self.suspend = False 						# robot state: suspend support (TODO)
 
@@ -97,11 +100,27 @@ class RobotState:
 		self.Gait.set_step_stroke(leg_stance, LEG_CLEAR, STEP_STROKE)
 		print ">> INITIALISED ROBOT CLASS"
 
+	def estimate_state(self):
+		# Gets called at IMU rate
+		self.state_estimator.estimate()
+
 	def update_state(self,**options):
 		""" update robot state using readings from topics """
 
 		reset = True if options.get("reset") == True else False
 		cmode = "fast" if options.get("control_mode") == "fast" else "normal"
+
+		if reset:
+			i = 0
+			self.state_estimator.reset_state()
+			# Wait for esimtate_state to be called enough times for calibration
+			while not self.state_estimator.calibrated:
+				sleep(0.002)
+				i += 1
+				if i > 1000:
+					raise Exception("Could not calibrate.")
+					pass
+			print "Calibration done"
 
 		self.update_bodypose_state(cmode)
 		self.update_leg_state(reset, cmode)
@@ -124,7 +143,8 @@ class RobotState:
 		else:
 			## Updates robot state based on measured states
 			wXb = self.P6c.world_X_base
-			qpc = self.qd#self.qc.position
+			# qpc = self.qd # Modified by Hassan
+			qpc = self.qc.position
 
 		# update leg states and check if boundary exceeded
 		for j in range(0,self.active_legs):
@@ -145,12 +165,21 @@ class RobotState:
 			self.V6c.world_X_base = self.V6d.world_X_base.copy()
 			self.A6c.world_X_base = self.A6d.world_X_base.copy()
 		else:
-			## Hassan: I'm presuming the contents in this function will be changed. The next two lines are the variables 
-			## that will be used in the main code, they are a row vector of 6x1 (linear, angular) 
+			## Hassan: I'm presuming the contents in this function will be changed. The next two lines are the variables
+			## that will be used in the main code, they are a row vector of 6x1 (linear, angular)
 			# self.P6c.world_X_base = hassan_state_estimation_output()
 			# self.V6c.world_X_base = hassan_state_estimation_output()
-			self.imu = None
-			if (self.imu is not None):
+			pos = np.reshape(self.state_estimator.r, (3,1))
+			angles = np.reshape(self.state_estimator.get_fixed_angles(), (3,1))
+			vel = np.reshape(self.state_estimator.v, (3,1))
+			angular = np.reshape(self.state_estimator.w, (3,1))
+			self.P6c.world_X_base = np.vstack((pos, angles))
+			self.V6c.world_X_base = np.vstack((vel, angular))
+
+
+			# self.imu = None
+			# TODO Sort the logic here
+			if (False and self.imu is not None):
 				## quaternion to euler transformation
 				rpy = np.array(euler_from_quaternion([self.imu.orientation.w, self.imu.orientation.x,
 														 self.imu.orientation.y, self.imu.orientation.z], 'sxyz')).reshape(3,1)
@@ -169,7 +198,7 @@ class RobotState:
 				self.XHc.update_base(self.P6c.world_X_base)
 				self.V6c.world_X_base = self.V6d.world_X_base.copy()
 				self.A6c.world_X_base = self.A6d.world_X_base.copy()
-                
+
 
 	def update_stability_margin(self):
 		""" updates the current stability margin """
@@ -212,7 +241,7 @@ class RobotState:
 
 	def update_rbdl(self, qb, qp):
 		""" Updates robot CoM and CRBI """
-		
+
 		self.Rbdl.update_CRBI(qb)
 		self.Rbdl.update_CoM(qp)
 		""" remaps tuple to numpy array """

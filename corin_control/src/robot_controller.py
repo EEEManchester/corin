@@ -11,6 +11,7 @@ from robot_manager import CorinManager
 from corin_control import *			# library modules to include
 
 import rospy
+import time
 
 class RobotController(CorinManager):
 	def __init__(self, initialise=False):
@@ -85,7 +86,7 @@ class RobotController(CorinManager):
 
 			if (self.interface == 'rviz' or self.control_loop == 'open'):
 				self.Robot.P6c.world_X_base = self.Robot.P6d.world_X_base.copy()
-			
+
 			P6e_world_X_base = self.Robot.P6d.world_X_base - self.Robot.P6c.world_X_base
 			V6e_world_X_base = self.Robot.V6d.world_X_base - self.Robot.V6c.world_X_base
 
@@ -136,7 +137,7 @@ class RobotController(CorinManager):
 			self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
 
 			if state_machine == 'unload':
-				
+
 				if tload == 1:
 					gphase = [0]*6 	# all legs in support phase at start of unloading
 					fmax_lim = [0]*6	# max. force array
@@ -145,14 +146,14 @@ class RobotController(CorinManager):
 					state_machine = 'motion'
 					print 'Motion ...'
 				else:
-					# reduce max force for legs that will be in transfer phase 
+					# reduce max force for legs that will be in transfer phase
 					fmax = F_MAX - tload*F_MAX/float(iload)
 					for j in range(0,6):
-						fmax_lim[j] = fmax if (self.Robot.Gait.cs[j] == 1) else F_MAX 
+						fmax_lim[j] = fmax if (self.Robot.Gait.cs[j] == 1) else F_MAX
 					tload += 1
 
 			elif state_machine == 'load':
-				
+
 				if tload == 1:
 					gphase = [0]*6 	# all legs in support phase at start of unloading
 					fmax_lim = [0]*6	# max. force array
@@ -161,23 +162,23 @@ class RobotController(CorinManager):
 					state_machine = 'unload'
 					print 'Unloading ...'
 				else:
-					# reduce max force for legs that will be in transfer phase 
+					# reduce max force for legs that will be in transfer phase
 					fmax = tload*F_MAX/float(iload)
 					for j in range(0,6):
-						fmax_lim[j] = fmax if (self.Robot.Gait.cs[j] == 1) else F_MAX 
+						fmax_lim[j] = fmax if (self.Robot.Gait.cs[j] == 1) else F_MAX
 					tload += 1
 
 			elif state_machine ==  'motion':
 				gphase = self.Robot.Gait.cs
 				fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
-				
+
 				## Generate trajectory for legs in transfer phase
 				for j in range (0, self.Robot.active_legs):
 
 					# Transfer phase - generate trajectory
 					if (self.Robot.Gait.cs[j] == 1 and self.Robot.Leg[j].transfer_phase_change==False):
 						self.Robot.Leg[j].feedback_state = 1 	# set leg to execution mode
-						
+
 						## Using planned foothold arrays
 						try:
 							self.Robot.Leg[j].XHd.world_X_foot = v3_X_m(world_X_footholds[j].xp.pop(0))
@@ -268,7 +269,7 @@ class RobotController(CorinManager):
 
 						elif (self.control_loop == "close"):
 							## Closed-loop control on bodypose. Move by sum of desired pose and error
-							
+
 							## Foot position: either position or velocity
 							## Position-control
 							comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + K_BP*P6e_world_X_base)
@@ -276,11 +277,11 @@ class RobotController(CorinManager):
 							self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 
 							## Velocity-control - Focchi2018 eq(3) TODO: check robustness
-							vel_base_X_foot = -V6e_world_X_base[0:3].flatten() - np.cross(V6e_world_X_base[3:6].flatten(), 
+							vel_base_X_foot = -V6e_world_X_base[0:3].flatten() - np.cross(V6e_world_X_base[3:6].flatten(),
 												(self.Robot.Leg[j].XHd.base_X_foot[0:3,3:4] - self.Robot.P6d.world_X_base[0:3]).flatten())
 							base_X_foot = self.Robot.Leg[j].XHd.base_X_foot[0:3,3] + vel_base_X_foot
 							# print j, '  ', base_X_foot - self.Robot.Leg[j].XHd.base_X_foot[0:3,3]
-							
+
 						self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
 						# print j, ' bXw: \n', np.round(self.Robot.XHd.base_X_world,3)
 						# print j, ' wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
@@ -319,7 +320,7 @@ class RobotController(CorinManager):
 			if (self.Robot.invalid == True):
 				print 'Error Occured, robot invalid! ', tXj_error
 				break
-			
+
 			## Force Distribution for all legs
 			if self.control_loop == 'close':
 				# Virtual force-controlled closed-loop control - Focchi2017 eq(3,4)
@@ -333,11 +334,11 @@ class RobotController(CorinManager):
 
 			## Impedance controller for each legs
 			## TODO: Hassan add call to function here
-			
+
 			## Data logging & publishing
 			qlog = self.set_log_values(v3cp, v3cv, xa_d, v3wp, v3wv, wa_d, qd, joint_torq, force_dist)
 			self.publish_topics(qd, qlog)
-			
+
 			## ============================================================================================================================== ##
 		else:
 			# Finish off transfer legs trajectory onto ground
@@ -347,6 +348,8 @@ class RobotController(CorinManager):
 			print 'Trajectory executed'
 			print 'Desired Goal: ', np.round(base_path.X.xp[-1],4), np.round(base_path.W.xp[-1],4)
 			print 'Tracked Goal: ', np.round(cob_X_desired.flatten(),4), np.round(cob_W_desired.flatten(),4)
+
+			time.sleep(10)
 
 			return True
 
@@ -365,7 +368,7 @@ class RobotController(CorinManager):
 		 	Output: foot force for legs in stance phase """
 
 		now = rospy.get_time()
-		
+
 		## Compute CRBI and CoM, then compute foot force distribution and joint torque
 		self.Robot.update_rbdl(qb, qp)
 		# if (self.rbim_serv_.available):
@@ -374,7 +377,7 @@ class RobotController(CorinManager):
 		# 		self.Robot.update_rbdl(resp1.CoM, resp1.CRBI)
 		# 	except:
 		# 		rbim_valid = False
-		
+
 		## Append legs in stance phase
 		p_foot = []
 		for j in range(0,6):
@@ -384,12 +387,12 @@ class RobotController(CorinManager):
 				world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3],
 					  					(-self.Robot.Rbdl.com.flatten() + self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
 				p_foot.append(world_CoM_X_foot.copy())
-				
+
 		## Compute force distribution using QP
 		foot_force = self.ForceDist.resolve_force(v3ca, v3wa, p_foot,
 													self.Robot.Rbdl.com,
 													self.Robot.Rbdl.crbi, gphase, fmax )
-		
+
 		end = rospy.get_time()
 		# print 'Tdiff: ', end - now
 

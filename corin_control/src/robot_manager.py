@@ -28,6 +28,7 @@ import tf 		 							# ROS transform library
 from geometry_msgs.msg import PolygonStamped
 from geometry_msgs.msg import Point32
 from geometry_msgs.msg import Polygon
+from geometry_msgs.msg import Vector3
 
 ## Services
 from service_handler import ServiceHandler
@@ -66,6 +67,34 @@ class CorinManager:
 		self.MotionPlan = MotionPlan()
 		self.Visualizer = RvizVisualise() 	# visualisation for rviz
 
+		if self.interface == "robotis":
+			self.IMU = "LORD"
+		else:
+			self.IMU = "gazebo"
+
+		if self.IMU == "LORD":
+			self.Robot.state_estimator.IMU_r = 0.001*np.array([-123, 5.25, 24.5]) # Body frame origin relative to IMU frame, described in the IMU frame
+			self.Robot.state_estimator.IMU_R = np.array([[-1, 0, 0],
+															[0, 1, 0],
+															[0, 0, -1]])	# Rotation matrix mapping vectors from IMU frame to body frame
+		elif self.IMU == "ODROID":
+			self.Robot.state_estimator.IMU_r = 0.001*np.array([-4, -8, -27]) #np.zeros(3)
+			self.Robot.state_estimator.IMU_R = np.eye(3)
+
+		else:
+			# Gazebo
+			self.Robot.state_estimator.Qf = 0.1 * np.eye(3)
+			self.Robot.state_estimator.Qw = 0.01 * np.eye(3)
+			self.Robot.state_estimator.IMU_r = 0.001*np.array([0, 0, 0]) #np.zeros(3)
+			self.Robot.state_estimator.IMU_R = np.eye(3)
+
+		# For debugging
+		self.pub_imu_v = rospy.Publisher('imu_v', Vector3, queue_size=1)
+		self.pub_imu_r = rospy.Publisher('imu_r', Vector3, queue_size=1)
+		self.pub_imu_q = rospy.Publisher('imu_q', Vector3, queue_size=1)
+		self.pub_imu_bf = rospy.Publisher('imu_bf', Vector3, queue_size=1)
+		self.pub_imu_bw = rospy.Publisher('imu_bw', Vector3, queue_size=1)
+
 		self.__initialise__()
 
 	def joint_state_callback(self, msg):
@@ -74,7 +103,25 @@ class CorinManager:
 
 	def imu_callback(self, msg):
 		""" imu callback """
+		if self.IMU == "LORD":
+			# only for LORD IMU (to put the orientation from NED to the correct frame)
+			o = msg.orientation
+			q0 = np.array([o.w, o.x, o.y, o.z])
+			q = quaternion_multiply(np.array([0, 1, 0, 0]), q0)
+			msg.orientation = Quaternion(q[1], q[2], q[3], q[0])
+
 		self.Robot.imu = msg
+		self.Robot.estimate_state()
+
+		# Hassan - debugging
+		if(self.Robot.state_estimator.calibrated):
+
+			self.pub_imu_v.publish(Vector3(*(1.0*self.Robot.state_estimator.v).tolist()))
+			self.pub_imu_r.publish(Vector3(*(1.0*self.Robot.state_estimator.r).tolist()))
+			self.pub_imu_q.publish(Vector3(*self.Robot.state_estimator.get_fixed_angles().tolist()))
+			self.pub_imu_bf.publish(Vector3(*self.Robot.state_estimator.bf.tolist()))
+			self.pub_imu_bw.publish(Vector3(*self.Robot.state_estimator.bw.tolist()))
+
 
 	def contact_state_callback(self, msg):
 		""" foot contact binary state """
@@ -82,7 +129,10 @@ class CorinManager:
 
 	def contact_force_callback(self, msg):
 		""" foot contact force """
+		# TODO: Should call a Robot class function instead
 		self.Robot.cforce = msg.data
+		for j in range(0,self.Robot.active_legs):
+			self.Robot.Leg[j].update_force_state(self.Robot.cstate[j], self.Robot.cforce[j*3:(j*3)+3])
 
 	def ui_callback(self, msg):
 		""" user interface control state """
@@ -192,7 +242,7 @@ class CorinManager:
 		self.ui_control_ = rospy.Subscriber(ROBOT_NS + '/ui_execute', String, self.ui_callback, queue_size=1)
 
 		# Sleep for short while for topics to be initiated properly
-		rospy.sleep(0.5)
+		rospy.sleep(1)
 
 	def __initialise_services__(self):
 		""" Initialises services used in manager """
@@ -447,7 +497,7 @@ class CorinManager:
 				# 	if (self.main_controller(motion_plan)):
 				# 		self.Robot.alternate_phase()
 				self.path_tracking(x_cob, w_cob)
-				
+
 			elif (mode == 3):
 				if (self.resting == False): 	# rest robot
 					print 'Rest'
