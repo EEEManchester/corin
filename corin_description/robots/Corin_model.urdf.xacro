@@ -17,7 +17,7 @@
 	<xacro:include filename="$(find corin_description)/robots/gazebo.xacro"/>
 
 	<!-- Utilise macros to build robot -->
-	
+
 	<!-- body -->
 	<xacro:RobotTrunk name="base">
 		<origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
@@ -72,13 +72,22 @@
 	</xacro:RobotLeg>
 
 	<!-- Sensors -->
-	<xacro:IMU
+	<!-- <xacro:IMU
 		parent="trunk"
 		imu_name="base_imu"
 		imu_topic="base/data"
 		imu_service="trunk/service"
 		update_rate="100">
 		<origin xyz="0.0 0.0 0.022" rpy="0 0 0"/>
+	</xacro:IMU> -->
+
+	<xacro:IMU
+		parent="trunk"
+		imu_name="base_imu"
+		imu_topic="base/data"
+		imu_service="trunk/service"
+		freq_rate="200">
+		<origin xyz="0 0 0.0" rpy="0 0 0"/>
 	</xacro:IMU>
 
 	<!--

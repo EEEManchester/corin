@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="corin">
 
 	<!-- #############  IMU Sensor  ############# -->
-	<xacro:macro name="IMU" params="parent imu_name imu_topic imu_service freq_rate *origin">
+	<xacro:macro name="IMU" params="parent imu_name imu_topic imu_service update_rate *origin">
         <!-- Joint -->
         <joint name="${imu_name}_joint" type="fixed">
             <xacro:insert_block name="origin"/>
@@ -13,59 +13,38 @@
         <!-- Link -->
         <link name="${imu_name}">
             <inertial>
-                <origin xyz="-0.0000  0.0000  0.000"/>
-                <mass value="0.0000"/>
+                <origin xyz="-0.00020  0.00010  0.00110"/>
+                <mass value="0.010"/>
                 <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0.0" ixz="0.0" iyz="0.0"/>
             </inertial>
             <visual>
                 <origin xyz="0.0 0 0.0" rpy="0 0 0"/>
                 <geometry>
-                    <box size="0.05 0.1 0.01" />
+                    <box size="0.05 0.05 0.01" />
                 </geometry>
                 <material name="black">
                     <color rgba="0 0 0 0.9"/>
                 </material>
             </visual>
-						<collision>
-								<origin xyz="0.0 0 0.0" rpy="0 0 0"/>
-								<geometry>
-										<box size="0.05 0.1 0.01" />
-								</geometry>
-								<material name="black">
-										<color rgba="0 0 0 0.9"/>
-								</material>
-						</collision>
         </link>
 
-        <gazebo reference="${imu_name}">
-					<material>Gazebo/Red</material>
-					<gravity>false</gravity>
-					<sensor name='IMU' type='imu'>
-						<always_on>true</always_on>
-						<!-- <update_rate>${freq_rate}</update_rate> -->
-						<visualize>true</visualize>
-						<topic>__default_topic__</topic>
-            <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
-								<robotNamespace>/corin/imu/</robotNamespace>
-								<alwaysOn>true</alwaysOn>
-								<gravity>false</gravity>
-								<frameName>${imu_name}</frameName>
+        <gazebo>
+            <material>Gazebo/Red</material>  
+            <plugin name="imu_plugin" filename="libgazebo_ros_imu.so">
+                <robotNamespace>/corin/imu/</robotNamespace>
+                <alwaysOn>true</alwaysOn>   
+                <frameName>${imu_name}</frameName>    
+                <bodyName>${imu_name}</bodyName>
                 <topicName>${imu_topic}</topicName>
                 <serviceName>${imu_service}</serviceName>
-								<bodyName>${imu_name}</bodyName>
-                <updateRateHZ>${freq_rate}</updateRateHZ>
-								<gaussianNoise>0</gaussianNoise>
-								<xyzOffset>0 0 0</xyzOffset>
-    						<rpyOffset>0 0 0</rpyOffset>
+                <gaussianNoise>0.1</gaussianNoise>
+                <updateRate>${update_rate}</updateRate> 
             </plugin>
-						<pose>0 0 0 0 0 0</pose>
-					</sensor>
         </gazebo>
-
     </xacro:macro>
 
     <!-- #############  Laser Sensor  ############# -->
-    <!-- Noise parameters based on published spec for Hokuyo laser achieving "+-30mm" accuracy at range < 10m. -->
+    <!-- Noise parameters based on published spec for Hokuyo laser achieving "+-30mm" accuracy at range < 10m. --> 
     <!-- A mean of 0.0m and stddev of 0.01m will put 99.7% of samples within 0.03m of the true reading. -->
 
     <xacro:macro name="LIDAR" params="parent lidar_name lidar_topic update_rate *origin">
@@ -115,8 +94,8 @@
                       <resolution>0.005</resolution>
                   </range>
                   <noise>
-                      <type>none</type>
-                      <mean>0.0</mean>
+                      <type>none</type>                 
+                      <mean>0.0</mean>                  
                       <stddev>0.0</stddev>
                   </noise>
                 </ray>

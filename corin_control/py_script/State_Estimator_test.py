@@ -54,12 +54,12 @@ class CorinStateTester:
 		# print quaternion_from_matrix(np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]]))
 		# exit()
 
-		self.data_source = "imu2"	# ideal, imu, imu2 (model states), imu3 (link states)
+		self.data_source = "imu"	# ideal, imu, imu2 (model states), imu3 (link states)
 		self.control_mode = "normal"
 		# self.rate   = rospy.Rate(100)	# frequency
 		self.reset = True
 		self.T_sim = 0.001
-		self.T_imu = 0.01#0.01
+		self.T_imu = 0.005#0.01
 		self.model_states = ModelStates()
 		self.link_states = ModelStates()
 		self.imu1 = Imu()
