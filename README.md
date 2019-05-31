@@ -21,6 +21,14 @@ The source code is released under a proprietary software license and should not 
 
 ## Installation
 
+### Library Dependencies
+
+The following libraries are used:
+
+    cvxopt
+    cython
+    qpsolvers
+
 ### Building from Source
 
 #### Dependencies
