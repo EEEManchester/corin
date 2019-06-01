@@ -47,6 +47,35 @@ class KDL():
 		except: 
 			return None
 
+	def world_leg_jacobian(self, leg_no, qb, q):
+
+		if leg_no >= 0 and leg_no <=5:
+			hip_yaw = np.deg2rad(ROT_BASE_X_LEG[leg_no])
+		else:
+			return None
+
+		roll  = qb[0]
+		pitch = qb[1]
+		yaw   = qb[2]
+		q1 = q[0]
+		q2 = q[1]
+		q3 = q[2]
+		Jv = np.zeros((3,3))
+
+		Jv[0,0] = np.sin(q1)*(np.sin(hip_yaw)*(np.cos(roll)*np.sin(yaw) - np.cos(yaw)*np.sin(pitch)*np.sin(roll)) - np.cos(pitch)*np.cos(hip_yaw)*np.cos(yaw))*(L1 + L3*np.cos(q2 + q3) + L2*np.cos(q2)) - np.cos(q1)*(np.cos(hip_yaw)*(np.cos(roll)*np.sin(yaw) - np.cos(yaw)*np.sin(pitch)*np.sin(roll)) + np.cos(pitch)*np.cos(yaw)*np.sin(hip_yaw))*(L1 + L3*np.cos(q2 + q3) + L2*np.cos(q2));
+		Jv[0,1] = (L3*np.cos(q2 + q3) + L2*np.cos(q2))*(np.sin(roll)*np.sin(yaw) + np.cos(roll)*np.cos(yaw)*np.sin(pitch)) + np.cos(q1)*(np.sin(hip_yaw)*(np.cos(roll)*np.sin(yaw) - np.cos(yaw)*np.sin(pitch)*np.sin(roll)) - np.cos(pitch)*np.cos(hip_yaw)*np.cos(yaw))*(L3*np.sin(q2 + q3) + L2*np.sin(q2)) + np.sin(q1)*(np.cos(hip_yaw)*(np.cos(roll)*np.sin(yaw) - np.cos(yaw)*np.sin(pitch)*np.sin(roll)) + np.cos(pitch)*np.cos(yaw)*np.sin(hip_yaw))*(L3*np.sin(q2 + q3) + L2*np.sin(q2));
+		Jv[0,2] = L3*np.cos(q2 + q3)*(np.sin(roll)*np.sin(yaw) + np.cos(roll)*np.cos(yaw)*np.sin(pitch)) + L3*np.sin(q2 + q3)*np.cos(q1)*(np.sin(hip_yaw)*(np.cos(roll)*np.sin(yaw) - np.cos(yaw)*np.sin(pitch)*np.sin(roll)) - np.cos(pitch)*np.cos(hip_yaw)*np.cos(yaw)) + L3*np.sin(q2 + q3)*np.sin(q1)*(np.cos(hip_yaw)*(np.cos(roll)*np.sin(yaw) - np.cos(yaw)*np.sin(pitch)*np.sin(roll)) + np.cos(pitch)*np.cos(yaw)*np.sin(hip_yaw));
+		Jv[1,0] = np.cos(q1)*(np.cos(hip_yaw)*(np.cos(roll)*np.cos(yaw) + np.sin(pitch)*np.sin(roll)*np.sin(yaw)) - np.cos(pitch)*np.sin(hip_yaw)*np.sin(yaw))*(L1 + L3*np.cos(q2 + q3) + L2*np.cos(q2)) - np.sin(q1)*(np.sin(hip_yaw)*(np.cos(roll)*np.cos(yaw) + np.sin(pitch)*np.sin(roll)*np.sin(yaw)) + np.cos(pitch)*np.cos(hip_yaw)*np.sin(yaw))*(L1 + L3*np.cos(q2 + q3) + L2*np.cos(q2));
+		Jv[1,1] = - (L3*np.cos(q2 + q3) + L2*np.cos(q2))*(np.cos(yaw)*np.sin(roll) - np.cos(roll)*np.sin(pitch)*np.sin(yaw)) - np.cos(q1)*(np.sin(hip_yaw)*(np.cos(roll)*np.cos(yaw) + np.sin(pitch)*np.sin(roll)*np.sin(yaw)) + np.cos(pitch)*np.cos(hip_yaw)*np.sin(yaw))*(L3*np.sin(q2 + q3) + L2*np.sin(q2)) - np.sin(q1)*(np.cos(hip_yaw)*(np.cos(roll)*np.cos(yaw) + np.sin(pitch)*np.sin(roll)*np.sin(yaw)) - np.cos(pitch)*np.sin(hip_yaw)*np.sin(yaw))*(L3*np.sin(q2 + q3) + L2*np.sin(q2));
+		Jv[1,2] = - L3*np.cos(q2 + q3)*(np.cos(yaw)*np.sin(roll) - np.cos(roll)*np.sin(pitch)*np.sin(yaw)) - L3*np.sin(q2 + q3)*np.cos(q1)*(np.sin(hip_yaw)*(np.cos(roll)*np.cos(yaw) + np.sin(pitch)*np.sin(roll)*np.sin(yaw)) + np.cos(pitch)*np.cos(hip_yaw)*np.sin(yaw)) - L3*np.sin(q2 + q3)*np.sin(q1)*(np.cos(hip_yaw)*(np.cos(roll)*np.cos(yaw) + np.sin(pitch)*np.sin(roll)*np.sin(yaw)) - np.cos(pitch)*np.sin(hip_yaw)*np.sin(yaw));
+		Jv[2,0] = np.cos(q1)*(np.sin(pitch)*np.sin(hip_yaw) + np.cos(pitch)*np.cos(hip_yaw)*np.sin(roll))*(L1 + L3*np.cos(q2 + q3) + L2*np.cos(q2)) + np.sin(q1)*(np.cos(hip_yaw)*np.sin(pitch) - np.cos(pitch)*np.sin(hip_yaw)*np.sin(roll))*(L1 + L3*np.cos(q2 + q3) + L2*np.cos(q2));
+		Jv[2,1] = np.cos(q1)*(np.cos(hip_yaw)*np.sin(pitch) - np.cos(pitch)*np.sin(hip_yaw)*np.sin(roll))*(L3*np.sin(q2 + q3) + L2*np.sin(q2)) - np.sin(q1)*(np.sin(pitch)*np.sin(hip_yaw) + np.cos(pitch)*np.cos(hip_yaw)*np.sin(roll))*(L3*np.sin(q2 + q3) + L2*np.sin(q2)) + np.cos(pitch)*np.cos(roll)*(L3*np.cos(q2 + q3) + L2*np.cos(q2));
+		Jv[2,2] = L3*np.cos(q2 + q3)*np.cos(pitch)*np.cos(roll) + L3*np.sin(q2 + q3)*np.cos(q1)*(np.cos(hip_yaw)*np.sin(pitch) - np.cos(pitch)*np.sin(hip_yaw)*np.sin(roll)) - L3*np.sin(q2 + q3)*np.sin(q1)*(np.sin(pitch)*np.sin(hip_yaw) + np.cos(pitch)*np.cos(hip_yaw)*np.sin(roll));
+		
+		# temp = mX(rot_Z(yaw), rot_Y(pitch), rot_X(roll),rot_Z(hip_yaw),self.leg_jacobian(q))
+
+		return Jv
+
 	def leg_FK(self, q=None):
 
 		try:
@@ -184,7 +213,7 @@ class KDL():
 		# f = J^(-T)*tau
 		return np.dot(inv(self.transpose_leg_jacobian(q)),tau)
 
-	
+
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
@@ -198,7 +227,7 @@ bodypose = np.array([0.,0.,BODY_HEIGHT, 0.,0.,0.])
 
 # print bodypose[3:7]
 # qs = [0., 1.238, -1.724] #[0., 1.195, -1.773] 	# left side
-qs = np.array([0., 0.15, -0.10])	# right side
+
 # print CK.singularity_approach(qs)
 # cd = CK.leg_FK(qs)
 # print cd.flatten()
@@ -207,3 +236,14 @@ qp = CK.leg_IK(cd,0)
 # print qp
 # if (not CK.check_singularity(qp)):
 # 	qd,qdd = CK.joint_speed(qp, v, a)
+q = np.array([0., -0.15, -0.90])
+qb = np.zeros(3)
+qb = np.array([0.2, 0., 0.])
+
+# print np.round(np.dot(temp, CK.leg_jacobian(q)),3)
+# print np.round(temp,5)
+# print np.round(CK.world_leg_jacobian(5, qb, q),5)
+
+# [[ 0.244 -0.051 -0.066]
+#  [-0.204 -0.061 -0.078]
+#  [-0.     0.258  0.11 ]]
