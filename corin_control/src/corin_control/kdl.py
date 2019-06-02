@@ -16,6 +16,7 @@ class KDL():
 		self.knee_up = True
 
 	def leg_jacobian(self, q=None):
+		""" Jacobian in leg frame """
 
 		Jv = np.zeros((3,3))
 		try:
@@ -48,6 +49,7 @@ class KDL():
 			return None
 
 	def world_leg_jacobian(self, leg_no, qb, q):
+		""" Jacobian in world frame """
 
 		if leg_no >= 0 and leg_no <=5:
 			hip_yaw = np.deg2rad(ROT_BASE_X_LEG[leg_no])

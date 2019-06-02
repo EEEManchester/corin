@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'library'))
 
 import numpy as np
 
-from constant import *
+from corin_control.constant import *
 
 from gazebo_msgs.msg import ContactsState
 from std_msgs.msg import ByteMultiArray
@@ -116,7 +116,7 @@ if __name__ == "__main__":
 
 	contact_manager = ContactForce()
 	print "Contact Force node Initiated"
-	
+
 	while not rospy.is_shutdown():
 		contact_manager.publish()
 		contact_manager.rate.sleep()

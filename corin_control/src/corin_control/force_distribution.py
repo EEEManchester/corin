@@ -82,8 +82,8 @@ def cvxopt_solve_qp(P, q, inq_C, inq_D):
 
 def quadprog_solve_qp(P, q, G=None, h=None, A=None, b=None):
 	# make sure P is symmetric and positive definite
-	# qp_G = 0.5 * (P + P.transpose()) + np.eye(len(P))*(0.0000001)
-	qp_G = nearestPD(P)
+	qp_G = 0.5 * (P + P.transpose()) + np.eye(len(P))*(0.0000001)
+	# qp_G = nearestPD(P)
 	qp_a = -q
 
 	if A is not None:
@@ -95,7 +95,11 @@ def quadprog_solve_qp(P, q, G=None, h=None, A=None, b=None):
 		qp_b = -h
 		meq = 0
 	
-	return quadprog.solve_qp(qp_G, qp_a, qp_C, qp_b, meq)[0]
+	try:
+		return quadprog.solve_qp(qp_G, qp_a, qp_C, qp_b, meq)[0]
+	except ValueError as e:
+		print e
+		return None
 
 # def leg_jacobian(q):
 
@@ -155,7 +159,9 @@ class QPForceDistribution():
 		
 		W = np.zeros((3*n_contact, 3*n_contact))	# secondary hessian matrix
 		J = np.zeros((3*n_contact, 3*n_contact))	# contact jacobian matrix
-		w_weight = np.array([5, 50, 2])*10e-3;
+
+		s_weight = np.array([1, 1, 1, 1, 1, 1]);
+		w_weight = np.array([1, 1, 1])*10e-3;
 		# print A
 		# print b
 		## =================== Bounded Force ============================ ##
@@ -173,24 +179,23 @@ class QPForceDistribution():
 			
 			# Compute according to surface normal
 			if (snorm is not 0):
-				sinst = snorm[i*3:i*3+3]
-				C = np.zeros((6,3))
-
-				## Surface normal direction
-				t1, t2 = self.compute_tangent(sinst.flatten())
-
-				C[0,:] = -mu*sinst.flatten() + t1
-				C[1,:] = -mu*sinst.flatten() + t2
-				C[2,:] = -(mu*sinst.flatten() + t1)
-				C[3,:] = -(mu*sinst.flatten() + t2)
-				C[4,:] = -sinst.flatten()
-				C[5,:] =  sinst.flatten()
-				inq_C[(i*6):(i+1)*6,(i*3):(i+1)*3] = C
-				
+				# sinst = snorm[i*3:i*3+3]
+				sinst = snorm[i]
 			else:
-				C = matrix([ [1,-1,0,0,0,0],[0,0,1,-1,0,0],[-mu,-mu,-mu,-mu,-1,1] ])
-				inq_C[(i*6):(i+1)*6,(i*3):(i+1)*3] = C
-		
+				sinst = np.array([0., 0., 1.])
+
+			# Calculate tangent to surface normal
+			t1, t2 = self.compute_tangent(sinst.flatten())
+
+			C = np.zeros((6,3))
+			C[0,:] = -mu*sinst.flatten() + t1
+			C[1,:] = -mu*sinst.flatten() + t2
+			C[2,:] = -(mu*sinst.flatten() + t1)
+			C[3,:] = -(mu*sinst.flatten() + t2)
+			C[4,:] = -sinst.flatten()
+			C[5,:] =  sinst.flatten()
+			inq_C[(i*6):(i+1)*6,(i*3):(i+1)*3] = C
+			
 			# Indirect torque minimization
 			if q is not None:
 				leg_no = index_c[i]
@@ -200,10 +205,9 @@ class QPForceDistribution():
 		# print np.round(J,3)
 		# print np.round(W,4)
 		# print np.round(inq_C,3)
-		# print np.round(inq_D,3)
+		# print np.round(inq_D.flatten(),3)
 
 		## Method A: Using system equation with weightage
-		s_weight = np.array([1, 1, 1, 1, 1, 1]);
 		S = np.diag(s_weight)
 
 		H = 2*mX(A.T, S, A)
@@ -217,7 +221,14 @@ class QPForceDistribution():
 		## Solve QP
 		# cvx_sol = cvxopt_solve_qp(H, q, inq_C, inq_D)
 		qpg_sol = quadprog_solve_qp(H, q, inq_C, inq_D)
-		
+		if qpg_sol is None:
+			print 'Error!'
+			# qpg_sol = quadprog_solve_qp(H, q, inq_C, inq_D+0.001)
+			print v3ca.flatten(), w3ca.flatten(), x_com
+			print p_foot
+			print gphase
+			print fmax
+			
 		qp_sol = qpg_sol
 
 		## Rearrange to publish output
@@ -227,12 +238,13 @@ class QPForceDistribution():
 		for i in range(0,6):
 			if (gphase[i] == 0):
 				for j in range(0,3):
-					force_vector[i*3+j,] = -qp_sol[qc]
+					force_vector[i*3+j,] = qp_sol[qc]
 					qc += 1
 			else:
 				for j in range(0,3):
 					force_vector[i*3+j,] = 0.0
-
+		# print np.round(inq_D[15:18].flatten(),3)
+		# print np.round(force_vector[15:18],3)
 		## Check solution
 		fcounter = 0
 		self.sum_forces = self.sum_moment = 0
@@ -244,7 +256,7 @@ class QPForceDistribution():
 				
 		self.desired_forces  = b[0:3] # ROBOT_MASS*(v3ca+gv)
 		self.desired_moments = b[3:6] # Ig_com*w3ca
-		error_forces = self.desired_forces + self.sum_forces
+		error_forces = self.desired_forces - self.sum_forces
 		error_moment = self.desired_moments - self.sum_moment
 		# print np.round(force_vector.flatten(),3)
 		# print np.transpose(np.round(self.sum_forces,3))
@@ -268,7 +280,7 @@ xb_com = np.array([0.,0.,0.]).reshape((3,1))
 xa_com = np.array([0.,0.,0.]).reshape((3,1))
 wa_com = np.array([0.,0.,0.]).reshape((3,1))
 
-## Test set: all legs in contact
+## Test set - all legs in contact
 ## Foot position - CoM to foot wrt world frame
 # p1 = np.array([ [0.125] ,[ 0.285],[ 0.1] ])
 # p2 = np.array([ [0.00]  ,[ 0.285],[ 0.1] ])
@@ -286,91 +298,41 @@ p6 = np.array([ [-0.115],[-0.31],[ -0.05] ])
 p_foot = [p1, p2, p3, p4, p5, p6] 			# leg position wrt CoM expressed in world frame
 contacts = [0,0,0,0,0,0]
 
-snorm = np.zeros((18,1))
+snorm =  []#np.zeros((18,1))
 for i in range(0,3):
-	# snorm[i*3:i*3+3] = mX(rot_X(PI/2.),np.array([0,0,1])).reshape((3,1))
-	snorm[i*3:i*3+3] = np.array([0., -1., 0.]).reshape((3,1))
+	# snorm[i*3:i*3+3] = np.array([0., 0., 1.]).reshape((3,1))
+	snorm.append(np.array([0., -1., 0.]))
 for i in range(3,6):
-	snorm[i*3:i*3+3] = np.array([0., 1., 0.]).reshape((3,1))
+	# snorm[i*3:i*3+3] = np.array([0., 0., 1.]).reshape((3,1))
+	snorm.append(np.array([0., 1., 0.]))
 farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
 
 ## Test set - 2 legs in contact
-c2 = np.array([ 0,  0.3, 0.0])
-c5 = np.array([ 0, -0.3, 0.0])
-pb = np.array([ 0,  0.0, 0.1])
-p2 = (-pb + c2).reshape((3,1))
-p5 = (-pb + c5).reshape((3,1))
-p_foot = [p2,p5]
-contacts = [1,0,1,1,0,1]
-q = np.array([0, 0.3381, -1.8523, 0, 0.3381, -1.8523])
-qb = np.zeros(3)
+# c2 = np.array([ 0,  0.3, 0.0])
+# c5 = np.array([ 0, -0.3, 0.0])
+# pb = np.array([ 0,  0.0, 0.1])
+# p2 = (-pb + c2).reshape((3,1))
+# p5 = (-pb + c5).reshape((3,1))
+# p_foot = [p2,p5]
+# contacts = [1,0,1,1,0,1]
+# q = np.array([0, 0.3381, -1.8523, 0, 0.3381, -1.8523])
+# qb = np.zeros(3)
 
-snorm = np.array([0., -1., 0., 0., 1., 0.])
-farr = [80., 80.]
+# snorm = np.array([0., -1., 0., 0., 1., 0.])
+# farr = [80., 80.]
 
+## Test set - Inconsistent solution 
+xb_com = np.array( [[ 0.06581812], [ 0.        ], [ 0.]]) 
+wb_com = np.array( [[ 0.],[ 0.1],[ 0.]] )
+xb_com = np.array( [ -1.93852815e-03,   7.85639857e-05,  -7.98505770e-05])
+p_foot = [np.array([ 0.19890486,  0.25071915, -0.0983407 ]), np.array([ 0.05235609,  0.2998471 , -0.09992533]), 
+			np.array([-0.19749435,  0.2510643 , -0.09987582]), 
+			np.array([ 0.30152783, -0.25136944, -0.09986481]), 
+			np.array([ 0.0516551 , -0.30015232, -0.09986504]), 
+			np.array([-0.1987471 , -0.25067399, -0.09986653])]
+contacts = [0, 0, 0, 0, 0, 0]
+farr = [0.0, 80.0, 80.0, 80.0, 80.0, 80.0]
 
+# force_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm)
 # force_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm, qb, q)
 # print np.round(force_vector.flatten(),3)
-
-# f = open('qp_discont.csv', 'w')
-
-# for count_i in range(0,22):
-# 	if (count_i < 10):
-# 		p_foot = [p1, p2, p3, p4, p5, p6] 			
-# 		contacts = [0,0,0,0,0,0]
-# 	else:
-# 		p_foot = [p1, p2, p3, p4, p5] 		
-# 		contacts = [0,0,0,0,0,1]
-
-# 	force_vector, twist = qprog.resolve_force(x_com, w_com, p_foot, Ig_com, contacts)
-# 	data = np.array(force_vector).flatten()
-	
-# 	long_stq = ""
-# 	for q in range(0,18):
-# 		long_stq = long_stq + "," + str(data.item(q))
-
-# 	# f.write(long_stq + '\n')
-
-##########################################################################################
-## 										Sample 											##
-##########################################################################################
-## e.g. min (x) for (Ax-b)^2
-## Taken from https://scaron.info/blog/quadratic-programming-in-python.html
-
-# Matrix variables
-# Mn = np.array([[1., 2., 0.], [-8., 3., 2.], [0., 1., 1.]]) 	# objective function A
-# Pn = np.dot(M.T, M)
-# qn = np.dot(np.array([3., 2., 3.]), M).reshape((3,))			# objective function B
-# Gn = np.array([[1., 2., 1.], [2., 0., 1.], [-1., 2., -1.]]) 	# inequality constraint, A
-# hn = np.array([3., 2., -2.]).reshape((3,)) 					# inequality constraint, b
-
-# print cvxopt_solve_qp(P, q, G, h)
-# print quadprog_solve_qp(P, q, G, h)
-# def cvxopt_solve_qp(P, q, G=None, h=None, A=None, b=None):
-# 	# make sure P is symmetric
-# 	P = .5 * (P + P.T)  
-# 	args = [matrix(P), matrix(q)]
-# 	if G is not None:
-# 		args.extend([matrix(G), matrix(h)])
-# 		if A is not None:
-# 			args.extend([matrix(A), matrix(b)])
-
-# 	sol = solvers.qp(*args)
-
-# 	if 'optimal' not in sol['status']:
-# 		return None
-
-# 	return np.array(sol['x']).reshape((P.shape[1],))
-
-# def quadprog_solve_qp(P, q, G=None, h=None, A=None, b=None):
-#     qp_G = .5 * (P + P.T)   # make sure P is symmetric
-#     qp_a = -q
-#     if A is not None:
-#         qp_C = -np.vstack([A, G]).T
-#         qp_b = -np.hstack([b, h])
-#         meq = A.shape[0]
-#     else:  # no equality constraint
-#         qp_C = -G.T
-#         qp_b = -h
-#         meq = 0
-#     return quadprog.solve_qp(qp_G, qp_a, qp_C, qp_b, meq)[0]

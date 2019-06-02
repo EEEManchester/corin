@@ -16,37 +16,51 @@ class RobotController(CorinManager):
 	def __init__(self, initialise=False):
 		CorinManager.__init__(self, initialise)
 
-	def main_controller(self, motion_plan):
+	def main_controller(self, motion_plan=None):
 
 		## Variables ##
-		state_machine = 'unload' 			# Motion state machine: unload, motion, load
-		cob_X_desired = np.zeros((3,1)) 	# cob linear location
-		cob_W_desired = np.zeros((3,1)) 	# cob angular location
+		cob_X_desired = np.zeros((3,1)) 	# track cob linear location
+		cob_W_desired = np.zeros((3,1)) 	# track cob angular location
 		wXbase_offset = self.Robot.P6c.world_X_base.copy()
 
 		## Variable mapping from motion plan
-		base_path = motion_plan.qb
-		world_X_base = motion_plan.qbp
-		gait_phase 	 = motion_plan.gait_phase
-		w_base_X_NRP = motion_plan.f_world_base_X_NRP
-		world_X_footholds = motion_plan.f_world_X_foot
-		base_X_footholds  = motion_plan.f_base_X_foot
+		if motion_plan is not None:
+			state_machine = 'hold' 			# Motion state machine: unload, motion, load
 
-		## Publish motion plan
-		self.Visualizer.show_motion_plan(self.Robot.P6c.world_X_base, motion_plan.qbp, motion_plan.f_world_X_foot)
-		if (self.interface == 'rviz'):
-			self.publish_topics(JointTrajectoryPoints(18,([],self.Robot.qc.position,[],[])))
-		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
-		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
+			base_path = motion_plan.qb
+			world_X_base = motion_plan.qbp
+			gait_phase 	 = motion_plan.gait_phase
+			w_base_X_NRP = motion_plan.f_world_base_X_NRP
+			world_X_footholds = motion_plan.f_world_X_foot
+			base_X_footholds  = motion_plan.f_base_X_foot
 
-		## Remove initial set of footholds (visualization purpose)
-		for j in range(0,6):
+			## Publish motion plan
+			self.Visualizer.show_motion_plan(self.Robot.P6c.world_X_base, motion_plan.qbp, motion_plan.f_world_X_foot)
+			if (self.interface == 'rviz'):
+				self.publish_topics(JointTrajectoryPoints(18,([],self.Robot.qc.position,[],[])))
+			# Plot.plot_2d(base_path.X.t, base_path.X.xp)
+			# Plot.plot_2d(base_path.W.t, base_path.W.xp)
+
+			## Remove initial set of footholds (visualization purpose)
+			for j in range(0,6):
+				try:
+					world_X_footholds[j].xp.pop(0)
+					base_X_footholds[j].xp.pop(0)
+					w_base_X_NRP[j].xp.pop(0)
+				except:
+					pass
+
+			## Use gait phase from planner if exists
 			try:
-				world_X_footholds[j].xp.pop(0)
-				base_X_footholds[j].xp.pop(0)
-				w_base_X_NRP[j].xp.pop(0)
+				gait_stack = cycle(gait_phase)
+				self.Robot.Gait.cs = next(gait_stack)
 			except:
-				pass
+				print 'No defined gait phases, using periodic'
+
+			path_length = len(base_path.X.t)
+		else:
+			state_machine = 'hold' 			# Motion state machine: unload, motion, load
+			path_length = 2000		
 
 		## User input
 		print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
@@ -58,20 +72,16 @@ class RobotController(CorinManager):
 		else:
 			self.ui_state = 'play'#'hold'
 
-		## Use gait phase from planner if exists
-		try:
-			gait_stack = cycle(gait_phase)
-			self.Robot.Gait.cs = next(gait_stack)
-		except:
-			print 'No defined gait phases, using periodic'
-
 		# State machine loading/unloading timing parameters
 		tload = 1						# timing for loading
 		iload = int(LOAD_T/CTR_INTV) 	# no. of intervals for loading
-
+		change_state = 'hold_to_unload'	# test - load
+		fmax_lim = [F_MAX]*6	# test - load
+		init_flim = [F_MAX]*6
+		gphase = [0]*6
 		## Cycle through trajectory points until complete
 		i = 1 		# skip first point since spline has zero initial differential conditions
-		while (i != len(base_path.X.t) and not rospy.is_shutdown()):
+		while (i != path_length and not rospy.is_shutdown()):
 
 			self.suspend_controller()
 			# print 'counting: ', i, len(base_path.X.t)
@@ -95,23 +105,31 @@ class RobotController(CorinManager):
 			#########################################################################
 			self.Robot.suspend = False # overwrite for selected motions
 			## suppress trajectory counter as body support suspended
-			if (self.Robot.suspend == True):
+			if (self.Robot.suspend == True or state_machine == 'hold'):
 				i -= 1
 
 			#########################################################################
 
 			## Variable mapping to R^(3x1) for base linear and angular time, position, velocity, acceleration
 			## Next Point along base trajectory
-			v3cp = wXbase_offset[0:3] + base_path.X.xp[i].reshape(3,1); 	# GRID PLAN: base trajectory in world frame
-			# v3cp = base_path.X.xp[i].reshape(3,1); 	# CORNERING: base trajectory relative to world frame
-			v3cv = base_path.X.xv[i].reshape(3,1);
-			v3ca = base_path.X.xa[i].reshape(3,1);
+			if motion_plan is not None:
+				v3cp = wXbase_offset[0:3] + base_path.X.xp[i].reshape(3,1); 	# GRID PLAN: base trajectory in world frame
+				# v3cp = base_path.X.xp[i].reshape(3,1); 	# CORNERING: base trajectory relative to world frame
+				v3cv = base_path.X.xv[i].reshape(3,1);
+				v3ca = base_path.X.xa[i].reshape(3,1);
 
-			v3wp = wXbase_offset[3:6] + base_path.W.xp[i].reshape(3,1);
-			# v3wp = base_path.W.xp[i].reshape(3,1);
-			v3wv = base_path.W.xv[i].reshape(3,1);
-			v3wa = base_path.W.xa[i].reshape(3,1);
+				v3wp = wXbase_offset[3:6] + base_path.W.xp[i].reshape(3,1);
+				# v3wp = base_path.W.xp[i].reshape(3,1);	# CORNERING: base trajectory relative to world frame
+				v3wv = base_path.W.xv[i].reshape(3,1);
+				v3wa = base_path.W.xa[i].reshape(3,1);
+			else:
+				v3cp = wXbase_offset[0:3]
+				v3cv = np.zeros((3,1))
+				v3ca = np.zeros((3,1))
 
+				v3wp = wXbase_offset[3:6]
+				v3wv = np.zeros((3,1))
+				v3wa = np.zeros((3,1))
 			## Next CoB location - NOT USED ATM
 			# try:
 			# 	v3cp_n = wXbase_offset[0:3] + base_path.X.xp[i+int(CTR_RATE*GAIT_TPHASE)].reshape(3,1);
@@ -133,53 +151,101 @@ class RobotController(CorinManager):
 			self.Robot.P6d.world_X_base = np.vstack((v3cp,v3wp))
 			self.Robot.V6d.world_X_base = np.vstack((v3cv,v3wv)) 			# not used atm
 			self.Robot.A6d.world_X_base = np.vstack((v3ca,v3wa)) 			# not used atm
-			self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
-
+			self.Robot.update_world_desired_frames()
+			print state_machine, tload, iload+1, self.Robot.Gait.cs
 			if state_machine == 'unload':
-				
+
 				if tload == 1:
-					gphase = [0]*6 	# all legs in support phase at start of unloading
+					gphase = [0]*6 		# all legs in support phase at start of unloading
 					fmax_lim = [0]*6	# max. force array
+					for j in range(0,6):
+						init_flim[j] = self.Robot.Leg[j].F6c.world_X_foot[2] if (self.Robot.Gait.cs[j] == 1) else F_MAX
+					
+				# reduce max force for legs that will be in transfer phase
+				# fmax = F_MAX - tload*F_MAX/float(iload) + 0.001
+				for j in range(0,6):
+					# fmax_lim[j] = fmax if (self.Robot.Gait.cs[j] == 1) else F_MAX
+					fmax = (init_flim[j]+1.) - tload*(init_flim[j]+1.)/float(iload) + 0.001
+					fmax_lim[j] = fmax if (self.Robot.Gait.cs[j] == 1) else F_MAX
+				tload += 1
+
 				if tload == iload+1:
 					tload = 1
 					state_machine = 'motion'
-					# raw_input('To Motion!')
 					print 'Motion ...'
-				else:
-					# reduce max force for legs that will be in transfer phase 
-					fmax = F_MAX - tload*F_MAX/float(iload)
-					for j in range(0,6):
-						fmax_lim[j] = fmax if (self.Robot.Gait.cs[j] == 1) else F_MAX 
-					tload += 1
 
 			elif state_machine == 'load':
-				
+
 				if tload == 1:
-					gphase = [0]*6 	# all legs in support phase at start of unloading
+					gphase = [0]*6 		# all legs in support phase at start of unloading
 					fmax_lim = [0]*6	# max. force array
+
+				# reduce max force for legs that will be in transfer phase
+				fmax = tload*F_MAX/float(iload)
+				for j in range(0,6):
+					# gait phase updated prior to this state, so use previous gait phase
+					fmax_lim[j] = fmax if (self.Robot.Gait.ps[j] == 1) else F_MAX	
+				tload += 1
+
 				if tload == iload+1:
 					tload = 1
 					state_machine = 'unload'
-					# raw_input('To Unload!')
 					print 'Unloading ...'
-				else:
-					# reduce max force for legs that will be in transfer phase 
-					fmax = tload*F_MAX/float(iload)
-					for j in range(0,6):
-						fmax_lim[j] = fmax if (self.Robot.Gait.ps[j] == 1) else F_MAX 
-					tload += 1
 
-			elif state_machine ==  'motion':
-				gphase = self.Robot.Gait.cs
-				fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
+			elif state_machine ==  'motion':# or state_machine == 'hold':
 				
+				fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
+				if state_machine ==  'motion':
+					gphase = self.Robot.Gait.cs
+				# elif state_machine == 'hold':
+				# 	gphase = [0]*6
+				# 	self.Robot.Gait.cs = [0]*6
+				# 	tload += 1
+				# 	if tload == iload+1:
+				# 		state_machine = 'unload'
+				# 		tload = 1
+				# 		raw_input('next')
+				
+				## START - Test for unloading
+				# if change_state == 'hold_to_load':
+				# 	tload += 1
+				# 	if tload == iload+1:
+				# 		change_state = 'load'
+				# 		tload = 1
+				# elif change_state == 'hold_to_unload':
+				# 	tload += 1
+				# 	if tload == iload+1:
+				# 		change_state = 'unload'
+				# 		tload = 1
+				# 		fmax_red = self.Robot.Leg[5].F6c.world_X_foot[2]
+
+				# elif change_state == 'unload':
+				# 	fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
+				# 	if j == 5:
+				# 		fmax_lim[j] = (fmax_red + 0.5) - tload*(fmax_red+0.5)/float(iload) + 0.001
+				# 	tload += 1
+				# 	if tload == iload+1:
+				# 		change_state = 'hold_to_load'
+				# 		tload = 1
+						
+				# elif change_state == 'load':
+				# 	fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
+				# 	if j == 5:
+				# 		fmax_lim[j] = tload*F_MAX/float(iload)
+				# 	tload += 1
+				# 	if tload == iload+1:
+				# 		change_state = 'hold_to_unload'
+				# 		tload = 1
+				# END - Test for unloading
+				# print change_state, np.round(fmax_lim,3)
+
 				## Generate trajectory for legs in transfer phase
 				for j in range (0, self.Robot.active_legs):
-
+					
 					# Transfer phase - generate trajectory
 					if (self.Robot.Gait.cs[j] == 1 and self.Robot.Leg[j].transfer_phase_change==False):
 						self.Robot.Leg[j].feedback_state = 1 	# set leg to execution mode
-						
+
 						## Using planned foothold arrays
 						try:
 							self.Robot.Leg[j].XHd.world_X_foot = v3_X_m(world_X_footholds[j].xp.pop(0))
@@ -270,7 +336,7 @@ class RobotController(CorinManager):
 
 						elif (self.control_loop == "close"):
 							## Closed-loop control on bodypose. Move by sum of desired pose and error
-							
+
 							## Foot position: either position or velocity
 							## Position-control
 							comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + K_BP*P6e_world_X_base)
@@ -278,11 +344,11 @@ class RobotController(CorinManager):
 							self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 
 							## Velocity-control - Focchi2018 eq(3) TODO: check robustness
-							vel_base_X_foot = -V6e_world_X_base[0:3].flatten() - np.cross(V6e_world_X_base[3:6].flatten(), 
+							vel_base_X_foot = -V6e_world_X_base[0:3].flatten() - np.cross(V6e_world_X_base[3:6].flatten(),
 												(self.Robot.Leg[j].XHd.base_X_foot[0:3,3:4] - self.Robot.P6d.world_X_base[0:3]).flatten())
 							base_X_foot = self.Robot.Leg[j].XHd.base_X_foot[0:3,3] + vel_base_X_foot
 							# print j, '  ', base_X_foot - self.Robot.Leg[j].XHd.base_X_foot[0:3,3]
-							
+
 						self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
 						# print j, ' bXw: \n', np.round(self.Robot.XHd.base_X_world,3)
 						# print j, ' wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
@@ -316,13 +382,35 @@ class RobotController(CorinManager):
 
 				i += 1
 
+			elif state_machine == 'hold':
+				# if abs(self.Robot.Leg[5].F6c.world_X_foot[2]) < 0.001:
+				# 	raw_input('kjkj')
+
+				self.Robot.Gait.cs = [0]*6
+				gphase = [0]*6
+				fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
+
+				tload += 1
+				if tload == iload+1:
+					state_machine = 'unload'
+					tload = 1
+					raw_input('next')
+				print 'Hold ', tload, iload+1 
+				# NOTE: MUST UPDATE THE NEXT TWO VARIABLES
+				for j in range (0, 6):
+					## Support phase
+					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
+					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
+
+				i += 1
+
 			## Task to joint space
 			qd, tXj_error = self.Robot.task_X_joint()
 
 			if (self.Robot.invalid == True):
 				print 'Error Occured, robot invalid! ', tXj_error
 				break
-			
+
 			## Force Distribution for all legs
 			if self.control_loop == 'close':
 				# Virtual force-controlled closed-loop control - Focchi2017 eq(3,4)
@@ -333,23 +421,31 @@ class RobotController(CorinManager):
 				wa_d = v3wa
 			force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, gphase, fmax_lim)
 			joint_torq = self.Robot.force_to_torque(force_dist)
-
+			# print np.round(force_dist[15:18],3)
 			## Impedance controller for each legs
-			## TODO: Hassan add call to function here
-			
+			self.Robot.apply_impedance_control(force_dist)
+
+			## Recompute task to joint space
+			qd, tXj_error = self.Robot.task_X_joint()
+
+			if (self.Robot.invalid == True):
+				print 'Error Occured, robot invalid! ', tXj_error
+				break
+
 			## Data logging & publishing
 			qlog = self.set_log_values(v3cp, v3cv, xa_d, v3wp, v3wv, wa_d, qd, joint_torq, force_dist)
 			self.publish_topics(qd, qlog)
-			
+
 			## ============================================================================================================================== ##
 		else:
 			# Finish off transfer legs trajectory onto ground
 			# self.complete_transfer_trajectory()
 			self.Robot.update_state(control_mode=self.control_rate)
 
-			print 'Trajectory executed'
-			print 'Desired Goal: ', np.round(base_path.X.xp[-1],4), np.round(base_path.W.xp[-1],4)
-			print 'Tracked Goal: ', np.round(cob_X_desired.flatten(),4), np.round(cob_W_desired.flatten(),4)
+			if motion_plan is not None:
+				print 'Trajectory executed'
+				print 'Desired Goal: ', np.round(base_path.X.xp[-1],4), np.round(base_path.W.xp[-1],4)
+				print 'Tracked Goal: ', np.round(cob_X_desired.flatten(),4), np.round(cob_W_desired.flatten(),4)
 
 			return True
 
@@ -368,7 +464,7 @@ class RobotController(CorinManager):
 		 	Output: foot force for legs in stance phase """
 
 		now = rospy.get_time()
-		
+
 		## Compute CRBI and CoM, then compute foot force distribution and joint torque
 		self.Robot.update_rbdl(qb, qp)
 		# if (self.rbim_serv_.available):
@@ -378,8 +474,10 @@ class RobotController(CorinManager):
 		# 	except:
 		# 		rbim_valid = False
 		
-		## Append legs in stance phase
-		p_foot = []
+		## Append legs and joint angles in stance phase
+		s_norm = []
+		p_foot = [] 		
+		q_contact = []
 		for j in range(0,6):
 			if (gphase[j] == 0):
 				# world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3],
@@ -387,12 +485,19 @@ class RobotController(CorinManager):
 				world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3],
 					  					(-self.Robot.Rbdl.com.flatten() + self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
 				p_foot.append(world_CoM_X_foot.copy())
-				
+				q_contact.append(qp[(j*3):(j*3)+3])
+		
+				if j <3:
+					# s_norm.append(np.array([0., -1., 0.]))
+					s_norm.append(np.array([0., 0., 1.]))
+				else:
+					s_norm.append(np.array([0., 0., 1.]))
+
 		## Compute force distribution using QP
 		foot_force = self.ForceDist.resolve_force(v3ca, v3wa, p_foot,
 													self.Robot.Rbdl.com,
-													self.Robot.Rbdl.crbi, gphase, fmax )
-		
+													self.Robot.Rbdl.crbi, gphase, fmax, #)
+													s_norm, qb[3:6], qp)
 		end = rospy.get_time()
 		# print 'Tdiff: ', end - now
 
