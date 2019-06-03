@@ -282,29 +282,27 @@ wa_com = np.array([0.,0.,0.]).reshape((3,1))
 
 ## Test set - all legs in contact
 ## Foot position - CoM to foot wrt world frame
-# p1 = np.array([ [0.125] ,[ 0.285],[ 0.1] ])
-# p2 = np.array([ [0.00]  ,[ 0.285],[ 0.1] ])
-# p3 = np.array([ [-0.125],[ 0.285],[ 0.1] ])
-# p4 = np.array([ [0.125] ,[-0.285],[-0.1] ])
-# p5 = np.array([ [0.00]  ,[-0.285],[-0.1] ])
-# p6 = np.array([ [-0.125],[-0.285],[-0.1] ])
-p1 = np.array([ [0.075] ,[ 0.31],[ -0.05] ])
-p2 = np.array([ [0.00]  ,[ 0.31],[ -0.05] ])
-p3 = np.array([ [-0.075],[ 0.31],[ -0.05] ])
-p4 = np.array([ [0.115] ,[-0.31],[ -0.05] ])
-p5 = np.array([ [0.00]  ,[-0.31],[ -0.05] ])
-p6 = np.array([ [-0.115],[-0.31],[ -0.05] ])
+p1 = np.array([ [0.125] ,[ 0.285],[-0.1] ])
+p2 = np.array([ [0.00]  ,[ 0.285],[-0.1] ])
+p3 = np.array([ [-0.125],[ 0.285],[-0.1] ])
+p4 = np.array([ [0.125] ,[-0.285],[-0.1] ])
+p5 = np.array([ [0.00]  ,[-0.285],[-0.1] ])
+p6 = np.array([ [-0.125],[-0.285],[-0.1] ])
+# p1 = np.array([ [0.075] ,[ 0.31],[ -0.05] ])
+# p2 = np.array([ [0.00]  ,[ 0.31],[ -0.05] ])
+# p3 = np.array([ [-0.075],[ 0.31],[ -0.05] ])
+# p4 = np.array([ [0.115] ,[-0.31],[ -0.05] ])
+# p5 = np.array([ [0.00]  ,[-0.31],[ -0.05] ])
+# p6 = np.array([ [-0.115],[-0.31],[ -0.05] ])
 
 p_foot = [p1, p2, p3, p4, p5, p6] 			# leg position wrt CoM expressed in world frame
 contacts = [0,0,0,0,0,0]
 
-snorm =  []#np.zeros((18,1))
+snorm =  []
 for i in range(0,3):
-	# snorm[i*3:i*3+3] = np.array([0., 0., 1.]).reshape((3,1))
-	snorm.append(np.array([0., -1., 0.]))
+	snorm.append(np.array([0., 0., 1.]))
 for i in range(3,6):
-	# snorm[i*3:i*3+3] = np.array([0., 0., 1.]).reshape((3,1))
-	snorm.append(np.array([0., 1., 0.]))
+	snorm.append(np.array([0., 0., 1.]))
 farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
 
 ## Test set - 2 legs in contact
@@ -322,16 +320,16 @@ farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
 # farr = [80., 80.]
 
 ## Test set - Inconsistent solution 
-xb_com = np.array( [[ 0.06581812], [ 0.        ], [ 0.]]) 
-wb_com = np.array( [[ 0.],[ 0.1],[ 0.]] )
-xb_com = np.array( [ -1.93852815e-03,   7.85639857e-05,  -7.98505770e-05])
-p_foot = [np.array([ 0.19890486,  0.25071915, -0.0983407 ]), np.array([ 0.05235609,  0.2998471 , -0.09992533]), 
-			np.array([-0.19749435,  0.2510643 , -0.09987582]), 
-			np.array([ 0.30152783, -0.25136944, -0.09986481]), 
-			np.array([ 0.0516551 , -0.30015232, -0.09986504]), 
-			np.array([-0.1987471 , -0.25067399, -0.09986653])]
-contacts = [0, 0, 0, 0, 0, 0]
-farr = [0.0, 80.0, 80.0, 80.0, 80.0, 80.0]
+# xb_com = np.array( [[ 0.06581812], [ 0.        ], [ 0.]]) 
+# wb_com = np.array( [[ 0.],[ 0.1],[ 0.]] )
+# xb_com = np.array( [ -1.93852815e-03,   7.85639857e-05,  -7.98505770e-05])
+# p_foot = [np.array([ 0.19890486,  0.25071915, -0.0983407 ]), np.array([ 0.05235609,  0.2998471 , -0.09992533]), 
+# 			np.array([-0.19749435,  0.2510643 , -0.09987582]), 
+# 			np.array([ 0.30152783, -0.25136944, -0.09986481]), 
+# 			np.array([ 0.0516551 , -0.30015232, -0.09986504]), 
+# 			np.array([-0.1987471 , -0.25067399, -0.09986653])]
+# contacts = [0, 0, 0, 0, 0, 0]
+# farr = [0.0, 80.0, 80.0, 80.0, 80.0, 80.0]
 
 # force_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm)
 # force_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm, qb, q)

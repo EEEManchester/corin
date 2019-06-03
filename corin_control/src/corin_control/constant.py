@@ -84,7 +84,7 @@ WALL_WIDTH_NARROW = 0.3
 ## ================================================================ ##
 ##                      Controller parameters 	 					##
 ## ================================================================ ##
-CTR_RATE = 60 			# controller rate for robot, Hz
+CTR_RATE = 200 			# controller rate for robot, Hz
 CTR_INTV = 1./CTR_RATE 	# controller interval for robot, s
 
 ## ================================================================ ##
@@ -93,9 +93,9 @@ CTR_INTV = 1./CTR_RATE 	# controller interval for robot, s
 LOAD_T = 2.0	# time for leg load & unloading
 F_MAX = 20.0	# maximum force for leg
 F_MIN = 0.0		# minimum force for leg
-KPcom = np.array([1.0, 1.0, 1.0])
+KPcom = np.array([1.0, 1.0, 1.0])*1.
 KDcom = np.array([1.0, 1.0, 1.0])
-KPang = np.array([1.0, 1.0, 1.0])
+KPang = np.array([1.0, 1.0, 1.0])*1.
 KDang = np.array([1.0, 1.0, 1.0])
 SURFACE_FRICTION = 1.0
 

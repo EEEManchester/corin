@@ -334,7 +334,8 @@ class LegClass:
 		offset_y = self.impedance_controller_y.evaluate(leg_df[1])
 		offset_z = self.impedance_controller_z.evaluate(leg_df[2])
 		
-		# if self.number == 5:		
+		if self.number == 4:		
+			print offset_z
 		self.XHd.coxa_X_foot[0:3,3] += np.array([offset_x, offset_y, offset_z])
 
 		# if self.number == 5:

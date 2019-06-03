@@ -81,6 +81,8 @@ class RobotController(CorinManager):
 		init_flim = [F_MAX]*6
 		gphase = [0]*6
 
+		offset_z = 0.0 	# base impedance
+
 		## Cycle through trajectory points until complete
 		i = 1 		# skip first point since spline has zero initial differential conditions
 		while (i != path_length and not rospy.is_shutdown()):
@@ -100,7 +102,7 @@ class RobotController(CorinManager):
 
 			P6e_world_X_base = self.Robot.P6d.world_X_base - self.Robot.P6c.world_X_base
 			V6e_world_X_base = self.Robot.V6d.world_X_base - self.Robot.V6c.world_X_base
-
+			
 			for j in range(0, self.Robot.active_legs):
 				self.Robot.Leg[j].P6_world_X_base = self.Robot.P6c.world_X_base.copy()
 
@@ -125,13 +127,14 @@ class RobotController(CorinManager):
 				v3wv = base_path.W.xv[i].reshape(3,1);
 				v3wa = base_path.W.xa[i].reshape(3,1);
 			else:
-				v3cp = wXbase_offset[0:3]
+				v3cp = wXbase_offset[0:3] #+ np.array([0.,0.,offset_z]).reshape((3,1))
 				v3cv = np.zeros((3,1))
 				v3ca = np.zeros((3,1))
 
 				v3wp = wXbase_offset[3:6]
 				v3wv = np.zeros((3,1))
 				v3wa = np.zeros((3,1))
+			
 			
 			## Tracking desired translations
 			if (self.Robot.suspend != True):
@@ -325,16 +328,21 @@ class RobotController(CorinManager):
 				break
 
 			## Force Distribution for all legs
-			if self.control_loop == 'close':
+			# if self.control_loop == 'close':
 				# Virtual force-controlled closed-loop control - Focchi2017 eq(3,4)
-				xa_d = mX(np.diag(KPcom), P6e_world_X_base[0:3]) + mX(np.diag(KDcom), V6e_world_X_base[0:3])
-				wa_d = mX(np.diag(KPang), P6e_world_X_base[3:6]) + mX(np.diag(KDang), V6e_world_X_base[3:6])
-			else:
-				xa_d = v3ca
-				wa_d = v3wa
+			xa_d = mX(np.diag(KPcom), P6e_world_X_base[0:3]) + mX(np.diag(KDcom), V6e_world_X_base[0:3])
+			wa_d = mX(np.diag(KPang), P6e_world_X_base[3:6]) + mX(np.diag(KDang), V6e_world_X_base[3:6])
+			
+			# else:
+			# xa_d = v3ca #np.array([0.,0.,5.0])
+			# wa_d = v3wa
 			force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, gphase, fmax_lim)
 			joint_torq = self.Robot.force_to_torque(force_dist)
-			
+			# print np.round(force_dist.flatten(),3)
+
+			## Base impedance
+			offset_z = self.Robot.apply_base_impedance(force_dist[12:15])
+
 			## Impedance controller for each legs
 			self.Robot.apply_impedance_control(force_dist)
 
@@ -436,24 +444,24 @@ class RobotController(CorinManager):
 		for j in range (0, 6):
 			if (self.Robot.Gait.cs[j] == 0 and self.Robot.suspend == False):
 				## Determine foot position wrt base & coxa - REQ: world_X_foot position
-				if (self.control_loop == "open"):
-					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
+				# if (self.control_loop == "open"):
+				# 	self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 
-				elif (self.control_loop == "close"):
-					## Closed-loop control on bodypose. Move by sum of desired pose and error
+				# elif (self.control_loop == "close"):
+				# 	## Closed-loop control on bodypose. Move by sum of desired pose and error
 					
-					## Foot position: either position or velocity
-					## Position-control
-					comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + K_BP*P6e_world_X_base)
-					comp_base_X_world = np.linalg.inv(comp_world_X_base)
-					self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
+				# 	## Foot position: either position or velocity
+				# 	## Position-control
+				# 	comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + K_BP*P6e_world_X_base)
+				# 	comp_base_X_world = np.linalg.inv(comp_world_X_base)
+				# 	self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 
-					## Velocity-control - Focchi2018 eq(3) TODO: check robustness
-					vel_base_X_foot = -V6e_world_X_base[0:3].flatten() - np.cross(V6e_world_X_base[3:6].flatten(), 
-										(self.Robot.Leg[j].XHd.base_X_foot[0:3,3:4] - self.Robot.P6d.world_X_base[0:3]).flatten())
-					base_X_foot = self.Robot.Leg[j].XHd.base_X_foot[0:3,3] + vel_base_X_foot
-					# print j, '  ', base_X_foot - self.Robot.Leg[j].XHd.base_X_foot[0:3,3]
-					
+				# 	## Velocity-control - Focchi2018 eq(3) TODO: check robustness
+				# 	vel_base_X_foot = -V6e_world_X_base[0:3].flatten() - np.cross(V6e_world_X_base[3:6].flatten(), 
+				# 						(self.Robot.Leg[j].XHd.base_X_foot[0:3,3:4] - self.Robot.P6d.world_X_base[0:3]).flatten())
+				# 	base_X_foot = self.Robot.Leg[j].XHd.base_X_foot[0:3,3] + vel_base_X_foot
+				# 	# print j, '  ', base_X_foot - self.Robot.Leg[j].XHd.base_X_foot[0:3,3]
+				self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 				self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
 
 				# print j, ' bXw: \n', np.round(self.Robot.XHd.base_X_world,3)

@@ -67,14 +67,14 @@ if __name__ == "__main__":
 		pub_05.publish(q2)
 		pub_08.publish(q2)
 		pub_11.publish(q2)
-		pub_14.publish(q2)
+		pub_14.publish(0.65)
 		pub_17.publish(q2)
 
 		pub_03.publish(q3)
 		pub_06.publish(q3)
 		pub_09.publish(q3)
 		pub_12.publish(q3)
-		pub_15.publish(q3)
+		pub_15.publish(-2.)
 		pub_18.publish(q3)
 
 		rospy.sleep(0.2) 	# small delay
@@ -133,14 +133,14 @@ if __name__ == "__main__":
 		pub_05.publish(q2)
 		pub_08.publish(q2)
 		pub_11.publish(q2)
-		pub_14.publish(q2)
+		pub_14.publish(0.65)
 		pub_17.publish(q2)
 
 		pub_03.publish(q3)
 		pub_06.publish(q3)
 		pub_09.publish(q3)
 		pub_12.publish(q3)
-		pub_15.publish(q3)
+		pub_15.publish(-2.0)
 		pub_18.publish(q3)
 
 		rospy.sleep(0.2) 	# small delay

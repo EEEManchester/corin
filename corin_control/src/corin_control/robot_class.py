@@ -21,6 +21,7 @@ import robot_transforms					# transformation and vector class for robot
 from matrix_transforms import *			# generic transformation library
 import rigid_body_inertia as Rbi
 import plotgraph as Plot 				# plot library
+from impedance_controller import ImpedanceController
 
 class RobotState:
 	def __init__(self):
@@ -59,6 +60,8 @@ class RobotState:
 		self.P6c.world_X_base[2] = BODY_HEIGHT
 		leg_stance = self.init_robot_stance()
 		# self._initialise(leg_stance)
+
+		self.impedance_controller_z = ImpedanceController(2, 3.0, 0.005)	# hassan: 2, 1.5, 0.001
 
 	def init_robot_stance(self, stance_type="flat"):
 
@@ -170,7 +173,6 @@ class RobotState:
 				self.V6c.world_X_base = self.V6d.world_X_base.copy()
 				self.A6c.world_X_base = self.A6d.world_X_base.copy()
 
-
 	def update_stability_margin(self):
 		""" updates the current stability margin """
 
@@ -265,6 +267,10 @@ class RobotState:
 		for j in range(0,6):
 			err_list[j], qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
 			
+			## FAULT INDUCE
+			if j == 4:
+				qpd = np.array([[0., 0.65, -2.02]])
+
 			## append to list if valid, otherwise break and raise error
 			err_str = ''
 			if (err_list[j] == 0):
@@ -322,6 +328,17 @@ class RobotState:
 		for j in range(0,6):
 			# if j == 5:
 			self.Leg[j].apply_impedance_controller(force_dist[j*3:j*3+3])
+
+	def apply_base_impedance(self, desired_force):
+	
+		world_df = (self.Leg[4].F6c.world_X_foot[0:3] - desired_force[0:3]).flatten()
+		# Transform to leg frame
+		leg_df = mX(self.Leg[4].XHd.coxa_X_world[:3,:3], world_df)
+
+		offset_z = self.impedance_controller_z.evaluate(leg_df[2])
+		
+		return offset_z
+		# self.XHd.coxa_X_foot[0:3,3] += np.array([offset_x, offset_y, offset_z])
 
 	def duplicate_self(self, robot):
 		""" Duplicates robot state by creating local copy of input robot """
