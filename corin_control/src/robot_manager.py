@@ -199,7 +199,7 @@ class CorinManager:
 		""" Initialises services used in manager """
 
 		self.grid_serv_ = ServiceHandler('/GridMap/query_map', PlanPath)
-		self.rbim_serv_ = ServiceHandler('/Corin/get_rigid_body_matrix', RigidBody)
+		# self.rbim_serv_ = ServiceHandler('/Corin/get_rigid_body_matrix', RigidBody)
 
 	def publish_topics(self, q, qlog=None, q_trac=None):
 		""" Publish joint position to joint controller topics and

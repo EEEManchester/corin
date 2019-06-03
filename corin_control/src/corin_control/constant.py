@@ -91,7 +91,7 @@ CTR_INTV = 1./CTR_RATE 	# controller interval for robot, s
 ##                 Force Distribution parameters 	 				##
 ## ================================================================ ##
 LOAD_T = 2.0	# time for leg load & unloading
-F_MAX = 10.0	# maximum force for leg
+F_MAX = 20.0	# maximum force for leg
 F_MIN = 0.0		# minimum force for leg
 KPcom = np.array([1.0, 1.0, 1.0])
 KDcom = np.array([1.0, 1.0, 1.0])
@@ -146,7 +146,7 @@ GAIT_TPHASE	 = 2.0 	# default period per gait phase
 STEP_HEIGHT  = 0.04	# default step height, z
 STEP_STROKE  = 0.1 	# default step stroke
 
-BASE_MAX_LINEAR_VELOCITY  = 0.015	# maximum base velocity, m/s - walking: 0.025
+BASE_MAX_LINEAR_VELOCITY  = 0.01	# maximum base velocity, m/s - walking: 0.025
 BASE_MAX_ANGULAR_VELOCITY = 0.01	# maximum base velocity, rad/s
 
 ## ================================================================ ##

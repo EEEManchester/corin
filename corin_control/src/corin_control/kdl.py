@@ -4,6 +4,7 @@
 ## Transformation with respect to SCS (origin is joint 1 frame)
 import sys; sys.dont_write_bytecode = True
 import numpy as np
+import timeit
 from scipy import linalg
 
 from matrix_transforms import *
@@ -235,7 +236,8 @@ bodypose = np.array([0.,0.,BODY_HEIGHT, 0.,0.,0.])
 # print cd.flatten()
 cd = [0.24 , -0.0,  0.]
 qp = CK.leg_IK(cd,0)
-# print qp
+print qp
+CK.check_singularity(qp)
 # if (not CK.check_singularity(qp)):
 # 	qd,qdd = CK.joint_speed(qp, v, a)
 q = np.array([0., -0.15, -0.90])
@@ -246,6 +248,40 @@ qb = np.array([0.2, 0., 0.])
 # print np.round(temp,5)
 # print np.round(CK.world_leg_jacobian(5, qb, q),5)
 
-# [[ 0.244 -0.051 -0.066]
-#  [-0.204 -0.061 -0.078]
-#  [-0.     0.258  0.11 ]]
+# code snippet to be executed only once 
+mysetup = "from math import sqrt"
+  
+# code snippet whose execution time is to be measured 
+mycode = ''' 
+try:
+	q = [-0.,          0.92729522, -1.85459044]
+	Jv = np.zeros((3,3))
+	try:
+		q1 = q[0]; q2 = q[1]; q3 = q[2]
+		
+		Jv[0,0] = -np.sin(q1)*(L3*np.cos(q2+q3)+np.cos(q2)*L2+L1)
+		Jv[0,1] = -np.cos(q1)*(L3*np.sin(q2+q3)+np.sin(q2)*L2)
+		Jv[0,2] = -np.sin(q2+q3)*np.cos(q1)*L3
+		Jv[1,0] = np.cos(q1)*(L3*np.cos(q2+q3)+np.cos(q2)*L2+L1)
+		Jv[1,1] = -np.sin(q1)*(L3*np.sin(q2+q3)+np.sin(q2)*L2)
+		Jv[1,2] = -np.sin(q2+q3)*np.sin(q1)*L3
+		Jv[2,1] = L3*np.cos(q2+q3)+np.cos(q2)*L2
+		Jv[2,2] = L3*np.cos(q2+q3)
+	except:
+		pass
+
+	rank = np.linalg.matrix_rank(Jv)
+	if (rank < 3):
+		pass
+	else:
+		pass
+except Exception, e:
+	pass
+'''
+  
+# timeit statement 
+# t_iter = 100000
+# t_total = timeit.timeit(setup = mysetup, 
+#                     stmt = mycode, 
+#                     number = 100000) 
+# print t_total/t_iter

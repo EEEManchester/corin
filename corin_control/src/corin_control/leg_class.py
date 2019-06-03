@@ -33,7 +33,7 @@ class LegClass:
 		# Impedance control (fn, D, G)
 		self.impedance_controller_x = ImpedanceController(1, 1, 0) # No gain (control along x and y)
 		self.impedance_controller_y = ImpedanceController(1, 1, 0)
-		self.impedance_controller_z = ImpedanceController(2, 2.0, 0.005)	# hassan: 2, 1.5, 0.001
+		self.impedance_controller_z = ImpedanceController(2, 3.0, 0.005)	# hassan: 2, 1.5, 0.001
 
 		# transfer phase variables - created in controller class and stored here
 		self.xspline = TrajectoryPoints() 		# trajectory in cartesian position
@@ -222,9 +222,11 @@ class LegClass:
 				error = 1
 			else:
 				if (self.KDL.check_singularity(self.Joint.qpd) is False):
-					self.Joint.qvd, self.Joint.qad = self.KDL.joint_speed(self.Joint.qpd,
-																			self.V6d.coxa_X_foot,
-																			self.A6d.coxa_X_foot)
+					# self.Joint.qvd, self.Joint.qad = self.KDL.joint_speed(self.Joint.qpd,
+					# 														self.V6d.coxa_X_foot,
+					# 														self.A6d.coxa_X_foot)
+					self.Joint.qvd = np.zeros(3)
+					self.Joint.qad = np.zeros(3)
 				else:
 					error = 2
 		else:
@@ -311,8 +313,7 @@ class LegClass:
 
 		## Variable mapping ##
 		i = self.spline_counter
-		# try:
-
+		
 		self.XHd.update_coxa_X_foot(self.qspline.xp[i])
 		self.V6d.coxa_X_foot[:3]  = self.xspline.xv[i].reshape(3,1)
 		self.A6d.coxa_X_foot[:3]  = self.xspline.xa[i].reshape(3,1)
@@ -321,14 +322,34 @@ class LegClass:
 		if (self.spline_counter == self.spline_length):
 			self.feedback_state = 2
 		return True
-		# except:
-		# 	self.feedback_state = 2
-		# 	return False
+
+	def apply_impedance_controller(self, desired_force):
+		# Currently only applied to z-axis
+
+		world_df = (self.F6c.world_X_foot[0:3] - desired_force[0:3]).flatten()
+		# Transform to leg frame
+		leg_df = mX(self.XHd.coxa_X_world[:3,:3], world_df)
+
+		offset_x = self.impedance_controller_x.evaluate(leg_df[0])
+		offset_y = self.impedance_controller_y.evaluate(leg_df[1])
+		offset_z = self.impedance_controller_z.evaluate(leg_df[2])
+		
+		# if self.number == 5:		
+		self.XHd.coxa_X_foot[0:3,3] += np.array([offset_x, offset_y, offset_z])
+
+		# if self.number == 5:
+		# 	print 'F wXf: ', np.round(self.F6c.world_X_foot[0:3].flatten(),3), np.round(desired_force[0:3].flatten(),3)
+		# 	print 'offst: ', np.round(offset_z,4)
+		# 	print 'cXf  : ', np.round(self.XHd.coxa_X_foot[0:3,3].flatten(),3)
+			# print 'F des: ', np.round(desired_force[0:3].flatten(),3)
+			# print 'F Wdf: ', np.round(world_df.flatten(),3)
+		# 	print 'F Ldf: ', np.round(leg_df.flatten(),3)
+			# print 'cXfoo: ', np.round(self.XHd.coxa_X_foot[0:3,3],3)
+		# 	print '========================================='
 
 	def singular_recovery(self):
 		""" sets the leg to default position when leg is singular """
 		pass
-
 
 	def duplicate_self(self, leg):
 		""" Duplicates leg state by creating local copy of input leg """
@@ -345,32 +366,9 @@ class LegClass:
 		self.XH_world_X_base = leg.XH_world_X_base.copy()
 		self.P6_world_X_base = leg.P6_world_X_base.copy()
 
-
-	def apply_impedance_controller(self, desired_force):
-		# Currently only applied to z-axis
-
-		world_df = (self.F6c.world_X_foot[0:3] - desired_force[0:3]).flatten()
-		# Transform to leg frame
-		leg_df = mX(self.XHd.coxa_X_world[:3,:3], world_df)
-
-		offset_x = self.impedance_controller_x.evaluate(leg_df[0])
-		offset_y = self.impedance_controller_y.evaluate(leg_df[1])
-		offset_z = self.impedance_controller_z.evaluate(leg_df[2])
-		
-		if self.number == 5:		
-			self.XHd.coxa_X_foot[0:3,3] += np.array([offset_x, offset_y, offset_z])
-
-		# if self.number == 5:
-		# 	print 'F wXf: ', np.round(self.F6c.world_X_foot[0:3].flatten(),3), np.round(desired_force[0:3].flatten(),3)
-		# 	print 'offst: ', np.round(offset_z,4)
-		# 	print 'cXf  : ', np.round(self.XHd.coxa_X_foot[0:3,3].flatten(),3)
-			# print 'F des: ', np.round(desired_force[0:3].flatten(),3)
-			# print 'F Wdf: ', np.round(world_df.flatten(),3)
-		# 	print 'F Ldf: ', np.round(leg_df.flatten(),3)
-			# print 'cXfoo: ', np.round(self.XHd.coxa_X_foot[0:3,3],3)
-		# 	print '========================================='
-
-
+## ================================================================================================ ##
+## 												TESTING 											##
+## ================================================================================================ ##
 
 ## Force transformation
 q = [ 0.0,  0.39504276, -1.90163425]

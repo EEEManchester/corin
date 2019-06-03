@@ -264,7 +264,7 @@ class RobotState:
 
 		for j in range(0,6):
 			err_list[j], qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
-
+			
 			## append to list if valid, otherwise break and raise error
 			err_str = ''
 			if (err_list[j] == 0):
@@ -282,7 +282,7 @@ class RobotState:
 				else:
 					err_str = 'Unknown error'
 				print err_str
-
+		
 		## check to ensure size is correct
 		if (len(qp)==18):
 			self.qd = qp 	# remap for "fast"
@@ -320,8 +320,8 @@ class RobotState:
 
 	def apply_impedance_control(self, force_dist):
 		for j in range(0,6):
-			if j == 5:
-				self.Leg[j].apply_impedance_controller(force_dist[j*3:j*3+3])
+			# if j == 5:
+			self.Leg[j].apply_impedance_controller(force_dist[j*3:j*3+3])
 
 	def duplicate_self(self, robot):
 		""" Duplicates robot state by creating local copy of input robot """
