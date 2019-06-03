@@ -148,6 +148,7 @@ class CorinManager:
 
 		##***************** PUBLISHERS ***************##
 		self.log_sp_pub_ = rospy.Publisher('/corin/log_setpoints', LoggingState, queue_size=1)	# LOGGING setpoint publisher
+		self.log_ac_pub_ = rospy.Publisher('/corin/log_actual', LoggingState, queue_size=1)		# LOGGING setpoint publisher
 		self.stability_pub_ = rospy.Publisher('/corin/stability_margin', Float64, queue_size=1) # Stability margin publisher
 
 		## Hardware Specific Publishers ##
@@ -250,6 +251,8 @@ class CorinManager:
 		if (qlog is not None):
 			self.log_sp_pub_.publish(qlog)
 
+		self.log_ac_pub_.publish(self.set_log_actual())
+		
 		## Runs controller at desired rate for normal control mode
 		if (self.control_rate is "normal" or self.interface is 'robotis'):
 			self.rate.sleep()
@@ -411,14 +414,14 @@ class CorinManager:
 
 		## check action to take - rosparam server
 		data = self.Action.action_to_take()
-		print data
+		# data = 1
 
 		if (data is not None):
 			self.Visualizer.clear_visualisation()
 
 			## Data mapping - for convenience
 			x_cob, w_cob, mode, motion_prim = data
-			# mode = 4 	# HARDCODED TO IMPORT MOTION PLAN
+			# mode = 6 	# HARDCODED TO IMPORT MOTION PLAN
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
 				print 'Going to standup'
@@ -519,6 +522,8 @@ class CorinManager:
 					print 'Planning service unavailable, exiting...'
 
 			elif (mode == 5):
+				# Execute motion plan from ros_grid_planner
+
 				rospy.wait_for_service(ROBOT_NS + '/import_motion_plan', 1.0)
 				try:
 					path_planner = rospy.ServiceProxy(ROBOT_NS + '/import_motion_plan', PlanPath)
@@ -558,8 +563,53 @@ class CorinManager:
 
 				if (self.main_controller(motion_plan)):
 					self.Robot.alternate_phase()
+
 		else:
+			self.Robot.Gait.support_mode()
+			self.main_controller()
 			rospy.sleep(0.5)
+
+	def set_log_values(self, v3cp, v3cv, v3ca, v3wp, v3wv, v3wa, qd, effort=None, forces=None):
+		""" Sets the variables for logging """
+
+		qlog = LoggingState()
+		qlog.positions = v3cp.flatten().tolist() + v3wp.flatten().tolist() + qd.xp.tolist()
+		qlog.velocities = v3cv.flatten().tolist() + v3wv.flatten().tolist() + qd.xv.tolist()
+		qlog.accelerations = v3ca.flatten().tolist() + v3wa.flatten().tolist() + qd.xa.tolist()
+		qlog.effort = effort
+		qlog.forces = forces
+		
+		qlog.qp_sum_forces = self.ForceDist.sum_forces.flatten().tolist()
+		qlog.qp_sum_moments = self.ForceDist.sum_moments.flatten().tolist()
+		qlog.qp_desired_forces = self.ForceDist.desired_forces.flatten().tolist()
+		qlog.qp_desired_moments = self.ForceDist.desired_moments.flatten().tolist()
+
+		return qlog
+
+	def set_log_actual(self):
+
+		contact_force = [0]*18
+		for j in range(0,6):
+			contact_force[j*3:j*3+3] = self.Robot.Leg[j].F6c.world_X_foot[:3]
+
+		qlog = LoggingState()
+		qlog.positions  = self.Robot.P6c.world_X_base[0:3].flatten().tolist() + self.Robot.P6c.world_X_base[3:6].flatten().tolist() + list(self.Robot.qc.position)
+		qlog.velocities = self.Robot.V6c.world_X_base[0:3].flatten().tolist() + self.Robot.V6c.world_X_base[3:6].flatten().tolist() + list(self.Robot.qc.velocity)
+		
+		qlog.effort = list(self.Robot.qc.effort)
+		qlog.forces = contact_force
+
+		return qlog
+
+	def visualize_support_polygon(self):
+		""" extracts the legs in support phase for generating the support polygon in RViZ """
+
+		foothold_list = []
+		for j in [0,1,2,5,4,3]:
+			if (self.Robot.Gait.cs[j]==0):
+				foothold_list.append(self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
+		self.Visualizer.publish_support_polygon(foothold_list)
+
 
 	def get_snorm(self, p, j):
 		## surface normal for chimney
@@ -599,29 +649,3 @@ class CorinManager:
 		# 	print j, p
 
 		return snorm
-
-	def set_log_values(self, v3cp, v3cv, v3ca, v3wp, v3wv, v3wa, qd, effort=None, forces=None):
-		""" Sets the variables for logging """
-
-		qlog = LoggingState()
-		qlog.positions = v3cp.flatten().tolist() + v3wp.flatten().tolist() + qd.xp.tolist()
-		qlog.velocities = v3cv.flatten().tolist() + v3wv.flatten().tolist() + qd.xv.tolist()
-		qlog.accelerations = v3ca.flatten().tolist() + v3wa.flatten().tolist() + qd.xa.tolist()
-		qlog.effort = effort
-		qlog.forces = forces
-		
-		qlog.qp_sum_forces = self.ForceDist.sum_forces.flatten().tolist()
-		qlog.qp_sum_moments = self.ForceDist.sum_moments.flatten().tolist()
-		qlog.qp_desired_forces = self.ForceDist.desired_forces.flatten().tolist()
-		qlog.qp_desired_moments = self.ForceDist.desired_moments.flatten().tolist()
-
-		return qlog
-
-	def visualize_support_polygon(self):
-		""" extracts the legs in support phase for generating the support polygon in RViZ """
-
-		foothold_list = []
-		for j in [0,1,2,5,4,3]:
-			if (self.Robot.Gait.cs[j]==0):
-				foothold_list.append(self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
-		self.Visualizer.publish_support_polygon(foothold_list)

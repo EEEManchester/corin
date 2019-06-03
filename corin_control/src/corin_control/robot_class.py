@@ -145,8 +145,8 @@ class RobotState:
 			self.V6c.world_X_base = self.V6d.world_X_base.copy()
 			self.A6c.world_X_base = self.A6d.world_X_base.copy()
 		else:
-			## Hassan: I'm presuming the contents in this function will be changed. The next two lines are the variables 
-			## that will be used in the main code, they are a row vector of 6x1 (linear, angular) 
+			## Hassan: I'm presuming the contents in this function will be changed. The next two lines are the variables
+			## that will be used in the main code, they are a row vector of 6x1 (linear, angular)
 			# self.P6c.world_X_base = hassan_state_estimation_output()
 			# self.V6c.world_X_base = hassan_state_estimation_output()
 			self.imu = None
@@ -169,7 +169,7 @@ class RobotState:
 				self.XHc.update_base(self.P6c.world_X_base)
 				self.V6c.world_X_base = self.V6d.world_X_base.copy()
 				self.A6c.world_X_base = self.A6d.world_X_base.copy()
-                
+
 
 	def update_stability_margin(self):
 		""" updates the current stability margin """
@@ -212,7 +212,7 @@ class RobotState:
 
 	def update_rbdl(self, qb, qp):
 		""" Updates robot CoM and CRBI """
-		
+
 		self.Rbdl.update_CRBI(qb)
 		self.Rbdl.update_CoM(qp)
 		""" remaps tuple to numpy array """
@@ -222,6 +222,13 @@ class RobotState:
 		# 	for j in range(0,3):
 		# 		self.CRBI[i,j] = i_crbi[nc]
 		# 		nc += 1
+
+	def update_world_desired_frames(self):
+		""" Update frames wrt to world """
+
+		self.XHd.update_world_X_base(self.P6d.world_X_base)
+		for j in range(0,6):
+			self.Leg[j].XHd.update_world_X_coxa(self.XHd.world_X_base)
 
 	def alternate_phase(self, new_phase=None):
 		""" change gait to next phase """
@@ -291,7 +298,7 @@ class RobotState:
 
 		for j in range(0,6):
 			# Transform foot force from world to hip frame
-			self.Leg[j].XHd.update_world_X_coxa(self.XHd.world_X_base)
+			# self.Leg[j].XHd.update_world_X_coxa(self.XHd.world_X_base)
 			self.Leg[j].F6d.world_X_foot[:3] = fforce[j*3:j*3+3]
 			self.Leg[j].F6d.coxa_X_foot[:3] = mX(self.Leg[j].XHd.coxa_X_world[:3,:3],self.Leg[j].F6d.world_X_foot[:3])
 
@@ -310,6 +317,11 @@ class RobotState:
 		else:
 			print 'Error in force to torque conversion!'
 			return None
+
+	def apply_impedance_control(self, force_dist):
+		for j in range(0,6):
+			if j == 5:
+				self.Leg[j].apply_impedance_controller(force_dist[j*3:j*3+3])
 
 	def duplicate_self(self, robot):
 		""" Duplicates robot state by creating local copy of input robot """

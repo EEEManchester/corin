@@ -40,9 +40,11 @@ G = array([[1., 2., 1.], [2., 0., 1.], [-1., 2., -1.]])
 h = array([3., 2., -2.]).reshape((3,))
 
 temp = 0.5*(M + M.T) + np.eye(len(M))*(0.001)
+
 print np.all(np.linalg.eigvals(M) > 0)
 print np.all(np.linalg.eigvals(temp) > 0)
 print np.all(np.linalg.eigvals(P) > 0)
+
 print np.linalg.eigvals(M)
 print np.linalg.eigvals(temp)
 print np.linalg.eigvals(P)
