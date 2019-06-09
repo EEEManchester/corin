@@ -90,12 +90,12 @@ CTR_INTV = 1./CTR_RATE 	# controller interval for robot, s
 ## ================================================================ ##
 ##                 Force Distribution parameters 	 				##
 ## ================================================================ ##
-LOAD_T = 2.0	# time for leg load & unloading
+LOAD_T = .2	# time for leg load & unloading
 F_MAX = 20.0	# maximum force for leg
 F_MIN = 0.0		# minimum force for leg
-KPcom = np.array([1.0, 1.0, 1.0])*1.
+KPcom = np.array([1.0, 1.0, 1.0])*1000. #
 KDcom = np.array([1.0, 1.0, 1.0])
-KPang = np.array([1.0, 1.0, 1.0])*1.
+KPang = np.array([1.0, 1.0, 1.0])*500.
 KDang = np.array([1.0, 1.0, 1.0])
 SURFACE_FRICTION = 1.0
 
@@ -128,7 +128,7 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 
 BOUND_FACTOR = 1.1 	# boundary constraint for leg workplane space
 LEG_CLEAR 	 = 0.06 	# clearance between leg workplane boundaries
-STANCE_WIDTH = 0.21		# ori: 0.21, chimney: 0.27, 0.31 for tripod
+STANCE_WIDTH = 0.21		# ori: 0.21, chimney: 0.23, 0.27, 0.31 for tripod
 BODY_HEIGHT  = 0.10		# ori: 0.10, chimney: 0.0
 # Offset for front and rear legs
 TETA_F = 0.;

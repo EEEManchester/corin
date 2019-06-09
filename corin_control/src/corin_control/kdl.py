@@ -234,19 +234,16 @@ bodypose = np.array([0.,0.,BODY_HEIGHT, 0.,0.,0.])
 # print CK.singularity_approach(qs)
 # cd = CK.leg_FK(qs)
 # print cd.flatten()
-cd = [0.24 , -0.0,  0.]
-qp = CK.leg_IK(cd,0)
-print qp
-CK.check_singularity(qp)
+cd = [0.15 , -0.0,  -0.1]
+cd = [0.17619022, -0.14784115, -0.]
+qp = CK.leg_IK(cd)
+# print np.rad2deg(qp[1])
+# print qp
+# CK.check_singularity(qp)
 # if (not CK.check_singularity(qp)):
 # 	qd,qdd = CK.joint_speed(qp, v, a)
-q = np.array([0., -0.15, -0.90])
-qb = np.zeros(3)
-qb = np.array([0.2, 0., 0.])
-
-# print np.round(np.dot(temp, CK.leg_jacobian(q)),3)
-# print np.round(temp,5)
-# print np.round(CK.world_leg_jacobian(5, qb, q),5)
+# qpd = np.array([0., 0.34, -1.85])
+# print CK.leg_FK(qpd)
 
 # code snippet to be executed only once 
 mysetup = "from math import sqrt"

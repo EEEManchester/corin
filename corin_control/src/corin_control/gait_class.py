@@ -19,6 +19,8 @@ class GaitClass:
 		self.step_stroke = STEP_STROKE#self.set_step_stroke(LEG_STANCE, LEG_CLEAR, STEP_STROKE)
 		self.step_height = STEP_HEIGHT
 
+		self.fault = []		# walk mode either 'normal' or 'fault'; latter discontinuous phase gait
+
 		# States
 		self.cs = [0]*6	# current 
 		self.ds = [0]*6	# desired 
@@ -151,12 +153,17 @@ class GaitClass:
 ## 												TESTING 											##
 ## ================================================================================================ ##
 
-gait = GaitClass(3)
-# print gait.cs
+gait = GaitClass(1)
 leg = 1
-# for i in range(0, len(gait.phases)):
+for i in range(0, len(gait.phases)):
 # 	print 'checking: ', gait.phases[i]
-	
+	# print gait.cs, gait.cs.index(1)
+	# if gait.cs.index(1) == gait.fault[0]:
+	# 	print 'Custom support: ', gait.cs
+	# else:
+	# 	print 'Transfer only: ', gait.cs
+	gait.change_phase()
+
 # 	if (gait.phases[i][leg] == 1):
 # 		print 'found: ', gait.phases[i]
 # for i in range(0,3):

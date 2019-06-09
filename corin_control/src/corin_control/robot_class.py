@@ -22,6 +22,7 @@ from matrix_transforms import *			# generic transformation library
 import rigid_body_inertia as Rbi
 import plotgraph as Plot 				# plot library
 from impedance_controller import ImpedanceController
+from fault_controller import FaultController
 
 class RobotState:
 	def __init__(self):
@@ -58,10 +59,13 @@ class RobotState:
 		self.A6d = robot_transforms.Vector6D() 				# acceleration: desired
 
 		self.P6c.world_X_base[2] = BODY_HEIGHT
-		leg_stance = self.init_robot_stance()
-		# self._initialise(leg_stance)
+		
+		self.impedance_controller_z = ImpedanceController(2, 3.0, 0.005)	# fn, D, G
+		self.Fault = FaultController()
 
-		self.impedance_controller_z = ImpedanceController(2, 3.0, 0.005)	# hassan: 2, 1.5, 0.001
+		leg_stance = self.init_robot_stance("chimney")
+		
+		# self._initialise(leg_stance)
 
 	def init_robot_stance(self, stance_type="flat"):
 
@@ -69,7 +73,7 @@ class RobotState:
 
 	def _initialise(self, leg_stance):
 		""" Initialises robot class for setting up number of legs """
-
+		
 		for j in range(6):
 			self.qd = self.KDL.leg_IK(leg_stance[j])
 			self.Leg.append(leg_class.LegClass(j))
@@ -184,8 +188,7 @@ class RobotState:
 			stack_world_bXw.append(self.Leg[j].XHc.world_base_X_foot[:3,3])
 			stack_base_bXw.append(self.Leg[j].XHc.base_X_foot[:3,3])
 
-		# self.SM.check_angle(stack_world_bXw, self.Gait.cs)
-		# compute Longitudinal Stability Margin
+		# Kinematic stability margin
 		valid, sm = self.SM.point_in_convex(np.zeros(3), stack_world_bXw, self.Gait.cs)
 
 		if not valid:
@@ -197,20 +200,6 @@ class RobotState:
 
 		if sm < 0.:
 			self.invalid = True
-		# sm = self.SM.LSM(stack_world_bXw, self.Gait.cs)
-		# # print self.Gait.cs
-		# # print stack_world_bXw
-		# print 'SM: ', np.round(sm,3)
-		# try:
-		# 	if (sm[0]<=SM_MIN or sm[1]<=SM_MIN):
-		# 		print 'Stability Violated!'
-		# 		self.invalid = True
-		# 	else:
-		# 		self.invalid = False
-		# except Exception, e:
-		# 	print 'Error: ', e
-		# 	print 'Robot Stopping'
-		# 	self.invalid = True
 
 	def update_rbdl(self, qb, qp):
 		""" Updates robot CoM and CRBI """
@@ -265,12 +254,13 @@ class RobotState:
 		err_list = [0]*6
 
 		for j in range(0,6):
+
+			# FAULT INDUCED
+			if self.Fault.fault_index[j] == True:
+				self.Leg[j].XHd.coxa_X_foot = mX(self.Leg[j].XHd.coxa_X_base, v3_X_m(self.Fault.base_X_foot[j]))
+
 			err_list[j], qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
 			
-			## FAULT INDUCE
-			if j == 4:
-				qpd = np.array([[0., 0.65, -2.02]])
-
 			## append to list if valid, otherwise break and raise error
 			err_str = ''
 			if (err_list[j] == 0):
@@ -325,18 +315,20 @@ class RobotState:
 			return None
 
 	def apply_impedance_control(self, force_dist):
+
 		for j in range(0,6):
-			# if j == 5:
 			self.Leg[j].apply_impedance_controller(force_dist[j*3:j*3+3])
 
 	def apply_base_impedance(self, desired_force):
 	
 		world_df = (self.Leg[4].F6c.world_X_foot[0:3] - desired_force[0:3]).flatten()
-		# Transform to leg frame
-		leg_df = mX(self.Leg[4].XHd.coxa_X_world[:3,:3], world_df)
+		offset_z = self.impedance_controller_z.evaluate(world_df[2])
 
-		offset_z = self.impedance_controller_z.evaluate(leg_df[2])
-		
+		# Transform to leg frame
+		# leg_df = mX(self.Leg[4].XHd.coxa_X_world[:3,:3], world_df)
+		# offset_z = self.impedance_controller_z.evaluate(leg_df[2])
+
+		print 'base z: ', offset_z	
 		return offset_z
 		# self.XHd.coxa_X_foot[0:3,3] += np.array([offset_x, offset_y, offset_z])
 
@@ -378,6 +370,8 @@ class RobotState:
 		elif (stance_type == "chimney"):
 			base_height = 0.
 			stance_width = 0.27
+			# teta_f = stance_offset[0]
+			# teta_r = stance_offset[1]
 
 			leg_stance[0] = np.array([ stance_width*np.cos(teta_f*np.pi/180), stance_width*np.sin(teta_f*np.pi/180), -base_height ])
 			leg_stance[1] = np.array([ stance_width, 0, -base_height])
@@ -389,7 +383,7 @@ class RobotState:
 		else:
 			print 'Invalid stance selected!'
 			leg_stance = None
-
+		print 'stance: ', leg_stance
 		return leg_stance
 ## ====================================================================================================================================== ##
 ## ====================================================================================================================================== ##

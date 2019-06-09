@@ -307,7 +307,7 @@ class SplineGenerator:
 		# return xnew, tnew
 		return xnew, self.compute_time_intervals(xnew)
 
-	def generate_spline(self, x, t=None, tn=0.1):
+	def old_generate_spline(self, x, t=None, tn=0.1):
 		""" 	Compute spline using via points only	"""
 		
 		## Extend size if less than 3 or set t if undefined
@@ -325,7 +325,56 @@ class SplineGenerator:
 		return self.spline_3D(x, t, tn)	# zero initial & final velocity
 		# return self.spline_3D(cx, tx, tn) 	# zero initial & final velocity & acceleration
 
-	
+	def generate_spline(self, x, t=None, tn=0.1):
+		""" 	Compute spline using via points only	"""
+		
+		if (t is None):
+			t = self.compute_time_intervals(x)
+		## Extend size if less than 3 or set t if undefined
+		elif (len(t)<4):
+			x, t = self.compute_spline_extension(x, t)
+		
+		## Check for via points that do not change - fault 
+		pose_hold = []
+		pose_move = []
+		for i in range(1,len(x)):
+			diff = abs(x[i] - x[i-1])
+			if np.linalg.norm(diff) < 0.01:
+				# pose_hold.append(((t[i-1]),(t[i])))
+				pose_hold.append( (i-1,i) )
+			else:
+				pose_move.append( (i-1,i) )
+
+		# introduce intermediate vertical translation
+		# for i in range(len(pose_move)):
+		# 	now = pose_move.pop(0)
+		# 	x = np.insert(x, now[1]+i, x[now[0]]+np.array([0.,0.,0.05]), axis=0)
+		# for i in range(len(pose_move)):
+		# 	now = pose_move.pop(-1)
+		# 	x = np.insert(x, now[1], x[now[0]]+np.array([0.,0.,0.05]), axis=0)
+		# t = self.compute_time_intervals(x)
+		# print x
+		# print t
+		## use zero initial and final acceleration
+		cx = np.zeros((len(x)+2,3))	# via point 2D array
+		tx = np.zeros(len(x)+2)		# time interval array
+		for i in range(0,3):
+			cx[:,i], tx = self.spline_1D_acc(x[:,i].flatten(), t)
+		
+		ct,cp,cv,ca = self.spline_3D(x, t, tn)	# zero initial & final velocity
+		
+		## Replace stationary via points interval
+		for i in range(len(pose_hold)):
+			now = pose_hold.pop(0)
+			
+			for j in range(len(ct)):
+				if ct[j] >= t[now[0]] and ct[j] <= t[now[1]]:
+					cp[j] = x[now[0]].tolist()
+					cv[j] = [0.]*3
+					ca[j] = [0.]*3
+		# Plot.plot_2d(ct, cp)
+		
+		return ct,cp,cv,ca
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
@@ -360,13 +409,19 @@ spliner = SplineGenerator()
 # spoints = spliner.spline_3D(w_cob,t_cob)
 
 # x_out = spliner.generate_leg_spline(sp,ep,snorm,phase)
+# t_com = np.array([0.0,1,2]) 
 x_com = np.array([1.,1.,1.])
 x_com = np.vstack((x_com,np.array([2.,2.,2.])))
+x_com = np.vstack((x_com,np.array([2.,2.,2.])))
+# x_com = np.vstack((x_com,np.array([2.,2.,2.])))
 x_com = np.vstack((x_com,np.array([3.,3.,3.])))
 x_com = np.vstack((x_com,np.array([4.,4.,4.])))
-# ct,cp,cv,ca = spliner.generate_spline(x_com, t_com)
+# x_com = np.vstack((x_com,np.array([4.,4.,4.])))
+
+# ct,cp,cv,ca = spliner.generate_spline(x_com)
+
 # print type(ct), type(cp)
-# Plot.plot_2d(x_out[0],x_out[1])
+# Plot.plot_2d(ct, cp)
 # Plot.plot_2d_multiple(2,x_out.t,x_out.xv,x_out.xa)
 
 

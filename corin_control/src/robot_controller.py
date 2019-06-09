@@ -76,17 +76,21 @@ class RobotController(CorinManager):
 		# State machine loading/unloading timing parameters
 		tload = 1						# timing for loading
 		iload = int(LOAD_T/CTR_INTV) 	# no. of intervals for loading
-		change_state = 'hold_to_unload'	# test - load
-		fmax_lim = [F_MAX]*6	# test - load
-		init_flim = [F_MAX]*6
-		gphase = [0]*6
-
-		offset_z = 0.0 	# base impedance
+		# Force Distribution parameters
+		fmax_lim  = [F_MAX]*6			# maximum force array
+		init_flim = [F_MAX]*6			# current force for linear decrease in unloading
+		gphase = [0]*6 					# gait phase array
+		# Base impedance
+		offset_z = 0.0
+		# Support phase counter
+		s_max = int(GAIT_TPHASE/CTR_INTV)
+		s_cnt = 1
 
 		## Cycle through trajectory points until complete
 		i = 1 		# skip first point since spline has zero initial differential conditions
 		while (i != path_length and not rospy.is_shutdown()):
-			start = time.time()
+
+			# start = time.time()
 			self.suspend_controller()
 			# print 'counting: ', i, len(base_path.X.t)
 
@@ -111,23 +115,29 @@ class RobotController(CorinManager):
 			## suppress trajectory counter as body support suspended
 			if (self.Robot.suspend == True or state_machine == 'hold'):
 				i -= 1
+				s_cnt -= 1
 
 			#########################################################################
 
 			## Variable mapping to R^(3x1) for base linear and angular time, position, velocity, acceleration
 			## Next Point along base trajectory
 			if motion_plan is not None:
-				v3cp = wXbase_offset[0:3] + base_path.X.xp[i].reshape(3,1); 	# GRID PLAN: base trajectory in world frame
+				# GRID PLAN: base trajectory in world frame
+				v3cp = wXbase_offset[0:3] + base_path.X.xp[i].reshape(3,1) 		\
+								+ np.array([0., 0., offset_z]).reshape((3,1)) 	#\
+								#+ self.Robot.Fault.xb_offset[0:3]
 				# v3cp = base_path.X.xp[i].reshape(3,1); 	# CORNERING: base trajectory relative to world frame
 				v3cv = base_path.X.xv[i].reshape(3,1);
 				v3ca = base_path.X.xa[i].reshape(3,1);
 
-				v3wp = wXbase_offset[3:6] + base_path.W.xp[i].reshape(3,1);
+				v3wp = wXbase_offset[3:6] + base_path.W.xp[i].reshape(3,1) 	#\
+										 # + self.Robot.Fault.xb_offset[3:6]
 				# v3wp = base_path.W.xp[i].reshape(3,1);	# CORNERING: base trajectory relative to world frame
 				v3wv = base_path.W.xv[i].reshape(3,1);
 				v3wa = base_path.W.xa[i].reshape(3,1);
 			else:
-				v3cp = wXbase_offset[0:3] #+ np.array([0.,0.,offset_z]).reshape((3,1))
+				v3cp = wXbase_offset[0:3] + np.array([0., 0., offset_z]).reshape((3,1))
+				# v3cp = wXbase_offset[0:3]
 				v3cv = np.zeros((3,1))
 				v3ca = np.zeros((3,1))
 
@@ -209,7 +219,9 @@ class RobotController(CorinManager):
 				for j in range (0, self.Robot.active_legs):
 					
 					# Transfer phase - generate trajectory
-					if (self.Robot.Gait.cs[j] == 1 and self.Robot.Leg[j].transfer_phase_change==False):
+					if (self.Robot.Gait.cs[j] == 1 and 
+						self.Robot.Leg[j].transfer_phase_change == False and
+						not self.Robot.Fault.fault_index[self.Robot.Gait.cs.index(1)]):
 						self.Robot.Leg[j].feedback_state = 1 	# set leg to execution mode
 
 						## Using planned foothold arrays
@@ -228,14 +240,13 @@ class RobotController(CorinManager):
 							iahead = int(GAIT_TPHASE/CTR_INTV)
 							# Get bodypose at end of gait phase, or end of trajectory
 							try:
-								x_ahead = base_path.X.xp[i+iahead]
-								w_ahead = base_path.W.xp[i+iahead]
+								x_ahead = base_path.X.xp[i+iahead] #+ self.Robot.Fault.xb_offset[0:3]
+								w_ahead = base_path.W.xp[i+iahead] #+ self.Robot.Fault.xb_offset[3:6]
 							except IndexError:
-								x_ahead = base_path.X.xp[-1]
-								w_ahead = base_path.W.xp[-1]
+								x_ahead = base_path.X.xp[-1] #+ self.Robot.Fault.xb_offset[0:3]
+								w_ahead = base_path.W.xp[-1] #+ self.Robot.Fault.xb_offset[3:6]
 
-							self.Robot.Leg[j].XH_world_X_base = vec6d_to_se3(np.array([x_ahead,
-																								 w_ahead]).reshape((6,1)))
+							self.Robot.Leg[j].XH_world_X_base = vec6d_to_se3(np.array([x_ahead, w_ahead]).reshape((6,1)))
 							self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
 																	self.Robot.Leg[j].XHd.world_X_foot)
 
@@ -290,10 +301,12 @@ class RobotController(CorinManager):
 						transfer_total += 1
 						if (self.Robot.Leg[j].feedback_state == 2):
 							leg_complete += 1
-
+				
 				# triggers only when all transfer phase legs complete and greater than zero
 				# > 0: prevents trigger during all leg support
-				if (transfer_total == leg_complete and transfer_total > 0 and leg_complete > 0):
+				if ( (transfer_total == leg_complete and transfer_total > 0 and leg_complete > 0) or
+					# For discontinuous phase gait
+					(all( map(lambda x: x == self.Robot.Gait.cs[0], self.Robot.Gait.cs ) ) and s_cnt == s_max+1) ):
 					try:
 						self.Robot.alternate_phase(next(gait_stack))
 						print 'unstacked'
@@ -301,12 +314,14 @@ class RobotController(CorinManager):
 						self.Robot.alternate_phase()
 					state_machine = 'load'
 					print 'Loading ...'
+					s_cnt = 1
 
 				i += 1
+				s_cnt += 1
 
 			elif state_machine == 'hold':
 				""" Holds position - for controller to settle or pause motion """
-
+				# print 'Holding State'
 				gphase = [0]*6
 				fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
 
@@ -340,21 +355,22 @@ class RobotController(CorinManager):
 			joint_torq = self.Robot.force_to_torque(force_dist)
 			# print np.round(force_dist.flatten(),3)
 
-			## Base impedance
-			offset_z = self.Robot.apply_base_impedance(force_dist[12:15])
+			if self.interface != 'rviz':
+				## Base impedance
+				# offset_z = self.Robot.apply_base_impedance(force_dist[12:15])
 
-			## Impedance controller for each legs
-			self.Robot.apply_impedance_control(force_dist)
+				## Impedance controller for each legs
+				# self.Robot.apply_impedance_control(force_dist)
 
-			## Recompute task to joint space
-			qd, tXj_error = self.Robot.task_X_joint()
+				## Recompute task to joint space
+				qd, tXj_error = self.Robot.task_X_joint()
 
 			if (self.Robot.invalid == True):
 				print 'Error Occured, robot invalid! ', tXj_error
 				break
 
 			## Data logging & publishing
-			qlog = self.set_log_values(v3cp, v3cv, xa_d, v3wp, v3wv, wa_d, qd, joint_torq, force_dist)
+			qlog = self.set_log_setpoint(v3cp, v3cv, xa_d, v3wp, v3wv, wa_d, qd, joint_torq, force_dist)
 			
 			self.publish_topics(qd, qlog)
 
@@ -385,7 +401,7 @@ class RobotController(CorinManager):
 					v3wa: base angular acceleration, Re^3
 		 	Output: foot force for legs in stance phase """
 
-		now = rospy.get_time()
+		# now = rospy.get_time()
 
 		## Compute CRBI and CoM, then compute foot force distribution and joint torque
 		self.Robot.update_rbdl(qb, qp)
@@ -420,7 +436,7 @@ class RobotController(CorinManager):
 													self.Robot.Rbdl.com,
 													self.Robot.Rbdl.crbi, gphase, fmax, #)
 													s_norm, qb[3:6], qp)
-		end = rospy.get_time()
+		# end = rospy.get_time()
 		# print 'Tdiff: ', end - now
 
 		return foot_force

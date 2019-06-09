@@ -58,9 +58,9 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
-		self.control_loop = "close" 	# run controller in open or closed loop
+		self.control_loop = "open" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
 		self.MotionPlan = MotionPlan()
@@ -148,7 +148,9 @@ class CorinManager:
 
 		##***************** PUBLISHERS ***************##
 		self.log_sp_pub_ = rospy.Publisher('/corin/log_setpoints', LoggingState, queue_size=1)	# LOGGING setpoint publisher
-		self.log_ac_pub_ = rospy.Publisher('/corin/log_actual', LoggingState, queue_size=1)		# LOGGING setpoint publisher
+		self.log_ac_pub_ = rospy.Publisher('/corin/log_actual', LoggingState, queue_size=1)		# LOGGING actual publisher
+		self.log_er_pub_ = rospy.Publisher('/corin/log_error', LoggingState, queue_size=1)		# LOGGING error publisher
+
 		self.stability_pub_ = rospy.Publisher('/corin/stability_margin', Float64, queue_size=1) # Stability margin publisher
 
 		## Hardware Specific Publishers ##
@@ -250,8 +252,10 @@ class CorinManager:
 		## Publish setpoints to logging topic
 		if (qlog is not None):
 			self.log_sp_pub_.publish(qlog)
-
-		self.log_ac_pub_.publish(self.set_log_actual())
+		if self.interface != 'rviz':
+			qlog_ac, qlog_er = self.set_log_actual()
+			self.log_ac_pub_.publish(qlog_ac)
+			self.log_er_pub_.publish(qlog_er)
 		
 		## Runs controller at desired rate for normal control mode
 		if (self.control_rate is "normal" or self.interface is 'robotis'):
@@ -479,6 +483,8 @@ class CorinManager:
 					ps = (10,13); pf = (10,20)
 				elif motion == 'forward':
 					ps = (10,13); pf = (15,13)
+				elif motion == 'chimney':
+					ps = (15,12); pf = (17,12)
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,
@@ -569,7 +575,7 @@ class CorinManager:
 			self.main_controller()
 			rospy.sleep(0.5)
 
-	def set_log_values(self, v3cp, v3cv, v3ca, v3wp, v3wv, v3wa, qd, effort=None, forces=None):
+	def set_log_setpoint(self, v3cp, v3cv, v3ca, v3wp, v3wv, v3wa, qd, effort=None, forces=None):
 		""" Sets the variables for logging """
 
 		qlog = LoggingState()
@@ -584,22 +590,30 @@ class CorinManager:
 		qlog.qp_desired_forces = self.ForceDist.desired_forces.flatten().tolist()
 		qlog.qp_desired_moments = self.ForceDist.desired_moments.flatten().tolist()
 
+		self.qlog_setpoint = qlog
+
 		return qlog
 
 	def set_log_actual(self):
 
-		contact_force = [0]*18
+		cforce_actaul = [0]*18
+		cforce_error  = [0]*18
 		for j in range(0,6):
-			contact_force[j*3:j*3+3] = self.Robot.Leg[j].F6c.world_X_foot[:3]
+			cforce_actaul[j*3:j*3+3] = self.Robot.Leg[j].F6c.world_X_foot[:3]
+			cforce_error[j*3:j*3+3]  = abs(self.Robot.Leg[j].F6d.world_X_foot[:3] - self.Robot.Leg[j].F6c.world_X_foot[:3])
 
-		qlog = LoggingState()
-		qlog.positions  = self.Robot.P6c.world_X_base[0:3].flatten().tolist() + self.Robot.P6c.world_X_base[3:6].flatten().tolist() + list(self.Robot.qc.position)
-		qlog.velocities = self.Robot.V6c.world_X_base[0:3].flatten().tolist() + self.Robot.V6c.world_X_base[3:6].flatten().tolist() + list(self.Robot.qc.velocity)
+		qlog_ac = LoggingState()
+		qlog_ac.positions  = self.Robot.P6c.world_X_base[0:3].flatten().tolist() + self.Robot.P6c.world_X_base[3:6].flatten().tolist() + list(self.Robot.qc.position)
+		qlog_ac.velocities = self.Robot.V6c.world_X_base[0:3].flatten().tolist() + self.Robot.V6c.world_X_base[3:6].flatten().tolist() + list(self.Robot.qc.velocity)
 		
-		qlog.effort = list(self.Robot.qc.effort)
-		qlog.forces = contact_force
+		qlog_ac.effort = list(self.Robot.qc.effort)
+		qlog_ac.forces = cforce_actaul
 
-		return qlog
+		qlog_er = LoggingState()
+		qlog_er.forces = cforce_error
+
+		return qlog_ac, qlog_er
+
 
 	def visualize_support_polygon(self):
 		""" extracts the legs in support phase for generating the support polygon in RViZ """

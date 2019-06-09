@@ -19,6 +19,9 @@ from collections import OrderedDict 	# remove duplicates
 
 import csv
 
+## FAULT INDUCE
+FAULT_POSE = np.array([0.,0.,-0.00])	# not used
+
 ## Global variables ##
 POSE_TABLE = {}
 
@@ -599,7 +602,6 @@ class PathPlanner:
 		ax = int(np.ceil((self.rbfp_gd[0])/2)) 			# robot longitudinal distance (grid cell)
 		ay = int(np.ceil((MIN_FP/self.GridMap.resolution)/2))	# robot lateral distance (grid cell) - HARDCODED
 		self.WIDTH_SAFETY = 0.05
-		# print 'Body Edges: ', ax, ' ', ay
 		
 		node_ignored = [] 	# list for nodes to ignore: either near map border or intersect obstacles/holes
 		node_free 	 = [] 	# list for free nodes
@@ -628,7 +630,7 @@ class PathPlanner:
 						# 	print bh, qr
 						# 	print '---------------------'
 					else:
-						bh = BODY_HEIGHT
+						bh = BODY_HEIGHT + FAULT_POSE[2]
 						qr = 0.
 
 					node_free.append(e)
@@ -712,7 +714,7 @@ class PathPlanner:
 
 	def find_valid_foothold(self, sp, j):
 		""" Find lowest valid foothold in leg grid area """
-		# print 'area sp: ', np.round(sp,4)
+		print 'area sp: ', np.round(sp,4)
 		# footholds = self.GridMap.square_spiral_search(sp, (3,3), j)
 		footholds = self.GridMap.search_area(sp, (3,3), j)
 		cost = np.zeros(len(footholds))
@@ -727,7 +729,7 @@ class PathPlanner:
 				print 'Valid foothold at ', footholds[i], position
 				return position
 
-		print 'No Valid Foothold in Foot Area'
+		print 'No Valid Foothold in Foot Area centred at ', sp
 
 	def foothold_planner(self, base_path):
 		""" Computes foothold based on generated path 	"""
@@ -828,6 +830,11 @@ class PathPlanner:
 
 		if (self.W_GND is False):
 			leg_stance = set_leg_stance()
+		
+		## TEMP for W_CHIM start
+		if (self.W_CHIM is True):
+			for j in range(0,6):
+				self.Robot.Leg[j].XHd.update_world_base_X_NRP(self.Robot.P6c.world_X_base) 
 
 		gphase_intv  = [] 						# intervals in which gait phase changes
 		gait_phase	 = []
@@ -850,7 +857,7 @@ class PathPlanner:
 		## Returns as footholds remain fixed for full support mode
 		if (self.Robot.support_mode is True):
 			return set_motion_plan()
-
+		fault_flag = False
 		## Cycle through trajectory
 		while (i != len(base_path.X.t)):
 			print '=================================================='
@@ -873,6 +880,17 @@ class PathPlanner:
 					world_X_base_rot = self.Robot.XHd.world_X_base.copy()
 					world_X_base_rot[:3,3:4] = np.zeros((3,1))
 					
+					if self.Robot.Fault.status == True:
+						# if self.Robot.Gait.cs.index(1) == self.Robot.Gait.fault[0]:
+						if self.Robot.Fault.fault_index[self.Robot.Gait.cs.index(1)]:
+							# Support phase in fault situation only + introduce vertical translation on base pose
+							print 'FAULT: custom support'
+							fault_flag = True
+						else:
+							# print 'FAULT: transfer only ', self.Robot.Gait.cs
+							bound_exceed = True
+							break
+
 					for j in range (0, self.Robot.active_legs):
 						## Legs in support phase:
 						if (self.Robot.Gait.cs[j] == 0):
@@ -909,12 +927,11 @@ class PathPlanner:
 					for j in range(6):
 						stack_base_X_world.append(self.Robot.Leg[j].XHd.world_base_X_foot[:3,3])
 					# compute Longitudinal Stability Margin
-					sm = self.Robot.SM.LSM(stack_base_X_world, self.Robot.Gait.cs)
-					# print m, ' current sm: ', np.round(sm,4), self.Robot.Gait.cs
-					if (sm[0] <= SM_MIN or sm[1] <= SM_MIN):
-						print m, ' current sm: ', sm, self.Robot.Gait.cs
+					sm_valid, sm_distance = self.Robot.SM.point_in_convex(np.zeros(3), stack_base_X_world, self.Robot.Gait.cs)
+					if not sm_valid:
+						print 'Outside Convex hull: ', m, sm_valid, sm_distance
 						bound_exceed = True
-
+					
 					if (bound_exceed is True):
 						if (i == break_n):
 							break_count += 1
@@ -936,16 +953,26 @@ class PathPlanner:
 					print 'Finishing foothold planning at ', i
 					break
 
-			## Stack to list next CoB location
-			world_X_base.append(P6d_world_X_base.flatten())
-			gphase_intv.append(i)
-			gait_phase.append(self.Robot.Gait.cs)
-			# print self.Robot.Gait.cs
-			# print 'qbp:: ', np.round(P6d_world_X_base.reshape(1,6),3), i
+			## FAULT: Stack to list next CoB location
+			if fault_flag == True:
+				fault_offset_motion = np.array([0.,0.,0.05,0.,0.,0.]) # Ground walking
+				# fault_offset_motion = np.array([0.,0.04,0.,0.,0.,0.]) # Chimney walking
+				int_pose = world_X_base[-1] + (P6d_world_X_base.flatten() - world_X_base[-1])/2. + fault_offset_motion
+				fault_flag = False
+				world_X_base.append(int_pose.flatten())
+				gphase_intv.append(i)
+				gait_phase.append([0]*6)
+				world_X_base.append(P6d_world_X_base.flatten())
+				gphase_intv.append(i)
+				gait_phase.append([0]*6)
+			else:
+				world_X_base.append(P6d_world_X_base.flatten())
+				gphase_intv.append(i)
+				gait_phase.append(self.Robot.Gait.cs)
 
 			## Set foothold for legs in transfer phase
 			for j in range (0, 6):
-				if (self.Robot.Gait.cs[j] == 1 and i <= len(base_path.X.t)):
+				if (self.Robot.Gait.cs[j] == 1 and i <= len(base_path.X.t) and not self.Robot.Fault.fault_index[self.Robot.Gait.cs.index(1)]):
 					
 					## 1) Update NRP
 					if (self.W_WALL):
@@ -1003,16 +1030,14 @@ class PathPlanner:
 					else:
 						self.Robot.Leg[j].XHd.update_world_base_X_NRP(P6d_world_X_base)
 
-					
-
 					## 2) Compute magnitude & vector direction
 					if (i == len(base_path.X.t)):
 						v3_uv = np.zeros(3)
 					else:
-
+						print 'norm here'
 						snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_NRP[:3,3], j) 	# Get surface normal
 						v3_uv = compute_vector_heading(v3cp, v3cp_prev, snorm)
-
+						print 'norm ok'
 						if (np.isnan(v3_uv).any() or np.isinf(v3_uv).any()):
 							try:
 								v3cp_nex = base_path.X.xp[i+1].reshape(3,1)
@@ -1051,8 +1076,11 @@ class PathPlanner:
 						# 	print 'ori: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3) #, self.GridMap.getIndex(self.Robot.Leg[j].XHd.world_X_foot[:2,3],j)
 						# print np.round(self.Robot.XHd.world_X_base[:3,3],3)
 						# self.Robot.Leg[j].XHd.world_X_foot[:3,3] = self.find_valid_foothold(self.Robot.Leg[j].XHd.world_X_foot[:3,3], j)
+
 						self.Robot.Leg[j].XHd.world_X_foot[:3,3] = self.find_valid_foothold(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + 
 																							self.Robot.XHd.world_X_base[:3,3], j)
+						print 'GROUDN WALKING', self.W_GND, self.W_CHIM
+						raw_input('fdsa')
 						# if j==3:
 						# 	print 'new: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
 					# if (j>=3):
@@ -1654,8 +1682,20 @@ class PathPlanner:
 
 		if (len(temp_path) > 1):
 			print 'Final walking interpolation: ', temp_path
+			if self.base_map.nodes[temp_path[-1]]['motion'] == 0:
+				self.W_GND = True
+				self.W_CHIM = False
+				self.W_WALL = False
+			elif self.base_map.nodes[temp_path[-1]]['motion'] == 1:
+				self.W_GND = False
+				self.W_CHIM = True
+				self.W_WALL = False
+			elif self.base_map.nodes[temp_path[-1]]['motion'] == 2:
+				self.W_GND = False
+				self.W_CHIM = False
+				self.W_WALL = True
 			motion_plan.append(generate_plan(temp_path))
-				
+
 		print 'Path completed'
 
 		## Update spline time interval
@@ -1698,7 +1738,7 @@ class PathPlanner:
 		print 'no. footholds: ', sum_footholds
 		print 'time: ', path.X.t[-1]
 		
-		# Plot.plot_2d(path.X.t,path.X.xp)
+		Plot.plot_2d(path.X.t,path.X.xp)
 		# Plot.plot_2d(path.W.t,path.W.xp)
 		# fig, ax = plt.subplots()
 		# ax.plot(motion_plan.qb.X.t, motion_plan.qb.X.xp[:,0], 'ro');
@@ -1823,7 +1863,7 @@ class PathPlanner:
 ## ================================================================================================ ##
 
 ## Create map and plan path
-# grid_map = GridMap('iros_part1_demo')
+# grid_map = GridMap('chimney_straight')
 # planner = PathPlanner(grid_map)
 # planner.plot_primitive_graph()
 

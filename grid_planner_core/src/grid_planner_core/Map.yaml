@@ -137,3 +137,14 @@ Map:
       # i3: { s1: [0,26], s2: [11,43], sh: -1}  # corner hole
       # i4: { s1: [0,0], s2: [37,5], sh: -1}  # vertical left hole
       # i5: { s1: [32,6], s2: [37,43], sh: -1}  # vertical left hole
+
+  chimney_straight:
+    size: { sx: 1.51, sy: 0.74}  # 0.63m width
+    # size: { sx: 1.51, sy: 0.8}  # 0.69m width
+    wall:
+      i1: { s1: [0,0], s2: [50,1], sh: 1}
+      i2: { s1: [0,23], s2: [50,24], sh: 1} # 0.63m width
+      # i2: { s1: [0,25], s2: [50,26], sh: 1} # 0.69m width
+    hole:
+      i1: { s1: [1,2], s2: [50,22], sh: -1} # 0.63m width
+      # i1: { s1: [1,2], s2: [50,24], sh: -1} # 0.69m width

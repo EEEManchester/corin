@@ -213,6 +213,7 @@ class GridMap:
 			if (self.get_index_exists(grid_p)):
 				return self.get_index(info, grid_p)
 			else:
+				print 'Index error: ', info, p, j
 				return None
 		except ValueError:	
 			print 'get_cell ValueError: ', p, j
@@ -580,7 +581,7 @@ class GridMap:
 		elif (j == 5):
 			sp = (int(np.ceil(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
 		
-		# print 'Search centered at ', sp
+		print 'Search centered at ', np.round(p,3), sp
 		result, grid_points = self.Spiral.get_grid(36)
 		# print sp, grid_points
 		for i in range(0, len(grid_points)):
@@ -622,8 +623,8 @@ class GridMap:
 			m_wall = dict(zip(gprim[1], gprim[1]))
 			m_chim = dict(zip(gprim[2], gprim[2]))
 		
-			nx.draw_networkx(gprim[0],m_walk,with_labels=labels,node_size=nsize, node_color='#ff6600',	width=0.0);
-			nx.draw_networkx(gprim[1],m_wall,with_labels=labels,node_size=nsize, node_color='#00ccff',	width=0.0);
+			# nx.draw_networkx(gprim[0],m_walk,with_labels=labels,node_size=nsize, node_color='#ff6600',	width=0.0);
+			# nx.draw_networkx(gprim[1],m_wall,with_labels=labels,node_size=nsize, node_color='#00ccff',	width=0.0);
 			nx.draw_networkx(gprim[2],m_chim,with_labels=labels,node_size=nsize, node_color='#66ff00',	width=0.0);
 		# nx.draw_networkx(self.GM_walk,m_walk,with_labels=labels,node_size=nsize, node_color='#ff6600',	width=0.0);
 		# nx.draw_networkx(self.GM_wall,m_wall,with_labels=labels,node_size=nsize, node_color='#00ccff',	width=0.0);

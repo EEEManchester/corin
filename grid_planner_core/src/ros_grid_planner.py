@@ -225,15 +225,12 @@ def call_planner(ps, pf):
 
 if __name__ == "__main__":
 
-	
-	# RosGridMap = GridMapRos("hole_demo")
-	# RosGridMap = GridMapRos("hole_wall_demo")
-	# RosGridMap = GridMapRos("iros_part1_demo")
-	# RosGridMap = GridMapRos("iros_demo")
+	## Common usage
 	# RosGridMap = GridMapRos("flat")
 	RosGridMap = GridMapRos("wall_transition")
+	# RosGridMap = GridMapRos("chimney_straight")
 
-	## Illustration for Cornering
+	## Cornering
 	# RosGridMap = GridMapRos("chimney_corner")
 	# RosGridMap = GridMapRos("wall_concave_corner")
 	# RosGridMap = GridMapRos("wall_convex_corner")
