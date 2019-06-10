@@ -11,8 +11,10 @@ from robot_transforms import *
 import plotgraph as Plot 					# library for plotting
 
 from force_distribution import *			# class for force distribution
-from trajectory_optimization import *
-from impedance_controller import *
+from impedance_controller import *			
+from kinematic_state_estimator import * 	
+
+from trajectory_optimization import *		# NOT USED
 
 import time
 import warnings

@@ -19,9 +19,6 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
 from sensor_msgs.msg import JointState
 
-def deg2rad(q):
-	return (q*pi/180)
-
 JOINT_NAME 	  = [None]*18
 JOINT_NAME[0] = 'lf_q1_joint'
 JOINT_NAME[1] = 'lf_q2_joint'
@@ -57,19 +54,20 @@ if __name__ == "__main__":
 	for n in range(18):
 		dqp.name.append(str(JOINT_NAME[n])) 	
 
-	# joint angles
-	q = [0.0, 0.34, -1.85]
-	q = [0.0, 0.93, -1.85]
-	for j in range(0,6): 	# loop for each leg
-		for k in range(0,3):	
-			dqp.position.append(q[k])			# joint angle
-	# dqp.position[0] = deg2rad(40.)
-	# dqp.position[15] = deg2rad(40.)
-	# dqp.position[0] = deg2rad(40.)
-	# dqp.position[6] = deg2rad(-40.)
-	# dqp.position[9] = deg2rad(-40.)
+	q1 = 0.0
+	q2 = 0.34
+	q3 = -1.85
+	for j in range(0,6):
+		dqp.position.append(q1)
+		dqp.position.append(q2)
+		dqp.position.append(q3)
 
-	qb = np.array([0., 0., 0., 0., 0., 0.])
+	dqp.position[12] = 0.
+	dqp.position[13] = 0.
+	dqp.position[14] = -1.57
+	qb = np.array([0.3, 0.39, 0.1246,  -0.0831, 0., 0.])
+
+	# qb = np.array([0.3, 0.39, 0.1,  -0., 0., 0.])	
 	quat = tf.transformations.quaternion_from_euler(qb[3].copy(), qb[4].copy(), qb[5].copy())
 	robot_broadcaster = tf.TransformBroadcaster()
 

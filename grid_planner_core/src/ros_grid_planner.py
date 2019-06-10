@@ -225,16 +225,23 @@ def call_planner(ps, pf):
 
 if __name__ == "__main__":
 
-	## Common usage
-	# RosGridMap = GridMapRos("flat")
-	RosGridMap = GridMapRos("wall_transition")
-	# RosGridMap = GridMapRos("chimney_straight")
+	mapname = "flat"
 
-	## Cornering
-	# RosGridMap = GridMapRos("chimney_corner")
-	# RosGridMap = GridMapRos("wall_concave_corner")
-	# RosGridMap = GridMapRos("wall_convex_corner")
+	if len(sys.argv) > 1:
+		if sys.argv[1] == 'wall_transition':
+			mapname = 'wall_transition'
+		elif sys.argv[1] == 'chimney_straight':
+			mapname = 'chimney_straight'
+		# cornering
+		elif sys.argv[1] == 'chimney_corner':
+			mapname = 'chimney_corner'
+		elif sys.argv[1] == 'wall_concave_corner':
+			mapname = 'wall_concave_corner'
+		elif sys.argv[1] == 'wall_convex_corner':
+			mapname = 'wall_convex_corner'
 
+	RosGridMap = GridMapRos(mapname)
+	
 	print "ROS Grid Map Planner Initialised"
 	
 	# RosGridMap.Planner.plot_primitive_graph()

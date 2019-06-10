@@ -76,16 +76,16 @@
     <!--                           Wall                                 -->
     <!-- ============================================================== -->
     <model name='left_wall'>
-      <pose frame=''>0 0.41 0 0 -0 0</pose>
+      <pose frame=''>0 0.365 0 0 -0 0</pose>
       <link name='Wall_1'>
 
         <collision name='Wall_1_Collision'>
           <geometry>
             <box>
-              <size>9.5 0.10 0.9</size>
+              <size>1.5 0.10 0.6</size>
             </box>
           </geometry>
-          <pose frame=''>0 0 0.45 0 -0 0</pose>
+          <pose frame=''>0 0 0.3 0 -0 0</pose>
           <surface>
               <friction>
                 <ode>
@@ -102,10 +102,10 @@
         </collision>
 
         <visual name='Wall_1_Visual'>
-          <pose frame=''>0 0 0.45 0 -0 0</pose>
+          <pose frame=''>0 0 0.3 0 -0 0</pose>
           <geometry>
             <box>
-              <size>9.5 0.10 0.9</size>
+              <size>1.5 0.10 0.6</size>
             </box>
           </geometry>
           <material>
@@ -123,16 +123,16 @@
   </model>
 
   <model name='right_wall'>
-    <pose frame=''>0 -0.41 0 0 -0 0</pose>
+    <pose frame=''>0 -0.365 0 0 -0 0</pose>
     <link name='Wall_2'>
 
       <collision name='Wall_2_Collision'>
+        <pose frame=''>0 0 0.3 0 -0 0</pose>
         <geometry>
           <box>
-            <size>9.5 0.10 0.9</size>
+            <size>1.5 0.10 0.6</size>
           </box>
         </geometry>
-        <pose frame=''>0 0 0.45 0 -0 0</pose>
         <surface>
             <friction>
               <ode>
@@ -149,10 +149,10 @@
       </collision>
 
       <visual name='Wall_2_Visual'>
-        <pose frame=''>0 0 0.45 0 -0 0</pose>
+        <pose frame=''>0 0 0.3 0 -0 0</pose>
         <geometry>
           <box>
-            <size>9.5 0.10 0.9</size>
+            <size>1.5 0.10 0.6</size>
           </box>
         </geometry>
         <material>

@@ -76,7 +76,10 @@ class LegClass:
 		self.XHc.update_base_X_foot(q_compensated)
 
 		self.XHc.update_world_base_X_foot(P6_world_X_base, q_compensated)
-
+		# if self.number == 1:
+		# 	print 'cXf: ', np.round(self.XHc.coxa_X_foot[:3,3].flatten() ,3)
+		# 	print self.Joint.qpc
+		# 	print P6_world_X_base.flatten()
 		## Check work envelope
 		bound_exceed = self.check_boundary_limit(self.XHc.world_base_X_foot, self.XHc.world_base_X_NRP, step_stroke)
 
@@ -277,7 +280,7 @@ class LegClass:
 
 			if (BOUND_FACTOR < r_state):
 				bound_violate = True
-
+				
 		return bound_violate
 
 	## Kinematic functions

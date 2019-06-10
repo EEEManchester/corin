@@ -881,9 +881,8 @@ class PathPlanner:
 					world_X_base_rot[:3,3:4] = np.zeros((3,1))
 					
 					if self.Robot.Fault.status == True:
-						# if self.Robot.Gait.cs.index(1) == self.Robot.Gait.fault[0]:
 						if self.Robot.Fault.fault_index[self.Robot.Gait.cs.index(1)]:
-							# Support phase in fault situation only + introduce vertical translation on base pose
+							# Support phase in fault situation only + introduce translation on base pose
 							print 'FAULT: custom support'
 							fault_flag = True
 						else:
@@ -893,7 +892,7 @@ class PathPlanner:
 
 					for j in range (0, self.Robot.active_legs):
 						## Legs in support phase:
-						if (self.Robot.Gait.cs[j] == 0):
+						if (self.Robot.Gait.cs[j] == 0 and self.Robot.Fault.fault_index[j] == False):
 							self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, 
 																	self.Robot.Leg[j].XHd.world_X_foot)
 							self.Robot.Leg[j].XHd.world_base_X_foot = mX(world_X_base_rot, 
@@ -926,7 +925,7 @@ class PathPlanner:
 					stack_base_X_world = []
 					for j in range(6):
 						stack_base_X_world.append(self.Robot.Leg[j].XHd.world_base_X_foot[:3,3])
-					# compute Longitudinal Stability Margin
+					
 					sm_valid, sm_distance = self.Robot.SM.point_in_convex(np.zeros(3), stack_base_X_world, self.Robot.Gait.cs)
 					if not sm_valid:
 						print 'Outside Convex hull: ', m, sm_valid, sm_distance
@@ -957,7 +956,12 @@ class PathPlanner:
 			if fault_flag == True:
 				fault_offset_motion = np.array([0.,0.,0.05,0.,0.,0.]) # Ground walking
 				# fault_offset_motion = np.array([0.,0.04,0.,0.,0.,0.]) # Chimney walking
-				int_pose = world_X_base[-1] + (P6d_world_X_base.flatten() - world_X_base[-1])/2. + fault_offset_motion
+				if not world_X_base:
+					int_pose = self.Robot.P6c.world_X_base.flatten() + \
+							(P6d_world_X_base.flatten() - self.Robot.P6c.world_X_base.flatten())/2. + fault_offset_motion
+				else:
+					int_pose = world_X_base[-1] + (P6d_world_X_base.flatten() - world_X_base[-1])/2. + fault_offset_motion
+				
 				fault_flag = False
 				world_X_base.append(int_pose.flatten())
 				gphase_intv.append(i)
@@ -1738,7 +1742,7 @@ class PathPlanner:
 		print 'no. footholds: ', sum_footholds
 		print 'time: ', path.X.t[-1]
 		
-		Plot.plot_2d(path.X.t,path.X.xp)
+		# Plot.plot_2d(path.X.t,path.X.xp)
 		# Plot.plot_2d(path.W.t,path.W.xp)
 		# fig, ax = plt.subplots()
 		# ax.plot(motion_plan.qb.X.t, motion_plan.qb.X.xp[:,0], 'ro');

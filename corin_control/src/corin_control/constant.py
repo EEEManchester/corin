@@ -105,7 +105,11 @@ SURFACE_FRICTION = 1.0
 IMPEDANCE_FN = 1 			# natural frequency
 IMPEDANCE_DAMPING = 1.5 	# damping ratio
 IMPEDANCE_GAIN = 0.006		# m/N (delta distance per delta force)
-
+a = [1]
+if not a:
+	print 'a empty'
+else:
+	print 'some'
 ## ================================================================ ##
 ##                  	Stability Parameters 						##
 ## ================================================================ ##
@@ -141,7 +145,7 @@ STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
 ## ================================================================ ##
 
 ## these gait parameters can be changed during runtime
-GAIT_TYPE 	 = 1 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+GAIT_TYPE 	 = 4 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 GAIT_TPHASE	 = 2.0 	# default period per gait phase
 STEP_HEIGHT  = 0.04	# default step height, z
 STEP_STROKE  = 0.1 	# default step stroke

@@ -17,17 +17,16 @@ from grid_planner_core.numpy_to_rosmsg import *
 
 ## ROS messages & libraries
 import rospy
-from sensor_msgs.msg import Imu 					# sub msg for IMU
+from sensor_msgs.msg import Imu 			# sub msg for IMU
 from sensor_msgs.msg import JointState 		# sub msg for joint states
-from trajectory_msgs.msg import JointTrajectoryPoint
-from std_msgs.msg import Float64 					# pub msg for Gazebo joints
+from std_msgs.msg import Float64 			# pub msg for Gazebo joints
 from std_msgs.msg import ByteMultiArray 	# foot contact state
 from std_msgs.msg import Float32MultiArray	# foot contact force
 from std_msgs.msg import String 			# ui control
 import tf 		 							# ROS transform library
-from geometry_msgs.msg import PolygonStamped
-from geometry_msgs.msg import Point32
-from geometry_msgs.msg import Polygon
+# from geometry_msgs.msg import PolygonStamped
+# from geometry_msgs.msg import Point32
+# from geometry_msgs.msg import Polygon
 
 ## Services
 from service_handler import ServiceHandler
@@ -58,7 +57,7 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
 		self.control_loop = "open" 	# run controller in open or closed loop
 

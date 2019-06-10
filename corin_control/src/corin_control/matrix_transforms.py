@@ -263,6 +263,23 @@ def rotation_matrix(angle, direction, point=None):
         M[:3, 3] = point - np.dot(R, point)
     return M
 
+def gram_schmidt(e1, e2):
+    # simply
+    q1 = e1
+    # projection of e2 along e1
+    proj_vec = (np.dot(e1, e2) / np.dot(e1, e1)) * e1
+    # subtract the projection from e2 to get a vector normal to e1
+    q2 = e2 - proj_vec
+    # obviously
+    q3 = np.cross(q1, q2)
+
+    # convert to column vector and normalise
+    q1 = q1.reshape((3,1)) / np.linalg.norm(q1)
+    q2 = q2.reshape((3,1)) / np.linalg.norm(q2)
+    q3 = q3.reshape((3,1)) / np.linalg.norm(q3)
+    
+    return np.hstack((q1, q2, q3))
+
 # print rotation_matrix(np.deg2rad(30),[0, 1, 0])
 ######################################################################
 ##                      Constant Parameters                         ##
