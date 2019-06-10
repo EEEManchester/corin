@@ -71,7 +71,7 @@ if __name__ == "__main__":
 	quat = tf.transformations.quaternion_from_euler(qb[3].copy(), qb[4].copy(), qb[5].copy())
 	robot_broadcaster = tf.TransformBroadcaster()
 
-	for i in range(3):
+	for i in range(5):
 		robot_broadcaster.sendTransform( (qb[0],qb[1],qb[2]), quat, rospy.Time.now(), "trunk", "world");
 		joint_pub_.publish(dqp)
 		rospy.sleep(1.0)
