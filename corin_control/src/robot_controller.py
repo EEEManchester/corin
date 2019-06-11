@@ -309,6 +309,7 @@ class RobotController(CorinManager):
 					# print s_cnt, s_max/2., transfer_total, leg_complete
 					# if (self.Robot.Gait.cs[5]==1 and self.Robot.Leg[5].cstate == True):
 					# 	print 'HERE HERE HERE cstate early, switch phase'
+					print self.Robot.Gait.cs, self.Robot.Gait.ps
 					state_machine = 'load'
 					print 'Loading ...'
 					s_cnt = 1
@@ -487,9 +488,9 @@ class RobotController(CorinManager):
 				self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 				self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
 
-				if j==5:
+				# if j==5:
 					# print j, ' bXw: \n', np.round(self.Robot.XHd.base_X_world,3)
-					print j, ' wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
+					# print j, ' wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
 					# print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],3)
 					# print j, ' cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],3)
 					# print '========================================================='

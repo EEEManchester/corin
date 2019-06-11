@@ -23,7 +23,7 @@ class GaitClass:
 
 		# States
 		self.cs = [0]*6	# current 
-		self.ds = [0]*6	# desired 
+		self.ns = [0]*6	# next
 		self.ps = [0]*6	# previous
 
 		self.__initialise__()
@@ -83,7 +83,8 @@ class GaitClass:
 		
 
 		self.cs = self.phases[self.np]
-
+		self.ns = self.phases[self.np+1]
+		
 	def update_phase(self):
 		self.ps = copy.deepcopy(self.cs)
 
@@ -99,6 +100,11 @@ class GaitClass:
 			# print 'index error'
 			self.np = 0 if (self.gd == 1) else 5
 			self.cs = self.phases[self.np]
+
+		try:
+			self.ns = self.phases[self.np+1]
+		except IndexError:
+			self.ns = self.phases[0]
 
 	def change_exceeded_phase(self, leg=None):
 		""" Change the input leg to transfer """
