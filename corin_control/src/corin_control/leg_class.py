@@ -339,7 +339,7 @@ class LegClass:
 
 		## Variable mapping ##
 		i = self.spline_counter
-		
+		print i, self.spline_length
 		self.XHd.update_coxa_X_foot(self.qspline.xp[i])
 		self.V6d.coxa_X_foot[:3]  = self.xspline.xv[i].reshape(3,1)
 		self.A6d.coxa_X_foot[:3]  = self.xspline.xa[i].reshape(3,1)

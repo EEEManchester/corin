@@ -213,7 +213,7 @@ class RobotController(CorinManager):
 						self.Robot.alternate_phase(next(gait_stack))
 					except:
 						self.Robot.alternate_phase()
-					raw_input('cont')
+					# raw_input('cont')
 					self.Robot.Gait.walk_mode()
 				
 			elif state_machine ==  'motion':
@@ -309,6 +309,16 @@ class RobotController(CorinManager):
 					# print s_cnt, s_max/2., transfer_total, leg_complete
 					# if (self.Robot.Gait.cs[5]==1 and self.Robot.Leg[5].cstate == True):
 					# 	print 'HERE HERE HERE cstate early, switch phase'
+					# try:
+					# 	self.Robot.alternate_phase(next(gait_stack))
+					# except:
+					# 	self.Robot.alternate_phase()
+					# update robot leg phase_change
+					for j in range(0,6):
+						if (self.Robot.Gait.cs[j] == 1):
+							self.Robot.Leg[j].transfer_phase_change = False
+							self.Robot.Leg[j].XHc.update_world_X_foot(self.Robot.XHc.world_X_base)
+							self.Robot.Leg[j].XHd.world_X_foot = self.Robot.Leg[j].XHc.world_X_foot.copy()
 					print self.Robot.Gait.cs, self.Robot.Gait.ps
 					state_machine = 'load'
 					print 'Loading ...'
