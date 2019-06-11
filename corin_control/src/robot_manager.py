@@ -57,7 +57,7 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
 		self.control_loop = "open" 	# run controller in open or closed loop
 
@@ -421,7 +421,7 @@ class CorinManager:
 
 		if (data is not None):
 			self.Visualizer.clear_visualisation()
-
+			
 			## Data mapping - for convenience
 			x_cob, w_cob, mode, motion_prim = data
 			# mode = 6 	# HARDCODED TO IMPORT MOTION PLAN
@@ -570,8 +570,9 @@ class CorinManager:
 					self.Robot.alternate_phase()
 
 		else:
-			self.Robot.Gait.support_mode()
+			# self.Robot.Gait.support_mode()
 			self.main_controller()
+			# self.leg_controller()
 			rospy.sleep(0.5)
 
 	def set_log_setpoint(self, v3cp, v3cv, v3ca, v3wp, v3wv, v3wa, qd, effort=None, forces=None):
@@ -612,7 +613,6 @@ class CorinManager:
 		qlog_er.forces = cforce_error
 
 		return qlog_ac, qlog_er
-
 
 	def visualize_support_polygon(self):
 		""" extracts the legs in support phase for generating the support polygon in RViZ """

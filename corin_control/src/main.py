@@ -29,17 +29,6 @@ if __name__ == "__main__":
 			motion = 'chimney'
 			rospy.set_param('/corin/plan_path', True)
 
-		for i in range(len(sys.argv)):
-			if sys.argv[i] == 'fault':
-				print 'FAULT Induced!'
-				findex = [False, False, False, False, True, False]
-				base_X_foot = [ np.array([ 0.25, 0.2509,-0.1 ]),
-								np.array([ 0.  , 0.3,	-0.1 ]),
-								np.array([-0.25, 0.2509,-0.1 ]),
-								np.array([ 0.25,-0.2509,-0.1 ]),
-								np.array([ 0.  ,-0.24,	-0.1 ]),
-								np.array([-0.25,-0.2509,-0.1 ])]
-				manager.Robot.Fault.set_fault_parameters(findex, base_X_foot)
 	# rospy.set_param('/corin/bodypose', True)
 	# rospy.set_param('/corin/plan_path', True)
 

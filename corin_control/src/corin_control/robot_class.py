@@ -63,7 +63,7 @@ class RobotState:
 		self.impedance_controller_z = ImpedanceController(2, 3.0, 0.005)	# fn, D, G
 		self.Fault = FaultController()
 
-		leg_stance = self.init_robot_stance("chimney")
+		leg_stance = self.init_robot_stance("flat")
 		
 		# self._initialise(leg_stance)
 
@@ -229,7 +229,7 @@ class RobotState:
 		else:
 			self.Gait.ps = self.Gait.cs
 			self.Gait.cs = new_phase
-
+		print self.Gait.cs, self.Gait.ps
 		# update robot leg phase_change
 		for j in range(0,6):
 			if (self.Gait.cs[j] == 1):
@@ -239,7 +239,7 @@ class RobotState:
 				# Update world_X_foot when phase changes from transfer to support to avoid drifting
 				self.Leg[j].XHc.update_world_X_foot(self.XHc.world_X_base)
 				self.Leg[j].XHd.world_X_foot = self.Leg[j].XHc.world_X_foot.copy()
-
+			
 		self.suspend = False
 
 	def task_X_joint(self,legs_phase=None): # TODO - to be revisited
@@ -256,8 +256,8 @@ class RobotState:
 		for j in range(0,6):
 
 			# FAULT INDUCED
-			if self.Fault.fault_index[j] == True:
-				self.Leg[j].XHd.coxa_X_foot = mX(self.Leg[j].XHd.coxa_X_base, v3_X_m(self.Fault.base_X_foot[j]))
+			# if self.Fault.fault_index[j] == True:
+			# 	self.Leg[j].XHd.coxa_X_foot = mX(self.Leg[j].XHd.coxa_X_base, v3_X_m(self.Fault.base_X_foot[j]))
 
 			err_list[j], qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
 			
@@ -366,6 +366,9 @@ class RobotState:
 			leg_stance[3] = np.array([ stance_width*np.cos(teta_f*np.pi/180), stance_width*np.sin(-teta_f*np.pi/180), -base_height ])
 			leg_stance[4] = np.array([ stance_width, 0, -base_height])
 			leg_stance[5] = np.array([ stance_width*np.cos(teta_r*np.pi/180), stance_width*np.sin(-teta_r*np.pi/180), -base_height ])
+
+			# for j in range(5):
+			# 	leg_stance[j][2] = 0.0
 
 		elif (stance_type == "chimney"):
 			base_height = 0.

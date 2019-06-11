@@ -113,7 +113,6 @@ class FaultController:
 					s1 = self.base_X_foot[fidx[0]]
 					s2 = self.base_X_foot[fidx[1]]
 					if fidx[0] != 2:
-						print 'anchor LR'
 						anchor_leg = self.base_X_foot[2]
 					elif fidx[0] != 5:
 						anchor_leg = self.base_X_foot[5]
@@ -133,13 +132,11 @@ class FaultController:
 			# print anchor_leg
 			e1 = s1 - anchor_leg
 			e2 = s2 - anchor_leg
-			# print e1, e2
 			R1 = gram_schmidt(e1,e2)
 
 			rpy = np.array(euler_from_matrix(R1.T,'sxyz'))
 			xyz = np.dot(R1.T, anchor_leg)
 
-			print 'roll: \t', np.round(np.rad2deg(rpy[0]),3)
 			if rpy[0] > np.pi/2:
 				rpy[0] = rpy[0] - np.pi
 				rpy[1] *= -1.
@@ -147,6 +144,9 @@ class FaultController:
 				rpy[0] = rpy[0] + np.pi
 				rpy[1] *= -1.
 
+			# Overwrite and correction
+			xyz[2] = abs(xyz[2])
+			rpy[2] = 0.
 			self.xb = np.hstack((xyz,rpy)).reshape((6,1))
 
 		else:
@@ -173,7 +173,7 @@ Fault.base_X_foot[5] = np.array([-0.25, -0.251, -BODY_HEIGHT])
 # Fault.set_fault_parameters(fault_index, base_X_foot)
 # Fault.fault_index = [True, False, True, True, False, False]
 
-xb = Fault.get_fault_pose().flatten()
-print xb
-print 'roll: \t', np.round(np.rad2deg(xb[3]),3)
-print 'pitch: \t', np.round(np.rad2deg(xb[4]),3)
+# xb = Fault.get_fault_pose().flatten()
+# print xb
+# print 'roll: \t', np.round(np.rad2deg(xb[3]),3)
+# print 'pitch: \t', np.round(np.rad2deg(xb[4]),3)

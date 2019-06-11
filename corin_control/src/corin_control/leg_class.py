@@ -31,9 +31,9 @@ class LegClass:
 		self.Path = path_generator.PathGenerator()
 
 		# Impedance control (fn, D, G)
-		self.impedance_controller_x = ImpedanceController(1, 1, 0) # No gain (control along x and y)
-		self.impedance_controller_y = ImpedanceController(1, 1, 0)
-		self.impedance_controller_z = ImpedanceController(2, 3.0, 0.005)	# hassan: 2, 1.5, 0.001
+		self.impedance_controller_x = ImpedanceController()
+		self.impedance_controller_y = ImpedanceController()
+		self.impedance_controller_z = ImpedanceController()
 
 		# transfer phase variables - created in controller class and stored here
 		self.xspline = TrajectoryPoints() 		# trajectory in cartesian position
@@ -42,7 +42,7 @@ class LegClass:
 		self.spline_length  = 0			# spline length
 		self.feedback_state	= 0 		# 0 = idle, 1 = command received (executing), 2 = command completed
 
-		self.cstate = 0 	# foot contact state: 1 or 0
+		self.cstate = False 	# foot contact state: 1 or 0
 
 		# transformation frames
 		self.XHc = robot_transforms.ArrayHomogeneousTransform(self.number)
@@ -59,6 +59,8 @@ class LegClass:
 
 		self.XH_world_X_base = np.eye(4)
 		self.P6_world_X_base = np.zeros((6,1))
+
+		self.threshold = 0 	# Number of times threshold has been crossed for each leg
 
 	## Update functions
 	def update_joint_state(self, P6_world_X_base, jointState, resetState, step_stroke):
@@ -96,10 +98,10 @@ class LegClass:
 	def update_force_state(self, cState, cForce):
 		""" contact force of leg """
 
-		self.cstate = cState
+		# self.cstate = cState
 		self.F6c.tibia_X_foot[:3] = np.reshape(np.array(cForce),(3,1))
 
-		# Transfrom to leg and base frame
+		# Transfrom to world, base and leg
 		base_X_coxa = rot_Z(ROT_BASE_X_LEG[self.number])
 		coxa_X_foot = mX(rot_Z(self.Joint.qpc[0]),
 						rot_X(np.pi/2),
@@ -117,8 +119,30 @@ class LegClass:
 		# 	print np.round(self.F6c.coxa_X_foot[:3].flatten(),3)
 		# 	print np.round(self.F6c.tibia_X_foot[:3].flatten(),3)
 
+		
+
+		force = np.linalg.norm(self.F6c.world_X_foot[:3])
+
+		# Hysteresis based contact detection
+		th = self.threshold
+		lim = 8
+		if th > lim: # We are in the "contact state"
+			if force < F_THRES:
+				th = 0
+		else: # Contact not yet established
+			if force > F_THRES:
+				th += 1
+			else:
+				th = 0
+
+		self.threshold = th
+
+		if th > lim:
+			self.cstate = True
+		else:
+			self.cstate = False
+
 		return None
-		## TODO: TRANSFORM FROM FOOT FRAME TO HIP, BASE, WORLD FRAME
 
 	def generate_spline(self, frame, sn1, sn2, phase=1, reflex=False, ctime=2.0, tn=0.1):
 		""" generate leg trajectory using bspline and check for kinematic constraints 	"""
@@ -237,7 +261,6 @@ class LegClass:
 
 		return error, self.Joint.qpd, self.Joint.qvd, self.Joint.qad 	# TEMP: change to normal (huh?)
 
-
 	def check_boundary_limit(self, world_base_X_foot, world_base_X_NRP, step_stroke, radius=None):
 		""" leg boundary area projected to 2D space """
 
@@ -327,8 +350,7 @@ class LegClass:
 		return True
 
 	def apply_impedance_controller(self, desired_force):
-		# Currently only applied to z-axis
-
+		
 		world_df = (self.F6c.world_X_foot[0:3] - desired_force[0:3]).flatten()
 		# Transform to leg frame
 		leg_df = mX(self.XHd.coxa_X_world[:3,:3], world_df)

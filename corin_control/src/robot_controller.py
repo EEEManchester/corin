@@ -61,7 +61,10 @@ class RobotController(CorinManager):
 			path_length = len(base_path.X.t)
 		else:
 			state_machine = 'hold' 			# Motion state machine: unload, motion, load
-			path_length = 2000		
+			path_length = 5000		
+			world_X_footholds = []
+			base_X_footholds = []
+			w_base_X_NRP = []
 
 		## User input
 		print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
@@ -124,14 +127,12 @@ class RobotController(CorinManager):
 			if motion_plan is not None:
 				# GRID PLAN: base trajectory in world frame
 				v3cp = wXbase_offset[0:3] + base_path.X.xp[i].reshape(3,1) 		\
-								+ np.array([0., 0., offset_z]).reshape((3,1)) 	#\
-								#+ self.Robot.Fault.xb_offset[0:3]
+								+ np.array([0., 0., offset_z]).reshape((3,1))
 				# v3cp = base_path.X.xp[i].reshape(3,1); 	# CORNERING: base trajectory relative to world frame
 				v3cv = base_path.X.xv[i].reshape(3,1);
 				v3ca = base_path.X.xa[i].reshape(3,1);
 
-				v3wp = wXbase_offset[3:6] + base_path.W.xp[i].reshape(3,1) 	#\
-										 # + self.Robot.Fault.xb_offset[3:6]
+				v3wp = wXbase_offset[3:6] + base_path.W.xp[i].reshape(3,1)
 				# v3wp = base_path.W.xp[i].reshape(3,1);	# CORNERING: base trajectory relative to world frame
 				v3wv = base_path.W.xv[i].reshape(3,1);
 				v3wa = base_path.W.xa[i].reshape(3,1);
@@ -169,14 +170,14 @@ class RobotController(CorinManager):
 					gphase = [0]*6 		# all legs in support phase at start of unloading
 					fmax_lim = [0]*6	# max. force array
 					for j in range(0,6):
-						init_flim[j] = self.Robot.Leg[j].F6c.world_X_foot[2] if (self.Robot.Gait.cs[j] == 1) else F_MAX
+						init_flim[j] = self.Robot.Leg[j].F6c.world_X_foot[2] if (self.Robot.Gait.ps[j] == 1) else F_MAX
 					
 				# reduce max force for legs that will be in transfer phase
 				# fmax = F_MAX - tload*F_MAX/float(iload) + 0.001
 				for j in range(0,6):
 					# fmax_lim[j] = fmax if (self.Robot.Gait.cs[j] == 1) else F_MAX
-					fmax = (init_flim[j]+1.) - tload*(init_flim[j]+1.)/float(iload) + 0.001
-					fmax_lim[j] = fmax if (self.Robot.Gait.cs[j] == 1) else F_MAX
+					fmax = init_flim[j]+1. - tload*(init_flim[j]+1.)/float(iload) + 0.001
+					fmax_lim[j] = fmax if (self.Robot.Gait.ps[j] == 1) else F_MAX
 				tload += 1
 
 				self.support_phase_update(P6e_world_X_base, V6e_world_X_base)
@@ -195,10 +196,11 @@ class RobotController(CorinManager):
 					fmax_lim = [0]*6	# max. force array
 
 				# reduce max force for legs that will be in transfer phase
+				# fmax = F_THRES + tload*(F_MAX-F_THRES)/float(iload)
 				fmax = tload*F_MAX/float(iload)
 				for j in range(0,6):
 					# gait phase updated prior to this state, so use previous gait phase
-					fmax_lim[j] = fmax if (self.Robot.Gait.cs[j] == 1) else F_MAX	
+					fmax_lim[j] = fmax if (self.Robot.Gait.ps[j] == 1) else F_MAX	
 				tload += 1
 
 				self.support_phase_update(P6e_world_X_base, V6e_world_X_base)
@@ -207,6 +209,11 @@ class RobotController(CorinManager):
 					tload = 1
 					state_machine = 'unload'
 					print 'Unloading ...'
+					try:
+						self.Robot.alternate_phase(next(gait_stack))
+					except:
+						self.Robot.alternate_phase()
+					raw_input('cont')
 					self.Robot.Gait.walk_mode()
 				
 			elif state_machine ==  'motion':
@@ -222,34 +229,35 @@ class RobotController(CorinManager):
 					if (self.Robot.Gait.cs[j] == 1 and 
 						self.Robot.Leg[j].transfer_phase_change == False and
 						not self.Robot.Fault.fault_index[self.Robot.Gait.cs.index(1)]):
-						self.Robot.Leg[j].feedback_state = 1 	# set leg to execution mode
-
-						## Using planned foothold arrays
-						try:
-							self.Robot.Leg[j].XHd.world_X_foot = v3_X_m(world_X_footholds[j].xp.pop(0))
-							self.Robot.Leg[j].XHd.base_X_foot  = v3_X_m(base_X_footholds[j].xp.pop(0))
-							self.Robot.Leg[j].XHd.world_base_X_NRP = v3_X_m(w_base_X_NRP[j].xp.pop(0))
-							self.Robot.Leg[j].XHc.world_base_X_NRP = self.Robot.Leg[j].XHd.world_base_X_NRP.copy()
-
-							## Set bodypose in leg class
-							self.Robot.Leg[j].XH_world_X_base = self.Robot.XHd.world_X_base.copy()
-
-						except IndexError:
-							## TODO: plan on the fly. Currently set to default position
-							print 'Leg: ', j, ' No further foothold planned!', i
-							iahead = int(GAIT_TPHASE/CTR_INTV)
-							# Get bodypose at end of gait phase, or end of trajectory
+						# Set leg to execution mode
+						self.Robot.Leg[j].feedback_state = 1 	
+						# Use planned foothold if motion plan exists
+						if motion_plan is not None:
 							try:
-								x_ahead = base_path.X.xp[i+iahead] #+ self.Robot.Fault.xb_offset[0:3]
-								w_ahead = base_path.W.xp[i+iahead] #+ self.Robot.Fault.xb_offset[3:6]
+								self.Robot.Leg[j].XHd.world_X_foot = v3_X_m(world_X_footholds[j].xp.pop(0))
+								self.Robot.Leg[j].XHd.base_X_foot  = v3_X_m(base_X_footholds[j].xp.pop(0))
+								self.Robot.Leg[j].XHd.world_base_X_NRP = v3_X_m(w_base_X_NRP[j].xp.pop(0))
+								self.Robot.Leg[j].XHc.world_base_X_NRP = self.Robot.Leg[j].XHd.world_base_X_NRP.copy()
+
+								## Set bodypose in leg class
+								self.Robot.Leg[j].XH_world_X_base = self.Robot.XHd.world_X_base.copy()
+
 							except IndexError:
-								x_ahead = base_path.X.xp[-1] #+ self.Robot.Fault.xb_offset[0:3]
-								w_ahead = base_path.W.xp[-1] #+ self.Robot.Fault.xb_offset[3:6]
+								## TODO: plan on the fly. Currently set to default position
+								print 'Leg: ', j, ' No further foothold planned!', i
+								iahead = int(GAIT_TPHASE/CTR_INTV)
+								# Get bodypose at end of gait phase, or end of trajectory
+								try:
+									x_ahead = base_path.X.xp[i+iahead]
+									w_ahead = base_path.W.xp[i+iahead]
+								except IndexError:
+									x_ahead = base_path.X.xp[-1]
+									w_ahead = base_path.W.xp[-1]
 
-							self.Robot.Leg[j].XH_world_X_base = vec6d_to_se3(np.array([x_ahead, w_ahead]).reshape((6,1)))
-							self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
-																	self.Robot.Leg[j].XHd.world_X_foot)
-
+								self.Robot.Leg[j].XH_world_X_base = vec6d_to_se3(np.array([x_ahead, w_ahead]).reshape((6,1)))
+								self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
+																		self.Robot.Leg[j].XHd.world_X_foot)
+						
 						## Compute average surface normal from cell surface normal at both footholds
 						try:
 							sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
@@ -267,18 +275,7 @@ class RobotController(CorinManager):
 						self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = mX(self.Robot.XHd.world_X_base[:3,:3],
 																			self.Robot.Leg[j].XHd.base_X_foot[:3,3])
 
-						## CORNERING: Wall - Identify knee up/down - first, checks only if body roll above threshold
-						if ((self.Robot.P6d.world_X_base[3] > ROLL_TH and j >= 3) or (self.Robot.P6d.world_X_base[3] < -ROLL_TH and j < 3)):
-							x_offset = np.array([COXA_X,0,0]).reshape((3,1)) 	# offset so that search at front of robot
-							wclear = self.GridMap.get_median_width(self.Robot.P6d.world_X_base[:3] + x_offset)
-							# change to knee down if width clearance below threshold
-							if (wclear < WALL_WIDTH_NARROW):
-								print j, ' Changing to knee down ', wclear
-								if (self.Robot.Leg[j].KDL.knee_up == True):
-									print 'Initiate change of knee config. routine'
-								self.Robot.Leg[j].KDL.knee_up = False
-							else:
-								self.Robot.Leg[j].KDL.knee_up = True
+						## CORNERING hack: insert here <<
 
 						if (svalid is False):
 							# set invalid if trajectory unfeasible for leg's kinematic
@@ -301,17 +298,17 @@ class RobotController(CorinManager):
 						transfer_total += 1
 						if (self.Robot.Leg[j].feedback_state == 2):
 							leg_complete += 1
-				
+
+					
 				# triggers only when all transfer phase legs complete and greater than zero
 				# > 0: prevents trigger during all leg support
 				if ( (transfer_total == leg_complete and transfer_total > 0 and leg_complete > 0) or
 					# For discontinuous phase gait
-					(all( map(lambda x: x == self.Robot.Gait.cs[0], self.Robot.Gait.cs ) ) and s_cnt == s_max+1) ):
-					try:
-						self.Robot.alternate_phase(next(gait_stack))
-						print 'unstacked'
-					except:
-						self.Robot.alternate_phase()
+					(all( map(lambda x: x == self.Robot.Gait.cs[0], self.Robot.Gait.cs ) ) and s_cnt == s_max+1)):# or
+					# (s_cnt > s_max/2. and self.Robot.Gait.cs[5]==1 and self.Robot.Leg[5].cstate == True) ):
+					# print s_cnt, s_max/2., transfer_total, leg_complete
+					# if (self.Robot.Gait.cs[5]==1 and self.Robot.Leg[5].cstate == True):
+					# 	print 'HERE HERE HERE cstate early, switch phase'
 					state_machine = 'load'
 					print 'Loading ...'
 					s_cnt = 1
@@ -326,15 +323,17 @@ class RobotController(CorinManager):
 				fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
 
 				if tload == 1:
+					print 'Holding ...'
 					self.Robot.Gait.support_mode()
 				tload += 1
-				if tload == iload+1 and motion_plan:
+				if tload == iload+1:# and motion_plan:
 					state_machine = 'unload'
 					tload = 1
 					self.Robot.Gait.walk_mode()
 				self.support_phase_update(P6e_world_X_base, V6e_world_X_base)
 				i += 1
 
+			# print state_machine, fmax_lim, self.Robot.Gait.cs, self.Robot.Gait.ps
 			## Task to joint space
 			qd, tXj_error = self.Robot.task_X_joint()
 
@@ -360,7 +359,7 @@ class RobotController(CorinManager):
 				# offset_z = self.Robot.apply_base_impedance(force_dist[12:15])
 
 				## Impedance controller for each legs
-				# self.Robot.apply_impedance_control(force_dist)
+				self.Robot.apply_impedance_control(force_dist)
 
 				## Recompute task to joint space
 				qd, tXj_error = self.Robot.task_X_joint()
@@ -411,17 +410,24 @@ class RobotController(CorinManager):
 		# 		self.Robot.update_rbdl(resp1.CoM, resp1.CRBI)
 		# 	except:
 		# 		rbim_valid = False
-		
+		# TEMP: base_X_foot
+		# base_X_foot = [np.array([ 0.25,  0.251, -BODY_HEIGHT]),
+		# 				np.array([ 0.,    0.300, -BODY_HEIGHT]),
+		# 				np.array([-0.25,  0.251, -BODY_HEIGHT]),
+		# 				np.array([ 0.25, -0.251, -BODY_HEIGHT]),
+		# 				np.array([ 0.,   -0.300, -BODY_HEIGHT]),
+		# 				np.array([-0.25, -0.251, -BODY_HEIGHT])]
+
 		## Append legs and joint angles in stance phase
 		s_norm = []
 		p_foot = [] 		
 		q_contact = []
 		for j in range(0,6):
 			if (gphase[j] == 0):
-				# world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3],
-				# 	  					(-self.Robot.P6c.base_X_CoM[:3].flatten()+self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
 				world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3],
-					  					(-self.Robot.Rbdl.com.flatten() + self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
+					  					(-self.Robot.P6c.base_X_CoM[:3].flatten()+self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
+				# world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3],
+				# 	  					(-self.Robot.Rbdl.com.flatten() + base_X_foot[j]) )
 				p_foot.append(world_CoM_X_foot.copy())
 				q_contact.append(qp[(j*3):(j*3)+3])
 		
@@ -436,6 +442,7 @@ class RobotController(CorinManager):
 													self.Robot.Rbdl.com,
 													self.Robot.Rbdl.crbi, gphase, fmax, #)
 													s_norm, qb[3:6], qp)
+
 		# end = rospy.get_time()
 		# print 'Tdiff: ', end - now
 
@@ -480,11 +487,12 @@ class RobotController(CorinManager):
 				self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 				self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
 
-				# print j, ' bXw: \n', np.round(self.Robot.XHd.base_X_world,3)
-				# print j, ' wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
-				# print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],3)
-				# print j, ' cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],3)
-				# print '========================================================='
+				if j==5:
+					# print j, ' bXw: \n', np.round(self.Robot.XHd.base_X_world,3)
+					print j, ' wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
+					# print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],3)
+					# print j, ' cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],3)
+					# print '========================================================='
 
 	def transfer_phase_update(self):
 

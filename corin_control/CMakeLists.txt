@@ -13,6 +13,7 @@ LIST( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR} )
 ################################################################################
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
+  # dynamic_reconfigure 
   actionlib
   cmake_modules
   control_msgs
@@ -31,6 +32,14 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   grid_planner_core
 )
+#add dynamic reconfigure api
+#find_package(catkin REQUIRED dynamic_reconfigure)
+# generate_dynamic_reconfigure_options(
+#   cfg/dynreconfig.cfg
+#   #...
+# )
+# make sure configure headers are built before any node using them
+# add_dependencies(main ${PROJECT_NAME}_gencfg)
 
 # find_package(RBDL REQUIRED)
 find_package(Eigen REQUIRED)
@@ -123,6 +132,8 @@ include_directories( ${catkin_INCLUDE_DIRS}
 ####################
 ##  Test Scripts  ##
 ####################
+
+
 
 # add_executable(test_eigen_quadprog cpp_script/test/test_eigen_quadprog.cpp)
 # add_dependencies(test_eigen_quadprog corin_control_gencpp)

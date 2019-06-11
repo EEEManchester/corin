@@ -76,6 +76,11 @@ class GaitClass:
 			self.phases.append([0,1,0,0,1,0])
 			self.phases.append([1,0,0,0,0,1])
 			self.phases.append([0,0,1,1,0,0])
+		# Tripod Gait
+		elif (self.type == 6):
+			self.phases.append([0,0,0,0,0,1])
+			self.phases.append([0,0,0,0,0,0])
+		
 
 		self.cs = self.phases[self.np]
 
