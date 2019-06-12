@@ -235,7 +235,7 @@ bodypose = np.array([0.,0.,BODY_HEIGHT, 0.,0.,0.])
 # cd = CK.leg_FK(qs)
 # print cd.flatten()
 cd = [0.15 , -0.0,  -0.1]
-cd = [0.17619022, -0.14784115, -0.]
+
 qp = CK.leg_IK(cd)
 # print np.rad2deg(qp[1])
 # print qp
@@ -243,7 +243,8 @@ qp = CK.leg_IK(cd)
 # if (not CK.check_singularity(qp)):
 # 	qd,qdd = CK.joint_speed(qp, v, a)
 # qpd = np.array([0., 0.34, -1.85])
-# print CK.leg_FK(qpd)
+q = [0.0, 0.7953988301841435, -1.590797660368287]
+# print CK.leg_FK(q)
 
 # code snippet to be executed only once 
 mysetup = "from math import sqrt"

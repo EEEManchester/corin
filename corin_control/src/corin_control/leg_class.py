@@ -61,6 +61,7 @@ class LegClass:
 		self.P6_world_X_base = np.zeros((6,1))
 
 		self.threshold = 0 	# Number of times threshold has been crossed for each leg
+		self.snorm = np.array([0., 0., 1.]) 	# leg surface normal in world frame
 
 	## Update functions
 	def update_joint_state(self, P6_world_X_base, jointState, resetState, step_stroke):
@@ -119,30 +120,32 @@ class LegClass:
 		# 	print np.round(self.F6c.coxa_X_foot[:3].flatten(),3)
 		# 	print np.round(self.F6c.tibia_X_foot[:3].flatten(),3)
 
-		
-
-		force = np.linalg.norm(self.F6c.world_X_foot[:3])
-
 		# Hysteresis based contact detection
-		th = self.threshold
-		lim = 8
-		if th > lim: # We are in the "contact state"
-			if force < F_THRES:
-				th = 0
-		else: # Contact not yet established
-			if force > F_THRES:
-				th += 1
-			else:
-				th = 0
+		# th = self.threshold
+		# lim = 8
+		# if th > lim: # We are in the "contact state"
+		# 	if force < F_THRES:
+		# 		th = 0
+		# else: # Contact not yet established
+		# 	if force > F_THRES:
+		# 		th += 1
+		# 	else:
+		# 		th = 0
 
-		self.threshold = th
+		# self.threshold = th
 
-		if th > lim:
-			self.cstate = True
-		else:
-			self.cstate = False
+		# if th > lim:
+		# 	self.cstate = True
+		# else:
+		# 	self.cstate = False
 
 		return None
+
+	def get_normal_force(self):
+
+		# Normal force
+		return np.linalg.norm(mX(np.diag(self.snorm), self.F6c.world_X_foot[0:3]))
+		
 
 	def generate_spline(self, frame, sn1, sn2, phase=1, reflex=False, ctime=2.0, tn=0.1):
 		""" generate leg trajectory using bspline and check for kinematic constraints 	"""
@@ -339,7 +342,7 @@ class LegClass:
 
 		## Variable mapping ##
 		i = self.spline_counter
-		print i, self.spline_length
+		
 		self.XHd.update_coxa_X_foot(self.qspline.xp[i])
 		self.V6d.coxa_X_foot[:3]  = self.xspline.xv[i].reshape(3,1)
 		self.A6d.coxa_X_foot[:3]  = self.xspline.xa[i].reshape(3,1)

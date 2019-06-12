@@ -11,7 +11,6 @@ from corin_control import *			# library modules to include
 # from motion_planning import *	# library modules on motion planning
 import control_interface 		# action selection from ROS parameter server
 from rviz_visual import *
-# from grid_planner import grid_map
 from grid_planner_core.grid_map import GridMap
 from grid_planner_core.numpy_to_rosmsg import *
 
@@ -59,7 +58,7 @@ class CorinManager:
 		self.on_start  = False 		# variable for resetting to leg suspended in air
 		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
-		self.control_loop = "open" 	# run controller in open or closed loop
+		self.control_loop = "close" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
 		self.MotionPlan = MotionPlan()
@@ -99,6 +98,13 @@ class CorinManager:
 		self.Robot.P6c.world_X_base[3] = rpy.item(0)
 		self.Robot.P6c.world_X_base[4] = rpy.item(1)
 		self.Robot.P6c.world_X_base[5] = rpy.item(2)
+
+		self.Robot.V6c.world_X_base[0] = msg.twist[idx].linear.x
+		self.Robot.V6c.world_X_base[1] = msg.twist[idx].linear.y
+		self.Robot.V6c.world_X_base[2] = msg.twist[idx].linear.z
+		self.Robot.V6c.world_X_base[3] = msg.twist[idx].angular.x
+		self.Robot.V6c.world_X_base[4] = msg.twist[idx].angular.y
+		self.Robot.V6c.world_X_base[5] = msg.twist[idx].angular.z
 
 	def __initialise__(self):
 		""" Initialises robot and classes """
@@ -223,9 +229,7 @@ class CorinManager:
 						self.joint_pub_[n].publish(qp)
 					elif (self.control_rate is "fast"):
 						pass
-				# self.rstate_cs_pub_.publish(array_to_pose(self.Robot.P6c.world_X_base))
-				# self.rstate_ds_pub_.publish(array_to_pose(self.Robot.P6d.world_X_base))
-
+				
 			elif (self.interface == 'rviz'):
 				dqp = JointState()
 				dqp.header.stamp = rospy.Time.now()
@@ -233,7 +237,7 @@ class CorinManager:
 					dqp.name.append(str(JOINT_NAME[n])) 	# joint name
 					dqp.position.append(q.xp[n])			# joint angle
 				self.joint_pub_.publish(dqp)
-
+				print q.xp
 			elif (self.interface == 'robotis'):
 				dqp = SyncWriteMultiFloat()
 				dqp.item_name 	= str("goal_position") 	# register to start first write
@@ -478,17 +482,19 @@ class CorinManager:
 				# ps = (10,13); pf = (20,13) 	# wall and chimney demo
 				# ps = (10,15); pf = (150,10) 	# IROS demo
 				# ps = (10,15); pf = (17,12) 	# IROS - past chimney
+				base_height = BODY_HEIGHT
 				if motion == 'transition':
 					ps = (10,13); pf = (10,20)
 				elif motion == 'forward':
-					ps = (10,13); pf = (15,13)
+					ps = (10,13); pf = (20,13)
 				elif motion == 'chimney':
-					ps = (15,12); pf = (17,12)
+					ps = (15,12); pf = (20,12)
+					base_height = 0.3
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,
 														ps[1]*self.GridMap.resolution,
-														BODY_HEIGHT,
+														base_height,
 														0.,0.,0.]).reshape(6,1)
 				self.Robot.P6c.world_X_base_offset = np.array([ps[0]*self.GridMap.resolution,
 																ps[1]*self.GridMap.resolution,
@@ -497,7 +503,9 @@ class CorinManager:
 				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 
 				self.Robot.init_robot_stance()
-
+				print self.Robot.XHc.world_X_base
+				print self.Robot.Leg[1].XHc.world_X_foot
+				print self.Robot.Leg[1].XHd.world_X_foot
 				if (self.grid_serv_.available):
 					if (self.GridMap.get_index_exists(ps) and self.GridMap.get_index_exists(pf)):
 						start = Pose()
@@ -590,6 +598,9 @@ class CorinManager:
 		qlog.qp_desired_forces = self.ForceDist.desired_forces.flatten().tolist()
 		qlog.qp_desired_moments = self.ForceDist.desired_moments.flatten().tolist()
 
+		error_forces = self.ForceDist.desired_forces - self.ForceDist.sum_forces
+		error_moment = self.ForceDist.desired_moments - self.ForceDist.sum_moments
+		
 		self.qlog_setpoint = qlog
 
 		return qlog

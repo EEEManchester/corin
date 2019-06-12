@@ -927,6 +927,8 @@ class PathPlanner:
 						stack_base_X_world.append(self.Robot.Leg[j].XHd.world_base_X_foot[:3,3])
 					
 					sm_valid, sm_distance = self.Robot.SM.point_in_convex(np.zeros(3), stack_base_X_world, self.Robot.Gait.cs)
+					if sm_distance < 0.02:
+						sm_valid = False
 					if not sm_valid:
 						print 'Outside Convex hull: ', m, sm_valid, sm_distance
 						bound_exceed = True

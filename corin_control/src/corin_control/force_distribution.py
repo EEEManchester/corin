@@ -96,7 +96,8 @@ def quadprog_solve_qp(P, q, G=None, h=None, A=None, b=None):
 		meq = 0
 	
 	try:
-		return quadprog.solve_qp(qp_G, qp_a, qp_C, qp_b, meq)[0]
+		sol_full = quadprog.solve_qp(qp_G, qp_a, qp_C, qp_b, meq)
+		return sol_full[0]
 	except ValueError as e:
 		print e
 		return None
@@ -106,10 +107,10 @@ def quadprog_solve_qp(P, q, G=None, h=None, A=None, b=None):
 
 class QPForceDistribution():
 	def __init__(self):
-		self.sum_forces = np.zeros((3,1))
-		self.sum_moments = np.zeros((3,1))
-		self.desired_forces = np.zeros((3,1))
-		self.desired_moments = np.zeros((3,1))
+		self.sum_forces = np.zeros(3)
+		self.sum_moments = np.zeros(3)
+		self.desired_forces = np.zeros(3)
+		self.desired_moments = np.zeros(3)
 		self.KDL = kdl.KDL()
 
 	def compute_tangent(self, snorm):
@@ -161,7 +162,7 @@ class QPForceDistribution():
 		J = np.zeros((3*n_contact, 3*n_contact))	# contact jacobian matrix
 
 		s_weight = np.array([1, 1, 1, 1, 1, 1]);
-		w_weight = np.array([1, 1, 1])*10e-3;
+		w_weight = np.array([5, 50, 2])*10e-3;
 		# print A
 		# print b
 		## =================== Bounded Force ============================ ##
@@ -219,8 +220,9 @@ class QPForceDistribution():
 		q = (-2*mX(b.T, S, A)).T
 
 		## Solve QP
-		# cvx_sol = cvxopt_solve_qp(H, q, inq_C, inq_D)
+		# qpg_sol = cvxopt_solve_qp(H, q, inq_C, inq_D)
 		qpg_sol = quadprog_solve_qp(H, q, inq_C, inq_D)
+
 		if qpg_sol is None:
 			print 'Error!'
 			# qpg_sol = quadprog_solve_qp(H, q, inq_C, inq_D+0.001)
@@ -247,23 +249,27 @@ class QPForceDistribution():
 		# print np.round(force_vector[15:18],3)
 		## Check solution
 		fcounter = 0
-		self.sum_forces = self.sum_moment = 0
+		## Reset variables
+		self.sum_forces = np.zeros(3)
+		self.sum_moments = np.zeros(3)
 		for i in range(0,6):
 			if (gphase[i]==0):
 				self.sum_forces  += force_vector[i*3:i*3+3]
-				self.sum_moments += np.cross( p_foot[fcounter].reshape(1,3), force_vector[i*3:i*3+3].reshape(1,3)).reshape(3,1)
+				self.sum_moments += np.cross( p_foot[fcounter].reshape(1,3), force_vector[i*3:i*3+3].reshape(1,3)).flatten()
 				fcounter += 1
-				
+
 		self.desired_forces  = b[0:3] # ROBOT_MASS*(v3ca+gv)
 		self.desired_moments = b[3:6] # Ig_com*w3ca
 		error_forces = self.desired_forces - self.sum_forces
-		error_moment = self.desired_moments - self.sum_moment
+		error_moment = self.desired_moments - self.sum_moments
 		# print np.round(force_vector.flatten(),3)
 		# print np.transpose(np.round(self.sum_forces,3))
 		# print np.transpose(np.round(self.desired_forces,4))
 		# print np.transpose(np.round(self.sum_forces,4))
-		# print np.transpose(np.round(error_forces,4))
-		# print np.transpose(np.round(error_moment,4))
+		print 'Fe :', np.transpose(np.round(error_forces,4))
+		# print 'Md :', np.transpose(np.round(self.desired_moments,4))
+		# print 'Mc :', np.transpose(np.round(self.sum_moments,4))
+		print 'Me :', np.transpose(np.round(error_moment,4))
 		# print '========================================='
 		
 		return force_vector.reshape((18,1))
@@ -298,11 +304,17 @@ p6 = np.array([ [-0.125],[-0.285],[-0.1] ])
 p_foot = [p1, p2, p3, p4, p5, p6] 			# leg position wrt CoM expressed in world frame
 contacts = [0,0,0,0,0,0]
 
+p_foot = [p1, p3, p5] 			# leg position wrt CoM expressed in world frame
+contacts = [0,1,0,1,0,1]
+
 snorm =  []
-for i in range(0,3):
-	snorm.append(np.array([0., 0., 1.]))
-for i in range(3,6):
-	snorm.append(np.array([0., 0., 1.]))
+snorm.append(np.array([0., -1., 0.]))
+snorm.append(np.array([0., -1., 0.]))
+snorm.append(np.array([0., 1., 0.]))
+# for i in range(0,3):
+# 	snorm.append(np.array([0., -1., 0.]))
+# for i in range(3,6):
+# 	snorm.append(np.array([0., 1., 0.]))
 farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
 
 ## Test set - 2 legs in contact
@@ -314,7 +326,7 @@ farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
 # p_foot = [p2,p5]
 # contacts = [1,0,1,1,0,1]
 # q = np.array([0, 0.3381, -1.8523, 0, 0.3381, -1.8523])
-# qb = np.zeros(3)
+qb = np.zeros(3)
 
 # snorm = np.array([0., -1., 0., 0., 1., 0.])
 # farr = [80., 80.]
@@ -331,6 +343,15 @@ farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
 # contacts = [0, 0, 0, 0, 0, 0]
 # farr = [0.0, 80.0, 80.0, 80.0, 80.0, 80.0]
 
-# force_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm)
+force_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm)
 # force_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm, qb, q)
-# print np.round(force_vector.flatten(),3)
+print np.round(force_vector.flatten(),3)
+
+# from robot_transforms import *
+# F6c = ArrayVector6D()
+# snorm = np.array([1.,0.,1.])
+# F6c.world_X_foot[:3] = np.array([2.,5.,10.]).reshape((3,1))
+
+# print np.linalg.norm(mX(np.diag(snorm), F6c.world_X_foot[0:3]))
+
+

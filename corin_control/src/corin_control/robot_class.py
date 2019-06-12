@@ -63,7 +63,7 @@ class RobotState:
 		self.impedance_controller_z = ImpedanceController(2, 3.0, 0.005)	# fn, D, G
 		self.Fault = FaultController()
 
-		leg_stance = self.init_robot_stance("flat")
+		leg_stance = self.init_robot_stance("chimney")
 		
 		# self._initialise(leg_stance)
 
@@ -156,26 +156,23 @@ class RobotState:
 			## that will be used in the main code, they are a row vector of 6x1 (linear, angular)
 			# self.P6c.world_X_base = hassan_state_estimation_output()
 			# self.V6c.world_X_base = hassan_state_estimation_output()
-			self.imu = None
-			if (self.imu is not None):
-				## quaternion to euler transformation
-				rpy = np.array(euler_from_quaternion([self.imu.orientation.w, self.imu.orientation.x,
-														 self.imu.orientation.y, self.imu.orientation.z], 'sxyz')).reshape(3,1)
-				wv3 = np.array([ [self.imu.angular_velocity.x], 	[self.imu.angular_velocity.y], 	  [self.imu.angular_velocity.z] ])
-				ca3 = np.array([ [self.imu.linear_acceleration.x], 	[self.imu.linear_acceleration.y], [self.imu.linear_acceleration.z] ])
+			self.XHc.update_base(self.P6c.world_X_base)
 
-				## state estimation
-				xyz = np.zeros((3,1))
-				## Updates robot state based on measured states
-				self.XHc.update_base(p6c)
-				self.V6c.world_X_base[3:6] = wv3
-				self.A6c.world_X_base[0:3] = ca3
+			# self.imu = None
+			# if (self.imu is not None):
+			# 	print 'imu loop'
+			# 	## quaternion to euler transformation
+			# 	rpy = np.array(euler_from_quaternion([self.imu.orientation.w, self.imu.orientation.x,
+			# 											 self.imu.orientation.y, self.imu.orientation.z], 'sxyz')).reshape(3,1)
+			# 	wv3 = np.array([ [self.imu.angular_velocity.x], 	[self.imu.angular_velocity.y], 	  [self.imu.angular_velocity.z] ])
+			# 	ca3 = np.array([ [self.imu.linear_acceleration.x], 	[self.imu.linear_acceleration.y], [self.imu.linear_acceleration.z] ])
 
-			else:
-				## Updates robot state using setpoints
-				self.XHc.update_base(self.P6c.world_X_base)
-				self.V6c.world_X_base = self.V6d.world_X_base.copy()
-				self.A6c.world_X_base = self.A6d.world_X_base.copy()
+			# 	## state estimation
+			# 	xyz = np.zeros((3,1))
+			# 	## Updates robot state based on measured states
+			# 	self.XHc.update_base(p6c)
+			# 	self.V6c.world_X_base[3:6] = wv3
+			# 	self.A6c.world_X_base[0:3] = ca3
 
 	def update_stability_margin(self):
 		""" updates the current stability margin """
@@ -371,8 +368,8 @@ class RobotState:
 			# 	leg_stance[j][2] = 0.0
 
 		elif (stance_type == "chimney"):
-			base_height = 0.
-			stance_width = 0.27
+			# base_height = 0.
+			# stance_width = STANCE_WIDTH
 			# teta_f = stance_offset[0]
 			# teta_r = stance_offset[1]
 

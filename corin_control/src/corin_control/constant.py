@@ -91,13 +91,13 @@ CTR_INTV = 1./CTR_RATE 	# controller interval for robot, s
 ##                 Force Distribution parameters 	 				##
 ## ================================================================ ##
 LOAD_T = 1.0	# time for leg load & unloading
-F_MAX = 20.0	# maximum force for leg
+F_MAX = 100.0	# maximum force for leg
 F_MIN = 0.0		# minimum force for leg
-KPcom = np.array([1.0, 1.0, 1.0])*1000. #
-KDcom = np.array([1.0, 1.0, 1.0])
+KPcom = np.array([1.0, 1.0, 0.5])*1000. #
+KDcom = np.array([1.0, 1.0, 0.0])*0.5
 KPang = np.array([1.0, 1.0, 1.0])*500.
-KDang = np.array([1.0, 1.0, 1.0])
-SURFACE_FRICTION = 1.0
+KDang = np.array([1.0, 1.0, 1.0])*0.5
+SURFACE_FRICTION = 0.5
 F_THRES = 3.0
 
 ## ================================================================ ##
@@ -130,10 +130,10 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 
 BOUND_FACTOR = 1.1 	# boundary constraint for leg workplane space
 LEG_CLEAR 	 = 0.06 	# clearance between leg workplane boundaries
-STANCE_WIDTH = 0.21		# ori: 0.21, chimney: 0.23, 0.27, 0.31 for tripod
-BODY_HEIGHT  = 0.10		# ori: 0.10, chimney: 0.0
+STANCE_WIDTH = 0.23		# ori: 0.21, chimney: 0.23, 0.27, 0.31 for tripod
+BODY_HEIGHT  = 0.00		# ori: 0.10, chimney: 0.0
 # Offset for front and rear legs
-TETA_F = 0.;
+TETA_F = 40.;
 TETA_R = -TETA_F;
 LEG_OFFSET = [TETA_F, 0., TETA_R, -TETA_F, 0., -TETA_R]
 STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
@@ -143,7 +143,7 @@ STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
 ## ================================================================ ##
 
 ## these gait parameters can be changed during runtime
-GAIT_TYPE 	 = 3 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+GAIT_TYPE 	 = 4 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 GAIT_TPHASE	 = 1.4 	# default period per gait phase
 STEP_HEIGHT  = 0.04	# default step height, z
 STEP_STROKE  = 0.1 	# default step stroke
