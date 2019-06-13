@@ -60,7 +60,9 @@ class RobotState:
 
 		self.P6c.world_X_base[2] = BODY_HEIGHT
 		
-		self.impedance_controller_z = ImpedanceController(2, 3.0, 0.005)	# fn, D, G
+		self.impedance_controller_x = ImpedanceController()
+		self.impedance_controller_y = ImpedanceController()
+		self.impedance_controller_z = ImpedanceController(2., 2.2, 0.0035)	# fn, D, G
 		self.Fault = FaultController()
 
 		leg_stance = self.init_robot_stance("chimney")
@@ -253,8 +255,8 @@ class RobotState:
 		for j in range(0,6):
 
 			# FAULT INDUCED
-			# if self.Fault.fault_index[j] == True:
-			# 	self.Leg[j].XHd.coxa_X_foot = mX(self.Leg[j].XHd.coxa_X_base, v3_X_m(self.Fault.base_X_foot[j]))
+			if self.Fault.fault_index[j] == True:
+				self.Leg[j].XHd.coxa_X_foot = mX(self.Leg[j].XHd.coxa_X_base, v3_X_m(self.Fault.base_X_foot[j]))
 
 			err_list[j], qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
 			
@@ -319,14 +321,17 @@ class RobotState:
 	def apply_base_impedance(self, desired_force):
 	
 		world_df = (self.Leg[4].F6c.world_X_foot[0:3] - desired_force[0:3]).flatten()
-		offset_z = self.impedance_controller_z.evaluate(world_df[2])
+		offset = np.zeros(3)
+		offset[0] = self.impedance_controller_x.evaluate(world_df[0])
+		offset[1] = self.impedance_controller_y.evaluate(world_df[1])
+		offset[2] = self.impedance_controller_z.evaluate(world_df[2])
 
 		# Transform to leg frame
 		# leg_df = mX(self.Leg[4].XHd.coxa_X_world[:3,:3], world_df)
 		# offset_z = self.impedance_controller_z.evaluate(leg_df[2])
 
-		print 'base z: ', offset_z	
-		return offset_z
+		# print 'base : ', np.round(offset,4)	
+		return offset
 		# self.XHd.coxa_X_foot[0:3,3] += np.array([offset_x, offset_y, offset_z])
 
 	def duplicate_self(self, robot):
@@ -384,6 +389,22 @@ class RobotState:
 			print 'Invalid stance selected!'
 			leg_stance = None
 		
+		# # Update leg configurations 
+		# for j in range(0,6):
+		# 	# Fault leg - use fault configuration
+		# 	if self.Fault.fault_index[j] == True:
+		# 		self.Leg[j].XHd.coxa_X_foot = mX(self.Leg[j].XHd.coxa_X_base, v3_X_m(self.Fault.base_X_foot[j]))
+
+		# 	# Working leg - update foot position
+		# 	else:
+		# 		# Propogate base offset to legs
+		# 		self.Leg[j].XHd.world_X_foot[0,3] += xb[0]
+		# 		self.Leg[j].XHd.world_X_foot[1,3] += xb[1]
+				
+		# 		self.Leg[j].XHd.coxa_X_foot = mX(self.Leg[j].XHd.coxa_X_base, 
+		# 											self.XHd.base_X_world, 
+		# 											self.Leg[j].XHd.world_X_foot)
+
 		return leg_stance
 ## ====================================================================================================================================== ##
 ## ====================================================================================================================================== ##

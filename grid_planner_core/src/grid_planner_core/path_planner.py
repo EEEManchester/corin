@@ -967,10 +967,10 @@ class PathPlanner:
 				fault_flag = False
 				world_X_base.append(int_pose.flatten())
 				gphase_intv.append(i)
-				gait_phase.append([0]*6)
+				gait_phase.append([0,0,0,0,0,0])
 				world_X_base.append(P6d_world_X_base.flatten())
 				gphase_intv.append(i)
-				gait_phase.append([0]*6)
+				gait_phase.append([0,0,0,0,0,0])
 			else:
 				world_X_base.append(P6d_world_X_base.flatten())
 				gphase_intv.append(i)

@@ -145,7 +145,7 @@ class QPForceDistribution():
 
 		## Declare variables
 		n_contact = len(p_foot)
-		index_c = [i for i, j in enumerate(contacts) if j == 0.]
+		index_c = [i for i, j in enumerate(gphase) if j == 0.]
 		gv = np.array([0., 0., G]) 	# gravitational vector
 		mu = SURFACE_FRICTION		# Coefficient of friction
 		
@@ -266,10 +266,10 @@ class QPForceDistribution():
 		# print np.transpose(np.round(self.sum_forces,3))
 		# print np.transpose(np.round(self.desired_forces,4))
 		# print np.transpose(np.round(self.sum_forces,4))
-		print 'Fe :', np.transpose(np.round(error_forces,4))
+		# print 'Fe :', np.transpose(np.round(error_forces,4))
 		# print 'Md :', np.transpose(np.round(self.desired_moments,4))
 		# print 'Mc :', np.transpose(np.round(self.sum_moments,4))
-		print 'Me :', np.transpose(np.round(error_moment,4))
+		# print 'Me :', np.transpose(np.round(error_moment,4))
 		# print '========================================='
 		
 		return force_vector.reshape((18,1))
@@ -343,9 +343,9 @@ qb = np.zeros(3)
 # contacts = [0, 0, 0, 0, 0, 0]
 # farr = [0.0, 80.0, 80.0, 80.0, 80.0, 80.0]
 
-force_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm)
+# force_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm)
 # force_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm, qb, q)
-print np.round(force_vector.flatten(),3)
+# print np.round(force_vector.flatten(),3)
 
 # from robot_transforms import *
 # F6c = ArrayVector6D()
@@ -354,4 +354,8 @@ print np.round(force_vector.flatten(),3)
 
 # print np.linalg.norm(mX(np.diag(snorm), F6c.world_X_foot[0:3]))
 
-
+gait = [1,0,0,0,0,0]
+if all( map(lambda x: x == gait[0], gait ) ):
+	print 'asll support'
+else:
+	print 'not all'

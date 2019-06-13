@@ -80,16 +80,20 @@ class RobotController(CorinManager):
 		# State machine loading/unloading timing parameters
 		tload = 1						# timing for loading
 		iload = int(LOAD_T/CTR_INTV) 	# no. of intervals for loading
-		hload = int(2.0/CTR_INTV)		# no. of intervals for initial holding
+		hload = int(0.5/CTR_INTV)		# no. of intervals for initial holding
 		# Force Distribution parameters
 		fmax_lim  = [F_MAX]*6			# maximum force array
 		init_flim = [F_MAX]*6			# current force for linear decrease in unloading
 		gphase = [0]*6 					# gait phase array
 		# Base impedance
 		offset_z = 0.0
+		offset_base = np.zeros(3)
 		# Support phase counter
 		s_max = int(GAIT_TPHASE/CTR_INTV)
 		s_cnt = 1
+
+		self.P6e_prev_1 = np.zeros((6,1))
+		self.P6e_prev_2 = np.zeros((6,1))
 
 		## Cycle through trajectory points until complete
 		i = 1 		# skip first point since spline has zero initial differential conditions
@@ -97,7 +101,7 @@ class RobotController(CorinManager):
 
 			# start = time.time()
 			self.suspend_controller()
-			# print 'counting: ', i, len(base_path.X.t)
+			print 'counting: ', i, len(base_path.X.t)
 
 			## Update robot state
 			self.Robot.update_state(control_mode=self.control_rate)
@@ -129,7 +133,8 @@ class RobotController(CorinManager):
 			if motion_plan is not None:
 				# GRID PLAN: base trajectory in world frame
 				v3cp = wXbase_offset[0:3] + base_path.X.xp[i].reshape(3,1) 		\
-								+ np.array([0., 0., offset_z]).reshape((3,1))
+								+ offset_base.reshape((3,1))
+								# + np.array([0., 0., offset_z]).reshape((3,1))
 				# v3cp = base_path.X.xp[i].reshape(3,1); 	# CORNERING: base trajectory relative to world frame
 				v3cv = base_path.X.xv[i].reshape(3,1);
 				v3ca = base_path.X.xa[i].reshape(3,1);
@@ -139,7 +144,7 @@ class RobotController(CorinManager):
 				v3wv = base_path.W.xv[i].reshape(3,1);
 				v3wa = base_path.W.xa[i].reshape(3,1);
 			else:
-				v3cp = wXbase_offset[0:3] + np.array([0., 0., offset_z]).reshape((3,1))
+				v3cp = wXbase_offset[0:3] + + offset_base.reshape((3,1))#np.array([0., 0., offset_z]).reshape((3,1))
 				# v3cp = wXbase_offset[0:3]
 				v3cv = np.zeros((3,1))
 				v3ca = np.zeros((3,1))
@@ -358,15 +363,21 @@ class RobotController(CorinManager):
 			wa_d = mX(np.diag(KPang), P6e_world_X_base[3:6]) + mX(np.diag(KDang), V6e_world_X_base[3:6])
 			
 			# else:
-			# xa_d = np.array([0.,0.,.0])
-			# wa_d = np.array([0.,0.,.0])
-			force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, gphase, fmax_lim)
+			xa_d = np.array([0.,0.,.0])
+			wa_d = np.array([0.,0.,.0])
+
+			temp_gphase = gphase
+			if i > 281 and i < 840:
+				# if all( map(lambda x: x == self.Robot.Gait.cs[0], self.Robot.Gait.cs ) ) and state_machine=='motion':
+				temp_gphase = [0,0,0,0,1,0]
+
+			force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, temp_gphase, fmax_lim)
 			joint_torq = self.Robot.force_to_torque(force_dist)
 			# print np.round(force_dist.flatten(),3)
 
 			if self.interface != 'rviz' and self.control_loop != "open":
 				## Base impedance
-				# offset_z = self.Robot.apply_base_impedance(force_dist[12:15])
+				# offset_base = self.Robot.apply_base_impedance(force_dist[12:15])
 
 				## Impedance controller for each legs
 				self.Robot.apply_impedance_control(force_dist)
@@ -382,6 +393,9 @@ class RobotController(CorinManager):
 			qlog = self.set_log_setpoint(v3cp, v3cv, xa_d, v3wp, v3wv, wa_d, qd, joint_torq, force_dist)
 			
 			self.publish_topics(qd, qlog)
+
+			self.P6e_prev_2 = self.P6e_prev_1.copy()
+			self.P6e_prev_1 = P6e_world_X_base.copy()
 
 			## ============================================================================================================================== ##
 		else:
@@ -442,8 +456,8 @@ class RobotController(CorinManager):
 				q_contact.append(qp[(j*3):(j*3)+3])
 		
 				# s_norm.append(np.array([0., 0., 1.]))
-				snorm_left  = np.array([0., -1., 0.])
-				snorm_right = np.array([0.,  1., 0.])
+				snorm_left  = np.array([0., 0., 1.]) # np.array([0., -1., 0.])
+				snorm_right = np.array([0., 0., 1.]) # np.array([0.,  1., 0.])
 				if j <3:
 					s_norm.append(snorm_left)
 					self.Robot.Leg[j].snorm = snorm_left
@@ -464,21 +478,35 @@ class RobotController(CorinManager):
 
 		return foot_force
 
-	def suspend_controller(self):
-		# User Interface for commanding robot motion state
-		while (self.ui_state == 'hold' or self.ui_state == 'pause'):
-			# loop until instructed to start or cancel
-			if (rospy.is_shutdown()):
-				break
-			rospy.sleep(0.15)
-		else:
-			if (self.ui_state == 'play'):
-				pass
-			else:
-				print 'Motion Cancelled!'
-				return False
-
 	def support_phase_update(self, P6e_world_X_base, V6e_world_X_base):
+
+		kcorrect = np.zeros((6,1))
+
+		# PID controller
+		Ts = CTR_INTV
+		Kp = 0.#0.2
+		Ki = 0.#0.
+		Kd = 0.#0.0005
+
+		a = Kp + Ki*Ts/2 + Kd/Ts
+		b = -Kp + Ki*Ts/2 - 2*Kd/Ts
+		c = Kd/Ts
+		# linear correction only
+		kcorrect[0:3] = a*P6e_world_X_base[0:3] + b*self.P6e_prev_1[0:3] + c*self.P6e_prev_2[0:3]
+		# full body correction
+		kcorrect[3:6] = a*P6e_world_X_base[3:6] + b*self.P6e_prev_1[3:6] + c*self.P6e_prev_2[3:6]
+
+		# Virtual Base controller
+		# xa_d = mX(np.diag(KPcom), P6e_world_X_base[0:3]) + mX(np.diag(KDcom), V6e_world_X_base[0:3])
+		# wa_d = mX(np.diag(KPang), P6e_world_X_base[3:6]) + mX(np.diag(KDang), V6e_world_X_base[3:6])
+		# kcorrect = np.array([xa_d,wa_d]).reshape((6,1))
+		
+		comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + kcorrect)
+		comp_base_X_world = np.linalg.inv(comp_world_X_base)
+
+		# print 'error: ', np.round(P6e_world_X_base[0:3].flatten(),3)
+		# print np.round(self.P6e_prev_1[0:3].flatten(),3)
+		# print 'corr: ', np.round(kcorrect[0:3].flatten(),4)
 
 		for j in range (0, 6):
 			if (self.Robot.Gait.cs[j] == 0 and self.Robot.suspend == False):
@@ -491,10 +519,11 @@ class RobotController(CorinManager):
 					
 					## Foot position: either position or velocity
 					## Position-control
-					comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + K_BP*P6e_world_X_base)
-					comp_base_X_world = np.linalg.inv(comp_world_X_base)
+					# comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + K_BP*P6e_world_X_base)
+					# if j >2:
 					self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
-
+					# else:
+					# 	self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 				# 	## Velocity-control - Focchi2018 eq(3) TODO: check robustness
 				# 	vel_base_X_foot = -V6e_world_X_base[0:3].flatten() - np.cross(V6e_world_X_base[3:6].flatten(), 
 				# 						(self.Robot.Leg[j].XHd.base_X_foot[0:3,3:4] - self.Robot.P6d.world_X_base[0:3]).flatten())
@@ -504,7 +533,7 @@ class RobotController(CorinManager):
 				# self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 				self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
 
-				# if j==5:
+				# if j==4:
 					# print j, ' bXw: \n', np.round(self.Robot.XHd.base_X_world,3)
 					# print j, ' wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
 					# print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],3)
@@ -520,3 +549,18 @@ class RobotController(CorinManager):
 				if (self.Robot.Leg[j].update_from_spline() is False):
 					## Stops body from moving until transfer phase completes
 					self.Robot.suspend = True
+
+	def suspend_controller(self):
+		""" User Interface for commanding robot motion state """
+
+		while (self.ui_state == 'hold' or self.ui_state == 'pause'):
+			# loop until instructed to start or cancel
+			if (rospy.is_shutdown()):
+				break
+			rospy.sleep(0.15)
+		else:
+			if (self.ui_state == 'play'):
+				pass
+			else:
+				print 'Motion Cancelled!'
+				return False

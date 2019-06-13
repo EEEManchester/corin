@@ -237,7 +237,7 @@ class CorinManager:
 					dqp.name.append(str(JOINT_NAME[n])) 	# joint name
 					dqp.position.append(q.xp[n])			# joint angle
 				self.joint_pub_.publish(dqp)
-				print q.xp
+				
 			elif (self.interface == 'robotis'):
 				dqp = SyncWriteMultiFloat()
 				dqp.item_name 	= str("goal_position") 	# register to start first write
@@ -483,19 +483,32 @@ class CorinManager:
 				# ps = (10,15); pf = (150,10) 	# IROS demo
 				# ps = (10,15); pf = (17,12) 	# IROS - past chimney
 				base_height = BODY_HEIGHT
+				base_roll	= 0.
+				base_pitch	= 0.
+
 				if motion == 'transition':
 					ps = (10,13); pf = (10,20)
 				elif motion == 'forward':
-					ps = (10,13); pf = (20,13)
+					ps = (10,13); pf = (16,13)
 				elif motion == 'chimney':
 					ps = (15,12); pf = (20,12)
 					base_height = 0.3
+
+				if self.Robot.Fault.status:
+					xb = self.Robot.Fault.get_fault_pose().flatten()
+					base_height = xb[2]
+					base_roll	= xb[3]
+					base_pitch	= xb[4]
+					print xb
+					# Update robot's base
+					self.Robot.XHd.update_world_X_base(xb)
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,
 														ps[1]*self.GridMap.resolution,
 														base_height,
-														0.,0.,0.]).reshape(6,1)
+														base_roll,
+														base_pitch, 0.]).reshape(6,1)
 				self.Robot.P6c.world_X_base_offset = np.array([ps[0]*self.GridMap.resolution,
 																ps[1]*self.GridMap.resolution,
 																0.,0.,0.,0.]).reshape(6,1)
@@ -503,9 +516,26 @@ class CorinManager:
 				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 
 				self.Robot.init_robot_stance()
-				print self.Robot.XHc.world_X_base
-				print self.Robot.Leg[1].XHc.world_X_foot
-				print self.Robot.Leg[1].XHd.world_X_foot
+
+				if self.Robot.Fault.status:
+					# Update leg configurations 
+					for j in range(0,6):
+						# Fault leg - use fault configuration
+						if self.Robot.Fault.fault_index[j] == True:
+							self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, v3_X_m(self.Robot.Fault.base_X_foot[j]))
+
+						# Working leg - update foot position
+						else:
+							# Propogate base offset to legs
+							self.Robot.Leg[j].XHd.world_X_foot[0,3] += xb[0]
+							self.Robot.Leg[j].XHd.world_X_foot[1,3] += xb[1]
+							
+							self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, 
+																	self.Robot.XHd.base_X_world, 
+																	self.Robot.Leg[j].XHd.world_X_foot)
+				# print self.Robot.XHc.world_X_base
+				# print self.Robot.Leg[1].XHc.world_X_foot
+				# print self.Robot.Leg[1].XHd.world_X_foot
 				if (self.grid_serv_.available):
 					if (self.GridMap.get_index_exists(ps) and self.GridMap.get_index_exists(pf)):
 						start = Pose()
