@@ -210,6 +210,13 @@ class PathPlanner:
 
 		self.__initialise_graph__()
 
+		if self.Robot.Fault.status:
+			xb = self.Robot.Fault.get_fault_pose().flatten()
+			self.Robot.P6c.world_X_base = np.array([0., 0., xb[2], xb[3], xb[4], 0.]).reshape(6,1)
+			self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
+			self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
+			self.Robot.init_fault_stance()
+
 	def __initialise_graph__(self):
 
 		# determine robot related size in grid cell
@@ -874,7 +881,7 @@ class PathPlanner:
 					v3wp = base_path.W.xp[i].reshape(3,1) #+ self.Robot.P6c.world_X_base[3:6]
 					
 					P6d_world_X_base = np.vstack((v3cp,v3wp))
-					
+					print np.round(P6d_world_X_base.flatten(),3)
 					## update robot's pose
 					self.Robot.XHd.update_world_X_base(P6d_world_X_base)
 					world_X_base_rot = self.Robot.XHd.world_X_base.copy()

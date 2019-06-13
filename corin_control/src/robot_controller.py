@@ -101,7 +101,7 @@ class RobotController(CorinManager):
 
 			# start = time.time()
 			self.suspend_controller()
-			print 'counting: ', i, len(base_path.X.t)
+			# print 'counting: ', i, len(base_path.X.t)
 
 			## Update robot state
 			self.Robot.update_state(control_mode=self.control_rate)
@@ -144,7 +144,7 @@ class RobotController(CorinManager):
 				v3wv = base_path.W.xv[i].reshape(3,1);
 				v3wa = base_path.W.xa[i].reshape(3,1);
 			else:
-				v3cp = wXbase_offset[0:3] + + offset_base.reshape((3,1))#np.array([0., 0., offset_z]).reshape((3,1))
+				v3cp = wXbase_offset[0:3] + offset_base.reshape((3,1))#np.array([0., 0., offset_z]).reshape((3,1))
 				# v3cp = wXbase_offset[0:3]
 				v3cv = np.zeros((3,1))
 				v3ca = np.zeros((3,1))
@@ -152,7 +152,6 @@ class RobotController(CorinManager):
 				v3wp = wXbase_offset[3:6]
 				v3wv = np.zeros((3,1))
 				v3wa = np.zeros((3,1))
-			
 			
 			## Tracking desired translations
 			if (self.Robot.suspend != True):
@@ -377,7 +376,7 @@ class RobotController(CorinManager):
 
 			if self.interface != 'rviz' and self.control_loop != "open":
 				## Base impedance
-				# offset_base = self.Robot.apply_base_impedance(force_dist[12:15])
+				offset_base = self.Robot.apply_base_impedance(force_dist[12:15])
 
 				## Impedance controller for each legs
 				self.Robot.apply_impedance_control(force_dist)
@@ -464,7 +463,7 @@ class RobotController(CorinManager):
 				else:
 					s_norm.append(snorm_right)
 					self.Robot.Leg[j].snorm = snorm_right
-
+		# print gphase, fmax
 		# print np.round(v3ca.flatten(),3) 
 		# print np.round(v3wa.flatten(),3) 
 		## Compute force distribution using QP
@@ -472,7 +471,7 @@ class RobotController(CorinManager):
 													self.Robot.Rbdl.com,
 													self.Robot.Rbdl.crbi, gphase, fmax, #)
 													s_norm, qb[3:6], qp)
-
+		# print np.round(foot_force[8],3), np.round(foot_force[11],3)
 		# end = rospy.get_time()
 		# print 'Tdiff: ', end - now
 
@@ -505,7 +504,7 @@ class RobotController(CorinManager):
 		comp_base_X_world = np.linalg.inv(comp_world_X_base)
 
 		# print 'error: ', np.round(P6e_world_X_base[0:3].flatten(),3)
-		# print np.round(self.P6e_prev_1[0:3].flatten(),3)
+		print np.round(self.Robot.P6d.world_X_base.flatten(),3)
 		# print 'corr: ', np.round(kcorrect[0:3].flatten(),4)
 
 		for j in range (0, 6):

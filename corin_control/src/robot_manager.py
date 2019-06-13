@@ -56,13 +56,15 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
 		self.control_loop = "close" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
 		self.MotionPlan = MotionPlan()
 		self.Visualizer = RvizVisualise() 	# visualisation for rviz
+
+		self.Planner = NominalPlanner()
 
 		self.__initialise__()
 
@@ -499,9 +501,6 @@ class CorinManager:
 					base_height = xb[2]
 					base_roll	= xb[3]
 					base_pitch	= xb[4]
-					print xb
-					# Update robot's base
-					self.Robot.XHd.update_world_X_base(xb)
 
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,
@@ -514,25 +513,32 @@ class CorinManager:
 																0.,0.,0.,0.]).reshape(6,1)
 				self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
 				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
-
-				self.Robot.init_robot_stance()
+				print 'P6: ', np.round(self.Robot.P6d.world_X_base.flatten(),3)
 
 				if self.Robot.Fault.status:
-					# Update leg configurations 
-					for j in range(0,6):
-						# Fault leg - use fault configuration
-						if self.Robot.Fault.fault_index[j] == True:
-							self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, v3_X_m(self.Robot.Fault.base_X_foot[j]))
+					self.Robot.init_fault_stance()
+					qd, tXj_error = self.Robot.task_X_joint()
+					for i in range(0,5):
+						self.publish_topics(qd)
+				else:				
+					self.Robot.init_robot_stance()
 
-						# Working leg - update foot position
-						else:
-							# Propogate base offset to legs
-							self.Robot.Leg[j].XHd.world_X_foot[0,3] += xb[0]
-							self.Robot.Leg[j].XHd.world_X_foot[1,3] += xb[1]
+				# if self.Robot.Fault.status:
+				# 	# Update leg configurations 
+				# 	for j in range(0,6):
+				# 		# Fault leg - use fault configuration
+				# 		if self.Robot.Fault.fault_index[j] == True:
+				# 			self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, v3_X_m(self.Robot.Fault.base_X_foot[j]))
+
+				# 		# Working leg - update foot position
+				# 		else:
+				# 			# Propogate base offset to legs
+				# 			self.Robot.Leg[j].XHd.world_X_foot[0,3] += xb[0]
+				# 			self.Robot.Leg[j].XHd.world_X_foot[1,3] += xb[1]
 							
-							self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, 
-																	self.Robot.XHd.base_X_world, 
-																	self.Robot.Leg[j].XHd.world_X_foot)
+				# 			self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, 
+				# 													self.Robot.XHd.base_X_world, 
+				# 													self.Robot.Leg[j].XHd.world_X_foot)
 				# print self.Robot.XHc.world_X_base
 				# print self.Robot.Leg[1].XHc.world_X_foot
 				# print self.Robot.Leg[1].XHd.world_X_foot

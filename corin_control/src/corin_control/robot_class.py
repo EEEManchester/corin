@@ -65,7 +65,7 @@ class RobotState:
 		self.impedance_controller_z = ImpedanceController(2., 2.2, 0.0035)	# fn, D, G
 		self.Fault = FaultController()
 
-		leg_stance = self.init_robot_stance("chimney")
+		leg_stance = self.init_robot_stance("flat")
 		
 		# self._initialise(leg_stance)
 
@@ -388,24 +388,29 @@ class RobotState:
 		else:
 			print 'Invalid stance selected!'
 			leg_stance = None
-		
-		# # Update leg configurations 
-		# for j in range(0,6):
-		# 	# Fault leg - use fault configuration
-		# 	if self.Fault.fault_index[j] == True:
-		# 		self.Leg[j].XHd.coxa_X_foot = mX(self.Leg[j].XHd.coxa_X_base, v3_X_m(self.Fault.base_X_foot[j]))
-
-		# 	# Working leg - update foot position
-		# 	else:
-		# 		# Propogate base offset to legs
-		# 		self.Leg[j].XHd.world_X_foot[0,3] += xb[0]
-		# 		self.Leg[j].XHd.world_X_foot[1,3] += xb[1]
-				
-		# 		self.Leg[j].XHd.coxa_X_foot = mX(self.Leg[j].XHd.coxa_X_base, 
-		# 											self.XHd.base_X_world, 
-		# 											self.Leg[j].XHd.world_X_foot)
-
+			
 		return leg_stance
+
+	def init_fault_stance(self):
+
+		leg_stance = {}
+		for j in range(0,6):
+			# Fault leg - use fault configuration
+			if self.Fault.fault_index[j] == True:
+				coxa_X_foot = mX(self.Leg[j].XHd.coxa_X_base, v3_X_m(self.Fault.base_X_foot[j]))
+
+			# Working leg - update foot position
+			else:
+				# Propogate base offset to legs
+				world_X_foot = self.Leg[j].XHd.world_X_foot.copy()
+				world_X_foot[0,3] = self.Leg[j].XHd.world_X_foot[0,3] + self.P6c.world_X_base[0]
+				world_X_foot[1,3] = self.Leg[j].XHd.world_X_foot[1,3] + self.P6c.world_X_base[1]
+				
+				coxa_X_foot = mX(self.Leg[j].XHd.coxa_X_base, self.XHc.base_X_world, world_X_foot)
+			leg_stance[j] = coxa_X_foot[:3,3].flatten()
+			
+
+		self._initialise(leg_stance)
 ## ====================================================================================================================================== ##
 ## ====================================================================================================================================== ##
 

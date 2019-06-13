@@ -42,7 +42,7 @@ class FaultController:
 							np.array([ 0.,    0.300, -BODY_HEIGHT]),
 							np.array([-0.25,  0.251, -BODY_HEIGHT]),
 							np.array([ 0.25, -0.251, -BODY_HEIGHT]),
-							np.array([ 0.,   -0.240, -0.06]),
+							np.array([ 0.,   -0.210, -0.07]),
 							np.array([-0.25, -0.251, -BODY_HEIGHT])]
 							
 	def fault_set_double(self):

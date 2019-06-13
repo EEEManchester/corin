@@ -70,16 +70,16 @@ if __name__ == "__main__":
 	RVIZ = RVIZ()
 	Robot = RobotState()
 	Robot.Fault.status = True
-	Robot.Fault.fault_index[0] = True
-	Robot.Fault.fault_index[2] = True
+	# Robot.Fault.fault_index[0] = True
+	# Robot.Fault.fault_index[2] = True
 	# Robot.Fault.fault_index[5] = True
 
-	Robot.Fault.base_X_foot[0] = np.array([ 0.25,  0.251, -0.15])
-	Robot.Fault.base_X_foot[1] = np.array([ 0.,    0.300, -BODY_HEIGHT])
-	Robot.Fault.base_X_foot[2] = np.array([-0.25,  0.251, -0.12])
-	Robot.Fault.base_X_foot[3] = np.array([ 0.25, -0.251, -BODY_HEIGHT])
-	Robot.Fault.base_X_foot[4] = np.array([ 0.,   -0.300, -BODY_HEIGHT])
-	Robot.Fault.base_X_foot[5] = np.array([-0.25, -0.251, -0.07])
+	# Robot.Fault.base_X_foot[0] = np.array([ 0.25,  0.251, -BODY_HEIGHT])
+	# Robot.Fault.base_X_foot[1] = np.array([ 0.,    0.300, -BODY_HEIGHT])
+	# Robot.Fault.base_X_foot[2] = np.array([-0.25,  0.251, -BODY_HEIGHT])
+	# Robot.Fault.base_X_foot[3] = np.array([ 0.25, -0.251, -BODY_HEIGHT])
+	# Robot.Fault.base_X_foot[4] = np.array([ 0.,   -0.300, -0.07])
+	# Robot.Fault.base_X_foot[5] = np.array([-0.25, -0.251, -BODY_HEIGHT])
 
 	xb = Robot.Fault.get_fault_pose().flatten()
 	
@@ -89,7 +89,7 @@ if __name__ == "__main__":
 
 	# Update robot's base
 	Robot.XHd.update_world_X_base(xb)
-	
+	print 'xb: ', np.round(xb,3)
 	# Update leg configurations 
 	for j in range(0,6):
 		# Fault leg - use fault configuration
@@ -106,6 +106,7 @@ if __name__ == "__main__":
 												Robot.XHd.base_X_world, 
 												Robot.Leg[j].XHd.world_X_foot)
 			# Robot.Leg[j].XHd.coxa_X_foot = mX(Robot.Leg[j].XHd.coxa_X_base, Robot.Leg[j].XHd.base_X_foot)
+		print np.round(Robot.Leg[j].XHd.coxa_X_foot[:3,3],3)
 
 	qd, tXj_error = Robot.task_X_joint()
 	
@@ -113,3 +114,4 @@ if __name__ == "__main__":
 		print 'Error Occured, robot invalid! ', tXj_error
 	else:
 		RVIZ.publish_robot(xb, qd.xp)
+
