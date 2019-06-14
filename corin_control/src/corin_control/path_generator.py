@@ -76,6 +76,8 @@ class PathGenerator():
 
 		return x_cob, w_cob, t_cob
 
+	
+
 	def generate_base_path(self, x_cob, w_cob, tn, t_cob=None):
 		""" Generate body trajectory (Re^6) and modify to be within velocity limit 	"""
 		""" Size of x_cob & w_cob needs to be the same otherwise the array with
@@ -91,8 +93,7 @@ class PathGenerator():
 
 		# generate linear or angular via points if size mismatch
 		x_cob, w_cob, t_cob = self.auto_generate_points(x_cob, w_cob, t_cob)
-		print x_cob
-		print t_cob
+		
 		# generate spline based on unit time interval between via points
 		x_out = SplineGenerator.generate_spline(x_cob, t_cob, tn)
 		w_out = SplineGenerator.generate_spline(w_cob, t_cob, tn)

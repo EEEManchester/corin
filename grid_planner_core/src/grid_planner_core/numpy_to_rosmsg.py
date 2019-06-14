@@ -180,7 +180,7 @@ def foothold_list_to_marker_array(path_arr, stamp=None, frame_id=None):
 
 	## Define Variables ##
 	mark_array = MarkerArray()
-	
+	# print 'a: ', path_arr[0].xp
 	## assumes that footholds array are of the same size
 	for j in range(0,6):
 		for i in range (0,len(path_arr[j].t)):

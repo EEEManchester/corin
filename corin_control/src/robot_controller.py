@@ -34,7 +34,7 @@ class RobotController(CorinManager):
 			w_base_X_NRP = motion_plan.f_world_base_X_NRP
 			world_X_footholds = motion_plan.f_world_X_foot
 			base_X_footholds  = motion_plan.f_base_X_foot
-
+			
 			## Publish motion plan
 			self.Visualizer.show_motion_plan(self.Robot.P6c.world_X_base, motion_plan.qbp, motion_plan.f_world_X_foot)
 			if (self.interface == 'rviz'):
@@ -264,7 +264,8 @@ class RobotController(CorinManager):
 								self.Robot.Leg[j].XH_world_X_base = vec6d_to_se3(np.array([x_ahead, w_ahead]).reshape((6,1)))
 								self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
 																		self.Robot.Leg[j].XHd.world_X_foot)
-						
+								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
+								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
 						## Compute average surface normal from cell surface normal at both footholds
 						try:
 							sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
@@ -272,7 +273,10 @@ class RobotController(CorinManager):
 						except:
 							sn1 = np.array([0., 0., 1.])
 							sn2 = np.array([0., 0., 1.])
+							print 'norm error'
 						
+						# 	print np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
+						# 	print np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],3)
 						## Generate transfer spline
 						svalid = self.Robot.Leg[j].generate_spline('world', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
 
@@ -504,9 +508,9 @@ class RobotController(CorinManager):
 		comp_base_X_world = np.linalg.inv(comp_world_X_base)
 
 		# print 'error: ', np.round(P6e_world_X_base[0:3].flatten(),3)
-		print np.round(self.Robot.P6d.world_X_base.flatten(),3)
+		# print np.round(self.Robot.P6d.world_X_base.flatten(),3)
 		# print 'corr: ', np.round(kcorrect[0:3].flatten(),4)
-
+		# print np.round(self.Robot.P6d.world_X_base,3)
 		for j in range (0, 6):
 			if (self.Robot.Gait.cs[j] == 0 and self.Robot.suspend == False):
 				## Determine foot position wrt base & coxa - REQ: world_X_foot position
@@ -532,10 +536,11 @@ class RobotController(CorinManager):
 				# self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 				self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
 
-				# if j==4:
+				# if j==1:
 					# print j, ' bXw: \n', np.round(self.Robot.XHd.base_X_world,3)
 					# print j, ' wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
 					# print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],3)
+					# print j, ' bXP: ', np.round(self.Robot.Leg[j].XHd.base_X_PEP[0:3,3],3)
 					# print j, ' cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],3)
 					# print '========================================================='
 

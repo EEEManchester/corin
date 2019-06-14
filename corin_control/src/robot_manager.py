@@ -13,6 +13,7 @@ import control_interface 		# action selection from ROS parameter server
 from rviz_visual import *
 from grid_planner_core.grid_map import GridMap
 from grid_planner_core.numpy_to_rosmsg import *
+from grid_planner_core.nominal_planner import PathPlanner
 
 ## ROS messages & libraries
 import rospy
@@ -64,7 +65,7 @@ class CorinManager:
 		self.MotionPlan = MotionPlan()
 		self.Visualizer = RvizVisualise() 	# visualisation for rviz
 
-		self.Planner = NominalPlanner()
+		self.Planner = PathPlanner(self.GridMap)
 
 		self.__initialise__()
 
@@ -430,7 +431,7 @@ class CorinManager:
 			
 			## Data mapping - for convenience
 			x_cob, w_cob, mode, motion_prim = data
-			# mode = 6 	# HARDCODED TO IMPORT MOTION PLAN
+			mode = 6 	# HARDCODED 
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
 				print 'Going to standup'
@@ -471,23 +472,68 @@ class CorinManager:
 					self.default_pose()
 					self.resting = False
 
+			elif (mode == 6):
+				""" Local planning and execution """
+
+				self.Robot.support_mode = False
+
+				map_offset = (0.33, 0.39)
+				
+				if self.Robot.Fault.status:
+					xb = self.Robot.Fault.get_fault_pose().flatten()
+					self.Robot.P6c.world_X_base = np.array([map_offset[0], map_offset[1], 
+															xb[2], xb[3], xb[4], 0.]).reshape(6,1)
+
+					self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
+					self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
+					print 'P6: ', np.round(self.Robot.P6d.world_X_base.flatten(),3)
+
+					self.Robot.init_fault_stance()
+					qd, tXj_error = self.Robot.task_X_joint()
+					for i in range(0,5):
+						self.publish_topics(qd)
+					# print 'cXf: ', np.round(self.Robot.Leg[5].XHd.coxa_X_foot[:3,3],4)
+					# print 'bXf: ', np.round(mX(self.Robot.Leg[5].XHd.base_X_coxa, self.Robot.Leg[5].XHd.coxa_X_foot),4)
+					# print self.Robot.Leg[5].XHd.base_X_foot
+					# # print self.Robot.Leg[5].XHd.base_X_coxa
+					# print 'wXA: ',self.Robot.Leg[5].XHc.world_base_X_AEP[:3,3]
+					# # print mX(self.Robot.Leg[5].XHd.coxa_X_base, self.Robot.Leg[5].XHd.base_X_foot)
+					# # print self.Robot.Leg[5].XHd.base_X_foot[:3,3]
+					# # print self.Robot.Leg[5].XHd.base_X_NRP[:3,3]
+					# print mX(self.Robot.XHc.world_X_base[:3,:3], self.Robot.Leg[5].XHd.base_X_foot[:3,3])
+					# print mX(self.Robot.XHc.world_X_base[:3,:3], self.Robot.Leg[5].XHd.base_X_AEP[:3,3])
+				else:
+					self.Robot.P6c.world_X_base = np.array([map_offset[0], map_offset[1], 
+															BODY_HEIGHT, 0., 0., 0.]).reshape(6,1)
+
+					self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
+					self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
+					self.Robot.init_robot_stance()
+				
+				if motion == 'forward':
+					ps = self.Robot.P6c.world_X_base
+					pf = self.Robot.P6c.world_X_base + np.array([0.1, 0.,0.,0.,0.,0.]).reshape(6,1)
+				
+					motion_plan = self.Planner.motion_planning(ps, pf, self.Robot)
+
+					if motion_plan is not None:
+						print motion_plan.f_base_X_foot[5].xp
+						raw_input('cont')
+						if (self.main_controller(motion_plan)):
+							self.Robot.alternate_phase()
+					else:
+						print 'Planning Failed'	
+
 			elif (mode == 4):
 				""" Plan path & execute """
 				print 'Planning path...'
 				self.Robot.support_mode = False
 
-				# ps = (10,13); pf = (13,13)	# Short straight Line
-				# ps = (10,13); pf = (10,20)	# G2W - Left side up
-				# ps = (10,13); pf = (10,6)	# G2W - Right side up
-				# ps = (10,13); pf = (25,21)	# G2W - Left side up
-				# ps = (10,13); pf = (40,13)	# full wall or chimney
-				# ps = (10,13); pf = (20,13) 	# wall and chimney demo
-				# ps = (10,15); pf = (150,10) 	# IROS demo
-				# ps = (10,15); pf = (17,12) 	# IROS - past chimney
 				base_height = BODY_HEIGHT
 				base_roll	= 0.
 				base_pitch	= 0.
 
+				# Using ROS grid planner
 				if motion == 'transition':
 					ps = (10,13); pf = (10,20)
 				elif motion == 'forward':
@@ -523,25 +569,6 @@ class CorinManager:
 				else:				
 					self.Robot.init_robot_stance()
 
-				# if self.Robot.Fault.status:
-				# 	# Update leg configurations 
-				# 	for j in range(0,6):
-				# 		# Fault leg - use fault configuration
-				# 		if self.Robot.Fault.fault_index[j] == True:
-				# 			self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, v3_X_m(self.Robot.Fault.base_X_foot[j]))
-
-				# 		# Working leg - update foot position
-				# 		else:
-				# 			# Propogate base offset to legs
-				# 			self.Robot.Leg[j].XHd.world_X_foot[0,3] += xb[0]
-				# 			self.Robot.Leg[j].XHd.world_X_foot[1,3] += xb[1]
-							
-				# 			self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, 
-				# 													self.Robot.XHd.base_X_world, 
-				# 													self.Robot.Leg[j].XHd.world_X_foot)
-				# print self.Robot.XHc.world_X_base
-				# print self.Robot.Leg[1].XHc.world_X_foot
-				# print self.Robot.Leg[1].XHd.world_X_foot
 				if (self.grid_serv_.available):
 					if (self.GridMap.get_index_exists(ps) and self.GridMap.get_index_exists(pf)):
 						start = Pose()

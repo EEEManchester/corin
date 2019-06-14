@@ -15,6 +15,7 @@ class GaitClass:
 		self.np = 0 				# counter for gait phase
 		self.tphase = GAIT_TPHASE	# timing per gait phase
 		self.gd = 1 				# gait direction
+		self.tcycle = GAIT_TPHASE	# timing per gait cycle
 
 		self.step_stroke = STEP_STROKE#self.set_step_stroke(LEG_STANCE, LEG_CLEAR, STEP_STROKE)
 		self.step_height = STEP_HEIGHT
@@ -81,6 +82,7 @@ class GaitClass:
 			self.phases.append([0,0,0,0,0,1])
 			self.phases.append([0,0,0,0,0,0])
 		
+		self.tcycle = len(self.phases)*self.tphase
 
 		self.cs = self.phases[self.np]
 		self.ns = self.phases[self.np+1]

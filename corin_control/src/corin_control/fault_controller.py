@@ -20,7 +20,7 @@ class FaultController:
 		self.base_X_foot = None
 
 		self.__default_parameters__()
-		self.fault_set_single()
+		# self.fault_set_single()
 
 	def __default_parameters__(self):
 
@@ -37,12 +37,12 @@ class FaultController:
 	def fault_set_single(self):
 
 		self.status = True
-		self.fault_index = [False, False, False, False, True, False]	
-		self.base_X_foot = [np.array([ 0.25,  0.251, -BODY_HEIGHT]),
+		self.fault_index = [True, False, False, False, False, False]	
+		self.base_X_foot = [np.array([ 0.25,  0.251, -0.07]),
 							np.array([ 0.,    0.300, -BODY_HEIGHT]),
 							np.array([-0.25,  0.251, -BODY_HEIGHT]),
 							np.array([ 0.25, -0.251, -BODY_HEIGHT]),
-							np.array([ 0.,   -0.210, -0.07]),
+							np.array([ 0.,   -0.210, -BODY_HEIGHT]),
 							np.array([-0.25, -0.251, -BODY_HEIGHT])]
 							
 	def fault_set_double(self):
