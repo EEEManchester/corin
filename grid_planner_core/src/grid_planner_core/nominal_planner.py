@@ -2,7 +2,7 @@
 """ 
 
 import sys; sys.dont_write_bytecode = True
-sys.path.insert(0, '/home/wei/catkin_ws/src/corin/corin_control/src')
+sys.path.insert(0, '/home/wilson/catkin_ws/src/corin/corin_control/src')
 from corin_control import *			# library modules to include 
 from grid_map import *
 
@@ -124,54 +124,52 @@ class PathPlanner:
 		## CoB at every gait cycle interval
 		elif Robot.Fault.status:
 			
+			# Set CoB and gait phases for moving legs into max. stride position
 			t_cob = [0]*(len(Gait.phases)+1)
 			
 			for j in range(1,len(Gait.phases)+1):
 				t_cob[j] = GAIT_TPHASE*j
-				world_X_base.append(ps)
+				world_X_base.append(ps.copy())
 
 				if Robot.Fault.fault_index[j-1]:
 					gait_phase[5] = [0]*6
-
+			
+			# Base motion during discontinuous phase
 			fault_offset_motion = np.array([0.,0.,0.05,0.,0.,0.]) # Ground walking
 			# fault_offset_motion = np.array([0.,0.04,0.,0.,0.,0.]) # Chimney walking
-				
-			for i in range(1, int(nintv)*len(Gait.phases)+1):
 			
-				p_intv = ps + d_dif/(nintv*len(Gait.phases))*i
-
+			# no. of intervals increase as base only translate for one phase per gait cycle
+			# nintv = math.ceil((d_mag)/(lamb/len(Gait.phases)))
+			nintv = math.ceil((d_mag)/lamb)
+			pintv = ps
+			# Cycle through each gait phase
+			for i in range(1, int(nintv)*len(Gait.phases)+1):
+				# Fault leg in transfer phase: moves base
 				if Robot.Fault.fault_index[Gait.cs.index(1)]:
-					print 'Add point in'
-					p_fault = ps + d_dif/(nintv*len(Gait.phases))*i + fault_offset_motion - d_dif/(2*nintv*len(Gait.phases))
-					world_X_base.append(p_fault.flatten())
+					# Intermediate position for clearing contact surface 
+					pintv += d_dif/nintv
+					p_fault = pintv + fault_offset_motion - d_dif/(2*nintv)
+					
+					world_X_base.append(p_fault.flatten().copy())
 					t_cob.append(GAIT_TPHASE*i + t_cob[len(Gait.phases)] - GAIT_TPHASE/2.)
 					gait_phase.append([0]*6)
-					# print p_fault
+
+				# Working legs in transfer phase
 				else:
 					gait_phase.append(Gait.cs)
-
-				world_X_base.append(p_intv.flatten())
+				
+				world_X_base.append(pintv.flatten().copy())
 				t_cob.append(GAIT_TPHASE*i + t_cob[len(Gait.phases)])
 				Gait.change_phase()
 
 			# Spline base path
-			path = self.spline_path(world_X_base, t_cob)
-			self.generate_linear_path(world_X_base, t_cob)
-				# print p_intv
-				# print p_intv
-			# print np.round(t_cob,2)
-			# print len(t_cob)
-			# print len(world_X_base)
-			# print len(path.X.t)
-		# nint = len(world_X_base)*len(Robot.Gait.phases)
-		# for i in range(1, nint):
-		# 	tphase = i*GAIT_TPHASE
-		# 	print path.X.t.index(tphase)
-		# print path.X.t
-		# 	for j in range(0,6):
+			# path_old = self.spline_path(world_X_base, t_cob)
+			path = self.generate_linear_path(world_X_base, t_cob)
 
-		# Plot.plot_2d(path.X.t, path.X.xp[:,2])
+		# Plot.plot_2d(path.X.t, path.X.xp)
+		# Plot.plot_2d(path_old.X.t, path_old.X.xp)
 		# Plot.plot_2d(path.W.t,path.W.xp)
+
 		# Include initial foothold position
 		for j in range(0,6):
 			world_X_footholds[j].xp.insert(0, Robot.Leg[j].XHc.world_X_foot[:3,3].flatten().copy())
@@ -231,38 +229,46 @@ class PathPlanner:
 			t_cob = np.zeros(len(world_X_base))
 			for i in range(0,len(world_X_base)):
 				t_cob[i] = i*Robot.Gait.tcycle
-		print t_cob
-		tintv = int(t_cob[-1]/CTR_INTV)+2
-		x_inp = np.zeros((tintv,3))
-		w_inp = np.zeros((tintv,3))
-		p_inp = np.zeros((tintv,6))
+		# print t_cob
+		tintv = int(math.ceil(t_cob[-1]/CTR_INTV))+1
+		xp = np.zeros((tintv,3));	xv = np.zeros((tintv,3));	xa = np.zeros((tintv,3))
+		wp = np.zeros((tintv,3));	wv = np.zeros((tintv,3));	wa = np.zeros((tintv,3))
 		t_inp = np.zeros(tintv)
 		
 		for i in range(tintv):
 			t_inp[i] = i*CTR_INTV
-		
+
 		count = 0
 		for i in range(1,len(world_X_base)):
 			dp = world_X_base[i] - world_X_base[i-1]
 			dt = t_cob[i] - t_cob[i-1]
-			# print 'int: ', dp, dt, int(dt/CTR_INTV)
-			# print dt, CTR_INTV, int(dt/CTR_INTV)
-			# print world_X_base[i-1]
-			# print world_X_base[i]
-			# print 'break point here =================='
-			for j in range(0, int(dt/CTR_INTV)):
-				# print world_X_base[i-1] + j*dp/dt
-				# print j*dp/float(int(dt/CTR_INTV))
-				p_inp[count] = world_X_base[i-1] + j*dp/float(int(dt/CTR_INTV))
-				# print j, p_inp[count]
-				
-				count += 1
-		# print p_inp
-		p_inp[count] = world_X_base[-1]
-		print count, len(t_inp)
-		print p_inp[-1]
-		# Plot.plot_2d(t_inp, p_inp)
 
+			if abs(math.ceil(dt/CTR_INTV) - (dt/CTR_INTV)) > 0.6:
+				itv = np.round(dt/CTR_INTV)
+			else:
+				itv = math.ceil(dt/CTR_INTV)
+			
+			if i == len(world_X_base)-1:
+				itv = int(itv)+1
+			for j in range(0, int(itv)):
+				xp[count] = world_X_base[i-1][0:3] + j*dp[0:3]/(dt/CTR_INTV) - world_X_base[0][0:3]
+				wp[count] = world_X_base[i-1][3:6] + j*dp[3:6]/(dt/CTR_INTV) - world_X_base[0][3:6]
+				xv[count] = (xp[count] - xp[count-1])/CTR_INTV
+				wv[count] = (wp[count] - wp[count-1])/CTR_INTV
+				xa[count] = (xv[count] - xv[count-1])/CTR_INTV
+				wa[count] = (wv[count] - wv[count-1])/CTR_INTV
+				count += 1
+		print 'Check spline count match: ', count, len(t_inp)
+		
+		# xp[-1] = world_X_base[-1][0:3]
+		# wp[-1] = world_X_base[-1][3:6]
+		# xp[-1] = world_X_base[-1][0:3]
+		# wp[-1] = world_X_base[-1][3:6]
+		# print count, len(t_inp), len(p_inp)
+		# print p_inp
+		# Plot.plot_2d(t_inp, xp)
+		
+		return Trajectory6D(((t_inp,xp,xv,xa),(t_inp,wp,wv,wa)))
 
 
 
@@ -278,7 +284,7 @@ Robot = robot_class.RobotState()
 # ps = np.array([10,13]) 
 # pf = np.array([16,13])
 ps = np.array([0.30, 0.39, 0.1, 0., 0., 0.]) 
-pf = np.array([0.50, 0.39, 0.1, 0., 0., 0.]) 
+pf = np.array([0.35, 0.39, 0.1, 0., 0., 0.]) 
 
 Robot.P6c.world_X_base = ps
 Robot.P6d.world_X_base = Robot.P6c.world_X_base.copy()
@@ -286,3 +292,33 @@ Robot.XHc.update_world_X_base(Robot.P6c.world_X_base)
 Robot.init_robot_stance()
 
 motion_plan = planner.motion_planning(ps, pf, Robot)
+
+
+a = np.array([0.,0.,0.])
+b = np.array([1.,0.,0.])
+d = np.array([2.,0.,0.])
+c = [a,b,d]
+# t = [0., 1.0, 1.4]
+
+# tintv = math.ceil(t[-1]/CTR_INTV)
+# t_intv = []
+# for i in range(int(tintv)+1):
+# 	t_intv.append(i*CTR_INTV)
+
+# p_inp = []
+# for i in range(1,len(c)):
+# 	dp = c[i] - c[i-1]
+# 	dt = t[i] - t[i-1]
+	
+# 	# print 'p ', c[i-1], c[i]
+# 	# print 'dp ', dp, dt, CTR_INTV, dt/CTR_INTV, math.ceil(dt/CTR_INTV)
+# 	# print 't ', int(math.ceil(dt/CTR_INTV))+1
+# 	# print 'a ', dp/float((dt/CTR_INTV))
+
+# 	for j in range(0, int(math.ceil(dt/CTR_INTV))):
+# 		temp = c[i-1] + j*dp/(dt/CTR_INTV)
+# 		p_inp.append(temp)
+		
+# p_inp.append(c[-1])
+# print p_inp
+# print len(p_inp), len(t_intv)

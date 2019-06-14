@@ -128,7 +128,7 @@ class PathGenerator():
 
 		self.base_path = Trajectory6D((x_out,w_out))
 		# return TrajectoryPoints(x_out), TrajectoryPoints(w_out)	# convert to TrajectoryPoints format
-
+		# print type(x_out), len(x_out)
 		return Trajectory6D((x_out,w_out))
 
 	def interpolate_leg_path(self, sp, ep, snorm, snorm2, phase=1, reflex=False, ctime=2.0, type='parabolic'):

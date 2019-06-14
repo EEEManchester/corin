@@ -20,7 +20,7 @@ class FaultController:
 		self.base_X_foot = None
 
 		self.__default_parameters__()
-		# self.fault_set_single()
+		self.fault_set_single()
 
 	def __default_parameters__(self):
 

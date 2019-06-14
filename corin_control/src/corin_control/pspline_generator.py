@@ -419,7 +419,7 @@ x_com = np.vstack((x_com,np.array([4.,4.,4.])))
 # x_com = np.vstack((x_com,np.array([4.,4.,4.])))
 
 # ct,cp,cv,ca = spliner.generate_spline(x_com)
-
+# print type(cp), cp
 # print type(ct), type(cp)
 # Plot.plot_2d(ct, cp)
 # Plot.plot_2d_multiple(2,x_out.t,x_out.xv,x_out.xa)

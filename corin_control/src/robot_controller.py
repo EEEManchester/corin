@@ -183,10 +183,13 @@ class RobotController(CorinManager):
 				# reduce max force for legs that will be in transfer phase
 				for j in range(0,6):
 					# fmax_lim[j] = fmax if (self.Robot.Gait.cs[j] == 1) else F_MAX
-					fmax = init_flim[j]+1. - tload*(init_flim[j]+1.)/float(iload) + 0.001
+					try:
+						fmax = init_flim[j]+1. - tload*(init_flim[j]+1.)/float(iload) + 0.001
+					except ZeroDivisionError:
+						fmax = 0.
 					fmax_lim[j] = fmax if (self.Robot.Gait.ps[j] == 1) else F_MAX
 				tload += 1
-
+				print 'unloading'
 				self.support_phase_update(P6e_world_X_base, V6e_world_X_base)
 
 				if tload == iload+1:
