@@ -269,6 +269,7 @@ class RobotController(CorinManager):
 																		self.Robot.Leg[j].XHd.world_X_foot)
 								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
 								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
+						
 						## Compute average surface normal from cell surface normal at both footholds
 						try:
 							sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
@@ -280,6 +281,7 @@ class RobotController(CorinManager):
 							# elif j>=3:
 							# 	sn1 = np.array([0., 1., 0.])
 							# 	sn2 = np.array([0., 1., 0.])
+							# print self.Robot.Leg[j].XHc.world_X_foot[0:3,3] + self.Robot.P6c.world_X_base_offset[0:3].flatten()
 							sn1 = np.array([0., 0., 1.])
 							sn2 = np.array([0., 0., 1.])
 							print 'norm error'

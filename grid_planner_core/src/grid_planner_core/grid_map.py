@@ -664,7 +664,11 @@ class GridMap:
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-# gmap = GridMap('iros_part1_demo')
+gmap = GridMap('flat')
+try:
+	print gmap.get_cell('norm', np.array([0.08, 0.641, 0.0]), 0)
+except:
+	print error
 # print gmap.get_cell('height', np.array([0.747,0.168,0]), 3)
 # print gmap.get_cell('height', np.array([0.72,0.06,0]), 3)
 # gmap.square_spiral_search((0.72,0.66), (3,3), 3)
@@ -679,5 +683,3 @@ class GridMap:
 # gmap.graph_representation()
 # print range(10/2,0,-1)
 # [(20, 5), (20, 6), (21, 6), (21, 5), (20, 5), (19, 5), (19, 6), (19, 7), (20, 7), (21, 7), (21, 6), (21, 5), (20, 5), (19, 5), (20, 5), (21, 5)]
-
-

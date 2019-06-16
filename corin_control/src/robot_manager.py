@@ -57,7 +57,7 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
 		self.control_loop = "close" 	# run controller in open or closed loop
 
@@ -476,6 +476,8 @@ class CorinManager:
 				""" Local planning and execution """
 
 				self.Robot.support_mode = False
+			
+				self.GridMap = GridMap('flat')
 
 				map_offset = (0.33, 0.39)
 				# self.Robot.Fault.status = False
@@ -515,6 +517,7 @@ class CorinManager:
 					for i in range(0,10):
 						self.publish_topics(qd)
 					# print qd.xp
+				
 				if motion == 'forward':
 					ps = self.Robot.P6c.world_X_base
 					pf = self.Robot.P6c.world_X_base + np.array([0.3, 0.,0.,0.,0.,0.]).reshape(6,1)
