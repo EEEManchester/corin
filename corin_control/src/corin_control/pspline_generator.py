@@ -246,6 +246,7 @@ class SplineGenerator:
 				nv = 1
 			
 			# print 'range: ', t[i], t[i+1]-lv, np.round((t[i+1]-t[i])/tint+nv), tint
+			# print np.linspace(t[i], t[i+1]-lv, np.round((t[i+1]-t[i])/tint+nv))
 			for tk in np.linspace(t[i], t[i+1]-lv, np.round((t[i+1]-t[i])/tint+nv)):
 				
 				td = tk - t[i]
@@ -292,24 +293,35 @@ class SplineGenerator:
 				for i in range(0,3):
 					xd = (x[-1][i] - x[0][i])/3
 					xnew[s][i] = x[0][i] + xd*s
-		elif (size ==3):
-			xnew[1] = x[1]
+		elif (size == 3):
+			tnew = [0]*5
+			xnew = np.zeros((5,3))
+			xnew[0] = x[0]; tnew[0] = t[0]
+			xnew[2] = x[1]; tnew[2] = t[1]
+			xnew[4] = x[2]; tnew[4] = t[2]
+			# xnew[-2] = x[-2]
 			for i in range(0,3):
-				xd = (x[-1][i] - x[1][i])/2
-				xnew[2][i] = x[1][i] + xd
+				# xd = (x[-1][i] - x[1][i])/2
+				# xnew[2][i] = x[1][i] + xd
+				xd = (x[1][i] - x[0][i])/2
+				xnew[1][i] = x[0][i] + xd
+				tnew[1] = t[0] + (t[1]-t[0])/2.
 
-		# if (t is None):
-		# 	tnew = self.compute_time_intervals(xnew)
+				xd = (x[2][i] - x[1][i])/2
+				xnew[3][i] = x[1][i] + xd
+				tnew[3] = t[1] + (t[2]-t[1])/2.
+
+		if (t is None):
+			tnew = self.compute_time_intervals(xnew)
 		# else:
 		# 	tnew = t
-		# print xnew
-		# print tnew
-		# return xnew, tnew
-		return xnew, self.compute_time_intervals(xnew)
 
-	def old_generate_spline(self, x, t=None, tn=0.1):
+		return xnew, tnew
+		# return xnew, self.compute_time_intervals(xnew)
+
+	def generate_spline(self, x, t=None, tn=0.1):
 		""" 	Compute spline using via points only	"""
-		
+		t_offset = t[0]
 		## Extend size if less than 3 or set t if undefined
 		if (len(t)<4):
 			x, t = self.compute_spline_extension(x, t)
@@ -322,10 +334,15 @@ class SplineGenerator:
 		for i in range(0,3):
 			cx[:,i], tx = self.spline_1D_acc(x[:,i].flatten(), t)
 		
-		return self.spline_3D(x, t, tn)	# zero initial & final velocity
+		ct,cp,cv,ca = self.spline_3D(x, t, tn)
+		# new_t = [x+t_offset for x in ct]
+		
+		# return new_t, cp, cv, ca
+		return ct,cp,cv,ca
+		# return self.spline_3D(x, t, tn)	# zero initial & final velocity
 		# return self.spline_3D(cx, tx, tn) 	# zero initial & final velocity & acceleration
 
-	def generate_spline(self, x, t=None, tn=0.1):
+	def meb_generate_spline(self, x, t=None, tn=0.1):
 		""" 	Compute spline using via points only	"""
 		
 		if (t is None):
@@ -333,7 +350,7 @@ class SplineGenerator:
 		## Extend size if less than 3 or set t if undefined
 		elif (len(t)<4):
 			x, t = self.compute_spline_extension(x, t)
-		
+
 		## Check for via points that do not change - fault 
 		pose_hold = []
 		pose_move = []
@@ -409,17 +426,17 @@ spliner = SplineGenerator()
 # spoints = spliner.spline_3D(w_cob,t_cob)
 
 # x_out = spliner.generate_leg_spline(sp,ep,snorm,phase)
-# t_com = np.array([0.0,1,2]) 
-x_com = np.array([1.,1.,1.])
-x_com = np.vstack((x_com,np.array([2.,2.,2.])))
-x_com = np.vstack((x_com,np.array([2.,2.,2.])))
+t_com = np.array([0.0,0.5,1.0]) 
+x_com = np.array([0.,0.,0.])
+x_com = np.vstack((x_com,np.array([0.,0.,0.1])))
+x_com = np.vstack((x_com,np.array([0.,0.,0.])))
 # x_com = np.vstack((x_com,np.array([2.,2.,2.])))
-x_com = np.vstack((x_com,np.array([3.,3.,3.])))
-x_com = np.vstack((x_com,np.array([4.,4.,4.])))
+# x_com = np.vstack((x_com,np.array([3.,3.,3.])))
+# x_com = np.vstack((x_com,np.array([4.,4.,4.])))
 # x_com = np.vstack((x_com,np.array([4.,4.,4.])))
 
-# ct,cp,cv,ca = spliner.generate_spline(x_com)
-# print type(cp), cp
+# ct,cp,cv,ca = spliner.generate_spline(x_com,t_com)
+# print ct
 # print type(ct), type(cp)
 # Plot.plot_2d(ct, cp)
 # Plot.plot_2d_multiple(2,x_out.t,x_out.xv,x_out.xa)

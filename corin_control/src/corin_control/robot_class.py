@@ -60,9 +60,9 @@ class RobotState:
 
 		self.P6c.world_X_base[2] = BODY_HEIGHT
 		
-		self.impedance_controller_x = ImpedanceController()
-		self.impedance_controller_y = ImpedanceController()
-		self.impedance_controller_z = ImpedanceController(2., 2.2, 0.0035)	# fn, D, G
+		self.impedance_controller_x = ImpedanceController(2., 2.2, 0.002)
+		self.impedance_controller_y = ImpedanceController(2., 2.2, 0.002)
+		self.impedance_controller_z = ImpedanceController(2., 2.2, 0.002)	# fn, D, G
 		self.Fault = FaultController()
 
 		leg_stance = self.init_robot_stance("flat")
@@ -262,6 +262,9 @@ class RobotState:
 
 			err_list[j], qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
 			
+			if j == 4:
+				qpd = np.array([0.,  6.12682006e-01,  -2.61484057e+00])
+
 			## append to list if valid, otherwise break and raise error
 			err_str = ''
 			if (err_list[j] == 0):
@@ -322,11 +325,15 @@ class RobotState:
 
 	def apply_base_impedance(self, desired_force):
 	
-		world_df = (self.Leg[4].F6c.world_X_foot[0:3] - desired_force[0:3]).flatten()
-		offset = np.zeros(3)
-		offset[0] = self.impedance_controller_x.evaluate(world_df[0])
-		offset[1] = self.impedance_controller_y.evaluate(world_df[1])
-		offset[2] = self.impedance_controller_z.evaluate(world_df[2])
+		if self.Fault.status:
+			for j in range(0,6):
+				if self.Fault.fault_index[j] == True:
+					world_df = (self.Leg[j].F6c.world_X_foot[0:3] - desired_force[j*3:j*3+3]).flatten()
+
+			offset = np.zeros(3)
+			offset[0] = self.impedance_controller_x.evaluate(world_df[0])
+			offset[1] = self.impedance_controller_y.evaluate(world_df[1])
+			offset[2] = self.impedance_controller_z.evaluate(world_df[2])
 
 		# Transform to leg frame
 		# leg_df = mX(self.Leg[4].XHd.coxa_X_world[:3,:3], world_df)

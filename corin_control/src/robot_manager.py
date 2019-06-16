@@ -57,7 +57,7 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
 		self.control_loop = "close" 	# run controller in open or closed loop
 
@@ -478,20 +478,21 @@ class CorinManager:
 				self.Robot.support_mode = False
 
 				map_offset = (0.33, 0.39)
-				
+				# self.Robot.Fault.status = False
 				if self.Robot.Fault.status:
 					xb = self.Robot.Fault.get_fault_pose().flatten()
 					self.Robot.P6c.world_X_base = np.array([map_offset[0], map_offset[1], 
 															xb[2], xb[3], xb[4], 0.]).reshape(6,1)
-
+					self.Robot.P6c.world_X_base_offset = np.array([map_offset[0], map_offset[1],
+																0.,0.,0.,0.]).reshape(6,1)
 					self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
 					self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
-					print 'P6: ', np.round(self.Robot.P6d.world_X_base.flatten(),3)
-
+					
 					self.Robot.init_fault_stance()
 					qd, tXj_error = self.Robot.task_X_joint()
-					for i in range(0,5):
+					for i in range(0,10):
 						self.publish_topics(qd)
+					# print qd.xp
 					# print 'cXf: ', np.round(self.Robot.Leg[5].XHd.coxa_X_foot[:3,3],4)
 					# print 'bXf: ', np.round(mX(self.Robot.Leg[5].XHd.base_X_coxa, self.Robot.Leg[5].XHd.coxa_X_foot),4)
 					# print self.Robot.Leg[5].XHd.base_X_foot
@@ -505,14 +506,18 @@ class CorinManager:
 				else:
 					self.Robot.P6c.world_X_base = np.array([map_offset[0], map_offset[1], 
 															BODY_HEIGHT, 0., 0., 0.]).reshape(6,1)
-
+					self.Robot.P6c.world_X_base_offset = np.array([map_offset[0], map_offset[1],
+																0.,0.,0.,0.]).reshape(6,1)
 					self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
 					self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 					self.Robot.init_robot_stance()
-				
+					qd, tXj_error = self.Robot.task_X_joint()
+					for i in range(0,10):
+						self.publish_topics(qd)
+					# print qd.xp
 				if motion == 'forward':
 					ps = self.Robot.P6c.world_X_base
-					pf = self.Robot.P6c.world_X_base + np.array([0.1, 0.,0.,0.,0.,0.]).reshape(6,1)
+					pf = self.Robot.P6c.world_X_base + np.array([0.3, 0.,0.,0.,0.,0.]).reshape(6,1)
 				
 					motion_plan = self.Planner.motion_planning(ps, pf, self.Robot)
 

@@ -100,6 +100,8 @@ def quadprog_solve_qp(P, q, G=None, h=None, A=None, b=None):
 		return sol_full[0]
 	except ValueError as e:
 		print e
+	# except IndexError as e:
+	# 	print 'Error'
 		return None
 
 # def leg_jacobian(q):
@@ -142,7 +144,7 @@ class QPForceDistribution():
 					fmax: Re(6) maximum force constraint for each leg 
 					snorm: Re(3c) surface normal vector for each leg
 			Output: force_vector, Re(18) 							"""
-
+		
 		## Declare variables
 		n_contact = len(p_foot)
 		index_c = [i for i, j in enumerate(gphase) if j == 0.]

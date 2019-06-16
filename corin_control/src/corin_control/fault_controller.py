@@ -20,7 +20,8 @@ class FaultController:
 		self.base_X_foot = None
 
 		self.__default_parameters__()
-		self.fault_set_single()
+		# self.fault_set_single()
+		# self.fault_set_double()
 
 	def __default_parameters__(self):
 
@@ -37,23 +38,23 @@ class FaultController:
 	def fault_set_single(self):
 
 		self.status = True
-		self.fault_index = [True, False, False, False, False, False]	
-		self.base_X_foot = [np.array([ 0.25,  0.251, -0.07]),
+		self.fault_index = [False, False, False, False, True, False]	
+		self.base_X_foot = [np.array([ 0.25,  0.251, -BODY_HEIGHT]),
 							np.array([ 0.,    0.300, -BODY_HEIGHT]),
 							np.array([-0.25,  0.251, -BODY_HEIGHT]),
 							np.array([ 0.25, -0.251, -BODY_HEIGHT]),
-							np.array([ 0.,   -0.210, -BODY_HEIGHT]),
+							np.array([ 0.,   -0.210, -0.05]),
 							np.array([-0.25, -0.251, -BODY_HEIGHT])]
 							
 	def fault_set_double(self):
 
 		self.status = True
-		self.fault_index = [False, True, False, False, False, True]
-		self.base_X_foot = [np.array([ 0.25,  0.251, -BODY_HEIGHT]),
+		self.fault_index = [True, False, False, False, True, False]
+		self.base_X_foot = [np.array([ 0.25,  0.29, -BODY_HEIGHT-0.05]),
 							np.array([ 0.,    0.300, -BODY_HEIGHT]),
 							np.array([-0.25,  0.251, -BODY_HEIGHT]),
 							np.array([ 0.25, -0.251, -BODY_HEIGHT]),
-							np.array([ 0.,   -0.300, -BODY_HEIGHT]),
+							np.array([ 0.,   -0.21, -0.05]),
 							np.array([-0.25, -0.251, -BODY_HEIGHT])]		
 
 	def set_fault_parameters(self, fault_index, base_X_foot):

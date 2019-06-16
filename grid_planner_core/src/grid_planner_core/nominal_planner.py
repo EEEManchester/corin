@@ -89,13 +89,12 @@ class PathPlanner:
 			base_X_footholds[j].t.append(1)
 			base_X_footholds[j].xp.append(w_base_X_foot[j].copy())
 		
-		# Flattens list
-		gait_phase = [val for sublist in gait_phase for val in sublist]
+		
 
 		# Interpolate following leg in max. stride position
 		# nintv = math.ceil((d_mag-d_nom)/lamb)
-		nintv = math.ceil((d_mag)/lamb)
-
+		nintv = math.ceil((d_mag)/lamb)+2
+		print nintv, lamb
 		if not Robot.Fault.status:
 
 			for i in range(1,int(nintv)+1):
@@ -103,12 +102,13 @@ class PathPlanner:
 
 				world_X_base.append(p_intv.flatten())
 				gait_phase.append(Gait.phases)
-				print p_intv
+				
+			# Flattens list
+			gait_phase = [val for sublist in gait_phase for val in sublist]
 
 			# Spline base path
-			path = self.spline_path(world_X_base)
-			self.generate_linear_path(world_X_base)
-			print 'this len', len(path.X.t), path.X.t
+			path = self.spline_path(world_X_base, None, world_X_base[0])
+			# self.generate_linear_path(world_X_base)
 			# for j in range(0,6):
 			# 	# world_X_foot = p_intv[0:3] + Robot.Leg[j].XHd.world_base_X_AEP[:3,3]
 			# 	world_X_foot = p_intv[0:3] + w_base_X_foot[j]
@@ -124,23 +124,26 @@ class PathPlanner:
 		## CoB at every gait cycle interval
 		elif Robot.Fault.status:
 			
+			# Flattens list
+			gait_phase = [val for sublist in gait_phase for val in sublist]
+
 			# Set CoB and gait phases for moving legs into max. stride position
 			t_cob = [0]*(len(Gait.phases)+1)
 			
-			for j in range(1,len(Gait.phases)+1):
+			for j in range(len(Gait.phases),0,-1):
 				t_cob[j] = GAIT_TPHASE*j
 				world_X_base.append(ps.copy())
-
+			
 				if Robot.Fault.fault_index[j-1]:
-					gait_phase[5] = [0]*6
+					gait_phase[len(Gait.phases)-j] = [0]*6
 			
 			# Base motion during discontinuous phase
 			fault_offset_motion = np.array([0.,0.,0.05,0.,0.,0.]) # Ground walking
 			# fault_offset_motion = np.array([0.,0.04,0.,0.,0.,0.]) # Chimney walking
 			
 			# no. of intervals increase as base only translate for one phase per gait cycle
-			# nintv = math.ceil((d_mag)/(lamb/len(Gait.phases)))
-			nintv = math.ceil((d_mag)/lamb)
+			nintv = math.ceil((d_mag)/(lamb/len(Gait.phases)))
+			# nintv = math.ceil((d_mag)/lamb)
 			pintv = ps
 			# Cycle through each gait phase
 			for i in range(1, int(nintv)*len(Gait.phases)+1):
@@ -148,12 +151,12 @@ class PathPlanner:
 				if Robot.Fault.fault_index[Gait.cs.index(1)]:
 					# Intermediate position for clearing contact surface 
 					pintv += d_dif/nintv
-					p_fault = pintv + fault_offset_motion - d_dif/(2*nintv)
+					p_fault = pintv + fault_offset_motion - d_dif/(2*nintv) 	# 2 - half a gait cycle translation
 					
 					world_X_base.append(p_fault.flatten().copy())
 					t_cob.append(GAIT_TPHASE*i + t_cob[len(Gait.phases)] - GAIT_TPHASE/2.)
 					gait_phase.append([0]*6)
-
+					# gait_phase.append([0,0,0,0,2,0])
 				# Working legs in transfer phase
 				else:
 					gait_phase.append(Gait.cs)
@@ -164,9 +167,14 @@ class PathPlanner:
 
 			# Spline base path
 			# path_old = self.spline_path(world_X_base, t_cob)
-			path = self.generate_linear_path(world_X_base, t_cob)
-
+			# path_lin = self.generate_linear_path(world_X_base, t_cob)
+			path = self.spline_combination(world_X_base, t_cob)
+			# print len(path.X.t), len(path_lin.X.t)
+			# print path.X.t, len(path.X.t)
+			# for i in range(len(path_new.X.t)):
+			# 	print np.round(path.X.t[i],3), np.round(path_new.X.t[i],2)
 		# Plot.plot_2d(path.X.t, path.X.xp)
+		# Plot.plot_2d(path_new.X.t, path_new.X.xp)
 		# Plot.plot_2d(path_old.X.t, path_old.X.xp)
 		# Plot.plot_2d(path.W.t,path.W.xp)
 
@@ -197,14 +205,14 @@ class PathPlanner:
 		# print self.Robot.Leg[5].XHc.world_base_X_PEP[:3,3]
 		return world_base_X_foot
 
-	def spline_path(self, world_X_base, t_cob=None):
-
+	def spline_path(self, world_X_base, t_cob=None, base_offset=None):
+		
 		x_cob = np.zeros((len(world_X_base),3))
 		w_cob = np.zeros((len(world_X_base),3))
 		
 		for i in range(0,len(world_X_base)):
-			x_cob[i,:] = world_X_base[i][0:3] - world_X_base[0][0:3]
-			w_cob[i,:] = world_X_base[i][3:6] - world_X_base[0][3:6]
+			x_cob[i,:] = world_X_base[i][0:3] - base_offset[0:3]
+			w_cob[i,:] = world_X_base[i][3:6] - base_offset[3:6]
 
 		if t_cob is None:
 			t_cob = np.zeros(len(world_X_base))
@@ -218,25 +226,25 @@ class PathPlanner:
 
 	def generate_linear_path(self, world_X_base, t_cob=None):
 	
-		x_cob = np.zeros((len(world_X_base),3))
-		w_cob = np.zeros((len(world_X_base),3))
+		# x_cob = np.zeros((len(world_X_base),3))
+		# w_cob = np.zeros((len(world_X_base),3))
 		
-		for i in range(0,len(world_X_base)):
-			x_cob[i,:] = world_X_base[i][0:3] - world_X_base[0][0:3]
-			w_cob[i,:] = world_X_base[i][3:6] - world_X_base[0][3:6]
+		# for i in range(0,len(world_X_base)):
+		# 	x_cob[i,:] = world_X_base[i][0:3] - world_X_base[0][0:3]
+		# 	w_cob[i,:] = world_X_base[i][3:6] - world_X_base[0][3:6]
 
 		if t_cob is None:
 			t_cob = np.zeros(len(world_X_base))
 			for i in range(0,len(world_X_base)):
 				t_cob[i] = i*Robot.Gait.tcycle
 		# print t_cob
-		tintv = int(math.ceil(t_cob[-1]/CTR_INTV))+1
+		tintv = int(math.ceil((t_cob[-1]-t_cob[0])/CTR_INTV))+1
 		xp = np.zeros((tintv,3));	xv = np.zeros((tintv,3));	xa = np.zeros((tintv,3))
 		wp = np.zeros((tintv,3));	wv = np.zeros((tintv,3));	wa = np.zeros((tintv,3))
-		t_inp = np.zeros(tintv)
-		
+		# t_inp = np.zeros(tintv)
+		t_inp = [0]*tintv
 		for i in range(tintv):
-			t_inp[i] = i*CTR_INTV
+			t_inp[i] = t_cob[0] + i*CTR_INTV
 
 		count = 0
 		for i in range(1,len(world_X_base)):
@@ -251,8 +259,8 @@ class PathPlanner:
 			if i == len(world_X_base)-1:
 				itv = int(itv)+1
 			for j in range(0, int(itv)):
-				xp[count] = world_X_base[i-1][0:3] + j*dp[0:3]/(dt/CTR_INTV) - world_X_base[0][0:3]
-				wp[count] = world_X_base[i-1][3:6] + j*dp[3:6]/(dt/CTR_INTV) - world_X_base[0][3:6]
+				xp[count] = world_X_base[i-1][0:3] + j*dp[0:3]/(dt/CTR_INTV) #- world_X_base[0][0:3]
+				wp[count] = world_X_base[i-1][3:6] + j*dp[3:6]/(dt/CTR_INTV) #- world_X_base[0][3:6]
 				xv[count] = (xp[count] - xp[count-1])/CTR_INTV
 				wv[count] = (wp[count] - wp[count-1])/CTR_INTV
 				xa[count] = (xv[count] - xv[count-1])/CTR_INTV
@@ -268,8 +276,71 @@ class PathPlanner:
 		# print p_inp
 		# Plot.plot_2d(t_inp, xp)
 		
-		return Trajectory6D(((t_inp,xp,xv,xa),(t_inp,wp,wv,wa)))
+		return Trajectory6D(((list(t_inp),xp,xv,xa),(list(t_inp),wp,wv,wa)))
 
+	def spline_combination(self, world_X_base, t_cob=None):
+
+		tintv = int(math.ceil(t_cob[-1]/CTR_INTV))+1
+
+		x_cob = np.zeros((len(world_X_base),6))
+		x_prev = np.zeros(6)
+		straight_cob = []
+		straight_t	 = []
+		curve_cob = []
+		curve_t	  = []
+		
+		path = Trajectory6D()
+
+		for i in range(0,len(world_X_base)):
+			x_cob = world_X_base[i] - world_X_base[0]
+			# w_cob = world_X_base[i][3:6] - world_X_base[0][3:6]
+			# print i
+			
+			if np.linalg.norm(x_cob - x_prev) > 0.01:
+				# Interpolate straight_cob
+				if len(straight_cob) > 0:
+					# print straight_cob, straight_t
+					path.remove(-1)
+					temp_path = self.generate_linear_path(straight_cob, straight_t)
+					straight_cob = []
+					straight_t 	 = []
+					path.append(temp_path)
+					# Plot.plot_2d(temp_path.X.t, temp_path.X.xp)
+					curve_cob.append(x_prev.copy())
+					curve_t.append(t_cob[i-1])
+				# print i*GAIT_TPHASE, 
+				curve_cob.append(x_cob.copy())
+				curve_t.append(t_cob[i])
+			else:
+				if len(curve_cob) > 0:
+					path.remove(-1)
+					temp_path = self.spline_path(curve_cob, curve_t, np.zeros(6))
+					# print temp_path.X.t
+					path.append(temp_path)
+					# Plot.plot_2d(temp_path.X.t, temp_path.X.xp)
+					curve_cob = []
+					curve_t   = []
+					straight_cob.append(x_prev.copy())
+					straight_t.append(t_cob[i-1])
+
+				straight_cob.append(x_cob.copy())
+				straight_t.append(t_cob[i])
+				
+			x_prev = x_cob.copy()
+
+		if len(straight_cob) > 0:
+			# print straight_cob, straight_t
+			path.remove(-1)
+			temp_path = self.generate_linear_path(straight_cob, straight_t)
+			# Plot.plot_2d(temp_path.X.t, temp_path.X.xp)
+			path.append(temp_path)
+
+		elif len(curve_cob):
+			path.remove(-1)
+			path.append(self.spline_path(curve_cob, curve_t, np.zeros(6)))
+
+		# Plot.plot_2d(path.X.t, path.X.xp)
+		return path
 
 
 ## ================================================================================================ ##
@@ -284,20 +355,22 @@ Robot = robot_class.RobotState()
 # ps = np.array([10,13]) 
 # pf = np.array([16,13])
 ps = np.array([0.30, 0.39, 0.1, 0., 0., 0.]) 
-pf = np.array([0.35, 0.39, 0.1, 0., 0., 0.]) 
+pf = np.array([0.5, 0.39, 0.1, 0., 0., 0.]) 
 
 Robot.P6c.world_X_base = ps
 Robot.P6d.world_X_base = Robot.P6c.world_X_base.copy()
 Robot.XHc.update_world_X_base(Robot.P6c.world_X_base)
 Robot.init_robot_stance()
 
-motion_plan = planner.motion_planning(ps, pf, Robot)
-
-
-a = np.array([0.,0.,0.])
-b = np.array([1.,0.,0.])
-d = np.array([2.,0.,0.])
-c = [a,b,d]
+# motion_plan = planner.motion_planning(ps, pf, Robot)
+# qpd = [0., 3.38135596e-01  -1.85227640e+00]
+# qpd.item(0)
+# print [val for sublist in Robot.Gait.phases for val in sublist]
+# True if x % 2 == 0 else False
+# a = np.array([0.,0.,0.])
+# b = np.array([1.,0.,0.])
+# d = np.array([2.,0.,0.])
+# c = [a,b,d]
 # t = [0., 1.0, 1.4]
 
 # tintv = math.ceil(t[-1]/CTR_INTV)

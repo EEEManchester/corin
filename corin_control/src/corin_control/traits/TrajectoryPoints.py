@@ -43,15 +43,26 @@ class Trajectory6D():
 		""" Appends to respective items assuming 
 			input is of the same type 			"""
 
-		self.X.t = self.X.t + data.X.t
-		self.X.xp = np.vstack((self.X.xp, data.X.xp))
-		self.X.xv = np.vstack((self.X.xv, data.X.xv))
-		self.X.xa = np.vstack((self.X.xa, data.X.xa))
-			
-		self.W.t = self.W.t + data.W.t
-		self.W.xp = np.vstack((self.W.xp, data.W.xp))
-		self.W.xv = np.vstack((self.W.xv, data.W.xv))
-		self.W.xa = np.vstack((self.W.xa, data.W.xa))
+		if not self.X.t:
+			self.X.t = data.X.t
+			self.X.xp = data.X.xp.copy()
+			self.X.xv = data.X.xv.copy()
+			self.X.xa = data.X.xa.copy()
+
+			self.W.t  = data.W.t
+			self.W.xp = data.W.xp.copy()
+			self.W.xv = data.W.xv.copy()
+			self.W.xa = data.W.xa.copy()
+		else:
+			self.X.t = self.X.t + data.X.t
+			self.X.xp = np.vstack((self.X.xp, data.X.xp))
+			self.X.xv = np.vstack((self.X.xv, data.X.xv))
+			self.X.xa = np.vstack((self.X.xa, data.X.xa))
+				
+			self.W.t = self.W.t + data.W.t
+			self.W.xp = np.vstack((self.W.xp, data.W.xp))
+			self.W.xv = np.vstack((self.W.xv, data.W.xv))
+			self.W.xa = np.vstack((self.W.xa, data.W.xa))
 
 	def reverse(self):
 		self.X.reverse()
@@ -64,13 +75,18 @@ class Trajectory6D():
 		self.X.insert(start,end,data.X)
 		self.W.insert(start,end,data.W)
 
+	def remove(self, index):
+
+		self.X.remove(index)
+		self.W.remove(index)
+
 class TrajectoryPoints():
 	def __init__(self,data=None):
 		if data is None:
 			self.t  = []
-			self.xp = np.zeros((0,3))
-			self.xv = np.zeros((0,3))
-			self.xa = np.zeros((0,3))
+			self.xp = []#np.zeros((0,3))
+			self.xv = []#np.zeros((0,3))
+			self.xa = []#np.zeros((0,3))
 		else:
 			self.t  = data[0]
 			self.xp = np.array(data[1])
@@ -122,3 +138,13 @@ class TrajectoryPoints():
 		lent = len(self.t)
 
 		self.t = np.arange(0., lent*intv, intv).tolist()
+
+	def remove(self,index):
+		""" Removes items at index 		"""
+		
+		if self.t:
+			del self.t[index]
+			self.xp = np.delete(self.xp, (index), axis=0)
+			self.xv = np.delete(self.xv, (index), axis=0)
+			self.xa = np.delete(self.xa, (index), axis=0)
+		

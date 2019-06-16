@@ -42,7 +42,7 @@ class Trajectory6D():
 	def append(self,data):
 		""" Appends to respective items assuming 
 			input is of the same type 			"""
-
+		
 		self.X.t = self.X.t + data.X.t
 		self.X.xp = np.vstack((self.X.xp, data.X.xp))
 		self.X.xv = np.vstack((self.X.xv, data.X.xv))
