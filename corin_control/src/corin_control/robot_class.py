@@ -141,12 +141,13 @@ class RobotState:
 		for j in range(0,self.active_legs):
 
 			bstate = self.Leg[j].update_joint_state(wXb, qpc[offset+j*3:offset+(j*3)+3], reset, self.Gait.step_stroke)
-			cstate = self.Leg[j].update_force_state(self.cstate[j], self.cforce[j*3:(j*3)+3])
+			self.cstate[j] = self.Leg[j].update_force_state(self.cforce[j*3:(j*3)+3])
 
 			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
 				# print 'Bound exceed ',j
 				# self.suspend = True
 				pass
+		# self.cstate = [1 if i==True else 0 for i in self.cstate ]
 
 	def update_bodypose_state(self, cmode):
 		""" update imu state """
@@ -345,12 +346,19 @@ class RobotState:
 		return offset
 		# self.XHd.coxa_X_foot[0:3,3] += np.array([offset_x, offset_y, offset_z])
 
+	# def get_contact_state(self):
+
+	# 	cstate = [0]*6
+	# 	for j in range(6):
+	# 		cstate[j] = self.Leg[j].cstate
+	# 	return cstate
+
 	def check_contact(self):
 
-		cstate = [0]*6
-		for j in range(6):
-			cstate[j] = self.Leg[j].cstate
-		contact_early = cstate and self.Gait.cs
+		# cstate = [0]*6
+		# for j in range(6):
+		# 	cstate[j] = self.Leg[j].cstate
+		# contact_early = cstate and self.Gait.cs
 
 		transfer_count = 0
 		contact_index  = [0]*6					# index for legs not in contact

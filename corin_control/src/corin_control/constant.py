@@ -99,6 +99,7 @@ KPang = np.array([1.0, 1.0, 1.0])*0.	#500.
 KDang = np.array([1.0, 1.0, 1.0])*0.	#0.5
 SURFACE_FRICTION = 0.5
 F_THRES = 3.0 	# threshold limit for contact detection
+D_MOVE = 0.0001	# motion for leg to achieve contact
 
 ## ================================================================ ##
 ##                 Impedance Controller parameters 	 				##

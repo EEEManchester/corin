@@ -229,17 +229,24 @@ class RobotController(CorinManager):
 				
 			elif state_machine ==  'motion':
 				
+				## Halfway through TIMEOUT - check swing leg contact state 
+				if (s_cnt > s_max/2):
+					# Check if transfer has made contact
+					cearly = map(lambda x,y: x and y, self.Robot.cstate, self.Robot.Gait.cs)
+					cindex = [z for z, y in enumerate(cearly) if y == 1]
+					# Change legs in transfer phase with contact to support
+					if cindex:
+						# print 'cindex ', cindex, self.Robot.cstate
+						for j in cindex:
+							self.Robot.Gait.cs[j] = 0
+							self.Robot.Leg[j].transfer_phase_change = False
+							self.Robot.Leg[j].XHc.update_world_X_foot(self.Robot.XHc.world_X_base)
+							self.Robot.Leg[j].XHd.world_X_foot = self.Robot.Leg[j].XHc.world_X_foot.copy()
+						
+				## Force and gait phase array for Force Distribution
 				fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
 				if state_machine ==  'motion':
 					gphase = self.Robot.Gait.cs
-
-				## Halfway through TIMEOUT - check swing leg contact state 
-				# Check all transfer contacts made
-				if (s_cnt > s_max/2):
-					cstate, cindex = self.Robot.check_contact()
-					print 'cstate: ', cstate, cindex
-					# Change legs in transfer phase to support
-					pass
 
 				## Generate trajectory for legs in transfer phase
 				for j in range (0, self.Robot.active_legs):
@@ -263,7 +270,7 @@ class RobotController(CorinManager):
 
 							except IndexError:
 								## TODO: plan on the fly. Currently set to default position
-								print 'Leg: ', j, ' No further foothold planned!', i
+								# print 'Leg: ', j, ' No further foothold planned!', i
 								iahead = int(GAIT_TPHASE/CTR_INTV)
 								# Get bodypose at end of gait phase, or end of trajectory
 								try:
@@ -325,52 +332,25 @@ class RobotController(CorinManager):
 				## Gait phase TIMEOUT
 				if ( s_cnt == s_max ):
 					# Legs in contact, change phase
-					if cstate:
-						for j in range(0,6):
-							if (self.Robot.Gait.cs[j] == 1):
-								self.Robot.Leg[j].transfer_phase_change = False
-								self.Robot.Leg[j].XHc.update_world_X_foot(self.Robot.XHc.world_X_base)
-								self.Robot.Leg[j].XHd.world_X_foot = self.Robot.Leg[j].XHc.world_X_foot.copy()
-						state_machine = 'load'
-						print i, ' Phase Timeout, Loading ...'
-						s_cnt = 1
+					# if all(self.Robot.cstate):
+					for j in range(0,6):
+						if (self.Robot.Gait.cs[j] == 1):
+							self.Robot.Leg[j].transfer_phase_change = False
+							self.Robot.Leg[j].XHc.update_world_X_foot(self.Robot.XHc.world_X_base)
+							self.Robot.Leg[j].XHd.world_X_foot = self.Robot.Leg[j].XHc.world_X_foot.copy()
+					state_machine = 'load'
+					print i, ' Phase Timeout, Loading ...'
+					s_cnt = 1
 					# Extend leg swing motion, suspend base
-					else:
-						self.Robot.suspend = True
-						print 'Not all contacts made, suspend robot'
-						## TODO: surface normal trajectory
-				
-
-				# ends gait phase early if transfer phase completes - TODO: ANOTHER WAY?
-				# transfer_total = 0;
-				# leg_complete   = 0;
-
-				# for j in range(0,6):
-				# 	if (self.Robot.Gait.cs[j]==1):
-				# 		transfer_total += 1
-				# 		if (self.Robot.Leg[j].feedback_state == 2):
-				# 			leg_complete += 1
-
-				# # triggers only when all transfer phase legs complete and greater than zero
-				# # > 0: prevents trigger during all leg support
-				# if ( (transfer_total == leg_complete and transfer_total > 0 and leg_complete > 0) or
-				# 	# For discontinuous phase gait
-				# 	(all( map(lambda x: x == self.Robot.Gait.cs[0], self.Robot.Gait.cs ) ) and s_cnt == s_max+1)):# or
-				# 	# (s_cnt > s_max/2. and self.Robot.Gait.cs[5]==1 and self.Robot.Leg[5].cstate == True) ):
-				# 	# print s_cnt, s_max/2., transfer_total, leg_complete
-				# 	# if (self.Robot.Gait.cs[5]==1 and self.Robot.Leg[5].cstate == True):
-				# 	# 	print 'HERE HERE HERE cstate early, switch phase'
-				# 	# Update new foothold setpoint for leg finishing transfer phase
-				# 	for j in range(0,6):
-				# 		if (self.Robot.Gait.cs[j] == 1):
-				# 			self.Robot.Leg[j].transfer_phase_change = False
-				# 			self.Robot.Leg[j].XHc.update_world_X_foot(self.Robot.XHc.world_X_base)
-				# 			self.Robot.Leg[j].XHd.world_X_foot = self.Robot.Leg[j].XHc.world_X_foot.copy()
-				# 	state_machine = 'load'
-				# 	print i, ' Loading ...'
-				# 	print '=============================='
-				# 	s_cnt = 1
-
+					# else:
+					# 	self.Robot.suspend = True
+					# 	print 'Not all contacts made, suspend robot: ', self.Robot.cstate, self.Robot.Gait.cs
+					# 	## TODO: surface normal trajectory
+					# 	for j in [z for z, y in enumerate(self.Robot.cstate) if y == False]:
+					# 		sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3], j)
+					# 		self.Robot.Leg[j].XHc.world_X_foot[:3,3] -= sn1*np.array([D_MOVE,D_MOVE,D_MOVE])
+					# 		print j, np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3],3)
+					# 		print j, np.round(self.Robot.Leg[j].XHc.world_X_foot[:3,3],3)
 				i += 1
 				s_cnt += 1
 
@@ -554,6 +534,7 @@ class RobotController(CorinManager):
 		# print 'corr: ', np.round(kcorrect[0:3].flatten(),4)
 		# print np.round(self.Robot.P6d.world_X_base,3)
 		for j in range (0, 6):
+			# if (self.Robot.Gait.cs[j] == 0):
 			if (self.Robot.Gait.cs[j] == 0 and self.Robot.suspend == False):
 				## Determine foot position wrt base & coxa - REQ: world_X_foot position
 				if (self.control_loop == "open"):

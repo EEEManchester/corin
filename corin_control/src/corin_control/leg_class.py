@@ -96,10 +96,9 @@ class LegClass:
 
 		return bound_exceed
 
-	def update_force_state(self, cState, cForce):
+	def update_force_state(self, cForce):
 		""" contact force of leg """
 
-		# self.cstate = cState
 		self.F6c.tibia_X_foot[:3] = np.reshape(np.array(cForce),(3,1))
 
 		# Transfrom to world, base and leg
@@ -115,7 +114,7 @@ class LegClass:
 
 		self.check_contact_state()
 		
-		return None
+		return self.cstate
 
 	def check_contact_state(self):
 		# Hysteresis based contact detection

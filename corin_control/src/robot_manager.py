@@ -188,7 +188,7 @@ class CorinManager:
 		##***************** SUBSCRIBERS ***************##
 		## Robot State ##
 		self.imu_sub_	 = rospy.Subscriber(ROBOT_NS + '/imu/base/data', Imu, self.imu_callback, queue_size=1)
-		self.cstate_sub_ = rospy.Subscriber(ROBOT_NS + '/contact_state', ByteMultiArray, self.contact_state_callback, queue_size=1)
+		# self.cstate_sub_ = rospy.Subscriber(ROBOT_NS + '/contact_state', ByteMultiArray, self.contact_state_callback, queue_size=1)
 		self.cforce_sub_ = rospy.Subscriber(ROBOT_NS + '/contact_force', Float32MultiArray, self.contact_force_callback, queue_size=1)
 
 		## Hardware Specific Subscribers ##
@@ -525,8 +525,7 @@ class CorinManager:
 					motion_plan = self.Planner.motion_planning(ps, pf, self.Robot)
 
 					if motion_plan is not None:
-						print motion_plan.f_base_X_foot[5].xp
-						raw_input('cont')
+						
 						if (self.main_controller(motion_plan)):
 							self.Robot.alternate_phase()
 					else:

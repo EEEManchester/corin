@@ -174,27 +174,11 @@ class GaitClass:
 gait = GaitClass(1)
 leg = 1
 for i in range(0, len(gait.phases)):
-# 	print 'checking: ', gait.phases[i]
-	# print gait.cs, gait.cs.index(1)
-	# if gait.cs.index(1) == gait.fault[0]:
-	# 	print 'Custom support: ', gait.cs
-	# else:
-	# 	print 'Transfer only: ', gait.cs
 	gait.change_phase()
 
-a = [0,2,1]
-b = [1,1,1]
-c = map(lambda x,y:x and y, a,b )
-# print c
-d = [a[i] for i in a]
-# print d
-# print all(a)
-# 	if (gait.phases[i][leg] == 1):
-# 		print 'found: ', gait.phases[i]
-# for i in range(0,3):
-# 	gait.change_phase()
-# 	print gait.cs
-
+a = np.array([0,0,1])
+b = np.array([2,3,4])
+print a*b
 # gait.reverse_gait()
 
 # print 'now reversed'
