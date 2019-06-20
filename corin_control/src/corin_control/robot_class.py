@@ -144,7 +144,9 @@ class RobotState:
 			cstate = self.Leg[j].update_force_state(self.cstate[j], self.cforce[j*3:(j*3)+3])
 
 			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
-				self.suspend = True
+				# print 'Bound exceed ',j
+				# self.suspend = True
+				pass
 
 	def update_bodypose_state(self, cmode):
 		""" update imu state """
@@ -262,8 +264,8 @@ class RobotState:
 
 			err_list[j], qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
 			
-			if j == 4:
-				qpd = np.array([0.,  6.12682006e-01,  -2.61484057e+00])
+			# if j == 4:
+			# 	qpd = np.array([0.,  6.12682006e-01,  -2.61484057e+00])
 
 			## append to list if valid, otherwise break and raise error
 			err_str = ''
@@ -342,6 +344,32 @@ class RobotState:
 		# print 'base : ', np.round(offset,4)	
 		return offset
 		# self.XHd.coxa_X_foot[0:3,3] += np.array([offset_x, offset_y, offset_z])
+
+	def check_contact(self):
+
+		cstate = [0]*6
+		for j in range(6):
+			cstate[j] = self.Leg[j].cstate
+		contact_early = cstate and self.Gait.cs
+
+		transfer_count = 0
+		contact_index  = [0]*6					# index for legs not in contact
+		transfer_total = self.Gait.cs.count(1) 	# no. legs in transfer phase
+		for j in range(0,6):
+			if self.Gait.cs[j] == 1:
+				if self.Leg[j].cstate == True:
+					# transfer_index.append(-1)
+					contact_index[j] = 1
+				else:
+					# transfer_index.append(j)
+					contact_index[j] = 0
+
+		if transfer_total == transfer_index.count(-1):
+			# print 'All swing in contact!'
+			return True, transfer_index
+		else:
+			return False, transfer_index
+		
 
 	def duplicate_self(self, robot):
 		""" Duplicates robot state by creating local copy of input robot """

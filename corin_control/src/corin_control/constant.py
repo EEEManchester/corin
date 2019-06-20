@@ -98,7 +98,7 @@ KDcom = np.array([0.0, 0.0, 1.0])*0.015	#0.5
 KPang = np.array([1.0, 1.0, 1.0])*0.	#500.
 KDang = np.array([1.0, 1.0, 1.0])*0.	#0.5
 SURFACE_FRICTION = 0.5
-F_THRES = 3.0
+F_THRES = 3.0 	# threshold limit for contact detection
 
 ## ================================================================ ##
 ##                 Impedance Controller parameters 	 				##
@@ -143,8 +143,8 @@ STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
 ## ================================================================ ##
 
 ## these gait parameters can be changed during runtime
-GAIT_TYPE 	 = 1 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
-GAIT_TPHASE	 = 2.0 	# default period per gait phase
+GAIT_TYPE 	 = 4 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+GAIT_TPHASE	 = 1.0 	# default period per gait phase
 STEP_HEIGHT  = 0.06	# default step height, z
 STEP_STROKE  = 0.1 	# default step stroke
 

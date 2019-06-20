@@ -2,7 +2,7 @@
 """ 
 
 import sys; sys.dont_write_bytecode = True
-sys.path.insert(0, '/home/wilson/catkin_ws/src/corin/corin_control/src')
+sys.path.insert(0, '/home/wei/catkin_ws/src/corin/corin_control/src')
 from corin_control import *			# library modules to include 
 from grid_map import *
 
@@ -60,13 +60,7 @@ class PathPlanner:
 		# Compute magnitude
 		d_dif = (pf - ps)
 		d_mag = np.linalg.norm(d_dif[0:2])
-		
-		if GAIT_TYPE == 1:
-			lamb = STEP_STROKE/(5./6.)
-		elif GAIT_TYPE == 2:
-			lamb = STEP_STROKE/4.
-		elif GAIT_TYPE == 4:
-			lamb = STEP_STROKE/(1./2.)
+		lamb  = STEP_STROKE/Robot.Gait.duty_factor
 
 		d_nom = lamb/2.
 		# Intermediate point for moving legs to nominal
@@ -193,16 +187,29 @@ class PathPlanner:
 	def max_stride_foothold(self, Robot):
 		""" Compute footholds wrt base position for maximum stride """
 
-		world_base_X_foot = []
-		if GAIT_TYPE == 1:
-			sint = STEP_STROKE/5
-			for j in range(0,6):
-				foothold = Robot.Leg[j].XHc.world_base_X_AEP[:3,3] - np.array([j*sint, 0., 0.])
-				world_base_X_foot.append(foothold)
-				
+		world_base_X_foot = [None]*6
+		
+		sint = STEP_STROKE/Robot.Gait.duty_factor.numerator
+		# for j in range(0,6):
+		# 	foothold = Robot.Leg[j].XHc.world_base_X_AEP[:3,3] - np.array([j*sint, 0., 0.])
+		# 	world_base_X_foot.append(foothold)
+		for i in range(Robot.Gait.duty_factor.denominator):
+			step = (Robot.Gait.duty_factor.denominator - i - 1)*sint
+			# print i, Robot.Gait.duty_factor.denominator, Robot.Gait.cs, step
+			for j in range(5,-1,-1):
+				if Robot.Gait.cs[j] == 1:
+					foothold = Robot.Leg[j].XHc.world_base_X_AEP[:3,3] - np.array([step, 0., 0.])
+					world_base_X_foot[j] = foothold.copy()
+					# print j, step, '\t', foothold
+					# print Robot.Leg[j].XHc.world_base_X_AEP[:3,3]
+					# print np.array([step, 0., 0.])
+					# print j, foothold
+					# print '========================================='
+			Robot.Gait.change_phase()
+
 		# print world_base_X_foot
-		# print self.Robot.Leg[5].XHc.world_base_X_AEP[:3,3]
-		# print self.Robot.Leg[5].XHc.world_base_X_PEP[:3,3]
+		# print Robot.Leg[5].XHc.world_base_X_AEP[:3,3]
+		# print Robot.Leg[5].XHc.world_base_X_PEP[:3,3]
 		return world_base_X_foot
 
 	def spline_path(self, world_X_base, t_cob=None, base_offset=None):

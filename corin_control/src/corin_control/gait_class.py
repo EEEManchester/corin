@@ -16,11 +16,12 @@ class GaitClass:
 		self.tphase = GAIT_TPHASE	# timing per gait phase
 		self.gd = 1 				# gait direction
 		self.tcycle = GAIT_TPHASE	# timing per gait cycle
+		self.duty_factor = 0
 
 		self.step_stroke = STEP_STROKE#self.set_step_stroke(LEG_STANCE, LEG_CLEAR, STEP_STROKE)
 		self.step_height = STEP_HEIGHT
 
-		self.fault = []		# walk mode either 'normal' or 'fault'; latter discontinuous phase gait
+		# self.fault = []		# walk mode either 'normal' or 'fault'; latter discontinuous phase gait
 
 		# States
 		self.cs = [0]*6	# current 
@@ -57,21 +58,25 @@ class GaitClass:
 			self.phases.append([0,0,1,0,0,0])
 			self.phases.append([0,1,0,0,0,0])
 			self.phases.append([1,0,0,0,0,0])
+			self.duty_factor = Fraction(5,6)
 		# Ripple Gait
 		elif (self.type == 2):
 			self.phases.append([1,0,0,0,0,1])
 			self.phases.append([0,0,0,0,1,0])
 			self.phases.append([0,0,1,1,0,0])
 			self.phases.append([0,1,0,0,0,0])
+			self.duty_factor = Fraction(3,4)
 		# Tetrapod Gait
 		elif (self.type == 3):
 			self.phases.append([1,0,0,0,0,1])
 			self.phases.append([0,0,1,0,1,0])
 			self.phases.append([0,1,0,1,0,0])
+			self.duty_factor = Fraction(2,3)
 		# Tripod Gait
 		elif (self.type == 4):
 			self.phases.append([0,1,0,1,0,1])
 			self.phases.append([1,0,1,0,1,0])
+			self.duty_factor = Fraction(1,2)
 		# Custom: Reset
 		elif (self.type == 5):
 			self.phases.append([0,1,0,0,1,0])
@@ -177,6 +182,13 @@ for i in range(0, len(gait.phases)):
 	# 	print 'Transfer only: ', gait.cs
 	gait.change_phase()
 
+a = [0,2,1]
+b = [1,1,1]
+c = map(lambda x,y:x and y, a,b )
+# print c
+d = [a[i] for i in a]
+# print d
+# print all(a)
 # 	if (gait.phases[i][leg] == 1):
 # 		print 'found: ', gait.phases[i]
 # for i in range(0,3):

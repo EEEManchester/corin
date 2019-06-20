@@ -81,7 +81,7 @@ class RobotController(CorinManager):
 		tload = 1						# timing for loading
 		iload = int(LOAD_T/CTR_INTV) 	# no. of intervals for loading
 		hload = int(0.5/CTR_INTV)		# no. of intervals for initial holding
-		# Force Distribution parameters
+		# Force Distribution variables
 		fmax_lim  = [F_MAX]*6			# maximum force array
 		init_flim = [F_MAX]*6			# current force for linear decrease in unloading
 		gphase = [0]*6 					# gait phase array
@@ -101,7 +101,7 @@ class RobotController(CorinManager):
 
 			# start = time.time()
 			self.suspend_controller()
-			# print 'counting: ', i, len(base_path.X.t)
+			# print 'counting: ', i, len(base_path.X.t), s_cnt, self.Robot.suspend
 
 			## Update robot state
 			self.Robot.update_state(control_mode=self.control_rate)
@@ -120,7 +120,7 @@ class RobotController(CorinManager):
 				self.Robot.Leg[j].P6_world_X_base = self.Robot.P6c.world_X_base.copy()
 
 			#########################################################################
-			self.Robot.suspend = False # overwrite for selected motions
+			# self.Robot.suspend = False # overwrite for selected motions
 			## suppress trajectory counter as body support suspended
 			if (self.Robot.suspend == True or state_machine == 'hold'):
 				i -= 1
@@ -194,6 +194,7 @@ class RobotController(CorinManager):
 
 				if tload == iload+1:
 					tload = 1
+					s_cnt = 1
 					state_machine = 'motion'
 					self.Robot.Gait.walk_mode()
 					print 'Motion ...'
@@ -231,6 +232,14 @@ class RobotController(CorinManager):
 				fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
 				if state_machine ==  'motion':
 					gphase = self.Robot.Gait.cs
+
+				## Halfway through TIMEOUT - check swing leg contact state 
+				# Check all transfer contacts made
+				if (s_cnt > s_max/2):
+					cstate, cindex = self.Robot.check_contact()
+					print 'cstate: ', cstate, cindex
+					# Change legs in transfer phase to support
+					pass
 
 				## Generate trajectory for legs in transfer phase
 				for j in range (0, self.Robot.active_legs):
@@ -311,35 +320,56 @@ class RobotController(CorinManager):
 				self.transfer_phase_update()
 				self.support_phase_update(P6e_world_X_base, V6e_world_X_base)
 				
+				# print s_cnt, s_max+1, self.Robot.Leg[5].spline_counter, self.Robot.Leg[5].spline_length
+				
+				## Gait phase TIMEOUT
+				if ( s_cnt == s_max ):
+					# Legs in contact, change phase
+					if cstate:
+						for j in range(0,6):
+							if (self.Robot.Gait.cs[j] == 1):
+								self.Robot.Leg[j].transfer_phase_change = False
+								self.Robot.Leg[j].XHc.update_world_X_foot(self.Robot.XHc.world_X_base)
+								self.Robot.Leg[j].XHd.world_X_foot = self.Robot.Leg[j].XHc.world_X_foot.copy()
+						state_machine = 'load'
+						print i, ' Phase Timeout, Loading ...'
+						s_cnt = 1
+					# Extend leg swing motion, suspend base
+					else:
+						self.Robot.suspend = True
+						print 'Not all contacts made, suspend robot'
+						## TODO: surface normal trajectory
+				
+
 				# ends gait phase early if transfer phase completes - TODO: ANOTHER WAY?
-				transfer_total = 0;
-				leg_complete   = 0;
+				# transfer_total = 0;
+				# leg_complete   = 0;
 
-				for j in range(0,6):
-					if (self.Robot.Gait.cs[j]==1):
-						transfer_total += 1
-						if (self.Robot.Leg[j].feedback_state == 2):
-							leg_complete += 1
+				# for j in range(0,6):
+				# 	if (self.Robot.Gait.cs[j]==1):
+				# 		transfer_total += 1
+				# 		if (self.Robot.Leg[j].feedback_state == 2):
+				# 			leg_complete += 1
 
-					
-				# triggers only when all transfer phase legs complete and greater than zero
-				# > 0: prevents trigger during all leg support
-				if ( (transfer_total == leg_complete and transfer_total > 0 and leg_complete > 0) or
-					# For discontinuous phase gait
-					(all( map(lambda x: x == self.Robot.Gait.cs[0], self.Robot.Gait.cs ) ) and s_cnt == s_max+1)):# or
-					# (s_cnt > s_max/2. and self.Robot.Gait.cs[5]==1 and self.Robot.Leg[5].cstate == True) ):
-					# print s_cnt, s_max/2., transfer_total, leg_complete
-					# if (self.Robot.Gait.cs[5]==1 and self.Robot.Leg[5].cstate == True):
-					# 	print 'HERE HERE HERE cstate early, switch phase'
-					# Update new foothold setpoint for leg finishing transfer phase
-					for j in range(0,6):
-						if (self.Robot.Gait.cs[j] == 1):
-							self.Robot.Leg[j].transfer_phase_change = False
-							self.Robot.Leg[j].XHc.update_world_X_foot(self.Robot.XHc.world_X_base)
-							self.Robot.Leg[j].XHd.world_X_foot = self.Robot.Leg[j].XHc.world_X_foot.copy()
-					state_machine = 'load'
-					print 'Loading ...'
-					s_cnt = 1
+				# # triggers only when all transfer phase legs complete and greater than zero
+				# # > 0: prevents trigger during all leg support
+				# if ( (transfer_total == leg_complete and transfer_total > 0 and leg_complete > 0) or
+				# 	# For discontinuous phase gait
+				# 	(all( map(lambda x: x == self.Robot.Gait.cs[0], self.Robot.Gait.cs ) ) and s_cnt == s_max+1)):# or
+				# 	# (s_cnt > s_max/2. and self.Robot.Gait.cs[5]==1 and self.Robot.Leg[5].cstate == True) ):
+				# 	# print s_cnt, s_max/2., transfer_total, leg_complete
+				# 	# if (self.Robot.Gait.cs[5]==1 and self.Robot.Leg[5].cstate == True):
+				# 	# 	print 'HERE HERE HERE cstate early, switch phase'
+				# 	# Update new foothold setpoint for leg finishing transfer phase
+				# 	for j in range(0,6):
+				# 		if (self.Robot.Gait.cs[j] == 1):
+				# 			self.Robot.Leg[j].transfer_phase_change = False
+				# 			self.Robot.Leg[j].XHc.update_world_X_foot(self.Robot.XHc.world_X_base)
+				# 			self.Robot.Leg[j].XHd.world_X_foot = self.Robot.Leg[j].XHc.world_X_foot.copy()
+				# 	state_machine = 'load'
+				# 	print i, ' Loading ...'
+				# 	print '=============================='
+				# 	s_cnt = 1
 
 				i += 1
 				s_cnt += 1
@@ -381,7 +411,6 @@ class RobotController(CorinManager):
 			wa_d = np.array([0.,0.,.0])
 
 			temp_gphase = gphase
-			# if i > 281 and i < 840:
 			if all( map(lambda x: x == self.Robot.Gait.cs[0], self.Robot.Gait.cs ) ) and state_machine=='motion':
 				# temp_gphase = [0,0,0,0,1,0]
 				temp_gphase = map(lambda x: 0 if x is False else 1, self.Robot.Fault.fault_index )
@@ -395,7 +424,7 @@ class RobotController(CorinManager):
 				# offset_base = self.Robot.apply_base_impedance(force_dist)
 
 				## Impedance controller for each legs
-				self.Robot.apply_impedance_control(force_dist)
+				# self.Robot.apply_impedance_control(force_dist)
 
 				## Recompute task to joint space
 				qd, tXj_error = self.Robot.task_X_joint()
@@ -565,6 +594,7 @@ class RobotController(CorinManager):
 				## Update leg position from generated leg spline
 				if (self.Robot.Leg[j].update_from_spline() is False):
 					## Stops body from moving until transfer phase completes
+					print 'Suspending in transfer_phase_update()'
 					self.Robot.suspend = True
 
 	def suspend_controller(self):

@@ -113,33 +113,34 @@ class LegClass:
 		self.F6c.base_X_foot[:3] = mX(self.XHc.base_X_foot[:3,:3], self.F6c.tibia_X_foot[:3].flatten()).reshape((3,1))
 		self.F6c.world_X_foot[:3] = mX(self.XHc.world_base_X_foot[:3,:3], self.F6c.tibia_X_foot[:3].flatten()).reshape((3,1))
 
-		# if self.number == 1:
-		# 	print self.Joint.qpc
-		# 	print np.round(self.F6c.world_X_foot[:3].flatten(),3)
-		# 	print np.round(self.F6c.base_X_foot[:3].flatten(),3)
-		# 	print np.round(self.F6c.coxa_X_foot[:3].flatten(),3)
-		# 	print np.round(self.F6c.tibia_X_foot[:3].flatten(),3)
-
-		# Hysteresis based contact detection
-		# th = self.threshold
-		# lim = 8
-		# if th > lim: # We are in the "contact state"
-		# 	if force < F_THRES:
-		# 		th = 0
-		# else: # Contact not yet established
-		# 	if force > F_THRES:
-		# 		th += 1
-		# 	else:
-		# 		th = 0
-
-		# self.threshold = th
-
-		# if th > lim:
-		# 	self.cstate = True
-		# else:
-		# 	self.cstate = False
-
+		self.check_contact_state()
+		
 		return None
+
+	def check_contact_state(self):
+		# Hysteresis based contact detection
+		th = self.threshold
+		lim = 5
+		force = np.linalg.norm(self.F6c.world_X_foot[:3])
+
+		if th > lim: # We are in the "contact state"
+			if force < F_THRES:
+				th = 0
+		else: # Contact not yet established
+			if force > F_THRES:
+				th += 1
+			else:
+				th = 0
+
+		self.threshold = th
+
+		if th > lim:
+			self.cstate = True
+		else:
+			self.cstate = False
+
+		# if self.number == 5:
+		# 	print 'cstate ', self.cstate
 
 	def get_normal_force(self):
 
@@ -346,7 +347,7 @@ class LegClass:
 		self.XHd.update_coxa_X_foot(self.qspline.xp[i])
 		self.V6d.coxa_X_foot[:3]  = self.xspline.xv[i].reshape(3,1)
 		self.A6d.coxa_X_foot[:3]  = self.xspline.xa[i].reshape(3,1)
-
+		
 		self.spline_counter += 1
 		if (self.spline_counter == self.spline_length):
 			self.feedback_state = 2
