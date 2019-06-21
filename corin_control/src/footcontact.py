@@ -109,7 +109,7 @@ class ContactForce:
 		cstate_msg = ByteMultiArray(data = self.contact_state)
 		cforce_msg = Float32MultiArray(data = self.contact_force)
 
-		self.contact_state_pub_.publish(cstate_msg)
+		# self.contact_state_pub_.publish(cstate_msg)
 		self.contact_force_pub_.publish(cforce_msg)
 
 if __name__ == "__main__":
@@ -120,48 +120,3 @@ if __name__ == "__main__":
 	while not rospy.is_shutdown():
 		contact_manager.publish()
 		contact_manager.rate.sleep()
-
-# def joint_state_callback(q):
-# 	force_jac = np.matrix(np.zeros((3,6)))
-# 	force_gaz = np.matrix(np.zeros((3,6)))
-
-# 	sum_force_gaz = np.matrix(np.zeros((3,1)))
-# 	sum_force_jac = np.matrix(np.zeros((3,1)))
-
-# 	tau_eff = np.zeros((3,1))
-# 	# offset to deal with extra joints
-# 	if (len(q.name)==18):
-# 		offset = 0
-# 	else:
-# 		offset = 1
-
-# 	for i in range(0,6):
-# 		qp = q.position[offset+i*3:offset+(i*3)+3]
-# 		qt = q.effort[offset+i*3:offset+(i*3)+3]
-
-# 		if (contact_state[i] == True):
-
-# 			## gazebo GRF sensor
-# 			force_gaz[:,i] = kdl.FK_SO3(qp, contact_force[:,i])
-
-# 			## estimated GRF
-# 			R_conv = np.array([ [-1.,0.,0.],[0.,-1.,0.],[0.,0.,-1.] ])
-
-# 			tau_cmp = kdl.gravity_matrix(np.array(qp))
-# 			tau_eff = tau_cmp - np.array(qt)
-# 			force_jac[:,i] = np.dot(R_conv, np.linalg.solve( kdl.jacobian_transpose(np.array(qp)), (tau_eff.reshape(3,1))))
-
-# 			if (i==3): print force_jac[:,3]
-# 			## convert foot force from hip to base frame
-# 			if (i < 3):
-# 				force_gaz[:,i] = np.dot( tf.rotation_matrix(np.pi/2.0,Z_AXIS)[:3, :3], force_gaz[:,i])
-# 				force_jac[:,i] = np.dot( tf.rotation_matrix(np.pi/2.0,Z_AXIS)[:3, :3], force_jac[:,i])
-# 			elif (i >=3):
-# 				force_gaz[:,i] = np.dot( tf.rotation_matrix(-np.pi/2.0,Z_AXIS)[:3, :3], force_gaz[:,i])
-# 				force_jac[:,i] = np.dot( tf.rotation_matrix(-np.pi/2.0,Z_AXIS)[:3, :3], force_jac[:,i])
-
-# 			## sum of forces
-# 			sum_force_gaz = sum_force_gaz + force_gaz[:,i]
-# 			sum_force_jac = sum_force_jac + force_jac[:,i]
-
-# 		hw = kdl.singularity_approach(np.array(qp))

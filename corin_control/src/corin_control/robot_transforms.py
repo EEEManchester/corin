@@ -100,7 +100,7 @@ class ArrayHomogeneousTransform:
 		# self.world_X_base = np.identity(4)
 		self.world_X_foot = np.identity(4)
 		self.world_X_NRP  = np.identity(4)
-		self.world_X_hip  = np.identity(4)
+		self.world_X_coxa = np.identity(4)
 
 		# Transformations wrt world frame: base to parts
 		self.world_base_X_foot = np.identity(4)
@@ -117,13 +117,14 @@ class ArrayHomogeneousTransform:
 		self.base_X_NRP  = np.identity(4)
 
 		# Transformations wrt leg frame: leg to parts
-		self.coxa_X_base = np.identity(4)
-		self.coxa_X_femur= np.identity(4)
-		self.coxa_X_foot = np.identity(4)
-		self.coxa_X_AEP  = np.identity(4)
-		self.coxa_X_PEP  = np.identity(4)
-		self.coxa_X_NRP  = np.identity(4)
-		self.coxa_X_COM  = np.identity(4)
+		self.coxa_X_world = np.identity(4)
+		self.coxa_X_base  = np.identity(4)
+		self.coxa_X_femur = np.identity(4)
+		self.coxa_X_foot  = np.identity(4)
+		self.coxa_X_AEP   = np.identity(4)
+		self.coxa_X_PEP   = np.identity(4)
+		self.coxa_X_NRP   = np.identity(4)
+		self.coxa_X_COM   = np.identity(4)
 		self.coxa_X_coxa_COM  = np.identity(4)
 		self.coxa_X_femur_COM = np.identity(4)
 		self.coxa_X_tibia_COM = np.identity(4)

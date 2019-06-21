@@ -155,11 +155,12 @@ class CorinManager:
 		""" Initialises publishers and subscribers """
 
 		##***************** PUBLISHERS ***************##
-		self.log_sp_pub_ = rospy.Publisher('/corin/log_setpoints', LoggingState, queue_size=1)	# LOGGING setpoint publisher
-		self.log_ac_pub_ = rospy.Publisher('/corin/log_actual', LoggingState, queue_size=1)		# LOGGING actual publisher
-		self.log_er_pub_ = rospy.Publisher('/corin/log_error', LoggingState, queue_size=1)		# LOGGING error publisher
+		self.log_sp_pub_ = rospy.Publisher(ROBOT_NS + '/log_setpoints', LoggingState, queue_size=1)	# LOGGING setpoint publisher
+		self.log_ac_pub_ = rospy.Publisher(ROBOT_NS + '/log_actual', LoggingState, queue_size=1)		# LOGGING actual publisher
+		self.log_er_pub_ = rospy.Publisher(ROBOT_NS + '/log_error', LoggingState, queue_size=1)		# LOGGING error publisher
 
-		self.stability_pub_ = rospy.Publisher('/corin/stability_margin', Float64, queue_size=1) # Stability margin publisher
+		self.stability_pub_ = rospy.Publisher(ROBOT_NS + '/stability_margin', Float64, queue_size=1) # Stability margin publisher
+		self.cstate_pub_  	= rospy.Publisher(ROBOT_NS + '/contact_state', ByteMultiArray, queue_size=1)
 
 		## Hardware Specific Publishers ##
 		if (ROBOT_NS == 'corin' and (self.interface == 'gazebo' or
@@ -262,7 +263,9 @@ class CorinManager:
 			qlog_ac, qlog_er = self.set_log_actual()
 			self.log_ac_pub_.publish(qlog_ac)
 			self.log_er_pub_.publish(qlog_er)
-		
+			cstate_msg = ByteMultiArray(data = self.Robot.cstate)
+			self.cstate_pub_.publish(cstate_msg)
+
 		## Runs controller at desired rate for normal control mode
 		if (self.control_rate is "normal" or self.interface is 'robotis'):
 			self.rate.sleep()

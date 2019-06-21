@@ -176,9 +176,14 @@ leg = 1
 for i in range(0, len(gait.phases)):
 	gait.change_phase()
 
-a = np.array([0,0,1])
-b = np.array([2,3,4])
-print a*b
+from operator import xor
+a = 1
+b = 0
+# print xor(bool(a), bool(b))
+# 	a = None
+# b = np.array([2,3,4])
+# print np.divide(b, 0.)
+# print a
 # gait.reverse_gait()
 
 # print 'now reversed'
