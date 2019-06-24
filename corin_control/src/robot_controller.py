@@ -417,10 +417,10 @@ class RobotController(CorinManager):
 				state_machine == 'motion'
 				and self.Robot.Fault.status):
 				temp_gphase = map(lambda x: 0 if x is False else 1, self.Robot.Fault.fault_index )
-				
+			print ' cXf: ', np.round(self.Robot.Leg[5].XHd.coxa_X_foot[0:3,3],3)
 			force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, temp_gphase, fmax_lim)
 			joint_torq = self.Robot.force_to_torque(force_dist)
-			print i, np.round(force_dist[17],3), np.round(fmax_lim[-1],3)
+			# print i, np.round(force_dist[17],3), np.round(fmax_lim[-1],3)
 			# print temp_gphase, fmax_lim
 			if self.interface != 'rviz' and self.control_loop != "open":
 				## Base impedance
@@ -544,18 +544,20 @@ class RobotController(CorinManager):
 		# full body correction
 		kcorrect[3:6] = a*P6e_world_X_base[3:6] + b*self.P6e_prev_1[3:6] + c*self.P6e_prev_2[3:6]
 
+		comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + kcorrect)
+		comp_base_X_world = np.linalg.inv(comp_world_X_base)
+		
 		# Virtual Base controller
 		# xa_d = mX(np.diag(KPcom), P6e_world_X_base[0:3]) + mX(np.diag(KDcom), V6e_world_X_base[0:3])
 		# wa_d = mX(np.diag(KPang), P6e_world_X_base[3:6]) + mX(np.diag(KDang), V6e_world_X_base[3:6])
 		# kcorrect = np.array([xa_d,wa_d]).reshape((6,1))
 		
-		comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + kcorrect)
-		comp_base_X_world = np.linalg.inv(comp_world_X_base)
+		## Kolter2011 correction
+		alpha = 0.02
+		comp_world_X_base = mX(np.linalg.inv(vec6d_to_se3(self.Robot.P6d.world_X_base)), 
+												vec6d_to_se3(self.Robot.P6c.world_X_base))
 
-		# print 'error: ', np.round(P6e_world_X_base[0:3].flatten(),3)
-		# print np.round(self.Robot.P6d.world_X_base.flatten(),3)
-		# print 'corr: ', np.round(kcorrect[0:3].flatten(),4)
-		# print np.round(self.Robot.P6d.world_X_base,3)
+		# print np.round(comp_world_X_base,3)
 		for j in range (0, 6):
 			# if (self.Robot.Gait.cs[j] == 0 and self.Robot.suspend == False):
 			if (self.Robot.Gait.cs[j] == 0):
@@ -568,12 +570,15 @@ class RobotController(CorinManager):
 					
 					## Foot position: either position or velocity
 					## Position-control
-					# comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + K_BP*P6e_world_X_base)
-					# if j >2:
-					self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
-					# self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
-					# else:
-					# 	self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
+					base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
+					
+					## Kolter2011 correction
+					self.Robot.Leg[j].XHd.base_X_foot = (1-alpha)*self.Robot.Leg[j].XHd.base_X_foot + \
+															alpha*mX(comp_world_X_base, self.Robot.Leg[j].XHd.base_X_foot)
+					# if j == 5:
+					# 	print '1 ', np.round(base_X_foot[:3,3].flatten(),4)
+					# 	print '2 ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3].flatten(),4)
+					# 	print '==========================================='
 				# 	## Velocity-control - Focchi2018 eq(3) TODO: check robustness
 				# 	vel_base_X_foot = -V6e_world_X_base[0:3].flatten() - np.cross(V6e_world_X_base[3:6].flatten(), 
 				# 						(self.Robot.Leg[j].XHd.base_X_foot[0:3,3:4] - self.Robot.P6d.world_X_base[0:3]).flatten())
@@ -588,7 +593,9 @@ class RobotController(CorinManager):
 				# 	print j, ' wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
 				# 	print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],3)
 					# print j, ' bXP: ', np.round(self.Robot.Leg[j].XHd.base_X_PEP[0:3,3],3)
-					# print j, ' cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],3)
+					# temp = mX(self.Robot.Leg[j].XHd.coxa_X_base, base_X_foot)
+					# print j, ' cXf 1: ', np.round(temp[0:3,3], 4)
+					# print j, ' cXf 2: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],3)
 					# print '========================================================='
 
 	def transfer_phase_update(self,delta_d=None):
