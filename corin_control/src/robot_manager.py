@@ -434,7 +434,7 @@ class CorinManager:
 			
 			## Data mapping - for convenience
 			x_cob, w_cob, mode, motion_prim = data
-			mode = 6 	# HARDCODED 
+			# mode = 6 	# HARDCODED 
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
 				print 'Going to standup'
@@ -497,17 +497,7 @@ class CorinManager:
 					qd, tXj_error = self.Robot.task_X_joint()
 					for i in range(0,10):
 						self.publish_topics(qd)
-					# print qd.xp
-					# print 'cXf: ', np.round(self.Robot.Leg[5].XHd.coxa_X_foot[:3,3],4)
-					# print 'bXf: ', np.round(mX(self.Robot.Leg[5].XHd.base_X_coxa, self.Robot.Leg[5].XHd.coxa_X_foot),4)
-					# print self.Robot.Leg[5].XHd.base_X_foot
-					# # print self.Robot.Leg[5].XHd.base_X_coxa
-					# print 'wXA: ',self.Robot.Leg[5].XHc.world_base_X_AEP[:3,3]
-					# # print mX(self.Robot.Leg[5].XHd.coxa_X_base, self.Robot.Leg[5].XHd.base_X_foot)
-					# # print self.Robot.Leg[5].XHd.base_X_foot[:3,3]
-					# # print self.Robot.Leg[5].XHd.base_X_NRP[:3,3]
-					# print mX(self.Robot.XHc.world_X_base[:3,:3], self.Robot.Leg[5].XHd.base_X_foot[:3,3])
-					# print mX(self.Robot.XHc.world_X_base[:3,:3], self.Robot.Leg[5].XHd.base_X_AEP[:3,3])
+					
 				else:
 					self.Robot.P6c.world_X_base = np.array([map_offset[0], map_offset[1], 
 															BODY_HEIGHT, 0., 0., 0.]).reshape(6,1)

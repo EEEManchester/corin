@@ -170,7 +170,7 @@ class RobotController(CorinManager):
 			self.Robot.update_world_desired_frames()
 
 			# print state_machine, tload, iload+1, self.Robot.Gait.cs
-			if state_machine == 'unload':
+			if state_machine == 'unload' and not self.Robot.support_mode:
 
 				if tload == 1:
 					self.Robot.Gait.support_mode()
@@ -196,7 +196,7 @@ class RobotController(CorinManager):
 					self.Robot.Gait.walk_mode()
 					print 'Motion ...'
 
-			elif state_machine == 'load':
+			elif state_machine == 'load' and not self.Robot.support_mode:
 
 				if tload == 1:
 					prev_phase = list(self.Robot.Gait.ps)
@@ -341,7 +341,7 @@ class RobotController(CorinManager):
 				
 				# print i, s_cnt, s_max
 				## Gait phase TIMEOUT
-				if ( s_cnt == s_max ):
+				if ( s_cnt == s_max  and not self.Robot.support_mode):
 					# Legs in contact, change phase
 					if all(self.Robot.cstate):
 						self.Robot.suspend = False
@@ -386,10 +386,14 @@ class RobotController(CorinManager):
 					self.Robot.Gait.support_mode()
 				tload += 1
 				if tload == hload+1:# and motion_plan:
-					state_machine = 'unload'
-					tload = 1
-					self.Robot.Gait.walk_mode()
-					print 'Unloading ...'
+					if self.Robot.support_mode:
+						state_machine = 'motion'
+						print 'Support mode: Motion'
+					else:
+						state_machine = 'unload'
+						tload = 1
+						self.Robot.Gait.walk_mode()
+						print 'Unloading ...'
 				self.support_phase_update(P6e_world_X_base, V6e_world_X_base)
 				i += 1
 
@@ -417,7 +421,7 @@ class RobotController(CorinManager):
 				state_machine == 'motion'
 				and self.Robot.Fault.status):
 				temp_gphase = map(lambda x: 0 if x is False else 1, self.Robot.Fault.fault_index )
-			print ' cXf: ', np.round(self.Robot.Leg[5].XHd.coxa_X_foot[0:3,3],3)
+			# print ' cXf: ', np.round(self.Robot.Leg[5].XHd.coxa_X_foot[0:3,3],3)
 			force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, temp_gphase, fmax_lim)
 			joint_torq = self.Robot.force_to_torque(force_dist)
 			# print i, np.round(force_dist[17],3), np.round(fmax_lim[-1],3)
@@ -553,7 +557,7 @@ class RobotController(CorinManager):
 		# kcorrect = np.array([xa_d,wa_d]).reshape((6,1))
 		
 		## Kolter2011 correction
-		alpha = 0.02
+		alpha = 0.05
 		comp_world_X_base = mX(np.linalg.inv(vec6d_to_se3(self.Robot.P6d.world_X_base)), 
 												vec6d_to_se3(self.Robot.P6c.world_X_base))
 
