@@ -67,6 +67,9 @@ class RobotState:
 
 		leg_stance = self.init_robot_stance("flat")
 		
+		self.cb_P6c = robot_transforms.Vector6D() 				# position: current state in Re6
+		self.cb_V6c = robot_transforms.Vector6D() 				# position: current state in Re6
+		self.cb_P6c.world_X_base[2] = BODY_HEIGHT
 		# self._initialise(leg_stance)
 
 	def init_robot_stance(self, stance_type="flat"):
@@ -163,6 +166,8 @@ class RobotState:
 			## that will be used in the main code, they are a row vector of 6x1 (linear, angular)
 			# self.P6c.world_X_base = hassan_state_estimation_output()
 			# self.V6c.world_X_base = hassan_state_estimation_output()
+			# self.P6c.world_X_base = self.cb_P6c.world_X_base.copy()
+			# self.P6c.world_X_base = self.cb_V6c.world_X_base.copy()
 			self.XHc.update_base(self.P6c.world_X_base)
 
 			# self.imu = None

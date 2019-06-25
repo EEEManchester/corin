@@ -95,6 +95,12 @@ class CorinManager:
 		idx = msg.name.index(ROBOT_NS)
 		rpy = np.array(euler_from_quaternion([msg.pose[idx].orientation.w, msg.pose[idx].orientation.x,
 												msg.pose[idx].orientation.y, msg.pose[idx].orientation.z], 'sxyz'))
+		# self.Robot.cb_P6c.world_X_base[0] = msg.pose[idx].position.x + self.Robot.P6c.world_X_base_offset.item(0)
+		# self.Robot.cb_P6c.world_X_base[1] = msg.pose[idx].position.y + self.Robot.P6c.world_X_base_offset.item(1)
+		# self.Robot.cb_P6c.world_X_base[2] = msg.pose[idx].position.z
+		# self.Robot.cb_P6c.world_X_base[3] = rpy.item(0)
+		# self.Robot.cb_P6c.world_X_base[4] = rpy.item(1)
+		# self.Robot.cb_P6c.world_X_base[5] = rpy.item(2)
 		self.Robot.P6c.world_X_base[0] = msg.pose[idx].position.x + self.Robot.P6c.world_X_base_offset.item(0)
 		self.Robot.P6c.world_X_base[1] = msg.pose[idx].position.y + self.Robot.P6c.world_X_base_offset.item(1)
 		self.Robot.P6c.world_X_base[2] = msg.pose[idx].position.z
@@ -102,12 +108,12 @@ class CorinManager:
 		self.Robot.P6c.world_X_base[4] = rpy.item(1)
 		self.Robot.P6c.world_X_base[5] = rpy.item(2)
 
-		self.Robot.V6c.world_X_base[0] = msg.twist[idx].linear.x
-		self.Robot.V6c.world_X_base[1] = msg.twist[idx].linear.y
-		self.Robot.V6c.world_X_base[2] = msg.twist[idx].linear.z
-		self.Robot.V6c.world_X_base[3] = msg.twist[idx].angular.x
-		self.Robot.V6c.world_X_base[4] = msg.twist[idx].angular.y
-		self.Robot.V6c.world_X_base[5] = msg.twist[idx].angular.z
+		self.Robot.cb_V6c.world_X_base[0] = msg.twist[idx].linear.x
+		self.Robot.cb_V6c.world_X_base[1] = msg.twist[idx].linear.y
+		self.Robot.cb_V6c.world_X_base[2] = msg.twist[idx].linear.z
+		self.Robot.cb_V6c.world_X_base[3] = msg.twist[idx].angular.x
+		self.Robot.cb_V6c.world_X_base[4] = msg.twist[idx].angular.y
+		self.Robot.cb_V6c.world_X_base[5] = msg.twist[idx].angular.z
 
 	def __initialise__(self):
 		""" Initialises robot and classes """
@@ -257,10 +263,11 @@ class CorinManager:
 		self.stability_pub_.publish(self.Robot.SM.min)
 
 		## Publish setpoints to logging topic
-		if (qlog is not None):
-			self.log_sp_pub_.publish(qlog)
-		if self.interface != 'rviz':
+		# if (qlog is not None):
+		# 	self.log_sp_pub_.publish(qlog)
+		if self.interface != 'rviz' and qlog is not None:
 			qlog_ac, qlog_er = self.set_log_actual()
+			self.log_sp_pub_.publish(qlog)
 			self.log_ac_pub_.publish(qlog_ac)
 			self.log_er_pub_.publish(qlog_er)
 			cstate_msg = ByteMultiArray(data = self.Robot.cstate)
@@ -434,7 +441,7 @@ class CorinManager:
 			
 			## Data mapping - for convenience
 			x_cob, w_cob, mode, motion_prim = data
-			# mode = 6 	# HARDCODED 
+			mode = 6 	# HARDCODED 
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
 				print 'Going to standup'

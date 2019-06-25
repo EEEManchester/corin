@@ -96,6 +96,8 @@ class RobotController(CorinManager):
 		self.P6e_prev_1 = np.zeros((6,1))
 		self.P6e_prev_2 = np.zeros((6,1))
 
+		self.P6e_integral = np.zeros((6,1))
+
 		## Cycle through trajectory points until complete
 		i = 1 		# skip first point since spline has zero initial differential conditions
 		while (i != path_length and not rospy.is_shutdown()):
@@ -103,20 +105,24 @@ class RobotController(CorinManager):
 			# start = time.time()
 			self.suspend_controller()
 			# print 'counting: ', i, len(base_path.X.t), s_cnt, self.Robot.suspend
-
+			
 			## Update robot state
 			self.Robot.update_state(control_mode=self.control_rate)
+			
 			#########################################################################
 			## overwrite - TC: use IMU data
-			self.Robot.XHc.world_X_base = self.Robot.XHd.world_X_base.copy()
-			self.Robot.XHc.base_X_world = self.Robot.XHd.base_X_world.copy()
+			# self.Robot.XHc.world_X_base = self.Robot.XHd.world_X_base.copy()
+			# self.Robot.XHc.base_X_world = self.Robot.XHd.base_X_world.copy()
 
 			if (self.interface == 'rviz' or self.control_loop == 'open'):
 				self.Robot.P6c.world_X_base = self.Robot.P6d.world_X_base.copy()
 
 			P6e_world_X_base = self.Robot.P6d.world_X_base - self.Robot.P6c.world_X_base
 			V6e_world_X_base = self.Robot.V6d.world_X_base - self.Robot.V6c.world_X_base
-			
+			self.P6e_integral += P6e_world_X_base*CTR_INTV
+			print 'err ', np.round(P6e_world_X_base.flatten(),3)
+			print 'int ', np.round(self.P6e_integral.flatten(),3)
+			print '======================================='
 			for j in range(0, self.Robot.active_legs):
 				self.Robot.Leg[j].P6_world_X_base = self.Robot.P6c.world_X_base.copy()
 
@@ -179,7 +185,7 @@ class RobotController(CorinManager):
 					for j in range(0,6):
 						# init_flim[j] = self.Robot.Leg[j].F6c.world_X_foot[2] if (self.Robot.Gait.ps[j] == 1) else F_MAX
 						init_flim[j] = self.Robot.Leg[j].get_normal_force('setpoint') if (self.Robot.Gait.ps[j] == 1) else F_MAX
-					print init_flim
+					# print init_flim
 					
 				# reduce max force for legs that will be in transfer phase
 				for j in range(0,6):
@@ -352,7 +358,7 @@ class RobotController(CorinManager):
 								self.Robot.Leg[j].XHd.world_X_foot = self.Robot.Leg[j].XHc.world_X_foot.copy()
 						state_machine = 'load'
 						print i, ' Phase Timeout, Loading ...'
-						print fmax_lim, gphase
+						# print fmax_lim, gphase
 						# raw_input('next')
 						s_cnt = 1
 					# Extend leg swing motion, suspend base
@@ -548,7 +554,9 @@ class RobotController(CorinManager):
 		# full body correction
 		kcorrect[3:6] = a*P6e_world_X_base[3:6] + b*self.P6e_prev_1[3:6] + c*self.P6e_prev_2[3:6]
 
-		comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + kcorrect)
+		KI_P_BASE = 5.0
+		KI_W_BASE = 5.0
+		comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + mX(np.diag([KI_P_BASE,KI_P_BASE,KI_P_BASE,KI_W_BASE,KI_W_BASE,KI_W_BASE]),self.P6e_integral))
 		comp_base_X_world = np.linalg.inv(comp_world_X_base)
 		
 		# Virtual Base controller
@@ -557,11 +565,15 @@ class RobotController(CorinManager):
 		# kcorrect = np.array([xa_d,wa_d]).reshape((6,1))
 		
 		## Kolter2011 correction
-		alpha = 0.05
-		comp_world_X_base = mX(np.linalg.inv(vec6d_to_se3(self.Robot.P6d.world_X_base)), 
-												vec6d_to_se3(self.Robot.P6c.world_X_base))
+		# alpha = 0.1
+		# comp_world_X_base = mX(np.linalg.inv(vec6d_to_se3(self.Robot.P6d.world_X_base)), 
+		# 										self.Robot.XHc.world_X_base)
 
-		# print np.round(comp_world_X_base,3)
+		# comp_world_X_base = mX(np.linalg.inv(v3_X_m(self.Robot.P6d.world_X_base[0:3])), v3_X_m(self.Robot.P6c.world_X_base[0:3]))
+		# print '1 ', np.round(vec6d_to_se3(self.Robot.P6d.world_X_base),4)
+		# print '2 ', np.round(self.Robot.XHc.world_X_base,4)
+		# print '=========================================='
+		
 		for j in range (0, 6):
 			# if (self.Robot.Gait.cs[j] == 0 and self.Robot.suspend == False):
 			if (self.Robot.Gait.cs[j] == 0):
@@ -574,13 +586,14 @@ class RobotController(CorinManager):
 					
 					## Foot position: either position or velocity
 					## Position-control
-					base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
+					self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 					
 					## Kolter2011 correction
-					self.Robot.Leg[j].XHd.base_X_foot = (1-alpha)*self.Robot.Leg[j].XHd.base_X_foot + \
-															alpha*mX(comp_world_X_base, self.Robot.Leg[j].XHd.base_X_foot)
+					# self.Robot.Leg[j].XHd.base_X_foot = (1-alpha)*self.Robot.Leg[j].XHd.base_X_foot + \
+					# 										alpha*mX(comp_world_X_base, self.Robot.Leg[j].XHd.base_X_foot)
 					# if j == 5:
-					# 	print '1 ', np.round(base_X_foot[:3,3].flatten(),4)
+					# 	print np.round(self.Robot.P6c.world_X_base.flatten(),4)
+					# # 	print '1 ', np.round(base_X_foot[:3,3].flatten(),4)
 					# 	print '2 ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3].flatten(),4)
 					# 	print '==========================================='
 				# 	## Velocity-control - Focchi2018 eq(3) TODO: check robustness
