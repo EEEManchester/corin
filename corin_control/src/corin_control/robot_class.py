@@ -146,6 +146,8 @@ class RobotState:
 			bstate = self.Leg[j].update_joint_state(wXb, qpc[offset+j*3:offset+(j*3)+3], reset, self.Gait.step_stroke)
 			self.cstate[j] = self.Leg[j].update_force_state(self.cforce[j*3:(j*3)+3])
 
+			self.Leg[j].P6_world_X_base = self.P6c.world_X_base.copy()
+
 			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
 				# print 'Bound exceed ',j
 				# self.suspend = True
@@ -327,43 +329,29 @@ class RobotState:
 			return None
 
 	def apply_impedance_control(self, force_dist):
+		""" Applies impedance control to track force for each leg """
 
 		for j in range(0,6):
 			self.Leg[j].apply_impedance_controller(force_dist[j*3:j*3+3])
 
 	def apply_base_impedance(self, desired_force):
-	
+		""" Applies base impedance control to track leg force """
+
+		offset = np.zeros(3)
+
 		if self.Fault.status:
 			for j in range(0,6):
 				if self.Fault.fault_index[j] == True:
 					world_df = (self.Leg[j].F6c.world_X_foot[0:3] - desired_force[j*3:j*3+3]).flatten()
 
-			offset = np.zeros(3)
 			offset[0] = self.impedance_controller_x.evaluate(world_df[0])
 			offset[1] = self.impedance_controller_y.evaluate(world_df[1])
 			offset[2] = self.impedance_controller_z.evaluate(world_df[2])
 
-		# Transform to leg frame
-		# leg_df = mX(self.Leg[4].XHd.coxa_X_world[:3,:3], world_df)
-		# offset_z = self.impedance_controller_z.evaluate(leg_df[2])
-
-		# print 'base : ', np.round(offset,4)	
 		return offset
-		# self.XHd.coxa_X_foot[0:3,3] += np.array([offset_x, offset_y, offset_z])
-
-	# def get_contact_state(self):
-
-	# 	cstate = [0]*6
-	# 	for j in range(6):
-	# 		cstate[j] = self.Leg[j].cstate
-	# 	return cstate
 
 	def check_contact(self):
-
-		# cstate = [0]*6
-		# for j in range(6):
-		# 	cstate[j] = self.Leg[j].cstate
-		# contact_early = cstate and self.Gait.cs
+		""" Checks for leg contact """
 
 		transfer_count = 0
 		contact_index  = [0]*6					# index for legs not in contact

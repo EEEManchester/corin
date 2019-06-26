@@ -664,11 +664,12 @@ class GridMap:
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-gmap = GridMap('flat')
-try:
-	print gmap.get_cell('norm', np.array([0.08, 0.641, 0.0]), 0)
-except:
-	print error
+# gmap = GridMap('chimney_straight')
+# print gmap.get_index('norm', (10,22))
+# try:
+# 	print gmap.get_cell('norm', np.array([0.08, 0.641, 0.0]), 0)
+# except:
+# 	print error
 # print gmap.get_cell('height', np.array([0.747,0.168,0]), 3)
 # print gmap.get_cell('height', np.array([0.72,0.06,0]), 3)
 # gmap.square_spiral_search((0.72,0.66), (3,3), 3)

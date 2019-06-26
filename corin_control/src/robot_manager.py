@@ -434,8 +434,7 @@ class CorinManager:
 
 		## check action to take - rosparam server
 		data = self.Action.action_to_take()
-		# data = 1
-
+	
 		if (data is not None):
 			self.Visualizer.clear_visualisation()
 			
