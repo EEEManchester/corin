@@ -19,9 +19,9 @@ class RobotController(CorinManager):
 		CorinManager.__init__(self, initialise)
 		
 		# Enable/disable controllers
-		self.ctrl_base_tracking  = True 	# base tracking controller
+		self.ctrl_base_tracking  = False 	# base tracking controller
 		self.ctrl_base_impedance = False 	# base impedance controller - fault
-		self.ctrl_leg_impedance  = False 	# leg impedance controller
+		self.ctrl_leg_impedance  = True 	# leg impedance controller
 
 	def main_controller(self, motion_plan=None):
 
@@ -243,7 +243,7 @@ class RobotController(CorinManager):
 					fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
 					gphase = list(self.Robot.Gait.cs)
 					for j in range(6):
-						self.Robot.Leg[j].Fmax = F_MAX if gphase[j] == 0 else F_THRES
+						self.Robot.Leg[j].Fmax = F_MAX if gphase[j] == 0 else FORCE_THRES
 
 				elif (s_cnt > s_max/2):
 					# Check if transfer has made contact
@@ -251,7 +251,7 @@ class RobotController(CorinManager):
 					cindex = [z for z, y in enumerate(cearly) if y == 1]
 					# Change legs in transfer phase with contact to support
 					if cindex:
-						print 'cindex ', cindex, self.Robot.cstate
+						print i, ' cindex ', cindex, self.Robot.cstate
 						for j in cindex:
 							self.Robot.Gait.cs[j] = 0
 							self.Robot.Leg[j].transfer_phase_change = False
@@ -270,7 +270,8 @@ class RobotController(CorinManager):
 						for j in range(6):
 							if self.Robot.Gait.cs[j] == 0:
 								fmax_lim.append(self.Robot.Leg[j].Fmax)
-						# print 'findex ', findex, self.Robot.Gait.cs, fmax_lim
+						gphase = list(self.Robot.Gait.cs)
+						print i, 'findex ', findex, gphase, fmax_lim
 
 				## Generate trajectory for legs in transfer phase
 				for j in range (0, self.Robot.active_legs):
@@ -490,8 +491,8 @@ class RobotController(CorinManager):
 		# Integral controller
 		KI_P_BASE = 5.0
 		KI_W_BASE = 5.0
-		# comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + \
-		# 					mX(np.diag([KI_P_BASE,KI_P_BASE,KI_P_BASE,KI_W_BASE,KI_W_BASE,KI_W_BASE]),self.P6e_integral))
+		comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + \
+							mX(np.diag([KI_P_BASE,KI_P_BASE,KI_P_BASE,KI_W_BASE,KI_W_BASE,KI_W_BASE]),self.P6e_integral))
 		comp_base_X_world = np.linalg.inv(comp_world_X_base)
 		
 		# Virtual Base controller

@@ -60,9 +60,9 @@ class LegClass:
 		self.XH_world_X_base = np.eye(4)
 		self.P6_world_X_base = np.zeros((6,1))
 
-		self.threshold = 0 	# Number of times threshold has been crossed for each leg
 		self.snorm = np.array([0., 0., 1.]) 	# leg surface normal in world frame
-		self.Fmax = F_MAX
+		self.c_threshold = 0 	# Number of times threshold has been crossed for each leg
+		self.Fmax = F_MAX 	# Maximum contact force
 	## Update functions
 	def update_joint_state(self, P6_world_X_base, jointState, resetState, step_stroke):
 		""" Update current joint state of legs and forward transformations 			"""
@@ -79,10 +79,7 @@ class LegClass:
 		self.XHc.update_base_X_foot(q_compensated)
 
 		self.XHc.update_world_base_X_foot(P6_world_X_base, q_compensated)
-		# if self.number == 1:
-		# 	print 'cXf: ', np.round(self.XHc.coxa_X_foot[:3,3].flatten() ,3)
-		# 	print self.Joint.qpc
-		# 	print P6_world_X_base.flatten()
+		
 		## Check work envelope
 		bound_exceed = self.check_boundary_limit(self.XHc.world_base_X_foot, self.XHc.world_base_X_NRP, step_stroke)
 
@@ -118,28 +115,25 @@ class LegClass:
 
 	def check_contact_state(self):
 		# Hysteresis based contact detection
-		th = self.threshold
-		lim = 8
+		th = self.c_threshold
+		
 		force = np.linalg.norm(self.F6c.world_X_foot[:3])
 
-		if th > lim: # We are in the "contact state"
-			if force < F_THRES:
+		if th > CONTACT_COUNT: # We are in the "contact state"
+			if force < FORCE_THRES:
 				th = 0
 		else: # Contact not yet established
-			if force > F_THRES:
+			if force > FORCE_THRES:
 				th += 1
 			else:
 				th = 0
 
-		self.threshold = th
+		self.c_threshold = th
 
-		if th > lim:
+		if th > CONTACT_COUNT:
 			self.cstate = True
 		else:
 			self.cstate = False
-
-		# if self.number == 5:
-		# 	print 'cstate ', self.cstate
 
 	def get_normal_force(self,which):
 

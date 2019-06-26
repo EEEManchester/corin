@@ -131,7 +131,7 @@ class PathGenerator():
 		# print type(x_out), len(x_out)
 		return Trajectory6D((x_out,w_out))
 
-	def interpolate_leg_path(self, sp, ep, snorm, snorm2, phase=1, reflex=False, ctime=2.0, type='parabolic'):
+	def interpolate_leg_path(self, sp, ep, sn1, sn2, phase=1, reflex=False, ctime=2.0, type='parabolic'):
 		""" Generate via points for leg trajectory (Re^3) 				"""
 		""" Input: 	1) sp -> starting position (Re^3)
 					2) ep -> end position (Re^3)
@@ -153,12 +153,12 @@ class PathGenerator():
 
 			# vector from origin to travel path midpoint
 			if (type=='parabolic'):
-				pdiv = np.array([0.1, 0.5, 1.0]) 		# point division
-				hdiv = np.array([0.6*sh, sh, 0.6*sh]) 		# height division
-				tdiv = np.array([0., 0.24*ctime, 0.5*ctime, 0.76*ctime, ctime ])
-				# pdiv = np.array([0.125, 0.5, 0.875]) 		# point division
+				# pdiv = np.array([0.1, 0.5, 0.9]) 		# point division
 				# hdiv = np.array([0.6*sh, sh, 0.6*sh]) 		# height division
 				# tdiv = np.array([0., 0.24*ctime, 0.5*ctime, 0.76*ctime, ctime ])
+				pdiv = np.array([0.125, 0.5, 0.875]) 		# point division
+				hdiv = np.array([0.6*sh, sh, 0.6*sh]) 		# height division
+				tdiv = np.array([0., 0.24*ctime, 0.5*ctime, 0.76*ctime, ctime ])
 			elif (type == 'trapezoidal'):
 				pdiv = np.array([0., 0.12, 0.5, 0.88, 1.])
 				hdiv = np.array([0.9*sh, sh, sh, sh, 0.9*sh])
@@ -175,7 +175,7 @@ class PathGenerator():
 					v3 = sp + (ep - sp)*pdiv[i]
 
 				# Compute the height clearance in surface normal direction
-				h3 = snorm*hdiv[i]
+				h3 = hdiv[i]*(sn1+sn2)/2
 
 				# Compute the via point with height clearance and stack into array
 				vn  = v3 + h3
@@ -272,7 +272,7 @@ class PathGenerator():
 			Output:	List of trajectory (position, velocity, acceleration)	"""
 
 		SpGen = Pspline.SplineGenerator()
-		# SpGen = Bspline.SplineGenerator()
+		SpGen = Bspline.SplineGenerator()
 		x_out = SpGen.generate_spline(cp, td, tn)
 
 		return x_out
@@ -282,27 +282,28 @@ class PathGenerator():
 ## ================================================================================================ ##
 ## Test leg path generation ##
 # Ground walking:
-# sn1 = np.array([0.,0.,1.])
-# sn2 = np.array([0.,0.,1.])
-# sp = np.array([0.0, -0.30, -0.1])
-# ep = np.array([0.1, -0.30, -0.1 ])
-# Ground to wall
 sn1 = np.array([0.,0.,1.])
-sn2 = np.array([0.,-0.5,0.5])
-sp = np.array([0.0, 0.30, -0.1])
-ep = np.array([0.0, 0.35,  0.1 ])
+sn2 = np.array([0.,0.,1.])
+sp = np.array([0.0, -0.30, -0.1])
+ep = np.array([0.1, -0.30, -0.1 ])
+# Ground to wall
+# sn1 = np.array([0.,0.,1.])
+# sn2 = np.array([0.,-0.5,0.5])
+# sp = np.array([0.0, 0.30, -0.1])
+# ep = np.array([0.0, 0.35,  0.1 ])
 
 phase = 1
 ### Test scripts
 planner = PathGenerator()
-# cxp, tdiv = planner.interpolate_leg_path(sp, ep, (sn1+sn2)/2, phase, False, GAIT_TPHASE)
+cxp, tdiv = planner.interpolate_leg_path(sp, ep, sn1, sn2, phase, False, GAIT_TPHASE)
 # cxp, tdiv = planner.new_interpolate_leg_path(sp, ep, sn1, sn2, phase, False, GAIT_TPHASE)
 # print cxp
-# data = planner.generate_leg_path(cxp, tdiv, CTR_INTV)
-# path = TrajectoryPoints(data)
+data = planner.generate_leg_path(cxp, tdiv, CTR_INTV)
+path = TrajectoryPoints(data)
 # Plot.plot_2d(path.xp[:,1], path.xp[:,2])
 # Plot.plot_2d(data[0],data[1])
 # Plot.plot_3d(path.xp[:,0], path.xp[:,1], path.xp[:,2])
+# Plot.plot_2d(path.t, path.xv)
 # print len(data[0])
 
 
