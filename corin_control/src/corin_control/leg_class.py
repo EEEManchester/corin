@@ -62,12 +62,19 @@ class LegClass:
 
 		self.snorm = np.array([0., 0., 1.]) 	# leg surface normal in world frame
 		self.c_threshold = 0 	# Number of times threshold has been crossed for each leg
-		self.Fmax = F_MAX 	# Maximum contact force
+		self.Fmax = F_MAX 		# Maximum contact force
+
+		self.zk_prev = BODY_HEIGHT
+		self.w_prev  = 0.
+		self.tdp_offset = np.array([0.,0.,0.])
+
 	## Update functions
 	def update_joint_state(self, P6_world_X_base, jointState, resetState, step_stroke):
 		""" Update current joint state of legs and forward transformations 			"""
 		""" Input: 	1) jointState -> joint angles
 					2) resetState -> flag to set desired state as current state 	"""
+
+		self.zk_prev = self.XHc.base_X_foot[2,3]
 
 		self.Joint.qpc = np.array([jointState[0],jointState[1],jointState[2]])
 
@@ -134,6 +141,39 @@ class LegClass:
 			self.cstate = True
 		else:
 			self.cstate = False
+
+	def time_domain_passivity(self):
+		""" Minimising contact force (Kim2007) """
+
+		ZPC_MAX = 0.005
+		Fz_now = self.F6c.base_X_foot[2]
+		Pz_now = self.XHc.base_X_foot[2,3]
+		# Get next position from spline
+		try:
+			P2 = self.xspline.xp[self.spline_counter+1]
+		except:
+			P2 = self.xspline.xp[-1]
+
+		d_z1 = Pz_now - self.zk_prev
+		d_z2 = P2[2] - Pz_now
+
+		# Passivity observer - energy
+		w_now  = self.w_prev + Fz_now*d_z1
+		w_next = w_now + Fz_now*d_z2
+
+		# Passivity controller - change in position
+		if w_next < 0:
+			d_zpc = -w_next/Fz_now if -w_next/Fz_now < ZPC_MAX else ZPC_MAX
+		else:
+			d_zpc = 0.
+		# print np.round(self.zk_prev,4)
+		# print np.round(Pz_now,4)
+		# print np.round(P2[2],4)
+		# print 'Energy:  ', np.round(w_now,4), np.round(w_next,4)
+		# print 'Deflect: ', np.round(d_zpc,4)
+		# print 'Fz     : ', np.round(Fz_now,4)
+		
+		self.tdp_offset = np.array([0.,0.,d_zpc])
 
 	def get_normal_force(self,which):
 
@@ -346,6 +386,10 @@ class LegClass:
 		self.spline_counter += 1
 		if (self.spline_counter == self.spline_length):
 			self.feedback_state = 2
+		# print 'ori: ', np.round(self.XHd.coxa_X_foot[:3,3].flatten(),4)
+		# self.XHd.coxa_X_foot[:3,3] += self.tdp_offset
+		# print 'new: ', np.round(self.XHd.coxa_X_foot[:3,3].flatten(),4)
+		# print '=================================='
 		return True
 
 	def apply_impedance_controller(self, desired_force):

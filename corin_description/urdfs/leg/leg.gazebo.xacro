@@ -77,20 +77,20 @@
 			<material>Gazebo/White</material>
 		</gazebo>
 		<gazebo reference="${name}_foot">
-			<kp>1000000.0</kp>
-			<kd>250.0</kd>
-			<mu1>10.5</mu1>
-			<mu2>10.5</mu2>
+			<kp>100000.0</kp>
+			<kd>0.1</kd>
+			<mu1>1.0</mu1>
+			<mu2>1.0</mu2>
 			<!-- <fdir1>1 0 0</fdir1> -->
-			<maxVel>0.001</maxVel>
-			<minDepth>0.00</minDepth>
+			<maxVel>0.00</maxVel> 		<!-- contact correction velocity truncation -->
+			<minDepth>0.001</minDepth> 	<!-- penetration between objects -->
 			<material>Gazebo/Black</material>
 		</gazebo>
 
 	  	<gazebo reference="${name}_foot">
 	    	<!-- contact sensor -->
 	    	<sensor type="contact" name="foot_contact">
-	      	<update_rate>100.0</update_rate>
+	      	<update_rate>200.0</update_rate>
 	      	<always_on>1</always_on>
 	      	<contact>
 	        	<collision>${name}_lowerleg_fixed_joint_lump__${name}_foot_collision_1</collision>

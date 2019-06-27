@@ -57,7 +57,7 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
 		self.control_loop = "close" 	# run controller in open or closed loop
 
@@ -488,7 +488,20 @@ class CorinManager:
 			
 				self.GridMap = GridMap('flat')
 
-				map_offset = (0.33, 0.39)
+				if motion == 'forward':
+					map_offset = (0.33, 0.39)
+					d_travel = np.array([0.2,0.,0.,0.,0.,0.]).reshape(6,1)
+				elif motion == 'transition':
+					map_offset = (0.33, 0.39)
+					d_travel = np.array([0.,0.21,0.,0.,0.,0.]).reshape(6,1)
+				elif motion == 'chimney':
+					map_offset = (0.45, 0.36)
+					d_travel = np.array([0.15,0.,0.,0.,0.,0.]).reshape(6,1)
+					base_height = 0.3
+				else:
+					map_offset = (0.33, 0.39)
+					d_travel = np.zeros(6).reshape(6,1)
+
 				# self.Robot.Fault.status = False
 				if self.Robot.Fault.status:
 					xb = self.Robot.Fault.get_fault_pose().flatten()
@@ -500,9 +513,6 @@ class CorinManager:
 					self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 					
 					self.Robot.init_fault_stance()
-					qd, tXj_error = self.Robot.task_X_joint()
-					for i in range(0,10):
-						self.publish_topics(qd)
 					
 				else:
 					self.Robot.P6c.world_X_base = np.array([map_offset[0], map_offset[1], 
@@ -512,23 +522,45 @@ class CorinManager:
 					self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
 					self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 					self.Robot.init_robot_stance()
+
+				if self.interface != "robotis":
 					qd, tXj_error = self.Robot.task_X_joint()
 					for i in range(0,10):
 						self.publish_topics(qd)
-					# print qd.xp
 				
-				if motion == 'forward':
-					ps = self.Robot.P6c.world_X_base
-					pf = self.Robot.P6c.world_X_base + np.array([0.2, 0.,0.,0.,0.,0.]).reshape(6,1)
-				
+				ps = self.Robot.P6c.world_X_base
+				pf = self.Robot.P6c.world_X_base + d_travel
+				# Use Cheah2019 grid planning service if available 
+				if (self.grid_serv_.available):
+					if (self.GridMap.get_index_exists(ps[0:2]) and self.GridMap.get_index_exists(pf[0:2])):
+						start = Pose()
+						goal  = Pose()
+						start.position.x = ps[0]#*self.GridMap.resolution
+						start.position.y = ps[1]#*self.GridMap.resolution
+						goal.position.x  = pf[0]#*self.GridMap.resolution
+						goal.position.y  = pf[1]#*self.GridMap.resolution
+						print start.position.x, start.position.y
+						try:
+							print 'Requesting Planning service'
+							serial_plan = self.grid_serv_.call(start, goal, String())
+							motion_plan = planpath_to_motionplan(serial_plan)
+						except:
+							motion_plan = None
+							print 'Planning Service Failed!'
+
+					else:
+						print "Start or End goal out of bounds!"
+				# Use reactive planning
+				else:
 					motion_plan = self.Planner.motion_planning(ps, pf, self.Robot)
 
-					if motion_plan is not None:
-						
-						if (self.main_controller(motion_plan)):
-							self.Robot.alternate_phase()
+				if motion_plan is not None:
+					if (self.main_controller(motion_plan)):
+						self.Robot.alternate_phase()
 					else:
 						print 'Planning Failed'	
+				else:
+					print 'Error: No motion plan! Exiting....'
 
 			elif (mode == 4):
 				""" Plan path & execute """
@@ -548,32 +580,18 @@ class CorinManager:
 					ps = (15,12); pf = (20,12)
 					base_height = 0.3
 
-				if self.Robot.Fault.status:
-					xb = self.Robot.Fault.get_fault_pose().flatten()
-					base_height = xb[2]
-					base_roll	= xb[3]
-					base_pitch	= xb[4]
-
 				## Set robot to starting position in default configuration
 				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,
 														ps[1]*self.GridMap.resolution,
 														base_height,
-														base_roll,
-														base_pitch, 0.]).reshape(6,1)
+														0., 0., 0.]).reshape(6,1)
 				self.Robot.P6c.world_X_base_offset = np.array([ps[0]*self.GridMap.resolution,
 																ps[1]*self.GridMap.resolution,
 																0.,0.,0.,0.]).reshape(6,1)
 				self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
 				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
-				print 'P6: ', np.round(self.Robot.P6d.world_X_base.flatten(),3)
-
-				if self.Robot.Fault.status:
-					self.Robot.init_fault_stance()
-					qd, tXj_error = self.Robot.task_X_joint()
-					for i in range(0,5):
-						self.publish_topics(qd)
-				else:				
-					self.Robot.init_robot_stance()
+				# print 'P6: ', np.round(self.Robot.P6d.world_X_base.flatten(),3)
+				self.Robot.init_robot_stance()
 
 				if (self.grid_serv_.available):
 					if (self.GridMap.get_index_exists(ps) and self.GridMap.get_index_exists(pf)):

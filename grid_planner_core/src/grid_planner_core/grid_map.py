@@ -221,6 +221,12 @@ class GridMap:
 	def get_index_exists(self, p):
 		""" Checks if cell index exists or out of bounds """
 		
+		# Check if type is array or tuple - array will be expressed in meters, convert to tuple
+		if isinstance(p, np.ndarray):
+			p = self.getIndex(tuple(map(float, p[0:2])),0)
+		elif isinstance(p, tuple):
+			pass
+
 		try:
 			self.Map.nodes[p]
 			return True
@@ -664,7 +670,14 @@ class GridMap:
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-# gmap = GridMap('chimney_straight')
+map_offset = (0.33, 0.39)
+ps = np.array([map_offset[0], map_offset[1], 0.1, 0., 0., 0.]).reshape(6,1)
+
+# gmap = GridMap('flat')
+# p_tuple = gmap.getIndex(ps[0:2])
+
+# print gmap.get_index_exists(gmap.getIndex(tuple(map(float, ps[0:2])),0))
+
 # print gmap.get_index('norm', (10,22))
 # try:
 # 	print gmap.get_cell('norm', np.array([0.08, 0.641, 0.0]), 0)

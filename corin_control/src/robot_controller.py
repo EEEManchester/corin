@@ -183,6 +183,7 @@ class RobotController(CorinManager):
 			if state_machine == 'unload' and not self.Robot.support_mode:
 
 				if tload == 1:
+					print 'State Machine: Unloading'
 					self.Robot.Gait.support_mode()
 					gphase = [0]*6 		# all legs in support phase at start of unloading
 					fmax_lim = [0]*6	# max. force array
@@ -204,11 +205,11 @@ class RobotController(CorinManager):
 					s_cnt = 1
 					state_machine = 'motion'
 					self.Robot.Gait.walk_mode()
-					print 'Motion ...'
-
+					
 			elif state_machine == 'load' and not self.Robot.support_mode:
 
 				if tload == 1:
+					print 'State Machine: Loading'
 					prev_phase = list(self.Robot.Gait.ps)
 					self.Robot.Gait.support_mode()
 					gphase = [0]*6 		# all legs in support phase at start of unloading
@@ -221,24 +222,22 @@ class RobotController(CorinManager):
 					# gait phase updated prior to this state, so use previous gait phase
 					fmax_lim[j] = fmax + self.Robot.Leg[j].Fmax if (prev_phase[j] == 1) else F_MAX	
 				tload += 1
-				# print prev_phase, fmax_lim
 				self.support_phase_update(P6e_world_X_base, V6e_world_X_base)
 
 				if tload == iload+1:
 					tload = 1
 					state_machine = 'unload'
-					print 'Unloading ...'
 					try:
 						self.Robot.alternate_phase(next(gait_stack))
 					except:
 						self.Robot.alternate_phase()
-					# raw_input('cont')
 					self.Robot.Gait.walk_mode()
 				
 			elif state_machine ==  'motion':
 				
 				## Halfway through TIMEOUT - check swing leg contact state 
 				if s_cnt == 1:
+					print 'State Machine: Motion'
 					## Force and gait phase array for Force Distribution
 					fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
 					gphase = list(self.Robot.Gait.cs)
@@ -258,7 +257,7 @@ class RobotController(CorinManager):
 							self.Robot.Leg[j].XHc.update_world_X_foot(self.Robot.XHc.world_X_base)
 							self.Robot.Leg[j].XHd.world_X_foot = self.Robot.Leg[j].XHc.world_X_foot.copy()
 						
-					## TODO: manipulate F values here
+					# Interpolate Fmax for legs in contact phase
 					fearly = map(lambda x,y: xor(bool(x), bool(y)), gphase, self.Robot.Gait.cs)
 					findex = [z for z, y in enumerate(fearly) if y == True]
 					# print 'findex ', findex, self.Robot.Gait.cs, gphase
@@ -272,6 +271,10 @@ class RobotController(CorinManager):
 								fmax_lim.append(self.Robot.Leg[j].Fmax)
 						gphase = list(self.Robot.Gait.cs)
 						print i, 'findex ', findex, gphase, fmax_lim
+
+					# Start passivity check
+					if self.Robot.Gait.cs[5] == 1:
+						self.Robot.Leg[5].time_domain_passivity()
 
 				## Generate trajectory for legs in transfer phase
 				for j in range (0, self.Robot.active_legs):
@@ -347,7 +350,7 @@ class RobotController(CorinManager):
 				## Gait phase TIMEOUT
 				if ( s_cnt == s_max  and not self.Robot.support_mode):
 					# Legs in contact, change phase
-					if all(self.Robot.cstate):
+					if all(self.Robot.cstate) or self.interface == "rviz":
 						self.Robot.suspend = False
 						for j in range(0,6):
 							if (self.Robot.Gait.cs[j] == 1):
@@ -386,9 +389,11 @@ class RobotController(CorinManager):
 				fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
 
 				if tload == 1:
-					print 'Holding ...'
+					print 'State Machine: Holding'
 					self.Robot.Gait.support_mode()
+				
 				tload += 1
+
 				if tload == hload+1:# and motion_plan:
 					if self.Robot.support_mode:
 						state_machine = 'motion'
@@ -397,7 +402,6 @@ class RobotController(CorinManager):
 						state_machine = 'unload'
 						tload = 1
 						self.Robot.Gait.walk_mode()
-						print 'Unloading ...'
 				self.support_phase_update(P6e_world_X_base, V6e_world_X_base)
 				i += 1
 
@@ -489,10 +493,8 @@ class RobotController(CorinManager):
 		comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + kcorrect)
 		
 		# Integral controller
-		KI_P_BASE = 5.0
-		KI_W_BASE = 5.0
-		comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + \
-							mX(np.diag([KI_P_BASE,KI_P_BASE,KI_P_BASE,KI_W_BASE,KI_W_BASE,KI_W_BASE]),self.P6e_integral))
+		comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + KI_P_BASE*self.P6e_integral)
+							# mX(np.diag([KI_P_BASE,KI_P_BASE,KI_P_BASE,KI_W_BASE,KI_W_BASE,KI_W_BASE]),self.P6e_integral))
 		comp_base_X_world = np.linalg.inv(comp_world_X_base)
 		
 		# Virtual Base controller

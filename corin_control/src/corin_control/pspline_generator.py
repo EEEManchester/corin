@@ -283,16 +283,20 @@ class SplineGenerator:
 		
 		## Define variables ##
 		size = len(t)
-		xnew = np.zeros((4,3))
-
-		xnew[0]  = x[0]
-		xnew[-1] = x[-1]
+		
 
 		if (size == 2):
+			tnew = [0]*4
+			xnew = np.zeros((4,3))
+			xnew[0]  = x[0];	tnew[0]  = t[0]
+			xnew[-1] = x[1];	tnew[-1] = t[1]
+
 			for s in range(1,3):
+				tnew[s] = t[0] + (t[1]-t[0])*s/3.
 				for i in range(0,3):
 					xd = (x[-1][i] - x[0][i])/3
 					xnew[s][i] = x[0][i] + xd*s
+
 		elif (size == 3):
 			tnew = [0]*5
 			xnew = np.zeros((5,3))
@@ -313,9 +317,7 @@ class SplineGenerator:
 
 		if (t is None):
 			tnew = self.compute_time_intervals(xnew)
-		# else:
-		# 	tnew = t
-
+		
 		return xnew, tnew
 		# return xnew, self.compute_time_intervals(xnew)
 
@@ -426,16 +428,16 @@ spliner = SplineGenerator()
 # spoints = spliner.spline_3D(w_cob,t_cob)
 
 # x_out = spliner.generate_leg_spline(sp,ep,snorm,phase)
-t_com = np.array([0.0,0.5,1.0]) 
+t_com = np.array([0.0,0.5]) 
 x_com = np.array([0.,0.,0.])
 x_com = np.vstack((x_com,np.array([0.,0.,0.1])))
-x_com = np.vstack((x_com,np.array([0.,0.,0.])))
+# x_com = np.vstack((x_com,np.array([0.,0.,0.])))
 # x_com = np.vstack((x_com,np.array([2.,2.,2.])))
 # x_com = np.vstack((x_com,np.array([3.,3.,3.])))
 # x_com = np.vstack((x_com,np.array([4.,4.,4.])))
 # x_com = np.vstack((x_com,np.array([4.,4.,4.])))
 
-# ct,cp,cv,ca = spliner.generate_spline(x_com,t_com)
+ct,cp,cv,ca = spliner.generate_spline(x_com,t_com)
 # print ct
 # print type(ct), type(cp)
 # Plot.plot_2d(ct, cp)

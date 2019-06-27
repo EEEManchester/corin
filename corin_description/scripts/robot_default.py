@@ -113,7 +113,7 @@ if __name__ == "__main__":
 	# Default pose
 	pose_x		= 0.0
 	pose_y		= 0.
-	pose_z		= 0.3
+	pose_z		= 0.15
 	pose_roll 	= 0.
 	pose_pitch 	= 0.
 	pose_yaw 	= 0.
