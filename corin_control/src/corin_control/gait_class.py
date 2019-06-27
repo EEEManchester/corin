@@ -176,9 +176,6 @@ leg = 1
 for i in range(0, len(gait.phases)):
 	gait.change_phase()
 
-from operator import xor
-a = 1
-b = 0
 # print xor(bool(a), bool(b))
 # 	a = None
 # b = np.array([2,3,4])

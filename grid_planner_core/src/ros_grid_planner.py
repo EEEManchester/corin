@@ -232,13 +232,19 @@ if __name__ == "__main__":
 			mapname = 'wall_transition'
 		elif sys.argv[1] == 'chimney_straight':
 			mapname = 'chimney_straight'
-		# cornering
+		# Full Planning
+		elif sys.argv[1] == 'taros':
+			mapname = 'wall_hole_demo'
+		# Cornering
 		elif sys.argv[1] == 'chimney_corner':
 			mapname = 'chimney_corner'
 		elif sys.argv[1] == 'wall_concave_corner':
 			mapname = 'wall_concave_corner'
 		elif sys.argv[1] == 'wall_convex_corner':
 			mapname = 'wall_convex_corner'
+		else:
+			print 'No match found, setting to default'
+			mapname = "flat"
 
 	RosGridMap = GridMapRos(mapname)
 	

@@ -1092,8 +1092,7 @@ class PathPlanner:
 
 						self.Robot.Leg[j].XHd.world_X_foot[:3,3] = self.find_valid_foothold(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + 
 																							self.Robot.XHd.world_X_base[:3,3], j)
-						print 'GROUDN WALKING', self.W_GND, self.W_CHIM
-						raw_input('fdsa')
+						
 						# if j==3:
 						# 	print 'new: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
 					# if (j>=3):

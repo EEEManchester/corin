@@ -74,12 +74,13 @@ class RobotController(CorinManager):
 			w_base_X_NRP = []
 
 		## User input
-		print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+		print '==============================================='
 		print 'Execute Path in', self.interface, '?',
 		if (self.interface == 'gazebo' or self.interface == 'robotis'):
 			raw_input('')
 			self.ui_state = 'play'#'hold'
 		else:
+			print ''
 			self.ui_state = 'play'#'hold'
 
 		# State machine loading/unloading timing parameters

@@ -52,12 +52,12 @@ class CorinManager:
 
 		self.Action	= control_interface.ControlInterface()	# control action class
 		self.Robot 	= robot_class.RobotState() 				# robot class
-		self.GridMap   = GridMap()
+		self.GridMap   = None#GridMap()
 		self.ForceDist = QPForceDistribution()
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
 		self.control_loop = "close" 	# run controller in open or closed loop
 
@@ -65,7 +65,7 @@ class CorinManager:
 		self.MotionPlan = MotionPlan()
 		self.Visualizer = RvizVisualise() 	# visualisation for rviz
 
-		self.Planner = PathPlanner(self.GridMap)
+		self.Planner = None#PathPlanner(self.GridMap)
 
 		self.__initialise__()
 
@@ -152,14 +152,18 @@ class CorinManager:
 		# 	self.control_loop = 'open'
 
 		## Set map to that available in service
+		print '==============================================='
 		try:
 			self.GridMap.set_map(rospy.get_param('/GridMap/map_name'))
 		except Exception, e:
-			print 'Grid Map has not been set'
+			print 'Grid Map set to default: Flat'
+			self.GridMap = GridMap('flat')
+			self.Planner = PathPlanner(self.GridMap)
 
 	def __initialise_topics__(self):
 		""" Initialises publishers and subscribers """
 
+		# print 'Setting up Topics: ', 
 		##***************** PUBLISHERS ***************##
 		self.log_sp_pub_ = rospy.Publisher(ROBOT_NS + '/log_setpoints', LoggingState, queue_size=1)	# LOGGING setpoint publisher
 		self.log_ac_pub_ = rospy.Publisher(ROBOT_NS + '/log_actual', LoggingState, queue_size=1)		# LOGGING actual publisher
@@ -186,7 +190,6 @@ class CorinManager:
 			elif (self.interface == 'robotis'):
 				self.joint_pub_  = rospy.Publisher('/robotis/sync_write_multi_float', SyncWriteMultiFloat, queue_size=1)
 
-			print ">> INITIALISED JOINT TOPICS"
 		else:
 			# shutdown if wrong hardware selected
 			rospy.logerr("INVALID HARDWARE INTERFACE SELECTED!")
@@ -211,12 +214,15 @@ class CorinManager:
 
 		# Sleep for short while for topics to be initiated properly
 		rospy.sleep(0.5)
+		# print 'Completed'
 
 	def __initialise_services__(self):
 		""" Initialises services used in manager """
 
+		# print 'Setting up Services: ', 		
 		self.grid_serv_ = ServiceHandler('/GridMap/query_map', PlanPath)
 		# self.rbim_serv_ = ServiceHandler('/Corin/get_rigid_body_matrix', RigidBody)
+		# print 'Completed'
 
 	def publish_topics(self, q, qlog=None, q_trac=None):
 		""" Publish joint position to joint controller topics and
@@ -447,7 +453,18 @@ class CorinManager:
 				self.default_pose()
 
 			## condition for support (1), walk (2), reset (3)
-			if (mode == 1):
+			if (mode == 3):
+				if (self.resting == False): 	# rest robot
+					print 'Rest'
+					self.routine_air_suspend_legs()
+					self.resting = True
+
+				elif (self.resting == True): 	# standup from rest
+					print 'Standup'
+					self.default_pose()
+					self.resting = False
+
+			elif (mode == 1):
 				print 'Support mode'
 				prev_suspend = self.Robot.suspend
 				self.Robot.support_mode = True
@@ -462,32 +479,13 @@ class CorinManager:
 			elif (mode == 2):
 				print 'walk mode'
 				self.Robot.support_mode = False
-				## TODO: Shouldnt' have to call motion planner
-				# motion_plan = self.Map.generate_motion_plan(self.Robot, path=(x_cob,w_cob))
-
-				# if (motion_plan is not None):
-				# 	if (self.main_controller(motion_plan)):
-				# 		self.Robot.alternate_phase()
 				self.path_tracking(x_cob, w_cob)
-				
-			elif (mode == 3):
-				if (self.resting == False): 	# rest robot
-					print 'Rest'
-					self.routine_air_suspend_legs()
-					self.resting = True
-
-				elif (self.resting == True): 	# standup from rest
-					print 'Standup'
-					self.default_pose()
-					self.resting = False
 
 			elif (mode == 6):
 				""" Local planning and execution """
 
 				self.Robot.support_mode = False
 			
-				self.GridMap = GridMap('flat')
-
 				if motion == 'forward':
 					map_offset = (0.33, 0.39)
 					d_travel = np.array([0.2,0.,0.,0.,0.,0.]).reshape(6,1)
@@ -498,6 +496,10 @@ class CorinManager:
 					map_offset = (0.45, 0.36)
 					d_travel = np.array([0.15,0.,0.,0.,0.,0.]).reshape(6,1)
 					base_height = 0.3
+				elif motion == 'taros':
+					map_offset = (0.33, 0.39)
+					d_travel = np.array([1.95,0.,0.,0.,0.,0.]).reshape(6,1)
+					print 'exec here'
 				else:
 					map_offset = (0.33, 0.39)
 					d_travel = np.zeros(6).reshape(6,1)
@@ -535,11 +537,10 @@ class CorinManager:
 					if (self.GridMap.get_index_exists(ps[0:2]) and self.GridMap.get_index_exists(pf[0:2])):
 						start = Pose()
 						goal  = Pose()
-						start.position.x = ps[0]#*self.GridMap.resolution
-						start.position.y = ps[1]#*self.GridMap.resolution
-						goal.position.x  = pf[0]#*self.GridMap.resolution
-						goal.position.y  = pf[1]#*self.GridMap.resolution
-						print start.position.x, start.position.y
+						start.position.x = ps[0]
+						start.position.y = ps[1]
+						goal.position.x  = pf[0]
+						goal.position.y  = pf[1]
 						try:
 							print 'Requesting Planning service'
 							serial_plan = self.grid_serv_.call(start, goal, String())
@@ -561,65 +562,6 @@ class CorinManager:
 						print 'Planning Failed'	
 				else:
 					print 'Error: No motion plan! Exiting....'
-
-			elif (mode == 4):
-				""" Plan path & execute """
-				print 'Planning path...'
-				self.Robot.support_mode = False
-
-				base_height = BODY_HEIGHT
-				base_roll	= 0.
-				base_pitch	= 0.
-
-				# Using ROS grid planner
-				if motion == 'transition':
-					ps = (10,13); pf = (10,20)
-				elif motion == 'forward':
-					ps = (10,13); pf = (16,13)
-				elif motion == 'chimney':
-					ps = (15,12); pf = (20,12)
-					base_height = 0.3
-
-				## Set robot to starting position in default configuration
-				self.Robot.P6c.world_X_base = np.array([ps[0]*self.GridMap.resolution,
-														ps[1]*self.GridMap.resolution,
-														base_height,
-														0., 0., 0.]).reshape(6,1)
-				self.Robot.P6c.world_X_base_offset = np.array([ps[0]*self.GridMap.resolution,
-																ps[1]*self.GridMap.resolution,
-																0.,0.,0.,0.]).reshape(6,1)
-				self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
-				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
-				# print 'P6: ', np.round(self.Robot.P6d.world_X_base.flatten(),3)
-				self.Robot.init_robot_stance()
-
-				if (self.grid_serv_.available):
-					if (self.GridMap.get_index_exists(ps) and self.GridMap.get_index_exists(pf)):
-						start = Pose()
-						goal  = Pose()
-						start.position.x = ps[0]*self.GridMap.resolution
-						start.position.y = ps[1]*self.GridMap.resolution
-						goal.position.x = pf[0]*self.GridMap.resolution
-						goal.position.y = pf[1]*self.GridMap.resolution
-						print start.position.x, start.position.y
-						try:
-							print 'Requesting Planning service'
-							path_generat = self.grid_serv_.call(start, goal, String())
-							plan_exist = True
-						except:
-							plan_exist = False
-							print 'Planning Service Failed!'
-
-						if (plan_exist):
-							motion_plan  = planpath_to_motionplan(path_generat)
-							if (motion_plan is not None):
-								# print len(motion_plan.qb.X.t)
-								if (self.main_controller(motion_plan)):
-									self.Robot.alternate_phase()
-					else:
-						print "Start or End goal out of bounds!"
-				else:
-					print 'Planning service unavailable, exiting...'
 
 			elif (mode == 5):
 				# Execute motion plan from ros_grid_planner

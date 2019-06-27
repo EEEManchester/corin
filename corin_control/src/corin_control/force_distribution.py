@@ -355,9 +355,3 @@ qb = np.zeros(3)
 # F6c.world_X_foot[:3] = np.array([2.,5.,10.]).reshape((3,1))
 
 # print np.linalg.norm(mX(np.diag(snorm), F6c.world_X_foot[0:3]))
-
-gait = [1,0,0,0,0,0]
-if all( map(lambda x: x == gait[0], gait ) ):
-	print 'asll support'
-else:
-	print 'not all'

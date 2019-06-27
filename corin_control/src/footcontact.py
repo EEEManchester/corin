@@ -20,7 +20,6 @@ class ContactForce:
 		self.robot_ns = ROBOT_NS
 		self.rate 	  = rospy.Rate(200)	# frequency: 200 Hz
 
-		self.contact_state = [None]*6 	# one for each leg
 		self.contact_force = [None]*18 	# three (xyz) for each leg
 
 		self._start()
@@ -41,7 +40,6 @@ class ContactForce:
 		self.contact_rr_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/rr', ContactsState, self.contact_callback)
 
 		##***************** PUBLISHERS ***************##
-		self.contact_state_pub_ = rospy.Publisher(ROBOT_NS + '/contact_state', ByteMultiArray, queue_size=1)
 		self.contact_force_pub_ = rospy.Publisher(ROBOT_NS + '/contact_force', Float32MultiArray, queue_size=1)
 
 	def set_to_zero(self, i):
@@ -59,58 +57,43 @@ class ContactForce:
 		## checks if contact exist. Yes: update list with contact force. No: set to zero ##
 		if (msg.header.frame_id == 'lf_foot'):
 			if (len(msg.states) == 0):
-				self.contact_state[0] = 0
 				self.set_to_zero(0)
 			else:
-				self.contact_state[0] = 1
 				self.append_to_list(0, msg.states[0].total_wrench.force)
 
 		elif(msg.header.frame_id == 'lm_foot'):
 			if (len(msg.states) == 0):
-				self.contact_state[1] = 0
 				self.set_to_zero(1)
 			else:
-				self.contact_state[1] = 1
 				self.append_to_list(1, msg.states[0].total_wrench.force)
 
 		elif(msg.header.frame_id == 'lr_foot'):
 			if (len(msg.states) == 0):
-				self.contact_state[2] = 0
 				self.set_to_zero(2)
 			else:
-				self.contact_state[2] = 1
 				self.append_to_list(2, msg.states[0].total_wrench.force)
 
 		elif(msg.header.frame_id == 'rf_foot'):
 			if (len(msg.states) == 0):
-				self.contact_state[3] = 0
 				self.set_to_zero(3)
 			else:
-				self.contact_state[3] = 1
 				self.append_to_list(3, msg.states[0].total_wrench.force)
 
 		elif(msg.header.frame_id == 'rm_foot'):
 			if (len(msg.states) == 0):
-				self.contact_state[4] = 0
 				self.set_to_zero(4)
 			else:
-				self.contact_state[4] = 1
 				self.append_to_list(4, msg.states[0].total_wrench.force)
 
 		elif(msg.header.frame_id == 'rr_foot'):
 			if (len(msg.states) == 0):
-				self.contact_state[5] = 0
 				self.set_to_zero(5)
 			else:
-				self.contact_state[5] = 1
 				self.append_to_list(5, msg.states[0].total_wrench.force)
 
 	def publish(self):
-		cstate_msg = ByteMultiArray(data = self.contact_state)
-		cforce_msg = Float32MultiArray(data = self.contact_force)
-
-		# self.contact_state_pub_.publish(cstate_msg)
-		self.contact_force_pub_.publish(cforce_msg)
+		
+		self.contact_force_pub_.publish(Float32MultiArray(data = self.contact_force))
 
 if __name__ == "__main__":
 

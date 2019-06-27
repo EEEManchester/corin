@@ -2,7 +2,7 @@
 """ 
 
 import sys; sys.dont_write_bytecode = True
-sys.path.insert(0, '/home/wei/catkin_ws/src/corin/corin_control/src')
+sys.path.insert(0, '/home/wilson/catkin_ws/src/corin/corin_control/src')
 from corin_control import *			# library modules to include 
 from grid_map import *
 
@@ -34,11 +34,14 @@ class PathPlanner:
 			return motion_plan
 
 		# Variables
-		d_nom = 0.05 	# distance for legs to move into nominal position
+		# print Robot.Gait.duty_factor.denominator
+		lamb  = STEP_STROKE/Robot.Gait.duty_factor 	# distance per gait cycle
+		d_nom = lamb/Robot.Gait.duty_factor.denominator 		# distance for legs to move into nominal position
 		ps = start.flatten()	# world frame
-		pf = end.flatten()	# world frame
-		print 'start: ',ps.flatten()
-		print ' end: ', pf.flatten()
+		pf = end.flatten()		# world frame
+		print 'Planning Path:-'
+		print 'Start:\t', np.round(ps.flatten(),3)
+		print 'End:\t', np.round(pf.flatten(),3)
 
 		Gait = gait_class.GaitClass(GAIT_TYPE)	# gait class
 
@@ -55,23 +58,24 @@ class PathPlanner:
 			base_X_footholds[j] = MarkerList()
 			world_base_X_NRP[j] = MarkerList()
 		
-		w_base_X_foot = self.max_stride_foothold(Robot)
+		w_base_X_foot = self.max_stride_foothold(Robot, d_nom)
 
 		# Compute magnitude
 		d_dif = (pf - ps)
-		d_mag = np.linalg.norm(d_dif[0:2])
-		lamb  = STEP_STROKE/Robot.Gait.duty_factor
-
-		d_nom = lamb/2.
+		d_mag = np.linalg.norm(d_dif[0:2]) 			# magnitude of distance to travel
+		
 		# Intermediate point for moving legs to nominal
 		ntemp = d_mag/d_nom
-		ptemp = ps #+ d_dif/ntemp
-		
+		ptemp = ps + d_dif/ntemp
+
 		# Max. stride foothold - fixed wrt base
-		# world_X_base.append(ptemp.flatten())
-		# gphase_intv.append(1)
+		world_X_base.append(ptemp.flatten())
 		gait_phase.append(Gait.phases)
 
+		# Recalculate magnitude and distance
+		d_dif = (pf - ptemp)
+		d_mag = np.linalg.norm(d_dif[0:2]) 			# magnitude of distance to travel
+		
 		for j in range(0,6):
 			world_X_foot = ptemp[0:3] + w_base_X_foot[j]
 			world_X_footholds[j].t.append(1)
@@ -83,25 +87,27 @@ class PathPlanner:
 			base_X_footholds[j].t.append(1)
 			base_X_footholds[j].xp.append(w_base_X_foot[j].copy())
 		
-		
-
 		# Interpolate following leg in max. stride position
-		# nintv = math.ceil((d_mag-d_nom)/lamb)
-		nintv = math.ceil((d_mag)/lamb)+2
-		print nintv, lamb
+		nintv = math.ceil((d_mag)/lamb)
+		# nintv = math.ceil((d_mag)/lamb)+2
+		
 		if not Robot.Fault.status:
 
-			for i in range(1,int(nintv)+1):
-				p_intv = ps + d_dif/nintv*i
+			for i in range(1,int(nintv)):
+				p_intv = ptemp + d_dif/(i*d_mag/lamb)
 
 				world_X_base.append(p_intv.flatten())
 				gait_phase.append(Gait.phases)
-				
+
+			world_X_base.append(pf.flatten())
+			gait_phase.append(Gait.phases)
+			# print world_X_base
+
 			# Flattens list
 			gait_phase = [val for sublist in gait_phase for val in sublist]
 
 			# Spline base path
-			path = self.spline_path(world_X_base, None, world_X_base[0])
+			path = self.spline_path(Robot.Gait.tcycle, world_X_base, None, world_X_base[0])
 			# self.generate_linear_path(world_X_base)
 			# for j in range(0,6):
 			# 	# world_X_foot = p_intv[0:3] + Robot.Leg[j].XHd.world_base_X_AEP[:3,3]
@@ -184,35 +190,28 @@ class PathPlanner:
 		
 		return set_motion_plan()
 
-	def max_stride_foothold(self, Robot):
+	def max_stride_foothold(self, Robot, d_nom):
 		""" Compute footholds wrt base position for maximum stride """
 
 		world_base_X_foot = [None]*6
 		
 		sint = STEP_STROKE/Robot.Gait.duty_factor.numerator
-		# for j in range(0,6):
-		# 	foothold = Robot.Leg[j].XHc.world_base_X_AEP[:3,3] - np.array([j*sint, 0., 0.])
-		# 	world_base_X_foot.append(foothold)
+		soff = d_nom/Robot.Gait.duty_factor.denominator
+		
 		for i in range(Robot.Gait.duty_factor.denominator):
-			step = (Robot.Gait.duty_factor.denominator - i - 1)*sint
-			# print i, Robot.Gait.duty_factor.denominator, Robot.Gait.cs, step
+			step = (Robot.Gait.duty_factor.denominator - i - 1)*(sint -  soff)
+			
 			for j in range(5,-1,-1):
+				
 				if Robot.Gait.cs[j] == 1:
 					foothold = Robot.Leg[j].XHc.world_base_X_AEP[:3,3] - np.array([step, 0., 0.])
 					world_base_X_foot[j] = foothold.copy()
-					# print j, step, '\t', foothold
-					# print Robot.Leg[j].XHc.world_base_X_AEP[:3,3]
-					# print np.array([step, 0., 0.])
-					# print j, foothold
-					# print '========================================='
+		
 			Robot.Gait.change_phase()
 
-		# print world_base_X_foot
-		# print Robot.Leg[5].XHc.world_base_X_AEP[:3,3]
-		# print Robot.Leg[5].XHc.world_base_X_PEP[:3,3]
 		return world_base_X_foot
 
-	def spline_path(self, world_X_base, t_cob=None, base_offset=None):
+	def spline_path(self, t_gait_cycle, world_X_base, t_cob=None, base_offset=None):
 		
 		x_cob = np.zeros((len(world_X_base),3))
 		w_cob = np.zeros((len(world_X_base),3))
@@ -224,7 +223,7 @@ class PathPlanner:
 		if t_cob is None:
 			t_cob = np.zeros(len(world_X_base))
 			for i in range(0,len(world_X_base)):
-				t_cob[i] = i*Robot.Gait.tcycle
+				t_cob[i] = i*t_gait_cycle
 		
 		path_generator = Pathgenerator.PathGenerator()
 		path_generator.V_MAX = path_generator.W_MAX = 10
@@ -321,7 +320,7 @@ class PathPlanner:
 			else:
 				if len(curve_cob) > 0:
 					path.remove(-1)
-					temp_path = self.spline_path(curve_cob, curve_t, np.zeros(6))
+					temp_path = self.spline_path(Robot.Gait.tcycle, curve_cob, curve_t, np.zeros(6))
 					# print temp_path.X.t
 					path.append(temp_path)
 					# Plot.plot_2d(temp_path.X.t, temp_path.X.xp)
@@ -344,7 +343,7 @@ class PathPlanner:
 
 		elif len(curve_cob):
 			path.remove(-1)
-			path.append(self.spline_path(curve_cob, curve_t, np.zeros(6)))
+			path.append(self.spline_path(Robot.Gait.tcycle, curve_cob, curve_t, np.zeros(6)))
 
 		# Plot.plot_2d(path.X.t, path.X.xp)
 		return path
@@ -359,8 +358,6 @@ grid_map = GridMap('flat')
 planner = PathPlanner(grid_map)
 Robot = robot_class.RobotState()
 
-# ps = np.array([10,13]) 
-# pf = np.array([16,13])
 ps = np.array([0.30, 0.39, 0.1, 0., 0., 0.]) 
 pf = np.array([0.5, 0.39, 0.1, 0., 0., 0.]) 
 
@@ -369,16 +366,8 @@ Robot.P6d.world_X_base = Robot.P6c.world_X_base.copy()
 Robot.XHc.update_world_X_base(Robot.P6c.world_X_base)
 Robot.init_robot_stance()
 
-# motion_plan = planner.motion_planning(ps, pf, Robot)
-# qpd = [0., 3.38135596e-01  -1.85227640e+00]
-# qpd.item(0)
-# print [val for sublist in Robot.Gait.phases for val in sublist]
-# True if x % 2 == 0 else False
-# a = np.array([0.,0.,0.])
-# b = np.array([1.,0.,0.])
-# d = np.array([2.,0.,0.])
-# c = [a,b,d]
-# t = [0., 1.0, 1.4]
+motion_plan = planner.motion_planning(ps, pf, Robot)
+
 
 # tintv = math.ceil(t[-1]/CTR_INTV)
 # t_intv = []

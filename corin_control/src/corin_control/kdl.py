@@ -236,7 +236,7 @@ bodypose = np.array([0.,0.,BODY_HEIGHT, 0.,0.,0.])
 # print cd.flatten()
 cd = [0.15 , -0.0,  -0.06]
 qp = CK.leg_IK(cd)
-print qp
+
 # print np.rad2deg(qp[1])
 # print qp
 # CK.check_singularity(qp)

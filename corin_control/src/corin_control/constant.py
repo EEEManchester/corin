@@ -147,13 +147,13 @@ STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
 ## ================================================================ ##
 
 ## these gait parameters can be changed during runtime
-GAIT_TYPE 	 = 1 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+GAIT_TYPE 	 = 3 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 GAIT_TPHASE	 = 1.0 	# default period per gait phase
 STEP_HEIGHT  = 0.06	# default step height, z
 STEP_STROKE  = 0.1 	# default step stroke
 
-BASE_MAX_LINEAR_VELOCITY  = 0.01	# maximum base velocity, m/s - walking: 0.025
-BASE_MAX_ANGULAR_VELOCITY = 0.01	# maximum base velocity, rad/s
+BASE_MAX_LINEAR_VELOCITY  = 0.05	# maximum base velocity, m/s - walking: 0.025
+BASE_MAX_ANGULAR_VELOCITY = 0.05	# maximum base velocity, rad/s
 
 ## ================================================================ ##
 ##                   Controller parameters 	 						##

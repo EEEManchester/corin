@@ -109,7 +109,7 @@ class RobotState:
 
 		self.task_X_joint()
 		self.Gait.set_step_stroke(leg_stance, LEG_CLEAR, STEP_STROKE)
-		print ">> INITIALISED ROBOT CLASS"
+		# print ">> INITIALISED ROBOT CLASS"
 
 	def update_state(self,**options):
 		""" update robot state using readings from topics """
@@ -240,7 +240,7 @@ class RobotState:
 		else:
 			self.Gait.ps = self.Gait.cs
 			self.Gait.cs = new_phase
-		print self.Gait.cs, self.Gait.ps
+		# print self.Gait.cs, self.Gait.ps
 		# update robot leg phase_change
 		for j in range(0,6):
 			if (self.Gait.cs[j] == 1):

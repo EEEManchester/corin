@@ -18,7 +18,6 @@ class ServiceHandler:
 	def initialise_service(self, srv_name, srv_type):
 		""" Check if service valid """
 
-		print 'Setting up service handler'
 		try:
 			rospy.wait_for_service(srv_name, 0.5)
 			self.srv_proxy = rospy.ServiceProxy(srv_name, srv_type)

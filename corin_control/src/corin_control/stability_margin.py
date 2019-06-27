@@ -187,4 +187,4 @@ gphase =  [0, 0, 0, 0, 0, 1]
 SM = StabilityMargin()
 # print SM.LSM(Legs, gphase)
 valid, sm = SM.point_in_convex(p, Legs, gphase)
-print valid, sm
+
