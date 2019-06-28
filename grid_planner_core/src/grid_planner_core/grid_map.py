@@ -230,7 +230,7 @@ class GridMap:
 			# else:
 			# 	grid_p = (int(np.floor(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
 			# Check if cell within bound
-			print grid_p, p[0]/self.resolution, p[1]/self.resolution
+			
 			if (self.get_index_exists(grid_p)):
 				return self.get_index(info, grid_p)
 			else:
@@ -683,10 +683,10 @@ class GridMap:
 ## ================================================================================================ ##
 map_offset = (0.33, 0.39)
 ps = np.array([map_offset[0], map_offset[1], 0.1, 0., 0., 0.]).reshape(6,1)
-p = [0.34811485, 0.555,      0.5       ]
+p = [0.374, 0.745,      0.5       ]
+p = [0.915, 0.745,      0.5       ]
 gmap = GridMap('chimney_corner_053')
 print gmap.get_cell('norm', p, 3)
-
-idx = gmap.getIndex(p, 0)
-print idx
+# print gmap.getIndex(p, 0)
+ 
 # print (26.%7.)

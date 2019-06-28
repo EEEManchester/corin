@@ -134,7 +134,7 @@ class CsvImport:
 					
 					world_X_footholds[j].t.append(counter*CTR_INTV)
 					world_X_footholds[j].xp.append(mod_foothold.copy())
-					if j == 1:
+					if j == 5:
 						print mod_foothold
 				self.joint_states.append( np.asarray(map(lambda x: float(x), row[24:42])) )
 				
