@@ -16,7 +16,7 @@ if __name__ == "__main__":
 	rospy.loginfo('Robot Ready!')
 	
 	motion = None
-	if len(sys.argv) > 1: 
+	if len(sys.argv) == 2: 
 		if sys.argv[1] == 'bodypose':
 			motion = 'bodypose'
 			rospy.set_param('/corin/bodypose', True)
@@ -24,7 +24,9 @@ if __name__ == "__main__":
 		else:
 			motion = sys.argv[1]
 			rospy.set_param('/corin/plan_path', True)
-
+	elif len(sys.argv) == 3: 
+		## TODO: select mode according to no. arguments
+		pass
 
 	## Run continuously
 	# while not rospy.is_shutdown():

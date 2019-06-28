@@ -1,3 +1,0 @@
-std_msgs/String map_name
----
-grid_planner_core/GridMap grid_map

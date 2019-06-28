@@ -459,6 +459,7 @@ def multiarray_to_graph_attr(GridMap, attr):
 def motionplan_to_planpath(motion_plan, frame_id=None):
 	""" Converts motion plan to PlanPath service message """
 
+	qoffset = Pose()
 	qbp = MultiDOFJointTrajectoryPoint()
 	qbi = Path()
 	gphase = Int8MultiArray()
@@ -466,6 +467,13 @@ def motionplan_to_planpath(motion_plan, frame_id=None):
 	bXf = Float64MultiArray()
 	bXN = Float64MultiArray()
 	
+	qoffset.position.x = motion_plan.qb_offset[0]
+	qoffset.position.y = motion_plan.qb_offset[1]
+	qoffset.position.z = motion_plan.qb_offset[2]
+	qoffset.orientation.x = motion_plan.qb_offset[3]
+	qoffset.orientation.y = motion_plan.qb_offset[4]
+	qoffset.orientation.z = motion_plan.qb_offset[5]
+
 	if motion_plan.qb is not None:
 		for i in range(0, len(motion_plan.qb.X.t)):
 			
@@ -537,7 +545,7 @@ def motionplan_to_planpath(motion_plan, frame_id=None):
 			bXN.layout.dim.append(dheader)
 			bXN.data += ddata
 
-	return qbp, qbi, gphase, wXf, bXf, bXN
+	return qoffset, qbp, qbi, gphase, wXf, bXf, bXN
 
 def list_to_multiarray(idata):
 
@@ -551,6 +559,14 @@ def planpath_to_motionplan(plan_path):
 	""" Converts PlanPath service message to MotionPlan """
 	
 	motion_plan = MotionPlan()
+
+	## Base Offset
+	motion_plan.qb_offset[0] = plan_path.base_offset.position.x    
+	motion_plan.qb_offset[1] = plan_path.base_offset.position.y    
+	motion_plan.qb_offset[2] = plan_path.base_offset.position.z    
+	motion_plan.qb_offset[3] = plan_path.base_offset.orientation.x 
+	motion_plan.qb_offset[4] = plan_path.base_offset.orientation.y 
+	motion_plan.qb_offset[5] = plan_path.base_offset.orientation.z 
 
 	## Trajectory parameters
 	tint = plan_path.base_path.time_from_start.to_sec()

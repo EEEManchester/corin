@@ -236,8 +236,10 @@ if __name__ == "__main__":
 		elif sys.argv[1] == 'taros':
 			mapname = 'wall_hole_demo'
 		# Cornering
-		elif sys.argv[1] == 'chimney_corner':
-			mapname = 'chimney_corner'
+		elif sys.argv[1] == 'chimney_corner_053':
+			mapname = 'chimney_corner_053'
+		elif sys.argv[1] == 'chimney_corner_066':
+			mapname = 'chimney_corner_066'
 		elif sys.argv[1] == 'wall_concave_corner':
 			mapname = 'wall_concave_corner'
 		elif sys.argv[1] == 'wall_convex_corner':

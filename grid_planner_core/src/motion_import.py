@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
 """ Imports motion from csv or yaml file """
+import os
 
 import rospy
+import rospkg
 from corin_control import *			# library modules to include
 from corin_control.constant import *
 from rviz_visual import *
@@ -76,8 +78,6 @@ class YamlImport:
 		self.motion_plan.qb.X.xp[0][1] = start['y']
 		self.motion_plan.qb.X.xp[0][2] = start['z']
 
-		# self.motion_plan = mplan
-
 		return self.motion_plan
 
 class CsvImport:
@@ -89,6 +89,12 @@ class CsvImport:
 
 	def get_MotionPlan(self, filename):
 
+		fpath, fname = os.path.split(filename)
+		if fname == 'chimney_nom.csv':
+			base_offset = np.array([-0.026,0.668+0.287,0.,0.,0.,0.]).reshape(6,1)
+		else:
+			base_offset = np.zeros((6,1))
+
 		## Instantiate leg transformation class & append initial footholds
 		world_X_base = []
 		world_X_footholds = [None]*6
@@ -99,8 +105,6 @@ class CsvImport:
 			base_X_footholds[j] = MarkerList()
 			world_base_X_NRP[j] = MarkerList()
 
-		print 'Reading file: ', filename
-		
 		with open(filename, 'rb') as csvfile:
 			motion_data = csv.reader(csvfile, delimiter=',')
 			counter = 0
@@ -114,25 +118,28 @@ class CsvImport:
 				
 				wpoint[1] = 0.0
 				if counter == 0:
-					x_cob = xpoint
-					w_cob = wpoint
+					# qb_bias = np.zeros((6,1))
+					qb_bias = np.array([xpoint, wpoint]).reshape((6,1))
+					x_cob = xpoint - qb_bias[0:3].flatten() 
+					w_cob = wpoint - qb_bias[3:6].flatten()
 				else:
-					x_cob = np.vstack((x_cob, xpoint))
-					w_cob = np.vstack((w_cob, wpoint))
-
+					x_cob = np.vstack((x_cob, xpoint - qb_bias[0:3].flatten()))
+					w_cob = np.vstack((w_cob, wpoint - qb_bias[3:6].flatten()))
+					
 				# Append for footholds
 				for j in range(0,6):
 					self.footholds[j].t.append(counter)
-					mod_foothold = np.asarray(map(lambda x: float(x), row[6+j*3:6+(j*3)+3]))
+					mod_foothold = np.asarray(map(lambda x: float(x), row[6+j*3:6+(j*3)+3])) + base_offset[0:3].flatten()
 					self.footholds[j].xp.append(mod_foothold)
-				
+					
 					world_X_footholds[j].t.append(counter*CTR_INTV)
 					world_X_footholds[j].xp.append(mod_foothold.copy())
-
+					if j == 1:
+						print mod_foothold
 				self.joint_states.append( np.asarray(map(lambda x: float(x), row[24:42])) )
 				
 				counter += 1
-
+		qb_bias += base_offset
 		# Interpolate base path
 		PathGenerator = Pathgenerator.PathGenerator() 	# path generator for robot's base
 		PathGenerator.V_MAX = 10;
@@ -143,8 +150,8 @@ class CsvImport:
 		# print len(x_cob), len(t_cob), t_cob
 		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
-
-		self.motion_plan.set_base_path(np.zeros((6,1)), base_path, world_X_base, None)
+		
+		self.motion_plan.set_base_path(qb_bias, base_path, world_X_base, None)
 		self.motion_plan.set_footholds(world_X_footholds, base_X_footholds, world_base_X_NRP)
 
 		return self.motion_plan
@@ -157,7 +164,9 @@ class MotionImport:
 		self.yaml_reader = YamlImport()
 		self.csv_reader  = CsvImport()
 		# self.Visualizer = RvizVisualise()
-
+		rospack = rospkg.RosPack()
+		self.file_directory = os.path.join(rospack.get_path("grid_planner_core"), "src", "motion_plans")
+		
 		self.__initialise_services__()
 
 	def __initialise_topics__(self):
@@ -172,22 +181,24 @@ class MotionImport:
 	def serv_import_import(self, req):
 		""" Plans path given start and end position """
 
-		print "SERVICE CALL - CSVImport"
+		print "Service Call - Import: ", req.filename.data
 
-		filename = req.filename.data
-		
+		# filename = req.filename.data
+		filename = os.path.join(self.file_directory, req.filename.data)
 		if filename.endswith('.yaml'):
 			mplan = self.yaml_reader.get_MotionPlan(filename)
 		elif filename.endswith('.csv'):
 			mplan = self.csv_reader.get_MotionPlan(filename)
 
-		qbp, qbi, gphase, wXf, bXf, bXN = motionplan_to_planpath(mplan, "world")
+		qoff, qbp, qbi, gphase, wXf, bXf, bXN = motionplan_to_planpath(mplan, "world")
 		
-		return PlanPathResponse(base_path = qbp, CoB = qbi, 
-												gait_phase = gphase, 
-												f_world_X_foot = wXf,
-												f_base_X_foot = bXf,
-												f_world_base_X_NRP = bXN)
+		return PlanPathResponse(base_offset = qoff,
+								base_path = qbp, 
+								CoB = qbi, 
+								gait_phase = gphase, 
+								f_world_X_foot = wXf,
+								f_base_X_foot = bXf,
+								f_world_base_X_NRP = bXN)
 
 	# def publish(self, CoB, qp):
 	# 	self.Visualizer.publish_robot(CoB)
@@ -225,12 +236,12 @@ class MotionImport:
 	# 		rospy.sleep(0.5)
 
 def call_motion_import(filename):
-	print 'calling import'
+	
 	rospy.wait_for_service(ROBOT_NS + '/import_motion_plan',1.0)
 	try:
 		path_planner = rospy.ServiceProxy(ROBOT_NS + '/import_motion_plan', PlanPath)
 		path_planned = path_planner(Pose(), Pose(), String(filename))
-		print 'Service processed!'
+		print 'Service Completed: Motion plan imported!'
 	# 	mplan = planpath_to_motionplan(path_planned)
 		
 	except rospy.ServiceException, e:
@@ -239,13 +250,24 @@ def call_motion_import(filename):
 if __name__ == "__main__":
 
 	MotionImport = MotionImport()
-	# call_motion_import('data.yaml')
-	# call_motion_import('chimney_autom.csv')
-	# call_motion_import('chimney_s054_03.csv')
-	# call_motion_import('chimney_sc_02.csv')
-	# call_motion_import('wall_convex_02.csv')
-	# call_motion_import('wall_concave_02.csv')
 	
+	filename = None
+	if len(sys.argv) > 1: 
+		if sys.argv[1] == 'chimney_nominal':
+			filename = 'chimney_nom.csv'
+		elif sys.argv[1] == 'chimney_heuristic':
+			filename = 'chimney_heu.csv'
+		elif sys.argv[1] == 'wall_convex':
+			filename = 'wall_convex.csv'
+		elif sys.argv[1] == 'wall_concave':
+			filename = 'wall_concave.csv'
+
+	if filename is not None:
+		call_motion_import(filename)
+	# else:
+	# 	print 'No file selected, exiting!'
+	# 	exit()
+
 	rospy.spin()
 
 	# csv_import.visualise_motion_plan()

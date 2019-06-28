@@ -48,7 +48,7 @@ class RobotController(CorinManager):
 
 			# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 			# Plot.plot_2d(base_path.W.t, base_path.W.xp)
-
+			# print world_X_footholds[0].xp
 			## Remove initial set of footholds (visualization purpose)
 			for j in range(0,6):
 				try:
@@ -80,7 +80,7 @@ class RobotController(CorinManager):
 			raw_input('')
 			self.ui_state = 'play'#'hold'
 		else:
-			print ''
+			raw_input('')
 			self.ui_state = 'play'#'hold'
 
 		# State machine loading/unloading timing parameters
@@ -93,7 +93,7 @@ class RobotController(CorinManager):
 		gphase = [0]*6 					# gait phase array
 		# Base impedance
 		offset_z = 0.0
-		offset_base = np.zeros(3)
+		offset_base = np.zeros(3) 		# offset for base impedance
 		# Support phase counter
 		s_max = int(GAIT_TPHASE/CTR_INTV)
 		s_cnt = 1
@@ -107,7 +107,7 @@ class RobotController(CorinManager):
 		i = 1 		# skip first point since spline has zero initial differential conditions
 		while (i != path_length and not rospy.is_shutdown()):
 			# print 'counting: ', i, len(base_path.X.t), s_cnt, self.Robot.suspend
-
+			# print 'wXb: ', np.round(self.Robot.P6c.world_X_base.flatten(),3)
 			# Check if controller should be suspended
 			self.suspend_controller()
 			
@@ -301,17 +301,17 @@ class RobotController(CorinManager):
 								iahead = int(GAIT_TPHASE/CTR_INTV)
 								# Get bodypose at end of gait phase, or end of trajectory
 								try:
-									x_ahead = base_path.X.xp[i+iahead]
-									w_ahead = base_path.W.xp[i+iahead]
+									x_ahead = base_path.X.xp[i+iahead].reshape(3,1) + wXbase_offset[0:3]
+									w_ahead = base_path.W.xp[i+iahead].reshape(3,1) + wXbase_offset[3:6]
 								except IndexError:
-									x_ahead = base_path.X.xp[-1]
-									w_ahead = base_path.W.xp[-1]
-
+									x_ahead = base_path.X.xp[-1].reshape(3,1) + wXbase_offset[0:3]
+									w_ahead = base_path.W.xp[-1].reshape(3,1) + wXbase_offset[3:6]
+								
 								self.Robot.Leg[j].XH_world_X_base = vec6d_to_se3(np.array([x_ahead, w_ahead]).reshape((6,1)))
 								self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
 																		self.Robot.Leg[j].XHd.world_X_foot)
 								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
-								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
+								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
 						
 						## Get surface normal at current and desired footholds
 						try:
@@ -322,8 +322,9 @@ class RobotController(CorinManager):
 							sn2 = np.array([0., 0., 1.])
 							print 'norm error'
 						
-						# 	print np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
-						# 	print np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],3)
+						print np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
+						print np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],3)
+						print sn1, sn2
 						## Generate transfer spline
 						svalid = self.Robot.Leg[j].generate_spline('world', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
 
@@ -532,7 +533,8 @@ class RobotController(CorinManager):
 
 				# if j==5:
 				# 	print j, ' bXw: \n', np.round(comp_base_X_world,3)
-				# 	print j, ' wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
+					# print ' wXb: ', np.round(self.Robot.XHd.base_X_world[:3,3],3)
+					# print ' wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
 				# 	print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],3)
 					# print j, ' bXP: ', np.round(self.Robot.Leg[j].XHd.base_X_PEP[0:3,3],3)
 					# temp = mX(self.Robot.Leg[j].XHd.coxa_X_base, base_X_foot)

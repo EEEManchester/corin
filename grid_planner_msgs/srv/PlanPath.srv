@@ -2,6 +2,7 @@ geometry_msgs/Pose start
 geometry_msgs/Pose goal
 std_msgs/String filename
 ---
+geometry_msgs/Pose base_offset
 trajectory_msgs/MultiDOFJointTrajectoryPoint base_path
 nav_msgs/Path CoB
 std_msgs/Int8MultiArray gait_phase

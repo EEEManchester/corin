@@ -199,17 +199,38 @@ class GridMap:
 			if (self.Map.nodes[e]['height'] >= 0. and self.Map.nodes[e]['height'] <= 0.5):
 				self.Map.nodes[e]['height'] = random.uniform(MIN_FLAT_H, MAX_FLAT_H)
 
+	def getIndex(self, p, j):
+		""" Returns cell index at position (m) """
+		
+		def point_to_cell(x):
+			idx = int(x/self.resolution)
+			rem = x % self.resolution - self.resolution/2
+			# print x, idx, x % self.resolution
+			idx += 1 if rem > 0. else 0
+			return idx
+
+		grid_p = (point_to_cell(p[0]), point_to_cell(p[1]))
+
+		# if (j < 3):
+		# 	grid_p = (int(np.floor(position[0]/self.resolution)), int(np.ceil(position[1]/self.resolution)))
+		# else:
+		# 	grid_p = (int(np.floor(position[0]/self.resolution)), int(np.floor(position[1]/self.resolution)))
+
+		return grid_p
+
 	def get_cell(self, info, p, j=0):
 		""" Returns cell characteristic at point p (in m) """
 		
 		# Convert cell location to grid format
+		grid_p = self.getIndex(p,0)
 		try:
-			if (j < 3):
-				grid_p = (int(np.floor(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
-			else:
-				grid_p = (int(np.floor(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
+			# grid_p = (point_to_cell(p[0]), point_to_cell(p[1]))
+			# if (j < 3):
+			# 	grid_p = (int(np.floor(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
+			# else:
+			# 	grid_p = (int(np.floor(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
 			# Check if cell within bound
-			# print grid_p, p[0]/self.resolution, p[1]/self.resolution
+			print grid_p, p[0]/self.resolution, p[1]/self.resolution
 			if (self.get_index_exists(grid_p)):
 				return self.get_index(info, grid_p)
 			else:
@@ -243,16 +264,6 @@ class GridMap:
 		except:
 			print 'Cell Invalid at ', p, info
 			return None
-
-	def getIndex(self, position, j):
-		""" Returns cell index at position (m) """
-
-		if (j < 3):
-			grid_p = (int(np.floor(position[0]/self.resolution)), int(np.ceil(position[1]/self.resolution)))
-		else:
-			grid_p = (int(np.floor(position[0]/self.resolution)), int(np.floor(position[1]/self.resolution)))
-
-		return grid_p
 
 	def get_map_size(self):
 		return self.map_size_g
@@ -672,28 +683,10 @@ class GridMap:
 ## ================================================================================================ ##
 map_offset = (0.33, 0.39)
 ps = np.array([map_offset[0], map_offset[1], 0.1, 0., 0., 0.]).reshape(6,1)
+p = [0.34811485, 0.555,      0.5       ]
+gmap = GridMap('chimney_corner_053')
+print gmap.get_cell('norm', p, 3)
 
-# gmap = GridMap('flat')
-# p_tuple = gmap.getIndex(ps[0:2])
-
-# print gmap.get_index_exists(gmap.getIndex(tuple(map(float, ps[0:2])),0))
-
-# print gmap.get_index('norm', (10,22))
-# try:
-# 	print gmap.get_cell('norm', np.array([0.08, 0.641, 0.0]), 0)
-# except:
-# 	print error
-# print gmap.get_cell('height', np.array([0.747,0.168,0]), 3)
-# print gmap.get_cell('height', np.array([0.72,0.06,0]), 3)
-# gmap.square_spiral_search((0.72,0.66), (3,3), 3)
-# gmap.search_area((0.72,0.66), (3,3), 3)
-# print gmap.get_index_exists((34,0))
-# a, b = gmap.graph_attributes_to_nparray("norm")
-# print a
-# print len(a)
-# sp = np.array([0.6015, 0.1391, -0.])
-# p = (19,21)
-# print gmap.get_median_width([p[0]*gmap.resolution,p[1]*gmap.resolution])
-# gmap.graph_representation()
-# print range(10/2,0,-1)
-# [(20, 5), (20, 6), (21, 6), (21, 5), (20, 5), (19, 5), (19, 6), (19, 7), (20, 7), (21, 7), (21, 6), (21, 5), (20, 5), (19, 5), (20, 5), (21, 5)]
+idx = gmap.getIndex(p, 0)
+print idx
+# print (26.%7.)

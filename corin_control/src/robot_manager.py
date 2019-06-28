@@ -58,7 +58,7 @@ class CorinManager:
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
 		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
-		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
+		self.control_rate = "fast" 	# run controller in either: 1) normal, or 2) fast
 		self.control_loop = "close" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
@@ -447,7 +447,7 @@ class CorinManager:
 			
 			## Data mapping - for convenience
 			x_cob, w_cob, mode, motion_prim = data
-			mode = 6 	# HARDCODED 
+			mode = 5 	# HARDCODED 
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
 				print 'Going to standup'
@@ -566,27 +566,32 @@ class CorinManager:
 
 			elif (mode == 5):
 				# Execute motion plan from ros_grid_planner
+				print 'Importing motion plan to execute'
+				# filename = 'wall_transition.yaml'
+				filename = 'chimney_nom.csv'
+				mapname  = 'chimney_corner_053'
 
 				rospy.wait_for_service(ROBOT_NS + '/import_motion_plan', 1.0)
 				try:
 					path_planner = rospy.ServiceProxy(ROBOT_NS + '/import_motion_plan', PlanPath)
-					motion_plan  = planpath_to_motionplan( path_planner(Pose(), Pose(), String('wall_transition.yaml')) )
+					motion_plan  = planpath_to_motionplan( path_planner(Pose(), Pose(), String(filename)) )
 					print 'Motion plan service imported!'
-					self.GridMap.set_map(rospy.get_param('/GridMap/map_name'))
+					self.GridMap.set_map(mapname)
 				except:
 					print 'Motion plan service call error!'
 				# motion_plan = planpath_to_motionplan( path_planner(Pose(), Pose()) )
 				# motion_plan = planpath_to_motionplan(plan_generat)
 				# Plot.plot_2d(motion_plan.qb.X.t, motion_plan.qb.X.xp)
-
-				self.Robot.P6c.world_X_base = np.array([motion_plan.qb.X.xp[0],
-														motion_plan.qb.W.xp[0]]).reshape(6,1)
+				# print 'bias by ', motion_plan.qb_offset
+				# self.Robot.P6c.world_X_base = np.array([motion_plan.qb.X.xp[0],
+				# 										motion_plan.qb.W.xp[0]]).reshape(6,1)
+				self.Robot.P6c.world_X_base = motion_plan.qb_offset.copy()
 				self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
-				self.Robot.P6c.world_X_base_offset = self.Robot.P6c.world_X_base.copy()
+				self.Robot.P6c.world_X_base_offset = np.zeros((6,1))#self.Robot.P6c.world_X_base.copy()
 
 				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 				self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
-
+				# print np.round(self.Robot.XHd.world_X_base,3)
 				# Update to new current foot position
 				leg_stance = [None]*6
 				for j in range(0,6):
@@ -597,15 +602,21 @@ class CorinManager:
 					self.Robot.Leg[j].XHc.base_X_foot = self.Robot.Leg[j].XHd.base_X_foot.copy()
 					self.Robot.Leg[j].XHc.coxa_X_foot = self.Robot.Leg[j].XHd.coxa_X_foot.copy()
 					leg_stance[j] = self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3]
-
+					# print j, ' wXf: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
+					# print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3],3)
 				self.Robot.stance_offset = (40, -40)
 				self.Robot._initialise(leg_stance)
 				self.Robot.qc.position = self.Robot.qd
+
 				# print 'moving to default'
 				# self.default_pose(0, leg_stance)
-
-				if (self.main_controller(motion_plan)):
-					self.Robot.alternate_phase()
+				if motion_plan is not None:
+					if (self.main_controller(motion_plan)):
+						self.Robot.alternate_phase()
+					else:
+						print 'Planning Failed'	
+				else:
+					print 'Error: No motion plan! Exiting....'
 
 		else:
 			# self.Robot.Gait.support_mode()
