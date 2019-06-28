@@ -250,60 +250,13 @@ if __name__ == "__main__":
 	
 	print "ROS Grid Map Planner Initialised"
 	
-	# RosGridMap.Planner.plot_primitive_graph()
-	## ==================================================== ##
-	## 					Test Scripts 						##
-	## ==================================================== ##
-	## Grid Map
-	# rospy.wait_for_service('GridMap/grid_map')
-	# try:
-	# 	grid_map_serv = rospy.ServiceProxy('GridMap/grid_map', GridMap)
-	# 	ros_grid_map  = grid_map_serv(String("flat"))
-	# 	print ros_grid_map
-	# except rospy.ServiceException, e:
-	# 	print "Service call failed: %s"%e
-
 	## Path Planning
-	# ps = (10,13); pf = (150,9) #IROS
-	ps = (10,13); 
-	pf = (10,20)
-	# pf = (15,13)
+	# ps = (10,13); pf = (150,9) 	# IROS
+	# ps = (11,13); pf = (76,13) 	# TAROS
+	
 	# call_planner(ps, pf)
 
 	# RosGridMap.save_to_yaml()
 
 	while (not rospy.is_shutdown()):
 		RosGridMap.loop_cycle()
-
-## ==================================================== ##
-## 					Service Example 					##
-## ==================================================== ##
-# rospy.init_node('grid_map_planner')
-# add_two_ints_server()
-
-# rospy.wait_for_service('test_array_service')
-# try:
-# 	path_planner = rospy.ServiceProxy('test_array_service', test_array)
-# 	motion_plan  = path_planner()
-# 	print motion_plan
-# except rospy.ServiceException, e:
-# 	print "Service call failed: %s"%e
-
-# def handle_service(req):
-# 	print 'in service'
-# 	qd = Int8MultiArray()
-# 	# qd.data.append([1,1,1.5])
-# 	a = []
-# 	a.append([1,2,3])
-# 	a.append([4,5,6])
-# 	aflatten = []
-# 	for i in range(0, len(a)):
-# 		for j in range(0, len(a[i])):
-# 			qd.data.append(a[i][j])
-# 	return test_arrayResponse(qd)
-
-# def add_two_ints_server():
-	
-# 	s = rospy.Service('test_array_service', test_array, handle_service)
-# 	print "Ready to teste."
-# 	rospy.sleep(1)

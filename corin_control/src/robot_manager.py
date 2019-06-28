@@ -57,7 +57,7 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
 		self.control_loop = "close" 	# run controller in open or closed loop
 
@@ -154,11 +154,12 @@ class CorinManager:
 		## Set map to that available in service
 		print '==============================================='
 		try:
-			self.GridMap.set_map(rospy.get_param('/GridMap/map_name'))
+			mapname = rospy.get_param('/GridMap/map_name')
 		except Exception, e:
-			print 'Grid Map set to default: Flat'
-			self.GridMap = GridMap('flat')
-			self.Planner = PathPlanner(self.GridMap)
+			mapname = 'flat'
+		# print 'Grid Map set to : ', mapname
+		self.GridMap  = GridMap(mapname)
+		self.Planner = PathPlanner(self.GridMap)
 
 	def __initialise_topics__(self):
 		""" Initialises publishers and subscribers """

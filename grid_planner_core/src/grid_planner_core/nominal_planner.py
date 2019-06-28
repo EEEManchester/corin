@@ -2,7 +2,7 @@
 """ 
 
 import sys; sys.dont_write_bytecode = True
-sys.path.insert(0, '/home/wilson/catkin_ws/src/corin/corin_control/src')
+sys.path.insert(0, '/home/wei/catkin_ws/src/corin/corin_control/src')
 from corin_control import *			# library modules to include 
 from grid_map import *
 
@@ -354,19 +354,19 @@ class PathPlanner:
 ## ================================================================================================ ##
 
 ## Create map and plan path
-grid_map = GridMap('flat')
-planner = PathPlanner(grid_map)
-Robot = robot_class.RobotState()
+# grid_map = GridMap('flat')
+# planner = PathPlanner(grid_map)
+# Robot = robot_class.RobotState()
 
-ps = np.array([0.30, 0.39, 0.1, 0., 0., 0.]) 
-pf = np.array([0.5, 0.39, 0.1, 0., 0., 0.]) 
+# ps = np.array([0.30, 0.39, 0.1, 0., 0., 0.]) 
+# pf = np.array([0.5, 0.39, 0.1, 0., 0., 0.]) 
 
-Robot.P6c.world_X_base = ps
-Robot.P6d.world_X_base = Robot.P6c.world_X_base.copy()
-Robot.XHc.update_world_X_base(Robot.P6c.world_X_base)
-Robot.init_robot_stance()
+# Robot.P6c.world_X_base = ps
+# Robot.P6d.world_X_base = Robot.P6c.world_X_base.copy()
+# Robot.XHc.update_world_X_base(Robot.P6c.world_X_base)
+# Robot.init_robot_stance()
 
-motion_plan = planner.motion_planning(ps, pf, Robot)
+# motion_plan = planner.motion_planning(ps, pf, Robot)
 
 
 # tintv = math.ceil(t[-1]/CTR_INTV)

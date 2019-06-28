@@ -245,7 +245,7 @@ if __name__ == "__main__":
 	# call_motion_import('chimney_sc_02.csv')
 	# call_motion_import('wall_convex_02.csv')
 	# call_motion_import('wall_concave_02.csv')
-	# call_motion_import('chimney_autom.csv')
+	
 	rospy.spin()
 
 	# csv_import.visualise_motion_plan()

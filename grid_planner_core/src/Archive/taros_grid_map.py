@@ -14,31 +14,27 @@ import numpy as np
 import math
 from fractions import Fraction
 from collections import OrderedDict 	# remove duplicates
-import random
-import spiral_search
-
-MAX_FLAT_H = 0.05
-MIN_FLAT_H = -0.05
 
 class GridMap:
-	def __init__(self,map_name=None):
+	def __init__(self,map_name):
 		self.map_name = map_name
-
 		self.resolution	= 0.03	# size of cell, (m) - TARGET: 0.03
 		self.map_size_m = (0,0) # set map size
 		self.map_size_g = (0,0) # set map size
 		# self.map_trunc  = (2,2) # cells to truncate
 		
-		self.Spiral = spiral_search.SpiralSearch()
-
 		## Illustrations
 		self.G_free = nx.Graph()
 		self.G_wall = nx.Graph()
 		self.G_hole = nx.Graph()
 		self.viz_offset = np.zeros(3)
 
-		if (map_name is not None):
-			self.__initialise_graph__(map_name)
+		## Motiom primitives illustrations
+		# self.GM_walk = nx.Graph()
+		# self.GM_wall = nx.Graph()
+		# self.GM_chim = nx.Graph()
+
+		self.__initialise_graph__(map_name)
 
 	def __load_map__(self, map_name):
 		""" Loads from a list of pre-defined maps """
@@ -64,11 +60,6 @@ class GridMap:
 						pass
 					try:
 						map_hole = map_list['Map'][map_name]['hole']
-					except:
-						pass
-					try:
-						voff = map_list['Map'][map_name]['offset']
-						self.viz_offset = np.array([voff['x'],voff['y'],voff['z']])
 					except:
 						pass
 					
@@ -104,18 +95,16 @@ class GridMap:
 			self.__set_obstacle__(map_wall, 'wall')
 		if (map_hole is not None):
 			self.__set_obstacle__(map_hole, 'hole')
-		
 		self.__set_surface_normal__()
-		# self.__set_irregular_terrain__()
 
 		self.set_illustrations()
 		# add moore edges
 		# self.Map = self.set_moore_edge(self.Map)		
 		# self.Map = self.remove_edges(self.Map)
 
-		print 'Initialised Map - ', self.map_name
-		print '  - Grid  \t: ', gridx, 'x', gridy
-		print '  - Resolution\t: ', self.resolution, 'm^2'
+		print 'Initialised Map - '
+		print '\tGrid  : ', gridx, 'x', gridy
+		print '\tResolution: ', self.resolution, 'm^2'
 		print '==============================================='
 
 	def __set_obstacle__(self, obs_list, obstacle):
@@ -191,14 +180,6 @@ class GridMap:
 			elif (self.Map.nodes[e]['height'] < 0.):
 				self.Map.nodes[e]['norm'] = np.array([0.,0.,1.])
 
-	def __set_irregular_terrain__(self):
-		""" Sets the surface normal for cells """
-
-		for e in self.Map.nodes():
-			# Normals for wall
-			if (self.Map.nodes[e]['height'] >= 0. and self.Map.nodes[e]['height'] <= 0.5):
-				self.Map.nodes[e]['height'] = random.uniform(MIN_FLAT_H, MAX_FLAT_H)
-
 	def get_cell(self, info, p, j=0):
 		""" Returns cell characteristic at point p (in m) """
 		
@@ -208,16 +189,23 @@ class GridMap:
 				grid_p = (int(np.floor(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
 			else:
 				grid_p = (int(np.floor(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
-			# Check if cell within bound
-			# print grid_p, p[0]/self.resolution, p[1]/self.resolution
-			if (self.get_index_exists(grid_p)):
-				return self.get_index(info, grid_p)
-			else:
-				print 'Index error: ', info, p, j
-				return None
 		except ValueError:	
 			print 'get_cell ValueError: ', p, j
-	
+		# if (j==1 or j==0):
+		# 	print 'get cell ', j, grid_p
+		# Return cell characteristic
+		return self.get_index(info, grid_p)
+		
+	def get_index(self, info, p):
+		""" Returns cell characteristic at index p """
+		
+		# Return cell characteristic
+		try:
+			return self.Map.nodes[p][info]
+		except:
+			print 'Cell Invalid at ', p, info
+			return None
+
 	def get_index_exists(self, p):
 		""" Checks if cell index exists or out of bounds """
 		
@@ -233,65 +221,9 @@ class GridMap:
 		except KeyError, e:
 			print 'Index %s out of bounds'%e
 			return False
-
-	def get_index(self, info, p):
-		""" Returns cell characteristic at index p """
-		
-		# Return cell characteristic
-		try:
-			return self.Map.nodes[p][info]
-		except:
-			print 'Cell Invalid at ', p, info
-			return None
-
-	def getIndex(self, position, j):
-		""" Returns cell index at position (m) """
-
-		if (j < 3):
-			grid_p = (int(np.floor(position[0]/self.resolution)), int(np.ceil(position[1]/self.resolution)))
-		else:
-			grid_p = (int(np.floor(position[0]/self.resolution)), int(np.floor(position[1]/self.resolution)))
-
-		return grid_p
-
+			
 	def get_map_size(self):
 		return self.map_size_g
-
-	def get_median_width(self, p):
-		""" get the width clearance ahead of p """
-
-		grid_p = (int(np.floor(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
-		
-		SCAN_WIDTH = 12
-		SCAN_DEPTH = 3
-		range_scan = [10]*3
-		
-		for row in range(0,SCAN_DEPTH):
-			lwall = (grid_p[0]+row, grid_p[1]+SCAN_WIDTH/2)
-			rwall = (grid_p[0]+row, grid_p[1]-SCAN_WIDTH/2)
-			
-			for column in range(SCAN_WIDTH/2,0,-1):
-				pl = (grid_p[0]+row, grid_p[1]+column)
-				pr = (grid_p[0]+row, grid_p[1]-column)
-				
-				try:
-					cell_h = self.Map.nodes[pl]['height']
-					if (cell_h > 0.5):
-						lwall = pl
-				except:
-					pass
-				try:
-					cell_h = self.Map.nodes[pr]['height']
-					if (cell_h > 0.5):
-						rwall = pr
-				except:
-					pass
-			# 	print pl, pr, lwall, rwall
-			# print '---------------------------'
-			# calculate width (m)
-			range_scan[row] = (lwall[1] - rwall[1]-1)*self.resolution
-
-		return np.median(range_scan)
 
 	def get_wall_length(self, p):
 		""" determine longest wall on either side given a point p """
@@ -404,11 +336,6 @@ class GridMap:
 
 		self.G_wall = nx.path_graph(i_wall) 	
 		self.G_hole = nx.path_graph(i_hole)
-
-	def set_map(self, map_name):
-		""" Initialise map """
-		self.map_name = map_name
-		self.__initialise_graph__(map_name)
 
 	def set_moore_edge(self, G):
 		""" generates moore edges for graph """
@@ -525,9 +452,8 @@ class GridMap:
 
 		i = 0
 		for p in self.Map.nodes():
-			cell_h = self.Map.nodes[p]['height']
-			if (cell_h >= 0.5):
-				# Append to array walls
+			if (self.Map.nodes[p]['height'] >= 0): 		# TODO: change to minimum permissible depth
+				# Append to array walls and ground
 				cx[i] = p[0]*self.resolution
 				cy[i] = p[1]*self.resolution
 				cz[i] = self.Map.nodes[p]['height']*0.9
@@ -536,42 +462,50 @@ class GridMap:
 					cx = np.append(cx,cx[i])
 					cy = np.append(cy,cy[i])
 					cz = np.append(cz,self.resolution*n)
-			elif (cell_h >= MIN_FLAT_H and cell_h <= MAX_FLAT_H):
-				# Append to array ground
-				cx[i] = p[0]*self.resolution
-				cy[i] = p[1]*self.resolution
-				cz[i] = self.Map.nodes[p]['height']
 			else:
 				# Ignore holes, leave them blank
-				cx[i] = -1000
-				cy[i] = -1000
-				
-				
+				pass
 			i += 1
 
 		return cx, cy, cz
 
-	def graph_attributes_to_nparray(self, attr):
-		""" returns map attributes as 1D array """
+	def square_spiral_search(self, p, grid_area, j):
+		""" spiral grid: rotates in clockwise direction starting with left, up, right then down """
 
-		## Define Variables ##
-		sz = self.Map.number_of_nodes() # size of grid map
-		idx = 0
+		def move_left(isp, iend, ii):
+			# move left
+			for x in range(0,ii):
+	            # skip last cell - ends in square shape
+				if (iend-ii==1 and ii-x==1):
+					pass
+				else:
+					isp = (isp[0]-1,isp[1])
+					point_list.append(isp)
+			return isp
+		def move_right(isp, iend, ii):
+			for x in range(0,ii):
+	            # skip last cell - ends in square shape
+				if (iend-ii==1 and ii-x==1):
+					pass
+				else:
+					isp = (isp[0]+1,isp[1])
+					point_list.append(isp)
+			return isp
+		def move_up(isp, iend, ii):
+			if (i!=iend-1):
+				for x in range(0,ii):
+					isp = (isp[0],isp[1]+1)
+					point_list.append(isp)
+			return isp
+		def move_down(isp, iend, ii):
+			if (i!=iend-1):
+				for x in range(0,ii):
+					isp = (isp[0],isp[1]-1)
+					point_list.append(isp)
+			return isp
 
-		try:
-			depth = len(self.Map.nodes[(0,0)][attr])
-		except TypeError:
-			depth = 1
-		
-		cx = np.zeros(sz*depth)
-		for x in range(0, self.map_size_g[0]):
-			for y in range(0, self.map_size_g[1]):
-				cx[idx:idx+depth] = self.Map.nodes[(x,y)][attr]
-				# print (x,y), idx, cx[idx:idx+depth], sz, self.Map.nodes[(x,y)][attr]
-				idx += depth
-		return cx, depth
-
-	def search_area(self, p, grid_area, j):
+		point_list = []
+		end = 2*grid_area[0] - 2
 
 		# sets the appropriate foothold in index form
 		if (j == 0):
@@ -587,17 +521,87 @@ class GridMap:
 		elif (j == 5):
 			sp = (int(np.ceil(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
 		
-		print 'Search centered at ', np.round(p,3), sp
-		result, grid_points = self.Spiral.get_grid(36)
-		# print sp, grid_points
-		for i in range(0, len(grid_points)):
-			grid_points[i] = (grid_points[i][0] + sp[0], grid_points[i][1] + sp[1])
-		# print sp, grid_points
-		return grid_points
+		# sets direction based on feet
+		if (j < 3):
+			direction = 'ccw'
+			# sp = (int(np.floor(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
+		else:
+			direction = 'cw'
+			# sp = (int(np.floor(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
+		
+		for i in range(1,end):
+			if (direction == 'cw'):
+				# sp = move_left(sp, end, i)
+				# sp = move_up(sp, end, i)
+				# sp = move_right(sp, end, i)
+				# sp = move_down(sp, end, i)
+				if (i%2):
+					# move left
+					for x in range(0,i):
+			            # skip last cell - ends in square shape
+						if (end-i==1 and i-x==1):
+							pass
+						else:
+							sp = (sp[0]-1,sp[1])
+							point_list.append(sp)
+					# move up
+					if (i!=end-1):
+						for x in range(0,i):
+							sp = (sp[0],sp[1]+1)
+							point_list.append(sp)
+				else:
+					# move right
+					for x in range(0,i):
+			            # skip last cell - ends in square shape
+						if (end-i==1 and i-x==1):
+							pass
+						else:
+							sp = (sp[0]+1,sp[1])
+							point_list.append(sp)
+					# move down
+					if (i!=end-1):
+						for x in range(0,i):
+							sp = (sp[0],sp[1]-1)
+							point_list.append(sp)
 
-	def graph_representation(self,**options):
+			elif (direction == 'ccw'):
+				# sp = move_right(sp, end, i)
+				# sp = move_up(sp, end, i)
+				# sp = move_left(sp, end, i)
+				# sp = move_down(sp, end, i)
+				if (i%2):
+					# move right
+					for x in range(0,i):
+			            # skip last cell - ends in square shape
+						if (end-i==1 and i-x==1):
+							pass
+						else:
+							sp = (sp[0]+1,sp[1])
+							point_list.append(sp)
+					# move up
+					if (i!=end-1):
+						for x in range(0,i):
+							sp = (sp[0],sp[1]+1)
+							point_list.append(sp)
+				else:
+					# move left
+					for x in range(0,i):
+			            # skip last cell - ends in square shape
+						if (end-i==1 and i-x==1):
+							pass
+						else:
+							sp = (sp[0]-1,sp[1])
+							point_list.append(sp)
+					# move down
+					if (i!=end-1):
+						for x in range(0,i):
+							sp = (sp[0],sp[1]-1)
+							point_list.append(sp)
+
+		return point_list
+
+	def graph_representation(self, gpath=None):
 		""" Plots graph functions """
-
 
 		# dictionary of node names->positions
 		p_map  = dict(zip(self.Map, self.Map))
@@ -605,44 +609,30 @@ class GridMap:
 		p_hole = dict(zip(self.G_hole, self.G_hole))
 		# p_path = dict(zip(self.Gfree, self.Gfree))
 
-		# m_walk = dict(zip(self.GM_walk, self.GM_walk))
-		# m_wall = dict(zip(self.GM_wall, self.GM_wall))
-		# m_chim = dict(zip(self.GM_chim, self.GM_chim))
-
 		# Grid map & obstacles
 		# plt.style.use('presentation')
-		nsize  = 20	# size of nodes
+		nsize  = 50	# size of nodes
 		labels = False 	# label on nodes
 
+		# Set figure size
+		plt.rcParams['figure.figsize'] = (12.0, 4.5)
+		plt.rcParams['font.family'] = ['cmr10']
+		plt.rcParams['font.size'] = 20
+
 		# Map
-		ax = nx.draw_networkx(self.Map, p_map, with_labels=labels, node_size=nsize, node_color='0.9', width=0.0, alpha=1.0, node_shape="s");
+		ax = nx.draw_networkx(self.Map, p_map, with_labels=labels, node_size=nsize, node_color='0.9', width=0.0, alpha=1.0, node_shape="s", edgecolors="none");
 		# Wall
-		nx.draw_networkx(self.G_wall, p_wall, with_labels=labels, node_size=nsize, node_color='#ff0000', width=0.0, node_shape="s");
+		nx.draw_networkx(self.G_wall, p_wall, with_labels=labels, node_size=nsize, node_color='#ff0000', width=0.0, node_shape="s", edgecolors="none");
 		# Holes 
-		nx.draw_networkx(self.G_hole, p_hole, with_labels=labels, node_size=nsize, node_color='#663300', width=0.0, node_shape="s");
-		
-		# Motion primitives
-		if (options.get('gprim') is not None):
-			print 'in prim'
-			gprim = options.get('gprim')
-			m_walk = dict(zip(gprim[0], gprim[0]))
-			m_wall = dict(zip(gprim[1], gprim[1]))
-			m_chim = dict(zip(gprim[2], gprim[2]))
-		
-			# nx.draw_networkx(gprim[0],m_walk,with_labels=labels,node_size=nsize, node_color='#ff6600',	width=0.0);
-			# nx.draw_networkx(gprim[1],m_wall,with_labels=labels,node_size=nsize, node_color='#00ccff',	width=0.0);
-			nx.draw_networkx(gprim[2],m_chim,with_labels=labels,node_size=nsize, node_color='#66ff00',	width=0.0);
-		# nx.draw_networkx(self.GM_walk,m_walk,with_labels=labels,node_size=nsize, node_color='#ff6600',	width=0.0);
-		# nx.draw_networkx(self.GM_wall,m_wall,with_labels=labels,node_size=nsize, node_color='#00ccff',	width=0.0);
-		# nx.draw_networkx(self.GM_chim,m_chim,with_labels=labels,node_size=nsize, node_color='#66ff00',	width=0.0);
+		nx.draw_networkx(self.G_hole, p_hole, with_labels=labels, node_size=nsize, node_color='#663300', width=0.0, node_shape="s", edgecolors="none");
 
 		# Feasible path - single point
-		if options.get("gpath") is not None:
+		if (gpath is not None):
 			p_path = dict(zip(gpath, gpath))
 			if (type(gpath) == list):
 				gpath = nx.path_graph(gpath)
 		
-			nx.draw_networkx(gpath, p_path, with_labels=labels, node_size=10, node_color='#ff33ff', edge_color='#ff33ff', alpha=1.0, width=1.0);
+			nx.draw_networkx(gpath, p_path, with_labels=labels, node_size=25, node_color='#ff33ff', edge_color='#ff33ff', alpha=1.0, width=3.0, edgecolors="none");
 
 		# else:
 		# 	# Feasible path - single point
@@ -656,44 +646,61 @@ class GridMap:
 		# minor_ticks = np.arange(0, 9+1, 0.5)
 		# plt.xticks(minor_ticks)
 
-		plt.xlabel('x, [1]')
-		plt.ylabel('y, [1]')
+		xaxis_label = range(0,90,10)
+		plt.xticks(xaxis_label, [x*0.03 for x in xaxis_label])
+		yaxis_label = range(0,30,5)
+		plt.yticks(yaxis_label, [x*0.03 for x in yaxis_label])
+
+		plt.xlabel('x, m')
+		plt.ylabel('y, m')
+
+		axes = plt.gca()
+		axes.set_xlim([-1,85])
+		axes.set_ylim([-1,27])
 
 		# maximise plot window
 		# print plt.get_backend()
 		# mng = plt.get_current_fig_manager()
 		# mng.resize(*mng.window.maxsize())
+
 		plt.tight_layout()
 		plt.show() 
+		
 		# fig_manager.resize(*fig_manager.window.maxsize())
 
+	def graph_primitive(self, GM_walk, GM_wall, GM_chim):
+
+		m_walk = dict(zip(GM_walk, GM_walk))
+		m_wall = dict(zip(GM_wall, GM_wall))
+		m_chim = dict(zip(GM_chim, GM_chim))
+		
+		nsize  = 50	# size of nodes
+		labels = False 	# label on nodes
+		
+		plt.rcParams['figure.figsize'] = (12.0, 4.5)
+		plt.rcParams['font.family'] = ['cmr10']
+		plt.rcParams['font.size'] = 20
+
+		# Motion primitives
+		nx.draw_networkx(GM_walk, m_walk, with_labels=labels, node_size=nsize, node_color='#ff6600',	width=0.0, edgecolors="none");
+		nx.draw_networkx(GM_wall, m_wall, with_labels=labels, node_size=nsize, node_color='#00ccff',	width=0.0, edgecolors="none");
+		nx.draw_networkx(GM_chim, m_chim, with_labels=labels, node_size=nsize, node_color='#66ff00',	width=0.0, edgecolors="none");
+
+		axes = plt.gca()
+		axes.set_xlim([-1,85])
+		axes.set_ylim([-1,27])
+
+		plt.grid('on');		 plt.grid(which='major', linestyle=':', linewidth='0.5', color='black')
+		plt.xlabel('x, [1]')
+		plt.ylabel('y, [1]')
+		plt.tight_layout()
+		plt.show() 
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-map_offset = (0.33, 0.39)
-ps = np.array([map_offset[0], map_offset[1], 0.1, 0., 0., 0.]).reshape(6,1)
-
-# gmap = GridMap('flat')
-# p_tuple = gmap.getIndex(ps[0:2])
-
-# print gmap.get_index_exists(gmap.getIndex(tuple(map(float, ps[0:2])),0))
-
-# print gmap.get_index('norm', (10,22))
-# try:
-# 	print gmap.get_cell('norm', np.array([0.08, 0.641, 0.0]), 0)
-# except:
-# 	print error
-# print gmap.get_cell('height', np.array([0.747,0.168,0]), 3)
-# print gmap.get_cell('height', np.array([0.72,0.06,0]), 3)
-# gmap.square_spiral_search((0.72,0.66), (3,3), 3)
-# gmap.search_area((0.72,0.66), (3,3), 3)
-# print gmap.get_index_exists((34,0))
-# a, b = gmap.graph_attributes_to_nparray("norm")
-# print a
-# print len(a)
-# sp = np.array([0.6015, 0.1391, -0.])
-# p = (19,21)
-# print gmap.get_median_width([p[0]*gmap.resolution,p[1]*gmap.resolution])
+# gmap = GridMap('wall_hole_demo')
 # gmap.graph_representation()
-# print range(10/2,0,-1)
+
 # [(20, 5), (20, 6), (21, 6), (21, 5), (20, 5), (19, 5), (19, 6), (19, 7), (20, 7), (21, 7), (21, 6), (21, 5), (20, 5), (19, 5), (20, 5), (21, 5)]
+
+
