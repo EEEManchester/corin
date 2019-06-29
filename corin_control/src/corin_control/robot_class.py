@@ -193,24 +193,19 @@ class RobotState:
 
 		## Define Variables ##
 		stack_world_bXw = []
-		stack_base_bXw = []
-
+		
 		for j in range(6):
 			stack_world_bXw.append(self.Leg[j].XHc.world_base_X_foot[:3,3])
-			stack_base_bXw.append(self.Leg[j].XHc.base_X_foot[:3,3])
-
+			
 		# Kinematic stability margin
-		valid, sm = self.SM.point_in_convex(np.zeros(3), stack_world_bXw, self.Gait.cs)
+		valid, sm = self.SM.point_in_convex(self.Rbdl.com, stack_world_bXw, self.Gait.cs)
 
 		if not valid:
 			print 'Convex hull: ', valid, sm
 			self.invalid = True
-			self.SM.point_in_convex(np.zeros(3), stack_world_bXw, self.Gait.cs, True)
+			self.SM.point_in_convex(self.Rbdl.com, stack_world_bXw, self.Gait.cs, True)
 		else:
 			self.invalid = False
-
-		if sm < 0.:
-			self.invalid = True
 
 	def update_rbdl(self, qb, qp):
 		""" Updates robot CoM and CRBI """

@@ -272,7 +272,8 @@ class CorinManager:
 		## Publish setpoints to logging topic
 		# if (qlog is not None):
 		# 	self.log_sp_pub_.publish(qlog)
-		if self.interface != 'rviz' and qlog is not None:
+		# if self.interface != 'rviz' and 
+		if qlog is not None:
 			qlog_ac, qlog_er = self.set_log_actual()
 			self.log_sp_pub_.publish(qlog)
 			self.log_ac_pub_.publish(qlog_ac)
@@ -599,10 +600,11 @@ class CorinManager:
 					self.Robot.Leg[j].XHd.world_X_foot = v3_X_m(motion_plan.f_world_X_foot[j].xp[0])
 					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHd.world_X_foot)
 					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
+					self.Robot.Leg[j].XHc.world_X_foot = self.Robot.Leg[j].XHd.world_X_foot.copy()
 					self.Robot.Leg[j].XHc.base_X_foot = self.Robot.Leg[j].XHd.base_X_foot.copy()
 					self.Robot.Leg[j].XHc.coxa_X_foot = self.Robot.Leg[j].XHd.coxa_X_foot.copy()
+					self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
 					leg_stance[j] = self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3]
-					# print j, ' wXf: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
 					# print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3],3)
 				self.Robot.stance_offset = (40, -40)
 				self.Robot._initialise(leg_stance)

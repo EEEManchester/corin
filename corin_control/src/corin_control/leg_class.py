@@ -142,6 +142,16 @@ class LegClass:
 		else:
 			self.cstate = False
 
+	def change_phase(self, phase, world_X_base):
+		""" Updates leg state when gait phase changes """
+		 
+		if phase == 'support':
+			self.transfer_phase_change = False
+			self.XHc.update_world_X_foot(world_X_base)
+			self.XHd.world_X_foot = self.XHc.world_X_foot.copy()
+		elif phase == 'transfer':
+			pass
+
 	def time_domain_passivity(self):
 		""" Minimising contact force (Kim2007) """
 
