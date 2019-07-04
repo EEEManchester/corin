@@ -21,7 +21,8 @@ class RobotController(CorinManager):
 		# Enable/disable controllers
 		self.ctrl_base_tracking  = False 	# base tracking controller
 		self.ctrl_base_impedance = False 	# base impedance controller - fault
-		self.ctrl_leg_impedance  = True 	# leg impedance controller
+		self.ctrl_leg_impedance  = False 	# leg impedance controller
+		self.ctrl_contact_detect = False 	# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
 
@@ -97,6 +98,8 @@ class RobotController(CorinManager):
 		# Support phase counter
 		s_max = int(GAIT_TPHASE/CTR_INTV)
 		s_cnt = 1
+		# Counts per gait phase interval
+		iahead = int(GAIT_TPHASE/CTR_INTV)
 
 		self.P6e_prev_1 = np.zeros((6,1))
 		self.P6e_prev_2 = np.zeros((6,1))
@@ -228,10 +231,15 @@ class RobotController(CorinManager):
 				if tload == iload+1:
 					tload = 1
 					state_machine = 'unload'
-					try:
-						self.Robot.alternate_phase(next(gait_stack))
-					except:
-						self.Robot.alternate_phase()
+					# Checks if robot meant to be in support mode 
+					if prev_phase == [0]*6:
+						self.Robot.Gait.support_mode()
+					else:
+						# alternate gait phase as robot meant to walk
+						try:
+							self.Robot.alternate_phase(next(gait_stack))
+						except:
+							self.Robot.alternate_phase()
 					self.Robot.Gait.walk_mode()
 				
 			elif state_machine ==  'motion':
@@ -245,7 +253,7 @@ class RobotController(CorinManager):
 					for j in range(6):
 						self.Robot.Leg[j].Fmax = F_MAX if gphase[j] == 0 else FORCE_THRES
 
-				elif (s_cnt > s_max/2):
+				elif (s_cnt > s_max/2 and self.ctrl_contact_detect):
 					# Check if transfer has made contact
 					cearly = map(lambda x,y: x and y, self.Robot.cstate, self.Robot.Gait.cs)
 					cindex = [z for z, y in enumerate(cearly) if y == 1]
@@ -273,8 +281,8 @@ class RobotController(CorinManager):
 						print i, 'findex ', findex, gphase, fmax_lim
 
 					# Start passivity check
-					if self.Robot.Gait.cs[5] == 1:
-						self.Robot.Leg[5].time_domain_passivity()
+					# if self.Robot.Gait.cs[5] == 1:
+					# 	self.Robot.Leg[5].time_domain_passivity()
 
 				## Generate trajectory for legs in transfer phase
 				for j in range (0, self.Robot.active_legs):
@@ -301,8 +309,6 @@ class RobotController(CorinManager):
 								self.Robot.Leg[j].XH_world_X_base = self.Robot.XHd.world_X_base.copy()
 
 							except IndexError:
-								# print 'Leg: ', j, ' No further foothold planned!', i
-								iahead = int(GAIT_TPHASE/CTR_INTV)
 								# Get bodypose at end of gait phase, or end of trajectory
 								try:
 									x_ahead = base_path.X.xp[i+iahead].reshape(3,1) + wXbase_offset[0:3]
@@ -314,7 +320,9 @@ class RobotController(CorinManager):
 								self.Robot.Leg[j].XH_world_X_base = vec6d_to_se3(np.array([x_ahead, w_ahead]).reshape((6,1)))
 								self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
 																		self.Robot.Leg[j].XHd.world_X_foot)
-								
+								## TEMP!
+								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
+
 						## Get surface normal at current and desired footholds
 						try:
 							sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
@@ -354,7 +362,7 @@ class RobotController(CorinManager):
 				## Gait phase TIMEOUT
 				if ( s_cnt == s_max  and not self.Robot.support_mode):
 					# Legs in contact, change phase
-					if all(self.Robot.cstate) or self.interface == "rviz":
+					if all(self.Robot.cstate) or self.interface == "rviz" or self.control_loop=="open":
 						self.Robot.suspend = False
 						for j in range(0,6):
 							if (self.Robot.Gait.cs[j] == 1):

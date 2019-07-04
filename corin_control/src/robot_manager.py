@@ -24,6 +24,7 @@ from std_msgs.msg import ByteMultiArray 	# foot contact state
 from std_msgs.msg import Float32MultiArray	# foot contact force
 from std_msgs.msg import String 			# ui control
 import tf 		 							# ROS transform library
+from geometry_msgs.msg import Vector3Stamped # Force sensor readings
 # from geometry_msgs.msg import PolygonStamped
 # from geometry_msgs.msg import Point32
 # from geometry_msgs.msg import Polygon
@@ -57,9 +58,9 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
-		self.control_rate = "fast" 	# run controller in either: 1) normal, or 2) fast
-		self.control_loop = "close" 	# run controller in open or closed loop
+		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
+		self.control_loop = "open" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
 		self.MotionPlan = MotionPlan()
@@ -77,12 +78,32 @@ class CorinManager:
 		""" imu callback """
 		self.Robot.imu = msg
 
-	def contact_state_callback(self, msg):
-		""" foot contact binary state """
-		self.Robot.cstate = msg.data
+	def contact_force_callback_0(self, msg):
+		data = msg.vector
+		self.Robot.cforce[0:3] = np.array([data.x, data.y, data.z]) 
+		
+	def contact_force_callback_1(self, msg):
+		data = msg.vector
+		self.Robot.cforce[3:6] = np.array([data.x, data.y, data.z]) 
+
+	def contact_force_callback_2(self, msg):
+		data = msg.vector
+		self.Robot.cforce[6:9] = np.array([data.x, data.y, data.z]) 
+
+	def contact_force_callback_3(self, msg):
+		data = msg.vector
+		self.Robot.cforce[9:12] = np.array([data.x, data.y, data.z]) 
+
+	def contact_force_callback_4(self, msg):
+		data = msg.vector
+		self.Robot.cforce[12:15] = np.array([data.x, data.y, data.z]) 
+
+	def contact_force_callback_5(self, msg):
+		data = msg.vector
+		self.Robot.cforce[15:18] = np.array([data.x, data.y, data.z]) 
 
 	def contact_force_callback(self, msg):
-		""" foot contact force """
+		""" Gazebo foot contact force """
 		self.Robot.cforce = msg.data
 
 	def ui_callback(self, msg):
@@ -199,16 +220,22 @@ class CorinManager:
 		##***************** SUBSCRIBERS ***************##
 		## Robot State ##
 		self.imu_sub_	 = rospy.Subscriber(ROBOT_NS + '/imu/base/data', Imu, self.imu_callback, queue_size=1)
-		# self.cstate_sub_ = rospy.Subscriber(ROBOT_NS + '/contact_state', ByteMultiArray, self.contact_state_callback, queue_size=1)
-		self.cforce_sub_ = rospy.Subscriber(ROBOT_NS + '/contact_force', Float32MultiArray, self.contact_force_callback, queue_size=1)
-
+		
 		## Hardware Specific Subscribers ##
 		if (self.interface == 'robotis'):
 			self.joint_sub_  = rospy.Subscriber('robotis/present_joint_states', JointState, self.joint_state_callback, queue_size=5)
+			self.cforce_sub_ = {}
+			self.cforce_sub_[0] = rospy.Subscriber('/force_sensor_' + str(0), Vector3Stamped, self.contact_force_callback_0, queue_size=1)
+			self.cforce_sub_[1] = rospy.Subscriber('/force_sensor_' + str(1), Vector3Stamped, self.contact_force_callback_1, queue_size=1)
+			self.cforce_sub_[2] = rospy.Subscriber('/force_sensor_' + str(2), Vector3Stamped, self.contact_force_callback_2, queue_size=1)
+			self.cforce_sub_[3] = rospy.Subscriber('/force_sensor_' + str(3), Vector3Stamped, self.contact_force_callback_3, queue_size=1)
+			self.cforce_sub_[4] = rospy.Subscriber('/force_sensor_' + str(4), Vector3Stamped, self.contact_force_callback_4, queue_size=1)
+			self.cforce_sub_[5] = rospy.Subscriber('/force_sensor_' + str(5), Vector3Stamped, self.contact_force_callback_5, queue_size=1)
 		else:
 			self.joint_sub_  = rospy.Subscriber(ROBOT_NS + '/joint_states', JointState, self.joint_state_callback, queue_size=5)
 			if (self.interface == 'gazebo'):
 				self.robot_sub_ = rospy.Subscriber('/gazebo/model_states', ModelStates, self.robot_state_callback, queue_size=5)
+				self.cforce_sub_ = rospy.Subscriber(ROBOT_NS + '/contact_force', Float32MultiArray, self.contact_force_callback, queue_size=1)
 
 		## User Interface
 		self.ui_control_ = rospy.Subscriber(ROBOT_NS + '/ui_execute', String, self.ui_callback, queue_size=1)
@@ -442,13 +469,13 @@ class CorinManager:
 
 		## check action to take - rosparam server
 		data = self.Action.action_to_take()
-	
+		data = None
 		if (data is not None):
 			self.Visualizer.clear_visualisation()
 			
 			## Data mapping - for convenience
 			x_cob, w_cob, mode, motion_prim = data
-			mode = 5 	# HARDCODED 
+			mode = 6 	# HARDCODED 
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
 				print 'Going to standup'
@@ -621,10 +648,8 @@ class CorinManager:
 					print 'Error: No motion plan! Exiting....'
 
 		else:
-			# self.Robot.Gait.support_mode()
+			self.Robot.Gait.support_mode()
 			self.main_controller()
-			# self.leg_controller()
-			rospy.sleep(0.5)
 
 	def set_log_setpoint(self, v3cp, v3cv, v3ca, v3wp, v3wv, v3wa, qd, effort=None, forces=None):
 		""" Sets the variables for logging """

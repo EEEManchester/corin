@@ -93,8 +93,9 @@ class GaitClass:
 		self.ns = self.phases[self.np+1]
 		
 	def update_phase(self):
-		self.ps = copy.deepcopy(self.cs)
 
+		self.ps = copy.deepcopy(self.cs)
+		
 	def change_phase(self):
 		""" Change to next gait phase """
 
