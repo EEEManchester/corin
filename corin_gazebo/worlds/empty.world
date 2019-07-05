@@ -68,8 +68,8 @@
         <gravity>1</gravity>
       </link>
     </model>
-   
-    
+
+
     <physics type='ode'>
       <simbody>
         <accuracy>0.005</accuracy>
@@ -84,9 +84,9 @@
           <iters>250</iters>
         </solver>
       </ode>
-      <max_step_size>0.001</max_step_size>
+      <max_step_size>0.0001</max_step_size>
       <real_time_factor>1</real_time_factor>
-      <real_time_update_rate>1000</real_time_update_rate>
+      <real_time_update_rate>10000</real_time_update_rate>
       <gravity>0 0 -9.8</gravity>
     </physics>
 
@@ -126,4 +126,3 @@
 
 
 </sdf>
-

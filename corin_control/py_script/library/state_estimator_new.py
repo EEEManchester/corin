@@ -9,13 +9,14 @@ sys.dont_write_bytecode = True
 import time
 import warnings
 import numpy as np
+from copy import copy
 
 ## Personal libraries
-from library import *			# library modules to include
 from constant import *
 import control_interface 								# action selection from ROS parameter server
 import robot_class 										# class for robot states and function
 from termcolor import colored
+from matrix_transforms import *
 
 class StateEstimator:
 
@@ -28,40 +29,60 @@ class StateEstimator:
 
 		# Define state vector components
 		self.a = np.zeros(3)
-		self.o = np.array([1, 0, 0, 0])
+		self.w = np.zeros(3)
+		self.q_IMU = np.array([1, 0, 0, 0])
 		self.v2 = np.zeros(3)
 		self.r = np.zeros(3)	# body position in world frame (inertial frame)
 		self.v = np.zeros(3)	# body velocity in world frame
 		# body quaternion mapping vectors from world to body frame (body frame rotated -90)
 		self.q = quaternion_from_matrix_JPL(np.array([[0, 1, 0], [-1, 0, 0], [0, 0, 1]])) #
-		self.q2 = quaternion_from_matrix(np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]]))
-		# print self.q
-		# print self.q2
 
 		self.y = np.zeros(18) # feet position errors
-
-		# self.R1 = np.array([[1, 0, 0, 4],
-		# 				 	[0, 1, 0, 8],
-		# 					[0, 0, 1, 27],
-		# 					[0, 0, 0, 1]])
-		#
-		# self.R2 = np.array([[-1, 0, 0, -123],
-		# 					[0, 1, 0, -5.25],
-		# 					[0, 0, -1, 24.5],
-		# 					[0, 0, 0, 1]])
 
 		self.IMU_r = np.array([-123, 5.25, 24.5]) # Body frame origin relative to IMU frame, described in the IMU frame
 		self.IMU_R = np.array([[-1, 0, 0],
 								[0, 1, 0],
 								[0, 0, -1]])	# Rotation matrix mapping vectors from IMU frame to body frame
-		self.IMU_r = np.zeros(3)
-		self.IMU_R = np.eye(3)
 
-		# self.IMU_r = np.array([-0.1, 0.2, 0])
-		# self.IMU_R = np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
+		self.IMU_r = np.zeros(3)
+		self.IMU_R = np.eye(3) # for Gazebo
 
 		self.IMU_q = quaternion_from_matrix_JPL(self.IMU_R) # Quaternion corresponding to self.IMU_R
 		self.w1 = np.zeros(3) # Initial angular velocity of IMU
+
+
+		# Process noise covariances: Qp, Qf, Qbf, Qw, Qbw
+
+		# Sensor noise covariance matrices
+		self.Qf = 3E-7*np.eye(3)		# accelerometer noise covariance matrix
+		self.Qbf = 1E-7*np.eye(3) 	# accelerometer bias derivative noise covariance matrix
+		self.Qw = 4E-6*np.eye(3) 	# gyroscope noise covariance matrix
+		self.Qbw = 2E-11*np.eye(3) 	# gyroscope bias derivative noise covariance matrix
+
+		# Foot position noise covariance matrix
+		# 1) This accounts for foot slippage in x,y,z directions in body frame
+		# 2) Set to infinity when foot not in contact, because the position is no longer known
+		self.Qp = 3E-6*np.eye(3)	# [<dx> m, <dy> m, <dz> m]
+
+		# Measurement noise covariances: Ra, Rs
+
+		# Kinematic model error covariance matrix in the body frame (x, y, z)
+		self.Rs = 2E-13*np.eye(3) # metres
+		# Joint angle covariance matrix
+		self.Ra = 3E-14*np.eye(3) # rad^2  (1 deg = 0.02 rad) #0 before
+
+		# Contact detection
+
+		self.force_threshold = 5 # Foot contact force threshold
+		self.threshold = [0] * 6 # Array for implementing hysteresis for contact detection
+
+		# Iterations to wait before calling update_state()
+		self.update_N = 10
+
+		self.reset_state()
+
+
+	def reset_state(self):
 
 		self.p0 = np.zeros(3)	# foot contact points 0 to 5 in world frame
 		self.p1 = np.zeros(3)
@@ -88,41 +109,74 @@ class StateEstimator:
 		self.dbf = np.zeros(3)	# accelerometer bias in body frame
 		self.dbw = np.zeros(3)	# gyroscope bias in body frame
 
-		# State error cova<origin xyz="0 0 0.0" rpy="0 0 0"/> riance matrix
+		# State error covariance matrix
 		self.P = 1E-6*np.eye(self.Ne)
 
+		# Calibration variables
+		self.calibrated = False
+		self.cal_N = 100
+		self.cal_i = None
 
-		# Process noise covariances: Qp, Qf, Qbf, Qw, Qbw
+	def calibrate(self):
 
-		# Sensor noise covariance matrices
-		self.Qf = 3E-7*np.eye(3)		# accelerometer noise covariance matrix
-		self.Qbf = 1E-7*np.eye(3) 	# accelerometer bias derivative noise covariance matrix
-		self.Qw = 4E-6*np.eye(3) 	# gyroscope noise covariance matrix
-		self.Qbw = 2E-11*np.eye(3) 	# gyroscope bias derivative noise covariance matrix
+		msg = self.robot.imu
+		a = msg.linear_acceleration; w = msg.angular_velocity; q = msg.orientation
+		a0 = np.array([a.x, a.y, a.z])
+		w0 = np.array([w.x, w.y, w.z])
+		q0 = np.array([q.w, q.x, q.y, q.z])
 
-		# self.Qf = (0.001)*np.eye(3)#*np.sqrt(self.T)		# accelerometer noise covariance matrix
-		# self.Qbf = 0*(0.001)*np.eye(3) 	# accelerometer bias derivative noise covariance matrix
-		# self.Qw = 0*(0.001**1)*np.eye(3)#*np.sqrt(self.T) 	# gyroscope noise covariance matrix
-		# self.Qbw = 0*(0.001)*np.eye(3) 	# gyroscope bias derivative noise covariance matrix
+		if self.cal_i is None:
+			self.q0_array = np.empty((0,4))
+			self.a0_array = np.empty((0,3))
+			self.w0_array = np.empty((0,3))
+			self.last_stamp = None # stores the latest imu msg timestamp
+			self.cal_i = 0
 
-		# Foot position noise covariance matrix
-		# 1) This accounts for foot slippage in x,y,z directions in body frame
-		# 2) Set to infinity when foot not in contact, because the position is no longer known
-		self.Qp = 3E-6*np.eye(3)	# [<dx> m, <dy> m, <dz> m]
-		# self.Qp = 1*np.diagflat([0.001, 0.001, 0.001])	# [<dx> m, <dy> m, <dz> m]
+		if(self.cal_i  < self.cal_N): #and msg.header.stamp != self.last_stamp
+			self.q0_array = np.vstack([self.q0_array, q0])
+			self.a0_array = np.vstack([self.a0_array, a0])
+			self.w0_array = np.vstack([self.w0_array, w0])
+			self.cal_i += 1
 
-		# Measurement noise covariances: Ra, Rs
+		elif self.cal_i == self.cal_N: #and msg.header.stamp != self.last_stamp
+			q_mean = np.mean(self.q0_array, axis=0)
+			q_rotate = quaternion_from_matrix_JPL(self.IMU_R) # Rotates points from IMU to base (body)
+			q_temp = quaternion_multiply_JPL(q_rotate, q_mean)
 
-		# Kinematic model error covariance matrix in the body frame (x, y, z)
-		self.Rs = 2E-13*np.eye(3) # metres
-		# self.Rs = 0.0000001*np.eye(3) # metres
-		# Joint angle covariance matrix
-		self.Ra = 3E-14*np.eye(3) # rad^2  (1 deg = 0.02 rad) #0 before
-		# self.Ra = 0.0004*np.eye(3) # rad^2  (1 deg = 0.02 rad) #0 before
+			# Set heading to zero
+			roll, pitch, yaw = euler_from_quaternion(q_temp, 'sxyz')
+			self.q = quaternion_from_euler(roll, pitch, 0, 'sxyz')
+			# self.q = q_temp
 
-		self.threshold = [0] * 6
+			# initialise IMU bias
+			g = np.array([0, 0, -9.80])
+			C = quaternion_matrix_JPL(self.q)[0:3, 0:3]
+			a = self.IMU_R.dot(np.mean(self.a0_array, axis=0)) # Transform to body frame
+			ab = a + C.dot(g) # bias in body frame
 
-		self.force_threshold = 2.7
+			bw = self.IMU_R.dot(np.mean(self.w0_array, axis=0))
+			self.bf = ab
+			self.bw = bw
+
+			# Move on to state estimation only after foot positions are reset
+			if self.reset_foot_positions():
+				print "reset foot positions"
+				self.cal_i += 1
+			print "calibrating", self.cal_i
+			print q_mean
+			print self.q
+			print "acc bias:", ab
+			print "gyro bias:", bw
+
+			return True
+
+		else:
+			self.cal_i += 1
+			print "calibrating", self.cal_i
+			return True
+
+		self.stamp = copy(msg.header.stamp)
+		return False
 
 	# Combine all states to produce state vector
 	def get_state_vector(self):
@@ -187,28 +241,37 @@ class StateEstimator:
 		angles_tuple = euler_from_quaternion_JPL(self.q, 'rxyz') # relative: rxyz
 		return np.asarray(angles_tuple)#*180.0/np.pi
 
-	def get_fixed_angles2(self):
-		# euler angles of rotation that maps vectors from body frame to world frame
-		angles_tuple = euler_from_quaternion(self.q2, 'rxyz') # relative: rxyz
+	def get_IMU_fixed_angles(self):
+		angles_tuple = euler_from_quaternion_JPL(self.q_IMU, 'rxyz') # relative: rxyz
 		return np.asarray(angles_tuple)#*180.0/np.pi
-
-	def get_o_fixed_angles(self):
-		angles_tuple = euler_from_quaternion_JPL(self.o, 'rxyz') # relative: rxyz
-		return np.asarray(angles_tuple)#*180.0/np.pi
-
-#	def set_q_using_IMU(self, IMU_q):
-
 
 	def reset_foot_positions(self):
 		if self.robot.qc is not None:
 			C = quaternion_matrix_JPL(self.q)[0:3, 0:3]
-			self.robot.update_state() # sets the new foot positions
+			self.robot.update_leg_state(False, "normal") # sets the new foot positions
 			for j in range(0,self.robot.active_legs):
 				s = self.robot.Leg[j].XHc.base_X_foot[:3,3]
 				self.set_p(j, C.T.dot(s)) # s - C.dot(p-r) should be zero
 			return True
 		else:
 			return False
+
+	# Estimation logic (state machine)
+	# Should be called at IMU rate
+	def estimate(self):
+		if self.calibrated:
+			self.predict_state()
+
+			self.update_i += 1
+			if self.update_i >= self.update_N:
+				self.update_state()
+				self.update_i = 0
+		else:
+			# This needs to be called many times before calibration completes
+			if self.calibrate():
+				self.calibrated = True
+				self.update_i = 0
+
 
 	# implements Kalman Filter state/error-state prediction upon receiving IMU data
 	def predict_state(self):
@@ -264,10 +327,8 @@ class StateEstimator:
 		self.v = self.v + T*self.a
 		self.r = self.r + T*self.v + (T**2/2) * self.a
 		self.w = C.T.dot(w) # w in world frame
-		self.o = o
+		self.q_IMU = o
 		self.q = quaternion_multiply_JPL(self.rotation_to_quaternion(T*w), self.q) # JPL
-		# self.q = o1
-		self.q2 = quaternion_multiply(self.q2, self.rotation_to_quaternion(T*w)) # Hamilton
 
 		# state error transition matrix (discrete linearised error dynamics)
 		F = np.zeros((self.Ne, self.Ne))
@@ -326,7 +387,7 @@ class StateEstimator:
 		Q[21:24, 21:24] = Q[9:12, 9:12]
 		Q[24:27, 24:27] = Q[9:12, 9:12]'''
 
-		self.robot.update_state()
+		self.robot.update_state() #TODO: still needed?
 		for j in range(0,self.robot.active_legs):
 			# if self.robot.Leg[j].cstate == True:
 			force = np.linalg.norm(self.robot.Leg[j].F6c.tibia_X_foot[:3])
@@ -342,7 +403,7 @@ class StateEstimator:
 
 			# Hysteresis based contact detection
 			th = self.threshold[j]
-			lim = 8
+			lim = 8# for LORD
 			if th > lim:
 				if force < self.force_threshold:
 					th = 0
@@ -353,8 +414,8 @@ class StateEstimator:
 					th = 0
 
 			self.threshold[j] = th
-			#
-			if th > lim: #Gazebo: force > 3 and force < 25
+			# if force > 5 and force < 80:
+			if th > lim: # LORD IMU at 500 Hz
 				cov = T * C.T.dot(self.Qp).dot(C)
 				# cov = T * C.T.dot(self.Qp1 if j<3 else self.Qp2).dot(C)
 			else:
@@ -395,7 +456,7 @@ class StateEstimator:
 		R = np.zeros((18,18))
 
 		# Evaluate robot foot positions based on latest angle measurements
-		self.robot.update_state()
+		self.robot.update_leg_state(False, "normal")
 		for j in range(0,self.robot.active_legs):
 			s = self.robot.Leg[j].XHc.base_X_foot[:3,3]
 			J = self.robot.Leg[j].XHc.j_base_X_foot # jacobian
@@ -418,6 +479,8 @@ class StateEstimator:
 		# Calculate Kalman gain
 		S = H.dot(self.P).dot(H.T) + R
 		#print "P:", self. P[0]
+		# print "P", P
+		# print "S", S
 		K = self.P.dot(H.T).dot(np.linalg.pinv(S))
 		#print "K:", K[0:2]
 

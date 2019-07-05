@@ -15,9 +15,8 @@ import random
 ## Personal libraries
 from library import *			# library modules to include
 from constant import *
-import control_interface 								# action selection from ROS parameter server
-import robot_class 										# class for robot states and function
 import tf 												# SE(3) transformation library
+import state_estimator_new as state_estimator
 
 ## ROS messages
 import rospy
@@ -40,7 +39,6 @@ import matplotlib.pyplot as plt
 from robotis_controller_msgs.msg import SyncWriteItem 	# pub msg for Robotis joints
 from robotis_controller_msgs.msg import SyncWriteMulti 	# pub msg for Robotis joints
 
-from State_Estimator import StateEstimator
 
 np.set_printoptions(suppress=True) # suppress scientific notation
 np.set_printoptions(precision=5) # number display precision
@@ -49,6 +47,24 @@ np.set_printoptions(linewidth=1000)
 
 class CorinStateTester:
 	def __init__(self):
+		#---------------------------------------------------------------------#
+		# Tuning parameters                                                   #
+		#---------------------------------------------------------------------#
+		self.Qf = 0.1#10**-7.02#1E-6         # (0.00025**2)* # Noise power density (m/s2 / sqrt(Hz))
+		self.Qbf = 1E-7#10**-7.15#1E-6       # 9
+
+		self.Qw = 0.01#10**-5.8#-5.6#1E-7
+		self.Qbw = 2E-11#10**-13.3#-2.2#1E-8          # 10
+
+		self.Qp = 3E-6#10**-6.76#-4.3#1E-5
+		self.Qp_xy = 1E-5
+		self.Qp_z = 1E-5
+
+		self.Rs = 2E-3 #10**-3.356#1E-3
+		self.Ra = 3E-4#3E-4 # 0.0003
+
+		self.force_threshold = 2.7#2.9#3.5 #3
+
 		rospy.init_node('IMU_estimator') 		#Initialises node
 
 		# print quaternion_from_matrix(np.array([[1, 0, 0], [0, -1, 0], [0, 0, -1]]))
@@ -64,25 +80,48 @@ class CorinStateTester:
 		self.link_states = ModelStates()
 		self.imu1 = Imu()
 		self.robot 	= robot_class.RobotState()
-		self.estimator = StateEstimator(self.robot, self.T_imu)
+		self.estimator = state_estimator.StateEstimator(self.robot, self.T_imu)
+		# self.estimator = state_estimator_old.StateEstimator(self.robot, self.T_imu)
+		self.estimator.Qf = self.Qf*np.eye(3)
+		self.estimator.Qbf = self.Qbf*np.eye(3)
+		self.estimator.Qw = self.Qw*np.eye(3)
+		self.estimator.Qbw = self.Qbw*np.eye(3)
+		self.estimator.Qp = self.Qp*np.eye(3)
+		self.estimator.Rs = self.Rs*np.eye(3)
+		self.estimator.Ra = self.Ra*np.eye(3)
+		self.estimator.force_threshold = self.force_threshold
+
+		self.estimator.IMU_r = 0.001*np.array([0, 0, 0])
+		self.estimator.IMU_R = np.eye(3)
+
+		# self.estimator.P[0:3, 0:3] = 0*np.eye(3)
+		# self.estimator.P[3:6, 3:6] = 0*np.eye(3)
+		# self.estimator.P[6:9, 6:9] = 1E-6*np.eye(3)
+		# self.estimator.P[8, 8] = 0 # we known heading = 0
+		# self.estimator.P[9:27, 9:27] = 1E-6*np.eye(18) # all feet
+		# self.estimator.P[27:30, 27:30] = 1E-6*np.eye(3)
+		# self.estimator.P[30:33, 30:33] = 1E-6*np.eye(3)
+
 		self.counter = 0
-		self.update_i = 0
-		self.update_N = 10
+		# self.update_i = 0
+		# self.update_N = 3
 		self.imu_a_z = np.array([])
 		self.body_a_z = np.array([])
 		self.imu_t = np.array([])
 		self.body_t = np.array([])
 
-		self.cal_N = 100
-		self.cal_sum = np.zeros(4)
-		self.cal_i = 0.0
-		self.level = 10
+		# self.cal_N = 10
+		# self.cal_sum = np.zeros(4)
+		# self.cal_i = 0.0
+		# self.level = 10
 
 		self.pub_imu_a = rospy.Publisher('imu_a', Vector3, queue_size=1)
 		self.pub_imu_v = rospy.Publisher('imu_v', Vector3, queue_size=1)
 		self.pub_imu_r = rospy.Publisher('imu_r', Vector3, queue_size=1)
 		self.pub_imu_w = rospy.Publisher('imu_w', Vector3, queue_size=1)
 		self.pub_imu_p = rospy.Publisher('imu_p', Vector3, queue_size=1)
+		self.pub_imu_bf = rospy.Publisher('imu_bf', Vector3, queue_size=1)
+		self.pub_imu_bw = rospy.Publisher('imu_bw', Vector3, queue_size=1)
 
 		self.pub_body_a = rospy.Publisher('body_a', Vector3, queue_size=1)
 		self.pub_body_v = rospy.Publisher('body_v', Vector3, queue_size=1)
@@ -140,55 +179,13 @@ class CorinStateTester:
 		self.v0 = None
 		self.dp = None
 
+		self.q0 = None
+		self.body_r0 = None
+		self.body_q0 = None
+
 		self.w  = np.array([0, 0, 0])
 
 		rospy.sleep(0.5)
-
-		#self.robot.update_state(reset=True,control_mode=self.control_mode)
-
-		#self.robot.imu = Imu()
-		#self.robot.qc = JointState()
-		#self.robot.qc.name = ['joint']*18
-		#self.robot.qc.position = [0]*18
-		#self.robot.qc.velocity = [0]*18
-
-		x = [1]*5 + [0]*5 + [-1]*5
-		y = [j/2.0 for j in x]
-		#z = [-9.81]*len(x)
-		roll_speed = [10]*len(x)
-
-		#print "initial", self.estimator.get_fixed_angles()
-
-		for i in range(0):
-		#for i in range(len(x)):
-
-			#self.robot.imu.linear_acceleration.y = x[i] + np.random.normal(0, 0.026831)
-			#self.robot.imu.linear_acceleration.y = y[i]
-			#self.robot.imu.linear_acceleration.z = z[i]
-			self.robot.imu.angular_velocity.x = roll_speed[i]
-			self.robot.imu.angular_velocity.y = roll_speed[i]/2.0
-
-			self.estimator.predict_state()
-
-			#print self.estimator.r
-			print "phi:", self.estimator.get_fixed_angles()
-			ps = PoseStamped()
-			ps.header.stamp 	 = rospy.Time.now()
-			ps.header.frame_id = "trunk"
-			#pose.pose.position.x = path_arr.X.xp[i][0] + offset[0]
-			ps.pose.orientation.w = self.estimator.q[0]
-			ps.pose.orientation.x = self.estimator.q[1]
-			ps.pose.orientation.y = self.estimator.q[2]
-			ps.pose.orientation.z = self.estimator.q[3]
-			self.pub_pose.publish(ps)
-			#print ps
-			rospy.sleep(.1)
-			print "ph2:", self.estimator.get_fixed_angles2()
-			#self.robot.qc.position = [0]*18
-			#self.robot.qc.velocity = [0]*18
-			#print(self.robot.qc)
-			#self.robot.update_state()
-			#self.estimator.update_state()<origin xyz="0 0 0.0" rpy="0 0 0"/>
 
 	def joint_state_callback(self, msg):
 		""" robot joint state callback """
@@ -245,6 +242,7 @@ class CorinStateTester:
 		self.imu1 = copy.deepcopy(msg)
 		self.robot.imu = msg
 
+
 		if self.data_source == "imu":
 			o = msg.orientation
 			av = msg.angular_velocity
@@ -273,13 +271,13 @@ class CorinStateTester:
 			C = quaternion_matrix_JPL(o)[0:3, 0:3]
 			# print o
 
-			msg.orientation = pose.orientation
+			msg.orientation = copy.deepcopy(pose.orientation)
 
 			if self.p is None:
 				#dp = (p - self.p0)/(self.T_sim*self.counter)
 				dp = 0
-				msg.linear_acceleration = Vector3(0, 0, 0)
-				msg.angular_velocity = Vector3(0, 0, 0)
+				# msg.linear_acceleration = Vector3(0, 0, 0)
+				# msg.angular_velocity = Vector3(0, 0, 0)
 			#if self.dp is None:
 			else:
 				dp = (p - self.p)/(self.T_imu)
@@ -321,117 +319,25 @@ class CorinStateTester:
 			self.IMU_mod_pub_.publish(msg)
 
 
-		#print "imu:", angular_velocity#
-		#print "imu t: %f" % time.time(),
-		#self.pub_x.publish(av.x)
+		self.estimator.estimate()
 
-		#print "lin acc:", (msg.linear_acceleration)
+		if(self.estimator.calibrated):
 
-		if(True and self.cal_i  < self.cal_N):
-			self.cal_sum += o
-			self.cal_i += 1
-		elif(True and self.cal_i == self.cal_N):
-			q_av = self.cal_sum / self.cal_N
-			q_av = q_av / np.sqrt(q_av.dot(q_av))
-			# self.estimator.q = q_av
-			print q_av
-			q0 = quaternion_from_matrix(self.estimator.IMU_R.T) # Rotates points from base to IMU
-			#self.estimator.q = quaternion_multiply_JPL(q_av, self.estimator.IMU_q)
-			self.estimator.q = quaternion_multiply(q_av, q0) # Rotate vector from base to IMU then from IMU to world
-			print self.estimator.q
-			ps = PoseStamped()
-			ps.header.stamp = rospy.Time.now()
-			ps.header.frame_id = "trunk"
-			q = self.estimator.q
-			#ps.pose.orientation = Quaternion(*(q[1:4].tolist()+ [q[0]]) )
-			ps.pose.orientation = Quaternion(q[1], q[2], q[3], q[0])
-
-			self.pub_pose.publish(ps)
-
-			# Move on to state estimation only after foot positions are reset
-			if self.estimator.reset_foot_positions():
-				self.cal_i += 1
-		#elif(self.cal_i > self.cal_N + 500)
-			#self.cal
-		else:
-			self.estimator.predict_state()
-
-			self.update_i += 1
-			if self.update_i >= self.update_N:
-				self.estimator.update_state()
-				self.update_i = 0
-				# level = self.level
-				# self.pub_update.publish(level)
-				# rospy.sleep(0.003)
-				# self.pub_update.publish(-level)
-				# self.level = -self.level
-				# scale = 100
-				# norms = []
-				# norms.append( scale * np.linalg.norm(self.estimator.y[0:3]) )
-				# norms.append( scale * np.linalg.norm(self.estimator.y[3:6]) )
-				# norms.append( scale * np.linalg.norm(self.estimator.y[6:9]) )
-				# norms.append( scale * np.linalg.norm(self.estimator.y[9:12]) )
-				# norms.append( scale * np.linalg.norm(self.estimator.y[12:15]) )
-				# norms.append( scale * np.linalg.norm(self.estimator.y[15:18]) )
-				# norms_msg = Float32MultiArray(data = 100 * norms)
-				# self.pub_error_.publish(norms_msg)
+			if self.q0 is None:
+				self.q0 = self.estimator.q
 
 			self.pub_imu_a.publish(Vector3(*self.estimator.a.tolist()))
 			self.pub_imu_v.publish(Vector3(*(1.0*self.estimator.v).tolist()))
 			self.pub_imu_r.publish(Vector3(*(1.0*self.estimator.r).tolist()))
 			self.pub_imu_w.publish(Vector3(*self.estimator.w.tolist()))
 			self.pub_imu_p.publish(Vector3(*self.estimator.get_fixed_angles().tolist()))
+			self.pub_imu_bf.publish(Vector3(*self.estimator.bf.tolist()))
+			self.pub_imu_bw.publish(Vector3(*self.estimator.bw.tolist()))
 
 			stddev = np.sqrt(self.estimator.P[0,0])
 			self.pub_y.publish(1.0*(self.estimator.r[0])+stddev)
 			self.pub_x.publish(1.0*(self.estimator.r[0])-stddev)
 
-			#a2 = self.estimator.a
-			#a_mag = np.sqrt(np.dot(a2, a2))
-			#self.pub_y.publish(a_mag)
-			#print "a1:", a2
-			#print "dr:", self.estimator.dr
-
-			#self.imu_a_z = np.append(self.imu_a_z, msg.angular_velocity.x)
-			#print np.std(self.imu_a_z)
-
-
-			'''
-			self.imu_a_z = np.append(self.imu_a_z, self.estimator.r[0])
-			self.imu_t = np.append(self.imu_t, time.time())
-			print len(self.imu_t)
-			if len(self.imu_t) == 3000:
-				print " reached "
-				self.imu_t -= self.body_t[0]
-				self.body_t -= self.body_t[0]
-				# self.imu_t = [x * 0.000000001 for x in self.imu_t]
-				# self.body_t = [x * 0.000000009 for x in self.body_t]
-				plt.figure(1)
-				plt.plot(self.imu_t, self.imu_a_z, label="Estimate")
-				plt.plot(self.body_t, self.body_a_z, label="Actual")
-				plt.legend()
-				plt.xlabel('Time (s)')
-				plt.ylabel('Position (m)')
-				plt.show()
-'''
-
-		#self.pub_x.publish(mag_avg)
-
-	'''same readings as imu
-	def Imu2_callback(self, msg):
-		o = msg.orientation
-		q = np.array([o.w, o.x, o.y, o.z])
-		C = quaternion_matrix_JPL(q)[0:3, 0:3]
-		a = msg.linear_acceleration
-		a = np.array([a.x, a.y, a.z])
-		a = C.T.dot(a) + np.array([0,0,-9.80])
-		self.pub_imu2_a.publish(Vector3(*a.tolist()))
-		#print "a2:", a
-
-		#T = 0.0001
-		T = 0.001
-		self.speed2 += T*a*1000
-		self.pub_imu2_v.publish(*self.speed2.tolist())'''
 
 	def model_states_callback(self, msg):
 		self.model_states = msg
@@ -447,11 +353,11 @@ class CorinStateTester:
 		# msg.twist[1].angular.x/y/z ()
 		t = time.time()
 		o = msg.pose[1].orientation # quaternion
-		o = np.array([o.w, o.x, o.y, o.z])
+		q = np.array([o.w, o.x, o.y, o.z])
 		w = msg.twist[1].angular #angular velocity
 		w = np.array([w.x, w.y, w.z])
-		p = msg.pose[1].position
-		p = np.array([p.x, p.y, p.z])
+		r = msg.pose[1].position
+		r = np.array([r.x, r.y, r.z])
 		v = msg.twist[1].linear # linear velocity
 		v = np.array([v.x, v.y, v.z])
 		a = (v - self.v)/self.T_sim
@@ -469,7 +375,7 @@ class CorinStateTester:
 		'''
 
 		C = quaternion_matrix_JPL(self.estimator.q)[0:3, 0:3]
-		C2 = quaternion_matrix_JPL(o)[0:3, 0:3]
+		C2 = quaternion_matrix_JPL(q)[0:3, 0:3]
 		#print "bod:", o
 		#print "model:", C.dot(w) # approx 1kHz but variable
 		#self.pub_y.publish(C.dot(w)[0])
@@ -477,25 +383,38 @@ class CorinStateTester:
 		a2 = C2.dot(a)
 		a_mag = np.sqrt(np.dot(a2, a2))
 		#self.pub_z.publish(a_mag)
-		if self.p0 is None:
-			if self.p is not None: # initialise starting position when imu loop starts
-				self.p0 = p.copy()
+		if self.body_q0 is None:
+			if self.q0 is not None: # initialise starting position when imu loop starts
+
+				b_q0_conj = q.copy()
+				b_q0_conj[1:4] = - b_q0_conj[1:4]
+				self.body_q0 = quaternion_multiply(self.q0, b_q0_conj) # Hamilton
+
+				self.body_r0 = r.copy()
+
 		else:
-			p -= self.p0
+
+			r = r - self.body_r0
+
+			r = quaternion_matrix(self.body_q0)[0:3,0:3].dot(r) # Hamilton
+
+			q = quaternion_multiply(self.body_q0, q) # Hamilton
+
+
 			self.pub_body_a.publish(Vector3(*a.tolist()))		# m unit
 			self.pub_body_v.publish(Vector3(*(1.0*v).tolist())) # mm unit
 			#print "real", 1.0*v[2]
 			h = Header()
 			h.stamp = rospy.Time.now()
-			self.pub_body_r.publish(h, Vector3(*p.tolist())) # mm unit
+			self.pub_body_r.publish(h, Vector3(*r.tolist())) # mm unit
 			self.pub_body_w.publish(Vector3(*w.tolist()))
 
-			angles_tuple = euler_from_quaternion_JPL(o, 'rxyz') # relative: rxyz
+			angles_tuple = euler_from_quaternion_JPL(q, 'rxyz') # relative: rxyz
 			angles = np.asarray(angles_tuple).tolist()
 
 			self.pub_body_p.publish(Vector3(*angles))
 
-			self.body_a_z = np.append(self.body_a_z, p[0])
+			self.body_a_z = np.append(self.body_a_z, r[0])
 			self.body_t = np.append(self.body_t, time.time())
 
 	def link_states_callback(self, msg):

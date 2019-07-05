@@ -37,7 +37,8 @@ import matplotlib.pyplot as plt
 from robotis_controller_msgs.msg import SyncWriteItem 	# pub msg for Robotis joints
 from robotis_controller_msgs.msg import SyncWriteMulti 	# pub msg for Robotis joints
 
-from State_Estimator import StateEstimator
+# from State_Estimator import StateEstimator
+from state_estimator_new import StateEstimator
 
 import rospkg
 import rosbag
@@ -240,8 +241,6 @@ class CorinStateTester:
         self.a0_sum = np.zeros(3)
         self.w_sum = np.zeros(3)
         self.cal_i = 0.0
-
-        self.q0_array = np.empty((0,4))
 
         self.robot 	= robot_class.RobotState()
         ################
@@ -798,9 +797,8 @@ class CorinStateTester:
 
         # if self.robot.qc is not None:
         #     self.robot.update_state()
-        if self.plot_foot0_force:
-            self.f_sensor0 = np.vstack([self.f_sensor0, self.robot.Leg[0].F6c.tibia_X_foot[:3].flatten()])
-            self.f_base0 = np.vstack([self.f_base0, self.robot.Leg[0].F6c.base_X_foot[:3].flatten()])
+        # self.f_sensor0 = np.vstack([self.f_sensor0, self.robot.Leg[0].F6c.tibia_X_foot[:3].flatten()])
+        # self.f_base0 = np.vstack([self.f_base0, self.robot.Leg[0].F6c.base_X_foot[:3].flatten()])
 
     def force_1_callback(self, msg, t):
         self.robot.cstate[1] = self.foot_state(msg)
@@ -815,9 +813,8 @@ class CorinStateTester:
 
         # if self.robot.qc is not None:
         #     self.robot.update_state()
-        if self.plot_foot1_force:
-            self.f_sensor1 = np.vstack([self.f_sensor1, self.robot.Leg[1].F6c.tibia_X_foot[:3].flatten()])
-            self.f_base1 = np.vstack([self.f_base1, self.robot.Leg[1].F6c.base_X_foot[:3].flatten()])
+        # self.f_sensor1 = np.vstack([self.f_sensor1, self.robot.Leg[1].F6c.tibia_X_foot[:3].flatten()])
+        # self.f_base1 = np.vstack([self.f_base1, self.robot.Leg[1].F6c.base_X_foot[:3].flatten()])
 
     def force_2_callback(self, msg, t):
         self.robot.cstate[2] = self.foot_state(msg)
@@ -832,9 +829,8 @@ class CorinStateTester:
 
         # if self.robot.qc is not None:
         #     self.robot.update_state()
-        if self.plot_foot2_force:
-            self.f_sensor2 = np.vstack([self.f_sensor2, self.robot.Leg[2].F6c.tibia_X_foot[:3].flatten()])
-            self.f_base2 = np.vstack([self.f_base2, self.robot.Leg[2].F6c.base_X_foot[:3].flatten()])
+        # self.f_sensor2 = np.vstack([self.f_sensor2, self.robot.Leg[2].F6c.tibia_X_foot[:3].flatten()])
+        # self.f_base2 = np.vstack([self.f_base2, self.robot.Leg[2].F6c.base_X_foot[:3].flatten()])
 
     def force_3_callback(self, msg, t):
         self.robot.cstate[3] = self.foot_state(msg)
@@ -849,9 +845,8 @@ class CorinStateTester:
 
         # if self.robot.qc is not None:
         #     self.robot.update_state()
-        if self.plot_foot3_force:
-            self.f_sensor3 = np.vstack([self.f_sensor3, self.robot.Leg[3].F6c.tibia_X_foot[:3].flatten()])
-            self.f_base3 = np.vstack([self.f_base3, self.robot.Leg[3].F6c.base_X_foot[:3].flatten()])
+        # self.f_sensor3 = np.vstack([self.f_sensor3, self.robot.Leg[3].F6c.tibia_X_foot[:3].flatten()])
+        # self.f_base3 = np.vstack([self.f_base3, self.robot.Leg[3].F6c.base_X_foot[:3].flatten()])
 
     def force_4_callback(self, msg, t):
         self.robot.cstate[4] = self.foot_state(msg)
@@ -867,9 +862,8 @@ class CorinStateTester:
 
         # if self.robot.qc is not None:
         #     self.robot.update_state()
-        if self.plot_foot4_force:
-            self.f_sensor4 = np.vstack([self.f_sensor4, self.robot.Leg[4].F6c.tibia_X_foot[:3].flatten()])
-            self.f_base4 = np.vstack([self.f_base4, self.robot.Leg[4].F6c.base_X_foot[:3].flatten()])
+        # self.f_sensor4 = np.vstack([self.f_sensor4, self.robot.Leg[4].F6c.tibia_X_foot[:3].flatten()])
+        # self.f_base4 = np.vstack([self.f_base4, self.robot.Leg[4].F6c.base_X_foot[:3].flatten()])
 
     def force_5_callback(self, msg, t):
         self.robot.cstate[5] = self.foot_state(msg)
@@ -884,9 +878,8 @@ class CorinStateTester:
 
         # if self.robot.qc is not None:
         #     self.robot.update_state()
-        if self.plot_foot5_force:
-            self.f_sensor5 = np.vstack([self.f_sensor5, self.robot.Leg[5].F6c.tibia_X_foot[:3].flatten()])
-            self.f_base5 = np.vstack([self.f_base5, self.robot.Leg[5].F6c.base_X_foot[:3].flatten()])
+        # self.f_sensor5 = np.vstack([self.f_sensor5, self.robot.Leg[5].F6c.tibia_X_foot[:3].flatten()])
+        # self.f_base5 = np.vstack([self.f_base5, self.robot.Leg[5].F6c.base_X_foot[:3].flatten()])
 
     def foot_state(self, msg):
         f = msg.vector
@@ -1038,124 +1031,97 @@ class CorinStateTester:
         # ps.pose.orientation = Quaternion(o[1], o[2], o[3], o[0])
         # self.pub_pose.publish(ps)
 
-        self.p = 0
 
-        if(True and self.cal_i  < self.cal_N):
-            self.cal_sum += o
-            self.a0_sum += a0
-            self.w_sum += w
-            self.cal_i += 1
-
-            self.q0_array = np.vstack([self.q0_array, o])
-        elif(True and self.cal_i == self.cal_N):
-            q_av = self.cal_sum / self.cal_N
-            q_av = q_av / np.sqrt(q_av.dot(q_av)) # = self.q0
-            # self.estimator.q = self.q0
-            q_mean = np.mean(self.q0_array, axis=0)
-
-            q0 = quaternion_from_matrix(self.estimator.IMU_R.T) # Rotates points from base to IMU
-            self.estimator.q = quaternion_multiply(q_av, q0) # Rotate vector from base to IMU then from IMU to world
-
-
-            # Set heading to zero
-            temp = self.estimator.q
-            angles_tuple = euler_from_quaternion(temp, 'sxyz')
-            a = np.asarray(angles_tuple).tolist()
-            self.estimator.q = quaternion_from_euler(a[0], a[1], 0, 'sxyz')
-
-            self.q0 = self.estimator.q
-
-            # Move on to state estimation only after foot positions are reset
-            if self.estimator.reset_foot_positions():
-                self.cal_i += 1
-
-            self.p2_0 = self.estimator.p2
-
-            # IMU offsets
-            # print "a", msg.linear_acceleration
-            # print "w", msg.angular_velocity
-
-            g = np.array([0, 0, -9.80])
-            C = quaternion_matrix_JPL(self.q0)[0:3, 0:3]
-            a = self.estimator.IMU_R.dot(self.a0_sum / self.cal_N) # Transform to body frame
-            ab = a + C.dot(g) # bias in body frame
-            # print "ab:", ab
-
-            f = a - ab
-            a2 = C.T.dot(f) + g
-            # print "a2:", a2 # this should be zero
-
-            C = quaternion_matrix_JPL(o)[0:3, 0:3]
-            ab2 = a0 + C.dot(g)
-            # print ab2
-            # print self.estimator.IMU_R.dot(ab2)
-
-            bw = self.estimator.IMU_R.dot(self.w_sum / self.cal_N)
-            #
-
-            self.estimator.P[0:3, 0:3] = self.P_r*np.eye(3)
-            self.estimator.P[3:6, 3:6] = self.P_v*np.eye(3)
-            self.estimator.P[6:9, 6:9] = self.P_q*np.eye(3) #1 deg = 0.01 rad **2 (100 iter)
-            self.estimator.P[9:27, 9:27] = self.P_p*np.eye(18) # all feet
-            self.estimator.P[27:30, 27:30] = self.P_bf*np.eye(3)
-            self.estimator.P[30:33, 30:33] = self.P_bw*np.eye(3)
-            self.estimator.P = 1E-6*np.eye(33)
-
-            if self.initialise_state:
-                # initialise IMU bias
-                self.estimator.bf = ab
-                self.estimator.bw = bw
-                # initialise P matrix
-            else:
-                self.estimator.q = np.array([1, 0, 0, 0])
-                self.estimator.P[8, 8] = 1E-6 # we known heading = 0
-
-            print "cal", self.cal_i
-            print q_av
-            print q_mean
-            print self.estimator.q
-            print ab
-            print bw
-            # exit()
-            # exit()
-
-        else:
-            # Set IMU orientation to "ideal" (VICON data)
-            # if (self.ideal_q == True and self.vicon_q.size > 0):
-            #     o = self.vicon_q[-1]
-            #     # Can use this orientation directly in State Estimator
-            #     msg.orientation = Quaternion(o[1], o[2], o[3], o[0])
-            self.estimator.predict_state()
+        self.estimator.estimate()
+        # if(True and self.cal_i  < self.cal_N):
+        #     self.cal_sum += o
+        #     self.a0_sum += a0
+        #     self.w_sum += w
+        #     self.cal_i += 1
+        # elif(True and self.cal_i == self.cal_N):
+        #     q_av = self.cal_sum / self.cal_N
+        #     q_av = q_av / np.sqrt(q_av.dot(q_av)) # = self.q0
+        #     # self.estimator.q = self.q0
+		#
+        #     q0 = quaternion_from_matrix(self.estimator.IMU_R.T) # Rotates points from base to IMU
+        #     self.estimator.q = quaternion_multiply(q_av, q0) # Rotate vector from base to IMU then from IMU to world
+		#
+		#
+        #     # Set heading to zero
+        #     temp = self.estimator.q
+        #     angles_tuple = euler_from_quaternion(temp, 'sxyz')
+        #     a = np.asarray(angles_tuple).tolist()
+        #     self.estimator.q = quaternion_from_euler(a[0], a[1], 0, 'sxyz')
+		#
+        #     self.q0 = self.estimator.q
+		#
+        #     # Move on to state estimation only after foot positions are reset
+        #     if self.estimator.reset_foot_positions():
+        #         self.cal_i += 1
+		#
+        #     self.p2_0 = self.estimator.p2
+		#
+        #     # IMU offsets
+        #     # print "a", msg.linear_acceleration
+        #     # print "w", msg.angular_velocity
+		#
+        #     g = np.array([0, 0, -9.80])
+        #     C = quaternion_matrix_JPL(self.q0)[0:3, 0:3]
+        #     a = self.estimator.IMU_R.dot(self.a0_sum / self.cal_N) # Transform to body frame
+        #     ab = a + C.dot(g) # bias in body frame
+        #     # print "ab:", ab
+		#
+        #     f = a - ab
+        #     a2 = C.T.dot(f) + g
+        #     # print "a2:", a2 # this should be zero
+		#
+        #     C = quaternion_matrix_JPL(o)[0:3, 0:3]
+        #     ab2 = a0 + C.dot(g)
+        #     # print ab2
+        #     # print self.estimator.IMU_R.dot(ab2)
+		#
+        #     bw = self.estimator.IMU_R.dot(self.w_sum / self.cal_N)
+        #     #
+		#
+        #     self.estimator.P[0:3, 0:3] = self.P_r*np.eye(3)
+        #     self.estimator.P[3:6, 3:6] = self.P_v*np.eye(3)
+        #     self.estimator.P[6:9, 6:9] = self.P_q*np.eye(3) #1 deg = 0.01 rad **2 (100 iter)
+        #     self.estimator.P[9:27, 9:27] = self.P_p*np.eye(18) # all feet
+        #     self.estimator.P[27:30, 27:30] = self.P_bf*np.eye(3)
+        #     self.estimator.P[30:33, 30:33] = self.P_bw*np.eye(3)
+		#
+        #     if self.initialise_state:
+        #         # initialise IMU bias
+        #         self.estimator.bf = ab
+        #         self.estimator.bw = bw
+        #         # initialise P matrix
+        #     else:
+        #         self.estimator.q = np.array([1, 0, 0, 0])
+        #         self.estimator.P[8, 8] = 1E-6 # we known heading = 0
+		#
+        #     # exit()
+		#
+        # else:
+        #     # Set IMU orientation to "ideal" (VICON data)
+        #     # if (self.ideal_q == True and self.vicon_q.size > 0):
+        #     #     o = self.vicon_q[-1]
+        #     #     # Can use this orientation directly in State Estimator
+        #     #     msg.orientation = Quaternion(o[1], o[2], o[3], o[0])
+        #     self.estimator.predict_state()
+		#
+		#
+        #     self.update_i += 1
+        #     if self.update_i >= self.update_N:
+        #         self.estimator.update_state()
+        #         self.update_i = 0
 
 
-            self.update_i += 1
-            if self.update_i >= self.update_N:
-                self.estimator.update_state()
-                self.update_i = 0
+        if(self.estimator.calibrated):
+            if self.p2_0 is None:
+                self.p2_0 = self.estimator.p2
 
-                if self.plot_residual:
-                    self.imu_y0 = np.vstack([self.imu_y0, self.estimator.y[0:3]])
-                    self.imu_y1 = np.vstack([self.imu_y1, self.estimator.y[3:6]])
-                    self.imu_y2 = np.vstack([self.imu_y2, self.estimator.y[6:9]])
-                    self.imu_y3 = np.vstack([self.imu_y3, self.estimator.y[9:12]])
-                    self.imu_y4 = np.vstack([self.imu_y4, self.estimator.y[12:15]])
-                    self.imu_y5 = np.vstack([self.imu_y5, self.estimator.y[15:18]])
-                    self.imu_ty = np.append(self.imu_ty, t)
-
-
-
-            # use VICON orientation as state estimate with 0 variance
-            if (self.ideal_q == True and self.vicon_q.size > 0):
-                self.estimator.q = self.vicon_q[-1]
-                self.estimator.bw = np.zeros(3)
-                # self.estimator.P[6:9, 6:9] = np.zeros((3,3))
-
-            if (self.ideal_r == True and self.vicon_r.size > 0):
-                self.estimator.r = self.vicon_r[-1].copy()
-                self.estimator.bf = np.zeros(3)
-                # self.estimator.P[0:3, 0:3] = np.zeros((3,3))
-                # self.estimator.P[27:30, 27:30] = np.zeros((3,3))
-
+            if self.q0 is None:
+                self.q0 = self.estimator.q
 
             if self.plot_position:
                 self.imu_r = np.vstack([self.imu_r, self.estimator.r])
