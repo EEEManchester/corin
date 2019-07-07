@@ -25,6 +25,7 @@ from std_msgs.msg import Float32MultiArray	# foot contact force
 from std_msgs.msg import String 			# ui control
 import tf 		 							# ROS transform library
 from geometry_msgs.msg import Vector3Stamped # Force sensor readings
+from geometry_msgs.msg import Vector3 		# debugging
 # from geometry_msgs.msg import PolygonStamped
 # from geometry_msgs.msg import Point32
 # from geometry_msgs.msg import Polygon
@@ -76,7 +77,25 @@ class CorinManager:
 
 	def imu_callback(self, msg):
 		""" imu callback """
+		if self.IMU == "LORD":
+			# only for LORD IMU (to put the orientation from NED to the correct frame)
+			o = msg.orientation
+			q0 = np.array([o.w, o.x, o.y, o.z])
+			q = quaternion_multiply(np.array([0, 1, 0, 0]), q0)
+			msg.orientation = Quaternion(q[1], q[2], q[3], q[0])
+
 		self.Robot.imu = msg
+		self.Robot.estimate_state()
+
+		# Hassan - debugging
+		if(self.Robot.state_estimator.calibrated):
+
+			self.pub_imu_v.publish(Vector3(*(1.0*self.Robot.state_estimator.v).tolist()))
+			self.pub_imu_r.publish(Vector3(*(1.0*self.Robot.state_estimator.r).tolist()))
+			self.pub_imu_q.publish(Vector3(*self.Robot.state_estimator.get_fixed_angles().tolist()))
+			self.pub_imu_bf.publish(Vector3(*self.Robot.state_estimator.bf.tolist()))
+			self.pub_imu_bw.publish(Vector3(*self.Robot.state_estimator.bw.tolist()))
+
 
 	def contact_force_callback_0(self, msg):
 		data = msg.vector
@@ -116,28 +135,25 @@ class CorinManager:
 		idx = msg.name.index(ROBOT_NS)
 		rpy = np.array(euler_from_quaternion([msg.pose[idx].orientation.w, msg.pose[idx].orientation.x,
 												msg.pose[idx].orientation.y, msg.pose[idx].orientation.z], 'sxyz'))
-		# self.Robot.cb_P6c.world_X_base[0] = msg.pose[idx].position.x + self.Robot.P6c.world_X_base_offset.item(0)
-		# self.Robot.cb_P6c.world_X_base[1] = msg.pose[idx].position.y + self.Robot.P6c.world_X_base_offset.item(1)
-		# self.Robot.cb_P6c.world_X_base[2] = msg.pose[idx].position.z
-		# self.Robot.cb_P6c.world_X_base[3] = rpy.item(0)
-		# self.Robot.cb_P6c.world_X_base[4] = rpy.item(1)
-		# self.Robot.cb_P6c.world_X_base[5] = rpy.item(2)
-		self.Robot.P6c.world_X_base[0] = msg.pose[idx].position.x + self.Robot.P6c.world_X_base_offset.item(0)
-		self.Robot.P6c.world_X_base[1] = msg.pose[idx].position.y + self.Robot.P6c.world_X_base_offset.item(1)
-		self.Robot.P6c.world_X_base[2] = msg.pose[idx].position.z
-		self.Robot.P6c.world_X_base[3] = rpy.item(0)
-		self.Robot.P6c.world_X_base[4] = rpy.item(1)
-		self.Robot.P6c.world_X_base[5] = rpy.item(2)
+		# self.Robot.P6c.world_X_base[0] = msg.pose[idx].position.x + self.Robot.P6c.world_X_base_offset.item(0)
+		# self.Robot.P6c.world_X_base[1] = msg.pose[idx].position.y + self.Robot.P6c.world_X_base_offset.item(1)
+		# self.Robot.P6c.world_X_base[2] = msg.pose[idx].position.z
+		# self.Robot.P6c.world_X_base[3] = rpy.item(0)
+		# self.Robot.P6c.world_X_base[4] = rpy.item(1)
+		# self.Robot.P6c.world_X_base[5] = rpy.item(2)
 
-		self.Robot.cb_V6c.world_X_base[0] = msg.twist[idx].linear.x
-		self.Robot.cb_V6c.world_X_base[1] = msg.twist[idx].linear.y
-		self.Robot.cb_V6c.world_X_base[2] = msg.twist[idx].linear.z
-		self.Robot.cb_V6c.world_X_base[3] = msg.twist[idx].angular.x
-		self.Robot.cb_V6c.world_X_base[4] = msg.twist[idx].angular.y
-		self.Robot.cb_V6c.world_X_base[5] = msg.twist[idx].angular.z
+		# self.Robot.cb_V6c.world_X_base[0] = msg.twist[idx].linear.x
+		# self.Robot.cb_V6c.world_X_base[1] = msg.twist[idx].linear.y
+		# self.Robot.cb_V6c.world_X_base[2] = msg.twist[idx].linear.z
+		# self.Robot.cb_V6c.world_X_base[3] = msg.twist[idx].angular.x
+		# self.Robot.cb_V6c.world_X_base[4] = msg.twist[idx].angular.y
+		# self.Robot.cb_V6c.world_X_base[5] = msg.twist[idx].angular.z
 
 	def __initialise__(self):
 		""" Initialises robot and classes """
+
+		## Setup hardware
+		self.__initialise_imu__()
 
 		## set up publisher and subscriber topics
 		self.__initialise_topics__()
@@ -251,6 +267,37 @@ class CorinManager:
 		self.grid_serv_ = ServiceHandler('/GridMap/query_map', PlanPath)
 		# self.rbim_serv_ = ServiceHandler('/Corin/get_rigid_body_matrix', RigidBody)
 		# print 'Completed'
+
+	def __initialise_imu__(self):
+		""" Selects IMU used and initialises parameters """
+
+		if self.interface == "robotis":
+			self.IMU = "LORD"
+		else:
+			self.IMU = "gazebo"
+
+		if self.IMU == "LORD":
+			self.Robot.state_estimator.IMU_r = 0.001*np.array([-123, 5.25, 24.5]) # Body frame origin relative to IMU frame, described in the IMU frame
+			self.Robot.state_estimator.IMU_R = np.array([[-1, 0, 0],
+															[0, 1, 0],
+															[0, 0, -1]])	# Rotation matrix mapping vectors from IMU frame to body frame
+		elif self.IMU == "ODROID":
+			self.Robot.state_estimator.IMU_r = 0.001*np.array([-4, -8, -27]) #np.zeros(3)
+			self.Robot.state_estimator.IMU_R = np.eye(3)
+
+		else:
+			# Gazebo
+			self.Robot.state_estimator.Qf = 0.1 * np.eye(3)
+			self.Robot.state_estimator.Qw = 0.01 * np.eye(3)
+			self.Robot.state_estimator.IMU_r = 0.001*np.array([0, 0, 0]) #np.zeros(3)
+			self.Robot.state_estimator.IMU_R = np.eye(3)
+
+		# For debugging
+		self.pub_imu_v = rospy.Publisher('imu_v', Vector3, queue_size=1)
+		self.pub_imu_r = rospy.Publisher('imu_r', Vector3, queue_size=1)
+		self.pub_imu_q = rospy.Publisher('imu_q', Vector3, queue_size=1)
+		self.pub_imu_bf = rospy.Publisher('imu_bf', Vector3, queue_size=1)
+		self.pub_imu_bw = rospy.Publisher('imu_bw', Vector3, queue_size=1)
 
 	def publish_topics(self, q, qlog=None, q_trac=None):
 		""" Publish joint position to joint controller topics and
@@ -469,7 +516,7 @@ class CorinManager:
 
 		## check action to take - rosparam server
 		data = self.Action.action_to_take()
-		data = None
+		# data = None
 		if (data is not None):
 			self.Visualizer.clear_visualisation()
 			

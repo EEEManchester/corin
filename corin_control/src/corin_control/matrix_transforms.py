@@ -242,6 +242,11 @@ def quaternion_matrix(quaternion):
         [    q[1, 3]-q[2, 0],     q[2, 3]+q[1, 0], 1.0-q[1, 1]-q[2, 2], 0.0],
         [                0.0,                 0.0,                 0.0, 1.0]])
 
+def quaternion_matrix_JPL(quaternion):
+    q = quaternion.copy()
+    q[1:4] = -q[1:4]
+    return quaternion_matrix(q)
+
 def rotation_matrix(angle, direction, point=None):
     """ Return matrix to rotate about axis defined by point and direction. """
 
@@ -279,6 +284,134 @@ def gram_schmidt(e1, e2):
     q3 = q3.reshape((3,1)) / np.linalg.norm(q3)
     
     return np.hstack((q1, q2, q3))
+
+######################################################################
+##                      Quaternion Operations                       ##
+######################################################################
+
+def quaternion_multiply(quaternion1, quaternion0):
+    """Return multiplication of two quaternions."""
+    w0, x0, y0, z0 = quaternion0
+    w1, x1, y1, z1 = quaternion1
+    return np.array([
+        -x1*x0 - y1*y0 - z1*z0 + w1*w0,
+        x1*w0 + y1*z0 - z1*y0 + w1*x0,
+        -x1*z0 + y1*w0 + z1*x0 + w1*y0,
+        x1*y0 - y1*x0 + z1*w0 + w1*z0], dtype=np.float64)
+
+def quaternion_multiply_JPL(q, p):
+    # JPL convention
+    q4, q1, q2, q3 = q # qr, qx, qy, qz
+    p4, p1, p2, p3 = p
+    return np.array([
+        -q1*p1 - q2*p2 - q3*p3 + q4*p4,
+        q4*p1 + q3*p2 - q2*p3 + q1*p4,
+        -q3*p1 + q4*p2 + q1*p3 + q2*p4,
+        q2*p1 - q1*p2 + q4*p3 + q3*p4], dtype=np.float64)
+
+def quaternion_from_matrix(matrix):
+    """Return quaternion from rotation matrix."""
+
+    M = np.array(matrix, dtype=np.float64, copy=False)[:4, :4]
+    m00 = M[0, 0]
+    m01 = M[0, 1]
+    m02 = M[0, 2]
+    m10 = M[1, 0]
+    m11 = M[1, 1]
+    m12 = M[1, 2]
+    m20 = M[2, 0]
+    m21 = M[2, 1]
+    m22 = M[2, 2]
+    # symmetric matrix K
+    K = np.array([[m00-m11-m22, 0.0,         0.0,         0.0],
+                     [m01+m10,     m11-m00-m22, 0.0,         0.0],
+                     [m02+m20,     m12+m21,     m22-m00-m11, 0.0],
+                     [m21-m12,     m02-m20,     m10-m01,     m00+m11+m22]])
+    K /= 3.0
+    # quaternion is eigenvector of K that corresponds to largest eigenvalue
+    w, V = np.linalg.eigh(K)
+    q = V[[3, 0, 1, 2], np.argmax(w)]
+
+    if q[0] < 0.0:
+        np.negative(q, q)
+    return q
+
+def quaternion_from_matrix_JPL(matrix):
+    q = quaternion_from_matrix(matrix)
+    q[1:4] = -q[1:4]
+    return q
+
+def quaternion_from_euler(ai, aj, ak, axes='sxyz'):
+    """Return quaternion from Euler angles and axis sequence.
+
+    ai, aj, ak : Euler's roll, pitch and yaw angles
+    axes : One of 24 axis sequences as string or encoded tuple
+
+    >>> q = quaternion_from_euler(1, 2, 3, 'ryxz')
+    >>> numpy.allclose(q, [0.435953, 0.310622, -0.718287, 0.444435])
+    True
+
+    """
+    try:
+        firstaxis, parity, repetition, frame = _AXES2TUPLE[axes.lower()]
+    except (AttributeError, KeyError):
+        _TUPLE2AXES[axes]  # validation
+        firstaxis, parity, repetition, frame = axes
+
+    i = firstaxis + 1
+    j = _NEXT_AXIS[i+parity-1] + 1
+    k = _NEXT_AXIS[i-parity] + 1
+
+    if frame:
+        ai, ak = ak, ai
+    if parity:
+        aj = -aj
+
+    ai /= 2.0
+    aj /= 2.0
+    ak /= 2.0
+    ci = math.cos(ai)
+    si = math.sin(ai)
+    cj = math.cos(aj)
+    sj = math.sin(aj)
+    ck = math.cos(ak)
+    sk = math.sin(ak)
+    cc = ci*ck
+    cs = ci*sk
+    sc = si*ck
+    ss = si*sk
+
+    q = np.empty((4, ))
+    if repetition:
+        q[0] = cj*(cc - ss)
+        q[i] = cj*(cs + sc)
+        q[j] = sj*(cc + ss)
+        q[k] = sj*(cs - sc)
+    else:
+        q[0] = cj*cc + sj*ss
+        q[i] = cj*sc - sj*cs
+        q[j] = cj*ss + sj*cc
+        q[k] = cj*cs - sj*sc
+    if parity:
+        q[j] *= -1.0
+
+    return q
+
+def euler_from_quaternion(quaternion, axes='sxyz'):
+    """Return Euler angles from quaternion for specified axis sequence."""
+    return euler_from_matrix(quaternion_matrix(quaternion), axes)
+
+def euler_from_quaternion_JPL(quaternion, axes='sxyz'):
+    # JPL convention
+    q = quaternion.copy()
+    q[1:4] = -q[1:4]
+    return euler_from_matrix(quaternion_matrix(q), axes)
+
+def quaternion_conjugate(quaternion):
+
+    q = np.array(quaternion, dtype=np.float64, copy=True)
+    np.negative(q[1:], q[1:])
+    return q
 
 # print rotation_matrix(np.deg2rad(30),[0, 1, 0])
 ######################################################################

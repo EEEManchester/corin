@@ -64,8 +64,9 @@ class LegClass:
 		self.c_threshold = 0 	# Number of times threshold has been crossed for each leg
 		self.Fmax = F_MAX 		# Maximum contact force
 
-		self.zk_prev = BODY_HEIGHT
-		self.w_prev  = 0.
+		# time domain passivity
+		self.zk_prev = BODY_HEIGHT 	
+		self.w_prev  = 0. 			
 		self.tdp_offset = np.array([0.,0.,0.])
 
 	## Update functions
@@ -84,9 +85,9 @@ class LegClass:
 		## Updates current state
 		self.XHc.update_coxa_X_foot(q_compensated)
 		self.XHc.update_base_X_foot(q_compensated)
-
 		self.XHc.update_world_base_X_foot(P6_world_X_base, q_compensated)
-		
+		self.XHc.update_foot_jacobians(q_compensated)
+
 		## Check work envelope
 		bound_exceed = self.check_boundary_limit(self.XHc.world_base_X_foot, self.XHc.world_base_X_NRP, step_stroke)
 

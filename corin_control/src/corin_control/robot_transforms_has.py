@@ -22,7 +22,7 @@ def deg2rad(q):
 	return (q*np.pi/180.)
 
 class Vector6D:
-	""" 6D vector for robot """ 
+	""" 6D vector for robot """
 	def __init__(self):
 		self.world_X_base 	 = np.zeros(Column6D)
 		self.world_X_base_offset = np.zeros(Column6D)
@@ -68,7 +68,7 @@ class Vector6D:
 		self.tibia_X_foot = obj.tibia_X_foot.copy()
 
 class ArrayVector6D:
-	""" 6D vector for robot's legs """ 
+	""" 6D vector for robot's legs """
 	def __init__(self):
 		self.world_X_foot = np.zeros(Column6D)
 		self.base_X_coxa  = np.zeros(Column6D)
@@ -79,7 +79,7 @@ class ArrayVector6D:
 		self.coxa_X_PEP   = np.zeros(Column6D)
 		self.coxa_X_NRP   = np.zeros(Column6D)
 		self.tibia_X_foot = np.zeros(Column6D)
-		
+
 	def duplicate(self, obj):
 		self.world_X_foot = obj.world_X_foot.copy()
 		self.base_X_coxa  = obj.base_X_coxa.copy()
@@ -100,7 +100,7 @@ class ArrayHomogeneousTransform:
 		# self.world_X_base = np.identity(4)
 		self.world_X_foot = np.identity(4)
 		self.world_X_NRP  = np.identity(4)
-		self.world_X_coxa = np.identity(4)
+		self.world_X_hip  = np.identity(4)
 
 		# Transformations wrt world frame: base to parts
 		self.world_base_X_foot = np.identity(4)
@@ -117,20 +117,23 @@ class ArrayHomogeneousTransform:
 		self.base_X_NRP  = np.identity(4)
 
 		# Transformations wrt leg frame: leg to parts
-		self.coxa_X_world = np.identity(4)
-		self.coxa_X_base  = np.identity(4)
-		self.coxa_X_femur = np.identity(4)
-		self.coxa_X_foot  = np.identity(4)
-		self.coxa_X_AEP   = np.identity(4)
-		self.coxa_X_PEP   = np.identity(4)
-		self.coxa_X_NRP   = np.identity(4)
-		self.coxa_X_COM   = np.identity(4)
+		self.coxa_X_base = np.identity(4)
+		self.coxa_X_femur= np.identity(4)
+		self.coxa_X_foot = np.identity(4)
+		self.coxa_X_AEP  = np.identity(4)
+		self.coxa_X_PEP  = np.identity(4)
+		self.coxa_X_NRP  = np.identity(4)
+		self.coxa_X_COM  = np.identity(4)
 		self.coxa_X_coxa_COM  = np.identity(4)
 		self.coxa_X_femur_COM = np.identity(4)
 		self.coxa_X_tibia_COM = np.identity(4)
 
 		## CoM ##
-		self.base_X_COM = np.identity(4)		# done
+		self.base_X_COM = np.identity(4)
+
+		# Foot Jacobians
+		self.j_coxa_X_foot = np.zeros((3,3))
+		self.j_base_X_foot = np.zeros((3,3))
 
 		self._initialize_()
 
@@ -185,7 +188,7 @@ class ArrayHomogeneousTransform:
 	def update_coxa_X_femur(self, q):
 		q1_sin = np.sin(q[0])
 		q1_cos = np.cos(q[0])
-		
+
 		self.coxa_X_femur[0,0] =  q1_cos
 		self.coxa_X_femur[0,1] =  0.
 		self.coxa_X_femur[0,2] =  q1_sin
@@ -203,7 +206,7 @@ class ArrayHomogeneousTransform:
 		self.update_coxa_X_femur(q)
 		self.base_X_femur = mX(self.base_X_coxa, self.coxa_X_femur)
 
-	def update_base_X_foot(self,q):	
+	def update_base_X_foot(self,q):
 		q1_sin = np.sin(q[0])
 		q2_sin = np.sin(q[1])
 		q3_sin = np.sin(q[2])
@@ -349,7 +352,7 @@ class ArrayHomogeneousTransform:
 		self.coxa_X_PEP[2,3] = L3*(q2_sin*q3_cos + q2_cos*q3_sin) + L2*q2_sin
 
 	def update_base_X_COM(self,q):
-		
+
 		self.update_coxa_COM(q)
 		self.base_X_COM = mX(self.base_X_coxa[:3,:3], self.coxa_X_COM[:3,3:4])
 
@@ -374,7 +377,7 @@ class ArrayHomogeneousTransform:
 												L3_COM[2]*q1_sin - L3_COM[1]*q1_cos*q2_cos*q3_sin - L3_COM[1]*q1_cos*q2_sin*q3_cos)
 		self.coxa_X_tibia_COM[1,3] = (L1*q1_sin + L2*q1_sin*q2_cos + L3_COM[0]*q1_sin*q2_cos*q3_cos - L3_COM[0]*q1_sin*q2_sin*q3_sin
 		 										- L3_COM[1]*q1_sin*q2_cos*q3_sin - L3_COM[1]*q1_sin*q2_sin*q3_cos - L3_COM[1]*q1_cos)
-		self.coxa_X_tibia_COM[2,3] = (L2*q2_sin + L3_COM[0]*q2_sin*q3_cos + L3_COM[0]*q2_cos*q3_sin + L3_COM[1]*q2_cos*q3_cos - 
+		self.coxa_X_tibia_COM[2,3] = (L2*q2_sin + L3_COM[0]*q2_sin*q3_cos + L3_COM[0]*q2_cos*q3_sin + L3_COM[1]*q2_cos*q3_cos -
 												L3_COM[1]*q2_sin*q3_sin)
 
 		self.coxa_X_COM[0,3] = (L1_MASS*self.coxa_X_coxa_COM[0,3] + L2_MASS*self.coxa_X_femur_COM[0,3] + L3_MASS*self.coxa_X_tibia_COM[0,3])/LEG_MASS
@@ -398,6 +401,7 @@ class ArrayHomogeneousTransform:
 											[ 0,  L3*c23+c2*L2,          L3*c23]			])
 
 		self.j_base_X_foot = self.base_X_coxa[:3,:3].dot(self.j_coxa_X_foot)
+
 
 q1 = 0.5
 q2 = 0.
@@ -439,7 +443,7 @@ class HomogeneousTransform:
 		self.world_X_RF_foot = np.identity(4)
 		self.world_X_RM_foot = np.identity(4)
 		self.world_X_RR_foot = np.identity(4)
-		
+
 		self.base_X_CoM 		 = np.identity(4)
 		## base to hip frame of each leg; one-off
 		self.base_X_LF_coxa  = np.identity(4)
@@ -525,7 +529,7 @@ class HomogeneousTransform:
 		self.base_X_RR_edge_2 = np.identity(4)
 		self.base_X_RR_edge_3 = np.identity(4)
 		self.base_X_RR_edge_4 = np.identity(4)
-		
+
 		self._initialize()
 
 	def _initialize(self):
@@ -536,7 +540,7 @@ class HomogeneousTransform:
 		KDL = kdl.KDL()
 		xp  = KDL.leg_IK([STANCE_WIDTH,0.,-BODY_HEIGHT])
 		# set legs to default standup position
-		for i in range(0,6): 	
+		for i in range(0,6):
 			q[0+i*3] = xp[0]
 			q[1+i*3] = xp[1]
 			q[2+i*3] = xp[2]
@@ -623,7 +627,7 @@ class HomogeneousTransform:
 	# 											L3_COM[2]*q1_sin - L3_COM[1]*q1_cos*q2_cos*q3_sin - L3_COM[1]*q1_cos*q2_sin*q3_cos)
 	# 	self.LF_coxa_X_tibia_COM[1,3] = (L1*q1_sin + L2*q1_sin*q2_cos + L3_COM[0]*q1_sin*q2_cos*q3_cos - L3_COM[0]*q1_sin*q2_sin*q3_sin
 	# 	 										- L3_COM[1]*q1_sin*q2_cos*q3_sin - L3_COM[1]*q1_sin*q2_sin*q3_cos - L3_COM[1]*q1_cos)
-	# 	self.LF_coxa_X_tibia_COM[2,3] = (L2*q2_sin + L3_COM[0]*q2_sin*q3_cos + L3_COM[0]*q2_cos*q3_sin + L3_COM[1]*q2_cos*q3_cos - 
+	# 	self.LF_coxa_X_tibia_COM[2,3] = (L2*q2_sin + L3_COM[0]*q2_sin*q3_cos + L3_COM[0]*q2_cos*q3_sin + L3_COM[1]*q2_cos*q3_cos -
 	# 											L3_COM[1]*q2_sin*q3_sin)
 
 	# 	self.LF_COM[0,3] = (L1_MASS*self.LF_coxa_X_coxa_COM[0,3] + L2_MASS*self.LF_coxa_X_femur_COM[0,3] + L3_MASS*self.LF_coxa_X_tibia_COM[0,3])/LEG_MASS
@@ -631,7 +635,7 @@ class HomogeneousTransform:
 	# 	self.LF_COM[2,3] = (L1_MASS*self.LF_coxa_X_coxa_COM[2,3] + L2_MASS*self.LF_coxa_X_femur_COM[2,3] + L3_MASS*self.LF_coxa_X_tibia_COM[2,3])/LEG_MASS
 
 	def update_world_X_base(self,q):
-		# rotates in sequence x, y, z in world frame 
+		# rotates in sequence x, y, z in world frame
 		tx = q[0]
 		ty = q[1]
 		tz = q[2]
@@ -654,12 +658,12 @@ class HomogeneousTransform:
 		self.world_X_base[2,1] =  qy_cos*qx_sin
 		self.world_X_base[2,2] =  qy_cos*qx_cos
 		self.world_X_base[2,3] =  tz
-		
+
 		self.update_base_X_world(q)
-		
+
 	def update_base_X_world(self, q=None):
 		self.base_X_world = np.linalg.inv(self.world_X_base)
-		
+
 	def update_base_X_coxa(self, q, tx):
 		""" generic method for updating each leg """
 
@@ -1104,7 +1108,7 @@ class HomogeneousTransform:
 		self.base_X_LF_edge_3[1,3] = self.base_X_LF_foot[1,3] + ( LEG_AREA_LY/2)
 		self.base_X_LF_edge_4[0,3] = self.base_X_LF_foot[0,3] + (-LEG_AREA_LX/2)
 		self.base_X_LF_edge_4[1,3] = self.base_X_LF_foot[1,3] + ( LEG_AREA_LY/2)
-		
+
 	def update_base_X_LM_edge(self):
 		self.base_X_LM_edge_1[0,3] = self.base_X_LM_foot[0,3] + (-LEG_AREA_LX/2)
 		self.base_X_LM_edge_1[1,3] = self.base_X_LM_foot[1,3] + (-LEG_AREA_LY/2)
@@ -1157,8 +1161,8 @@ class HomogeneousTransform:
 
 def vec6d_to_se3(q):
 	# transform_world_X_base()
-	
-	# rotates in sequence x, y, z in world frame 
+
+	# rotates in sequence x, y, z in world frame
 	tx = q[0]
 	ty = q[1]
 	tz = q[2]
@@ -1195,7 +1199,7 @@ q  = np.zeros(18)
 qb = np.zeros(6)
 
 # set legs to default standup position
-for i in range(0,6): 	
+for i in range(0,6):
 	q[0+i*3] = 0.
 	q[1+i*3] = 0.3381
 	q[2+i*3] = -1.852

@@ -23,6 +23,8 @@ import rigid_body_inertia as Rbi
 import plotgraph as Plot 				# plot library
 from impedance_controller import ImpedanceController
 from fault_controller import FaultController
+from state_estimator import StateEstimator  # EKF-based state estimation class
+from time import sleep
 
 class RobotState:
 	def __init__(self):
@@ -35,7 +37,8 @@ class RobotState:
 		self.SM   = SMargin.StabilityMargin() 		# stability margin class
 		self.Gait = Gaitgen.GaitClass(GAIT_TYPE)	# gait class
 		self.Rbdl = Rbi.RigidBodyInertia()
-
+		self.state_estimator = StateEstimator(self, 1./IMU_RATE)   # declare during update_state(reset)
+		
 		self.invalid = False 						# robot state: invalid - do not do anything
 		self.suspend = False 						# robot state: suspend support (TODO)
 
@@ -67,9 +70,9 @@ class RobotState:
 
 		leg_stance = self.init_robot_stance("flat")
 		
-		self.cb_P6c = robot_transforms.Vector6D() 				# position: current state in Re6
-		self.cb_V6c = robot_transforms.Vector6D() 				# position: current state in Re6
-		self.cb_P6c.world_X_base[2] = BODY_HEIGHT
+		# self.cb_P6c = robot_transforms.Vector6D() 				# position: current state in Re6
+		# self.cb_V6c = robot_transforms.Vector6D() 				# position: current state in Re6
+		# self.cb_P6c.world_X_base[2] = BODY_HEIGHT
 		# self._initialise(leg_stance)
 
 	def init_robot_stance(self, stance_type="flat"):
@@ -117,9 +120,25 @@ class RobotState:
 		reset = True if options.get("reset") == True else False
 		cmode = "fast" if options.get("control_mode") == "fast" else "normal"
 
+		if reset:
+			i = 0
+			self.state_estimator.reset_state()
+			# Wait for esimtate_state to be called enough times for calibration
+			while not self.state_estimator.calibrated:
+				sleep(0.002)
+				i += 1
+				if i > 1000:
+					raise Exception("Could not calibrate.")
+					pass
+			print "Calibration done"
+
 		self.update_bodypose_state(cmode)
 		self.update_leg_state(reset, cmode)
 		self.update_stability_margin()
+
+	def estimate_state(self):
+		# Gets called at IMU rate
+		self.state_estimator.estimate()
 
 	def update_leg_state(self, reset, cmode):
 		""" update legs state """
@@ -164,29 +183,44 @@ class RobotState:
 			self.V6c.world_X_base = self.V6d.world_X_base.copy()
 			self.A6c.world_X_base = self.A6d.world_X_base.copy()
 		else:
-			## Hassan: I'm presuming the contents in this function will be changed. The next two lines are the variables
-			## that will be used in the main code, they are a row vector of 6x1 (linear, angular)
-			# self.P6c.world_X_base = hassan_state_estimation_output()
-			# self.V6c.world_X_base = hassan_state_estimation_output()
-			# self.P6c.world_X_base = self.cb_P6c.world_X_base.copy()
-			# self.P6c.world_X_base = self.cb_V6c.world_X_base.copy()
-			self.XHc.update_base(self.P6c.world_X_base)
+			# Pull data from state estimator
+			pos = np.reshape(self.state_estimator.r, (3,1)) + \
+					np.array([self.P6c.world_X_base_offset.item(0),
+ 								self.P6c.world_X_base_offset.item(1),
+ 								BODY_HEIGHT]).reshape((3,1))
+			angles = np.reshape(self.state_estimator.get_fixed_angles(), (3,1))
+			vel = np.reshape(self.state_estimator.v, (3,1))
+			angular = np.reshape(self.state_estimator.w, (3,1))
+
+			self.P6c.world_X_base = np.vstack((pos, angles))
+			self.V6c.world_X_base = np.vstack((vel, angular))
+			# print np.round(self.P6c.world_X_base.flatten(),3)
+			# print np.round(self.state_estimator.r.flatten(),3)
+			# print np.round(angles.flatten(),3)
+			# print '==============================================='
 
 			# self.imu = None
-			# if (self.imu is not None):
-			# 	print 'imu loop'
-			# 	## quaternion to euler transformation
-			# 	rpy = np.array(euler_from_quaternion([self.imu.orientation.w, self.imu.orientation.x,
-			# 											 self.imu.orientation.y, self.imu.orientation.z], 'sxyz')).reshape(3,1)
-			# 	wv3 = np.array([ [self.imu.angular_velocity.x], 	[self.imu.angular_velocity.y], 	  [self.imu.angular_velocity.z] ])
-			# 	ca3 = np.array([ [self.imu.linear_acceleration.x], 	[self.imu.linear_acceleration.y], [self.imu.linear_acceleration.z] ])
+			# TODO Sort the logic here
+			if (False and self.imu is not None):
+				## quaternion to euler transformation
+				rpy = np.array(euler_from_quaternion([self.imu.orientation.w, self.imu.orientation.x,
+														 self.imu.orientation.y, self.imu.orientation.z], 'sxyz')).reshape(3,1)
+				wv3 = np.array([ [self.imu.angular_velocity.x], 	[self.imu.angular_velocity.y], 	  [self.imu.angular_velocity.z] ])
+				ca3 = np.array([ [self.imu.linear_acceleration.x], 	[self.imu.linear_acceleration.y], [self.imu.linear_acceleration.z] ])
 
-			# 	## state estimation
-			# 	xyz = np.zeros((3,1))
-			# 	## Updates robot state based on measured states
-			# 	self.XHc.update_base(p6c)
-			# 	self.V6c.world_X_base[3:6] = wv3
-			# 	self.A6c.world_X_base[0:3] = ca3
+				## state estimation
+				xyz = np.zeros((3,1))
+				## Updates robot state based on measured states
+				self.XHc.update_base(p6c)
+				self.V6c.world_X_base[3:6] = wv3
+				self.A6c.world_X_base[0:3] = ca3
+
+			else:
+				## Updates robot state using setpoints
+				self.XHc.update_base(self.P6c.world_X_base)
+				self.V6c.world_X_base = self.V6d.world_X_base.copy()
+				self.A6c.world_X_base = self.A6d.world_X_base.copy()
+
 
 	def update_stability_margin(self):
 		""" updates the current stability margin """
