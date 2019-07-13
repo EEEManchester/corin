@@ -21,6 +21,7 @@ class StabilityMargin():
 		self.sm = np.zeros(2) 	# current stability margin
 		self.min = 0.
 		self.valid = True
+		self.convex_hull = None
 
 	def force_moment(self):
 		pass
@@ -48,7 +49,7 @@ class StabilityMargin():
 		xh = vertices[hull.vertices,0].reshape((ns,1))
 		yh = vertices[hull.vertices,1].reshape((ns,1))
 		hull_arr = np.concatenate((xh,yh),axis=1)
-		
+
 		# Check if CoB lies inside convex hull
 		if not isinstance(hull, spatial.Delaunay):
 			de_hull = spatial.Delaunay(hull_arr)
@@ -65,7 +66,7 @@ class StabilityMargin():
 			darr.append(shortest_distance(p1, p2))
 		
 		self.min = min(darr) if self.valid else -min(darr)
-		
+		self.convex_hull = hull_arr
 		# plt.plot(vertices[:,0], vertices[:,1], 'o')
 		# plt.plot(p[0], p[1], '*')
 		# for simplex in hull.simplices:
@@ -119,7 +120,7 @@ Legs = [np.array([-1.64207938e-01,  3.22204156e-01, -1.38777878e-17]), np.array(
 gphase = [0, 0, 0, 1, 0, 0]
 Legs = [np.array([-2.21998450e-01,  2.80855690e-01,  5.55111512e-17]), np.array([-0.22182818,  0.18271897,  0.        ]), np.array([-3.18639671e-01,  1.65395701e-01,  1.38777878e-17]), np.array([ 3.77314358e-01, -2.32872695e-02,  5.55111512e-17]), np.array([ 3.77292937e-01, -1.54514558e-01,  1.38777878e-17]), np.array([ 0.01116949, -0.43351627,  0.        ])]
 gphase =  [0, 0, 0, 0, 0, 1]
-SM = StabilityMargin()
-# print SM.LSM(Legs, gphase)
-valid, sm = SM.point_in_convex(p, Legs, gphase)
+# SM = StabilityMargin()
+# # print SM.LSM(Legs, gphase)
+# valid, sm = SM.point_in_convex(p, Legs, gphase)
 

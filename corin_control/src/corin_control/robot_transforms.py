@@ -417,6 +417,7 @@ XH.update_coxa_X_foot(np.array([0.5,0.,0.]))
 # XH.update_world_X_coxa(world_X_base)
 # print XH.world_X_coxa
 # print XH.coxa_X_world
+# print XH.coxa_X_world[:3,3:4]
 
 ## ============================================================================================================================= ##
 ## ============================================================================================================================= ##
@@ -426,6 +427,7 @@ class HomogeneousTransform:
 	def __init__(self):
 		self.world_X_base = np.identity(4)
 		self.base_X_world = np.identity(4)
+		self.world_X_COM  = np.identity(4)
 
 		## ============================================= ##
 		# self.Leg = [None]*6
@@ -440,7 +442,6 @@ class HomogeneousTransform:
 		self.world_X_RM_foot = np.identity(4)
 		self.world_X_RR_foot = np.identity(4)
 		
-		self.base_X_CoM 		 = np.identity(4)
 		## base to hip frame of each leg; one-off
 		self.base_X_LF_coxa  = np.identity(4)
 		self.base_X_LM_coxa  = np.identity(4)
@@ -594,7 +595,7 @@ class HomogeneousTransform:
 		self.update_RR_coxa_X_RR_foot(q)
 
 		# self.update_LF_coxa_X_LF_COM(q)
-		self.update_base_X_COM()
+		# self.update_base_X_COM()
 
 	def update_base_X_COM(self):
 		# TODO: what if base is rotated?
@@ -657,6 +658,9 @@ class HomogeneousTransform:
 		
 		self.update_base_X_world(q)
 		
+	def update_world_X_COM(self):
+		self.world_X_COM = mX(self.world_X_base, self.base_X_COM)
+
 	def update_base_X_world(self, q=None):
 		self.base_X_world = np.linalg.inv(self.world_X_base)
 		

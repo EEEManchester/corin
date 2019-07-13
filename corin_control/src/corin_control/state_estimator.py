@@ -13,8 +13,8 @@ from copy import copy
 
 ## Personal libraries
 from constant import *
-import control_interface 								# action selection from ROS parameter server
-import robot_class 										# class for robot states and function
+# import control_interface 								# action selection from ROS parameter server
+# import robot_class 										# class for robot states and function
 from termcolor import colored
 
 class StateEstimator:

@@ -2,7 +2,7 @@
 """ 
 
 import sys; sys.dont_write_bytecode = True
-sys.path.insert(0, '/home/wei/catkin_ws/src/corin/corin_control/src')
+sys.path.insert(0, '/home/wilson/catkin_ws/src/corin/corin_control/src')
 from corin_control import *			# library modules to include 
 from grid_map import *
 
@@ -204,6 +204,7 @@ class PathPlanner:
 			for j in range(5,-1,-1):
 				
 				if Robot.Gait.cs[j] == 1:
+					
 					foothold = Robot.Leg[j].XHc.world_base_X_AEP[:3,3] - np.array([step, 0., 0.])
 					world_base_X_foot[j] = foothold.copy()
 		
@@ -366,6 +367,7 @@ class PathPlanner:
 # Robot.XHc.update_world_X_base(Robot.P6c.world_X_base)
 # Robot.init_robot_stance()
 
+# Robot.Gait.walk_mode()
 # motion_plan = planner.motion_planning(ps, pf, Robot)
 
 

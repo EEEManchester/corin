@@ -596,6 +596,7 @@ class RobotController(CorinManager):
 			if (gphase[j] == 0):
 				# world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3],
 				# 	  					(-self.Robot.P6c.base_X_CoM[:3].flatten()+self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
+				
 				world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3],
 					  					(-self.Robot.Rbdl.com.flatten() + self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
 				p_foot.append(world_CoM_X_foot.copy())

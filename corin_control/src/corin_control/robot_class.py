@@ -109,9 +109,9 @@ class RobotState:
 			self.Leg[j].XHc.world_base_X_PEP = self.Leg[j].XHc.base_X_PEP.copy()
 			self.Leg[j].XHc.update_world_base_X_NRP(self.P6c.world_X_base)
 			self.Leg[j].XHd.update_world_base_X_NRP(self.P6c.world_X_base)
-
 		self.task_X_joint()
 		self.Gait.set_step_stroke(leg_stance, LEG_CLEAR, STEP_STROKE)
+		
 		# print ">> INITIALISED ROBOT CLASS"
 
 	def update_state(self,**options):
@@ -172,6 +172,8 @@ class RobotState:
 				# self.suspend = True
 				pass
 		# self.cstate = [1 if i==True else 0 for i in self.cstate ]
+		self.XHc.base_X_COM[:3,3:4] = self.Rbdl.update_CoM(qpc)
+		self.XHc.update_world_X_COM()
 
 	def update_bodypose_state(self, cmode):
 		""" update imu state """
@@ -226,13 +228,22 @@ class RobotState:
 		""" updates the current stability margin """
 
 		## Define Variables ##
-		stack_world_bXw = []
+		# stack_world_bXw = []
+		
+		# for j in range(6):
+		# 	stack_world_bXw.append(self.Leg[j].XHc.world_base_X_foot[:3,3])
+		
+		# # Kinematic stability margin
+		# valid, sm = self.SM.point_in_convex(self.Rbdl.com, stack_world_bXw, self.Gait.cs)
+
+		## Define Variables ##
+		stack_world_X_foot = []
 		
 		for j in range(6):
-			stack_world_bXw.append(self.Leg[j].XHc.world_base_X_foot[:3,3])
-			
+			stack_world_X_foot.append(self.Leg[j].XHc.world_X_foot[:3,3])
+		
 		# Kinematic stability margin
-		valid, sm = self.SM.point_in_convex(self.Rbdl.com, stack_world_bXw, self.Gait.cs)
+		valid, sm = self.SM.point_in_convex(self.XHc.world_X_COM[:3,3], stack_world_X_foot, self.Gait.cs)
 
 		if not valid:
 			print 'Convex hull: ', valid, sm
@@ -240,7 +251,7 @@ class RobotState:
 			self.SM.point_in_convex(self.Rbdl.com, stack_world_bXw, self.Gait.cs, True)
 		else:
 			self.invalid = False
-
+			
 	def update_rbdl(self, qb, qp):
 		""" Updates robot CoM and CRBI """
 
