@@ -1,21 +1,17 @@
 #!/usr/bin/env python
 
 ## State estimation for the robot
-import os
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'library'))
 sys.dont_write_bytecode = True
 
 import time
 import warnings
 import numpy as np
 from copy import copy
+from termcolor import colored
 
 ## Personal libraries
 from constant import *
-import control_interface 								# action selection from ROS parameter server
-import robot_class 										# class for robot states and function
-from termcolor import colored
 
 class StateEstimator:
 

@@ -8,6 +8,7 @@ import sys; sys.dont_write_bytecode = True
 
 import math
 import numpy as np
+import time
 
 from traits import *
 from constant import * 					# constants used
@@ -24,7 +25,7 @@ import plotgraph as Plot 				# plot library
 from impedance_controller import ImpedanceController
 from fault_controller import FaultController
 from state_estimator import StateEstimator  # EKF-based state estimation class
-from time import sleep
+import stabilipy
 
 class RobotState:
 	def __init__(self):
@@ -62,7 +63,8 @@ class RobotState:
 		self.A6d = robot_transforms.Vector6D() 				# acceleration: desired
 
 		self.P6c.world_X_base[2] = BODY_HEIGHT
-		
+
+		# Fault tolerant control parameters
 		self.impedance_controller_x = ImpedanceController(2., 2.2, 0.002)
 		self.impedance_controller_y = ImpedanceController(2., 2.2, 0.002)
 		self.impedance_controller_z = ImpedanceController(2., 2.2, 0.002)	# fn, D, G
@@ -70,6 +72,7 @@ class RobotState:
 
 		leg_stance = self.init_robot_stance("flat")
 		
+		self.Poly = stabilipy.StabilityPolygon(ROBOT_MASS, 2, -9.81)
 		# self.cb_P6c = robot_transforms.Vector6D() 				# position: current state in Re6
 		# self.cb_V6c = robot_transforms.Vector6D() 				# position: current state in Re6
 		# self.cb_P6c.world_X_base[2] = BODY_HEIGHT
@@ -125,7 +128,7 @@ class RobotState:
 			self.state_estimator.reset_state()
 			# Wait for esimtate_state to be called enough times for calibration
 			while not self.state_estimator.calibrated:
-				sleep(0.002)
+				time.sleep(0.002)
 				i += 1
 				if i > 1000:
 					raise Exception("Could not calibrate.")
@@ -227,7 +230,7 @@ class RobotState:
 
 		## Define Variables ##
 		stack_world_bXw = []
-		
+
 		for j in range(6):
 			stack_world_bXw.append(self.Leg[j].XHc.world_base_X_foot[:3,3])
 			
@@ -240,6 +243,33 @@ class RobotState:
 			self.SM.point_in_convex(self.Rbdl.com, stack_world_bXw, self.Gait.cs, True)
 		else:
 			self.invalid = False
+
+		## Static stability (Bretl2008)
+		stack_world_bXw = []
+		stack_normals 	= []
+		now1 = time.time()
+		for j in range(0,6):
+			if self.Gait.cs[j] == 0:
+				stack_world_bXw.append([self.Leg[j].XHc.world_base_X_foot[:3,3].tolist()])
+				stack_normals.append([self.Leg[j].snorm.flatten().tolist()])
+		# print stack_world_bXw
+		# print stack_normals
+		self.Poly.contacts = [stabilipy.Contact(SURFACE_FRICTION, np.array(p).T,
+								stabilipy.utils.normalize(np.array(n).T))
+								for p, n in zip(stack_world_bXw, stack_normals)]
+		self.Poly.compute(stabilipy.Mode.best, epsilon=1e-3, 
+												maxIter=1, 
+												solver='cdd',
+												plot_error=False,
+												plot_init=False,
+												plot_step=False,
+												record_anim=False,
+												plot_direction=False,
+												plot_final=False)
+		now3 = time.time()
+		print self.Poly.inner
+		# print now3-now1
+		print '=================================================='
 
 	def update_rbdl(self, qb, qp):
 		""" Updates robot CoM and CRBI """

@@ -2,6 +2,7 @@
 
 import numpy as np
 import stabilipy
+import time
 math = stabilipy.Math()
 # from math_tools import Math
 # mass, dimension, gravity, radius, force limit, robust sphere (not enforced)
@@ -18,8 +19,8 @@ pos = [ [[0.5,   0.2, -0.]],
 		# [[-1.0, -0.2, -0.]]]
 # surface normals
 normals = [[[0., 0., 1.]], 
-			[[0., 0., 1.]],
-			[[0., 0., 1.]]]#,
+		   [[0., 0., 1.]],
+		   [[0., 0., 1.]]]#,
 			# [[0., 0.0, 1.]]] 
 axisZ = np.array([[0.0], [0.0], [1.0]])
 n4 = np.transpose(np.transpose(math.rpyToRot(1.0,0.0,0.0)).dot(axisZ))
@@ -27,19 +28,21 @@ n4 = np.transpose(np.transpose(math.rpyToRot(1.0,0.0,0.0)).dot(axisZ))
 # normals[3] = n4.tolist()
 # friction coefficient
 mu = 1.0
-
 contacts = [stabilipy.Contact(mu, np.array(p).T,
                               stabilipy.utils.normalize(np.array(n).T))
             for p, n in zip(pos, normals)]
 poly.contacts = contacts
 
 # modes: best, iteration, precision
+now = time.time()
 poly.compute(stabilipy.Mode.best, epsilon=1e-3, 
-									maxIter=8, 
+									maxIter=1, 
 									solver='cdd',
 									plot_error=False,
 									plot_init=False,
 									plot_step=False,
-									record_anim=True,
+									record_anim=False,
 									plot_direction=False,
 									plot_final=False)
+end = time.time()
+print 'td: ', end-now

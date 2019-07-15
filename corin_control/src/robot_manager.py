@@ -96,7 +96,6 @@ class CorinManager:
 			self.pub_imu_bf.publish(Vector3(*self.Robot.state_estimator.bf.tolist()))
 			self.pub_imu_bw.publish(Vector3(*self.Robot.state_estimator.bw.tolist()))
 
-
 	def contact_force_callback_0(self, msg):
 		data = msg.vector
 		self.Robot.cforce[0:3] = np.array([data.x, data.y, data.z]) 

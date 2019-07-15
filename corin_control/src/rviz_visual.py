@@ -24,6 +24,7 @@ class RvizVisualise:
 		self.mark_pub_ = rospy.Publisher(ROBOT_NS + '/footholds', MarkerArray, queue_size=1)	# fooholds
 		self.cob_pub_  = rospy.Publisher(ROBOT_NS + '/cob', MarkerArray, queue_size=1) 			# CoB position
 		self.poly_pub_ = rospy.Publisher(ROBOT_NS + '/support_polygon', PolygonStamped, queue_size=1) # Support polygon
+		self.support_region_pub_ = rospy.Publisher(ROBOT_NS + '/support_region', Polygon3D, queue_size=1000)
 
 		self.wrench_pub_ = {}
 		for j in range(0,6):
@@ -106,6 +107,12 @@ class RvizVisualise:
 			poly.polygon.points.append(p)
 			
 		self.poly_pub_.publish(poly)
+
+	def send_support_region(self, name, vertices):
+        output = Polygon3D()
+        #        output.names = name
+        output.vertices = vertices
+        self.support_region_pub_.publish(output)
 
 	def show_motion_plan(self, robot_pose, path, footholds):
 		""" Publishes the motion plan
