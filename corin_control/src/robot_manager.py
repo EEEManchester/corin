@@ -321,6 +321,7 @@ class CorinManager:
 						pass
 				
 			elif (self.interface == 'rviz'):
+				self.Visualizer.publish_robot_pose(self.Robot.P6d.world_X_base)
 				dqp = JointState()
 				dqp.header.stamp = rospy.Time.now()
 				for n in range(0,self.Robot.active_legs*3): 	# loop for each joint
@@ -339,7 +340,9 @@ class CorinManager:
 
 				self.joint_pub_.publish(dqp)
 
-		self.Visualizer.publish_robot_pose(self.Robot.P6d.world_X_base)
+		
+		self.Visualizer.publish_support_polygon(self.Robot.SM.convex_hull)
+		self.Visualizer.publish_com(self.Robot.Rbdl.com + self.Robot.P6c.world_X_base[:3])
 		self.stability_pub_.publish(self.Robot.SM.min)
 
 		## Publish setpoints to logging topic
@@ -414,7 +417,7 @@ class CorinManager:
 
 			return True
 		except Exception, e:
-			print "Error: ", e
+			print colored("ERROR: %s" %e, 'red')
 			print "Returning legs to ground failed"
 			return False
 
@@ -428,7 +431,8 @@ class CorinManager:
 							- leg_phase -> type of trajectory
 							- period -> timing of leg execution
 			Output: flag -> True: execution complete, False: error occured 		"""
-		print 'Leg level controller'
+
+		print colored("INFO: Leg-level controller", 'green')
 		self.Robot.update_state(control_mode=self.control_rate) 		# get current state
 
 		## Define Variables ##
@@ -511,7 +515,10 @@ class CorinManager:
 		## TODO: alternative for this - using action server
 
 		## update robot state prior to starting action
+		self.Robot.Gait.support_mode()
+		self.Robot.update_stability_region()
 		self.Robot.update_state(control_mode=self.control_rate)
+		self.Robot.Gait.walk_mode()
 
 		## check action to take - rosparam server
 		data = self.Action.action_to_take()
@@ -521,26 +528,26 @@ class CorinManager:
 			
 			## Data mapping - for convenience
 			x_cob, w_cob, mode, motion_prim = data
-			mode = 6 	# HARDCODED 
+			# mode = 2 	# HARDCODED 
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
-				print 'Going to standup'
+				print colored("INFO: Standing up", 'green')
 				self.default_pose()
 
 			## condition for support (1), walk (2), reset (3)
 			if (mode == 3):
 				if (self.resting == False): 	# rest robot
-					print 'Rest'
+					print colored("INFO: Rest", 'green')
 					self.routine_air_suspend_legs()
 					self.resting = True
 
 				elif (self.resting == True): 	# standup from rest
-					print 'Standup'
+					print colored("INFO: Stand", 'green')
 					self.default_pose()
 					self.resting = False
 
-			elif (mode == 1):
-				print 'Support mode'
+			elif (mode == 4):
+				print colored("INFO: Bodypose", 'green')
 				prev_suspend = self.Robot.suspend
 				self.Robot.support_mode = True
 				self.Robot.suspend = False 		# clear suspension flag
@@ -551,14 +558,9 @@ class CorinManager:
 				# self.default_pose()
 				# self.default_pose(1) 	# required for resetting stance for walking
 
-			elif (mode == 2):
-				print 'walk mode'
-				self.Robot.support_mode = False
-				self.path_tracking(x_cob, w_cob)
-
-			elif (mode == 6):
+			elif (mode == 5):
 				""" Local planning and execution """
-
+				print colored("INFO: Walk", 'green')
 				self.Robot.support_mode = False
 			
 				if motion == 'forward':
@@ -574,12 +576,12 @@ class CorinManager:
 				elif motion == 'taros':
 					map_offset = (0.33, 0.39)
 					d_travel = np.array([1.95,0.,0.,0.,0.,0.]).reshape(6,1)
-					print 'exec here'
 				else:
 					map_offset = (0.33, 0.39)
 					d_travel = np.zeros(6).reshape(6,1)
 
 				# self.Robot.Fault.status = False
+				self.Robot.Gait.support_mode()
 				if self.Robot.Fault.status:
 					xb = self.Robot.Fault.get_fault_pose().flatten()
 					self.Robot.P6c.world_X_base = np.array([map_offset[0], map_offset[1], 
@@ -599,7 +601,7 @@ class CorinManager:
 					self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
 					self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 					self.Robot.init_robot_stance()
-
+				self.Robot.Gait.walk_mode()
 				if self.interface != "robotis":
 					qd, tXj_error = self.Robot.task_X_joint()
 					for i in range(0,10):
@@ -638,12 +640,13 @@ class CorinManager:
 				else:
 					print 'Error: No motion plan! Exiting....'
 
-			elif (mode == 5):
+			elif (mode == 6):
 				# Execute motion plan from ros_grid_planner
 				print 'Importing motion plan to execute'
 				# filename = 'wall_transition.yaml'
-				filename = 'chimney_nom.csv'
-				mapname  = 'chimney_corner_053'
+				if motion == 'chimney_nom':
+					filename = 'chimney_nom.csv'
+					mapname  = 'chimney_corner_053'
 
 				rospy.wait_for_service(ROBOT_NS + '/import_motion_plan', 1.0)
 				try:
@@ -738,16 +741,6 @@ class CorinManager:
 		qlog_er.forces = cforce_error
 
 		return qlog_ac, qlog_er
-
-	def visualize_support_polygon(self):
-		""" extracts the legs in support phase for generating the support polygon in RViZ """
-
-		foothold_list = []
-		for j in [0,1,2,5,4,3]:
-			if (self.Robot.Gait.cs[j]==0):
-				foothold_list.append(self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
-		self.Visualizer.publish_support_polygon(foothold_list)
-
 
 	def get_snorm(self, p, j):
 		## surface normal for chimney

@@ -25,6 +25,7 @@ from builtins import object
 from .backends import CDDBackend, PlainBackend, QhullBackend, ParmaBackend
 from functools import partial
 from enum import Enum, unique
+import time
 
 from .printing import Verbosity, Printer
 import numpy as np
@@ -96,6 +97,7 @@ class RecursiveProjectionProblem(object):
       self.invalidate_vreps()
 
   def select_solver(self, solver):
+    
     if solver == 'cdd':
       self.backend = CDDBackend('scipy')
     elif solver == 'parma':
@@ -182,6 +184,7 @@ class RecursiveProjectionProblem(object):
       raise ValueError("Unknown mode, please use a value supplied in enum")
 
     while(stop_condition()):
+      print nrSteps
       try:
         self.next_edge(plot_step, plot_direction, record_anim,
                        fname_polys, nrSteps)
@@ -190,6 +193,7 @@ class RecursiveProjectionProblem(object):
         self.printer(e.message, Verbosity.error)
         failure = True
         break
+      
       error = self.volume_convex(self.outer) - self.volume_convex(self.inner)
       self.printer("{} - {} = {} ".format(self.volume_convex(self.outer),
                                           self.volume_convex(self.inner),
@@ -210,7 +214,7 @@ class RecursiveProjectionProblem(object):
         self.ax_error.autoscale_view()
         self.fig_error.canvas.draw()
         plt.pause(0.01)
-    
+      
     if self.display_enabled:
       self.printer("NrIter : {} | Remainder : {}".format(nrSteps, error), Verbosity.info)
 
@@ -274,9 +278,13 @@ class RecursiveProjectionProblem(object):
 
   def next_edge(self, plot=False, plot_direction=False,
                 record=False, fname_poly=None, number=0):
+    # print 'next edge'
+    now1 = time.time()
     d = normalize(self.find_direction(plot_direction).reshape((self.dimension, 1)))
+    now2 = time.time()
     self.step(d)
-    
+    now3 = time.time()
+    # print now3-now2, now2-now1
     if plot or record:
       # self.plot()   # original
       self.plot_2D(d)
@@ -325,7 +333,10 @@ class RecursiveProjectionProblem(object):
       surf.set_edgecolor('red')
     else:
       #self.ax.plot(*coords, linestyle='+', color=c, alpha=1.0)
-      self.ax.triplot(*coords, triangles=tri, color=c, alpha=a)
+      if c == 'red':
+        self.ax.triplot(*coords, linestyle='--', triangles=tri, color=c, alpha=a)
+      else:
+        self.ax.triplot(*coords, linestyle='-', triangles=tri, color=c, alpha=a, linewidth=2)
 
   def reset_fig(self):
     self.fig = plt.figure()
@@ -343,17 +354,17 @@ class RecursiveProjectionProblem(object):
     self.fig = plt.figure()
     self.ax = self.fig.add_subplot('111', aspect='equal')
 
-    tup = [-2, 2]
+    # tup = [-2, 2]
 
-    self.ax.set_xlim(tup)
-    self.ax.set_ylim(tup)
+    # self.ax.set_xlim(tup)
+    # self.ax.set_ylim(tup)
 
-    self.ax.elev = 30.
+    # self.ax.elev = 30.
 
   def iterBound(self, nr_edges_init, error_init, prec):
     return None
 
-  def polyhedron(self):
+  def inner_polyhedron(self):
     """Return the inner polyhedron as a set of vertices"""
     p = self.convexify_polyhedron(self.inner)
     return p

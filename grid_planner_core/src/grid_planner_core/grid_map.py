@@ -686,7 +686,7 @@ ps = np.array([map_offset[0], map_offset[1], 0.1, 0., 0., 0.]).reshape(6,1)
 p = [0.374, 0.745,      0.5       ]
 p = [0.915, 0.745,      0.5       ]
 p = [ 0.299,  0.555,  0.5  ]
-gmap = GridMap('chimney_corner_053')
+# gmap = GridMap('chimney_corner_053')
 # print gmap.get_cell('norm', p)
 # print gmap.getIndex(p, 0)
  

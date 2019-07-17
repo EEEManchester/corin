@@ -39,7 +39,7 @@ class RigidBodyInertia:
 
 		base_com = np.array([BODY_COM[0], BODY_COM[1], BODY_COM[2]])
 
-		self.com = (LEG_MASS*(LF + LM + LR + RF + RM + RR) + BODY_MASS*base_com)/(6*LEG_MASS + BODY_MASS)
+		self.com = np.reshape((LEG_MASS*(LF + LM + LR + RF + RM + RR) + BODY_MASS*base_com)/(6*LEG_MASS + BODY_MASS),(3,1))
 
 		return self.com
 

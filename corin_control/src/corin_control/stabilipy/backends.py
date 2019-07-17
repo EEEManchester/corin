@@ -46,6 +46,14 @@ except ImportError:
 
 from .plain_polygon import DoublePolygon
 
+def seq_convex_points(points):
+  hull = ConvexHull(points)
+  # Rearrange vertex sequence
+  ns = len(points[hull.vertices,0])
+  xh = points[hull.vertices,0].reshape((ns,1))
+  yh = points[hull.vertices,1].reshape((ns,1))
+  return np.concatenate((xh,yh),axis=1)
+
 def cdd_invalidate_vreps(backend, poly):
   offset = poly.offsets[-1]
   direction = poly.directions[-1]
@@ -149,7 +157,7 @@ class CDDBackend(object):
     if geomengine == 'scipy':
       self.volume_convex = self.scipy_volume_convex
 
-  def scipy_volume_convex(self, hrep):
+  def scipy_volume_convex(self, hrep, poly=None):
     try:
       points = np.array(cdd.Polyhedron(hrep).get_generators())[:, 1:]
     except RuntimeError:
@@ -157,12 +165,44 @@ class CDDBackend(object):
     except IndexError:
       return 0
 
+    ## Check coincident points - canonicalize does not cope well with close points
+    if poly is not None:
+      outer_points = seq_convex_points(np.array(cdd.Polyhedron(poly.outer).get_generators())[:, 1:])
+      inner_points = seq_convex_points(np.array(poly.inner)[:, 1:])
+      # First find which points from triangle coincident with inner polygon
+      log_inner = []
+      for p in range(len(inner_points)):
+        for j in range(len(points)):
+          dif = inner_points[p] - points[j]
+          mag = np.linalg.norm(dif)
+          if mag < 0.0001:
+            log_inner.append(p)
+      if len(log_inner) == 2:
+        log = []
+        for p in range(len(outer_points)):
+          for j in range(2):
+            dif = outer_points[p] - inner_points[log_inner[j]]
+            mag = np.linalg.norm(dif)
+            if mag < 0.0001:
+              log.append(p)
+              # print(p, outer_points[p])
+              # print(j, inner_points[log_inner[j]])
+              # print(mag, dif)
+              # print('-------------------')
+        # print(log)
+        if log and len(log)==2:
+          if abs(log[1] - log[0]) == 1:
+            # print('volume is zero')
+            return 0.
+
     if points.shape[0] < points.shape[1]+1:
       return 0
     try:
       ch = ConvexHull(points)
     except QhullError:
       return 0
+    # print('points:\n', points)
+    # print('Vol: ', ch.volume)
     return ch.volume
 
   def build_polys(self, poly):
@@ -196,7 +236,6 @@ class CDDBackend(object):
     """ Find direction to expand inner polygon """
 
     self.build_polys(poly)
-
     volumes = []
     # represent inner polygon as inequalities
     try:
@@ -207,9 +246,11 @@ class CDDBackend(object):
     # print(np.round(ineq,3))
     # For each inequality
     for line in ineq:
+      # print('line: ', line)
+      # print('Outer\n',poly.outer)
+      # print('Inner\n',poly.inner)
       # represent each ineq as a hash key
       key = hashlib.sha1(line).hexdigest()
-
       # check if hash key already exist
       if key in poly.volume_dic:
         # hash key exist, append to volume
@@ -224,6 +265,7 @@ class CDDBackend(object):
           A_e.extend(cdd.Matrix(-line.reshape(1, line.size)))
           # print('line ',line)
           A_e.canonicalize()
+          # print('A_e',A_e)
           poly.hrep_dic[key] = A_e
 
         if plot:
@@ -232,12 +274,12 @@ class CDDBackend(object):
           poly.plot_polyhedron(A_e, 'm', 0.5)
           poly.show()
 
-        vol = self.volume_convex(A_e)
+        vol = self.volume_convex(A_e, poly)
         poly.volume_dic[key] = vol
         volumes.append(vol)
         poly.vrep_dic[key] = np.array(cdd.Polyhedron(A_e).get_generators())
       # print(count)
-      
+    
     ## Recompute volumes for all if inner polygon does not change
     if len(ineq) == count:
       # print('Outer boundary check')
@@ -248,13 +290,13 @@ class CDDBackend(object):
         A_e.canonicalize()
         poly.hrep_dic[key] = A_e
 
-        vol = self.volume_convex(A_e)
+        vol = self.volume_convex(A_e, poly)
         poly.volume_dic[key] = vol
         volumes.append(vol)
         poly.vrep_dic[key] = np.array(cdd.Polyhedron(A_e).get_generators())
 
     # print('volume: ',volumes)
-    # print('=======================')
+    # print('=======================================')
     # Find triangle with largest volume
     maxv = max(volumes)
     # If two triangle with same volume, select one randomly
@@ -262,6 +304,7 @@ class CDDBackend(object):
     i = random.choice(alli)
     key = hashlib.sha1(ineq[i, :]).hexdigest()
     self.last_hrep = poly.hrep_dic[key]
+    # print(maxv, -ineq[i, 1:])
     return -ineq[i, 1:]
 
   def invalidate_vreps(self, poly):
@@ -275,9 +318,21 @@ class CDDBackend(object):
     return [c for c in ch.points.T], ch.simplices
 
   def scipy_convexify_polyhedron(self, hrep):
+    
     points = np.array(cdd.Polyhedron(hrep).get_generators())[:, 1:]
     ch = ConvexHull(points)
-    return ch.points
+    # Rearrange vertex points
+    ns = len(ch.vertices)
+    xh = points[ch.vertices,0].reshape((ns,1))
+    yh = points[ch.vertices,1].reshape((ns,1))
+    hull_arr = np.concatenate((xh,yh),axis=1)
+    return hull_arr
+
+  def hrep_to_vrep(self, hrep):
+    return cdd.Polyhedron(hrep).get_generators()
+
+  def vrep_to_hrep(self, vrep):
+    return cdd.Polyhedron(vrep).get_inequalities()
 
 class ParmaBackend(object):
 

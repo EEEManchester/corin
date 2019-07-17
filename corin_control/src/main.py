@@ -20,12 +20,15 @@ if __name__ == "__main__":
 		if sys.argv[1] == 'bodypose':
 			motion = 'bodypose'
 			rospy.set_param('/corin/bodypose', True)
-
 		else:
+			# Plan from grid map
 			motion = sys.argv[1]
-			rospy.set_param('/corin/plan_path', True)
+			rospy.set_param('/corin/walk', True)
+
 	elif len(sys.argv) == 3: 
-		## TODO: select mode according to no. arguments
+		# Loads motion plan
+		motion = sys.argv[2]
+		rospy.set_param('/corin/load_plan', True)
 		pass
 
 	## Run continuously

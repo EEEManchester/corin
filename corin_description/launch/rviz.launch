@@ -2,21 +2,21 @@
 <launch>
 
 	<arg name="robotis" default="false"/>
-	<arg name="sensors" default="true"/>
-	<arg name="gui" default="false"/> 		<!-- True: manual control   False: real sensor -->
+	<arg name="manual_control" default="false"/> 		<!-- True: manual control   False: real sensor -->
 	<arg name="rviz_conf" default="$(find corin_description)/rviz/grid_map.rviz"/>
+	<!-- <arg name="robot_name" default=""/> -->
 
 	<!-- load robot -->
 	<!-- Load the URDF into the ROS Parameter Server -->
   	<param name="robot_description"
-   	 command="$(find xacro)/xacro --inorder '$(find corin_description)/robots/Corin_fixed.urdf.xacro'"/>
+   	 command="$(find xacro)/xacro --inorder '$(find corin_description)/robots/Corin_model.urdf.xacro'"/>
 	<param name="publish_frequency" value="400" /> <!-- Hz -->
 
 	<!-- publish the joint and robot states -->
-	<group if="$(arg gui)">
+	<group if="$(arg manual_control)">
 		<node name="joint_state_publisher" pkg="joint_state_publisher"
 			type="joint_state_publisher" respawn="true" >
-			<param name="use_gui" value="$(arg gui)"/>
+			<param name="use_gui" value="$(arg manual_control)"/>
 			<param name="rate" value="400"/>
 		</node>
 	</group>
@@ -25,12 +25,16 @@
 		type="state_publisher" respawn="true">
 		<param name="publish_frequency" value="400" />
 		<param name="rate" value="400" />
+		<!-- <param name="tf_prefix" value="$(arg robot_name)"/> -->
+		<!-- <remap from="robot_description" to="" /> -->
 		<remap from="/joint_states" to="/robotis/present_joint_states" if="$(arg robotis)"/> 	<!-- interfacing to robotis -->
 		<remap from="/joint_states" to="/corin/joint_states" unless="$(arg robotis)"/> 			<!-- interfacing to gazebo or rviz -->
 	</node>
 
+	<!-- Transfroms from world to trunk -->
+	<node name="tf_support" pkg="corin_description" type="robot_publisher.py" output="screen"/>
+
 	<!-- load displays -->
-	<param name="use_gui" value="true"/>
 	<node name="rviz" pkg="rviz" type="rviz" output="screen" required="true" args="-d $(arg rviz_conf) -f world" />
 
 </launch>

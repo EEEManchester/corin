@@ -27,7 +27,7 @@ from builtins import object
 import numpy as np
 from scipy.linalg import block_diag
 from cvxopt import matrix, solvers
-
+import time
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa
 
@@ -138,6 +138,8 @@ class StabilityPolygon(RecursiveProjectionProblem):
       raise ValueError("Dimension can only be 2 or 3")
 
     self.display_enabled = False
+
+    self.com = np.zeros((3,1))
 
   def nrVars(self):
     return self.size_x() + self.size_z() + self.size_s()
@@ -309,7 +311,9 @@ class StabilityPolygon(RecursiveProjectionProblem):
     assert(self.t.shape == (6, 1))
 
   def solve(self, a):
+    now1 = time.time()
     self.sol = self.block_socp(a, self.A1, self.A2, self.t, self.B_s, self.u_s)
+    # print 'td ', time.time()-now1
     if self.sol['status'] == 'optimal':
       vec = np.array(self.sol['x'])
       self.com = vec[self.size_x():self.size_x()+self.size_z()]
@@ -560,6 +564,27 @@ class StabilityPolygon(RecursiveProjectionProblem):
     c = 343/243
     return np.ceil(nr_edges_init*(np.sqrt(c*error_init/prec) - 1))
 
+  def point_in_hull(self, p):
+    """ Checks if a point is in the inner polygon """
+    valid = True
+    darr = []
+    # Convert inner polygon to half-space representation
+    hrep = self.backend.vrep_to_hrep(self.inner)
+    # print hrep
+    # Check for each hrep that p lies on correct side
+    for h in hrep:
+      # Distance from p to half plane |b-Ax|/||A||
+      d = abs(h[0]+(h[1]*p[0]+h[2]*p[1]))/np.sqrt(h[1]**2+h[2]**2)
+      # Check if point constrained by b-Ax >= 0
+      c = h[0]+(h[1]*p[0]+h[2]*p[1])
+      if c < 0:
+        valid = False
+        d = d*-1.
+      # print h, '\t', c
+      darr.append(d)
+    # print darr
+    return valid, min(darr)
+
   def reset_fig(self):
     RecursiveProjectionProblem.reset_fig(self)
     if self.radius is not None:
@@ -590,9 +615,9 @@ class StabilityPolygon(RecursiveProjectionProblem):
 
     for c in self.contacts:
       rot = rotate_axis(np.array([[0., 0., 1.]]).T, c.n)
-      world_points = radius*c.n+c.r+rot.dot(c.mu*points.T)
-      x, y, z = list(zip(*world_points.T))
-      self.ax.plot(x, y, z, 'black')
+      # world_points = radius*c.n+c.r+rot.dot(c.mu*points.T)
+      # x, y, z = list(zip(*world_points.T))
+      # self.ax.plot(x, y, z, 'black')
       self.ax.plot(c.r[0], c.r[1], c.r[2], marker='o', markersize=6, color='black')
 
   def plot_solution(self):
@@ -656,15 +681,15 @@ class StabilityPolygon(RecursiveProjectionProblem):
 
     for c in self.contacts:
       rot = rotate_axis(np.array([[0., 0., 1.]]).T, c.n)
-      world_points = radius*c.n+c.r+rot.dot(c.mu*points.T)
-      x, y, z = list(zip(*world_points.T))
-      self.ax.plot(x, y, 'black')
+      # world_points = radius*c.n+c.r+rot.dot(c.mu*points.T)
+      # x, y, z = list(zip(*world_points.T))
+      # self.ax.plot(x, y, 'black')
       self.ax.plot(c.r[0], c.r[1], marker='o', markersize=6, color='black')
 
   def reset_fig_2D(self):
     RecursiveProjectionProblem.reset_fig_2D(self)
-    if self.radius is not None:
-      tup = [-1.1*self.radius, 1.1*self.radius]
-      self.ax.set_xlim(tup)
-      self.ax.set_ylim(tup)
+    # if self.radius is not None:
+    #   tup = [-1.1*self.radius, 1.1*self.radius]
+    #   self.ax.set_xlim(tup)
+    #   self.ax.set_ylim(tup)
       # self.ax.set_zlim(tup)

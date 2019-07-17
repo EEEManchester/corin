@@ -17,14 +17,14 @@ ROBOT_NS = "corin"
 ##                       Robot parameters 	 						##
 ## ================================================================ ##
 # Link Length, Mass
-BODY_MASS = 1.48
+BODY_MASS = 1.58
 L1 = 0.060;	COXA_M = 0.040586;	#L1_MASS = 0.040
 L2 = 0.15;	FEMUR_M = 0.347529;	#L2_MASS = 0.350 # ORIGIINAL L2 = 0.15 m; chimney 0.2; wall 0.17
 L3 = 0.15;	TIBIA_M = 0.10313;	#L3_MASS = 0.116
 
 LEG_MASS = COXA_M + FEMUR_M + TIBIA_M #L1_MASS + L2_MASS + L3_MASS
 ROBOT_MASS = BODY_MASS + LEG_MASS*6
-
+print ROBOT_MASS
 # Link Centre of Mass reference from parent frame
 BODY_COM = [-0.0065, 0.0, 0.0]
 L1_COM   = [0.024713, 0.0, 0.0]

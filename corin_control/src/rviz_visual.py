@@ -24,8 +24,7 @@ class RvizVisualise:
 		self.mark_pub_ = rospy.Publisher(ROBOT_NS + '/footholds', MarkerArray, queue_size=1)	# fooholds
 		self.cob_pub_  = rospy.Publisher(ROBOT_NS + '/cob', MarkerArray, queue_size=1) 			# CoB position
 		self.poly_pub_ = rospy.Publisher(ROBOT_NS + '/support_polygon', PolygonStamped, queue_size=1) # Support polygon
-		self.support_region_pub_ = rospy.Publisher(ROBOT_NS + '/support_region', Polygon3D, queue_size=1000)
-
+		self.com_pub_  = rospy.Publisher(ROBOT_NS + '/centre_of_mass', Marker, queue_size=1) # CoM position
 		self.wrench_pub_ = {}
 		for j in range(0,6):
 			self.wrench_pub_[j] = rospy.Publisher(ROBOT_NS + '/' + LEG_FORCE_NAME[j], WrenchStamped, queue_size=1)
@@ -92,27 +91,48 @@ class RvizVisualise:
 				# 	print np.round(forces[counter:counter+3].flatten(),3)
 				counter += 3
 
-	def publish_support_polygon(self, footholds):
-		""" Foothold array publisher 
-			Input:  footholds: list of footholds """
+	def publish_support_polygon(self, footholds, offset=None):
+		""" Support polygon publisher 
+			Input:  footholds: list of footholds
+					offset: offsets the polygon """
 		
+		if offset is None:
+			offset = [0,0,0]
+
 		poly = PolygonStamped()
 		poly.header.stamp = rospy.Time.now()
 		poly.header.frame_id = self.fr_fix
 		for f in footholds:
 			p = Point32()
-			p.x = f[0]
-			p.y = f[1]
-			p.z = f[2]
+			p.x = f[0] + offset[0]
+			p.y = f[1] + offset[1]
+			p.z = 0. #+ offset[2]
 			poly.polygon.points.append(p)
 			
 		self.poly_pub_.publish(poly)
 
-	def send_support_region(self, name, vertices):
-        output = Polygon3D()
-        #        output.names = name
-        output.vertices = vertices
-        self.support_region_pub_.publish(output)
+	def publish_com(self, com):
+		""" Publishes the CoM position """
+		
+		mark = Marker()
+		mark.header.stamp = rospy.Time.now()
+		mark.header.frame_id = self.fr_fix
+
+		mark.type = 2
+		mark.id = 0
+		mark.pose.position.x = com[0]
+		mark.pose.position.y = com[1]
+		mark.pose.position.z = 0.
+		mark.pose.orientation.x = 0.0;
+		mark.pose.orientation.y = 0.0;
+		mark.pose.orientation.z = 0.0;
+		mark.pose.orientation.w = 1.0;
+		mark.scale.x = 0.03
+		mark.scale.y = 0.03
+		mark.scale.z = 0.03
+		mark.color.a = 1.0; # transparency level
+
+		self.com_pub_.publish(mark)
 
 	def show_motion_plan(self, robot_pose, path, footholds):
 		""" Publishes the motion plan

@@ -81,6 +81,15 @@ def mC(a, b):
 		print e
 		return None
 
+def tangential(v):
+    """ Matrix multiplication of a (3x1) and (1x3) matrix """
+
+    a = np.zeros((3,3))
+    for i in range(3):
+        for j in range(3):
+            a[i][j] = v[i]*v[j] 
+    return a
+
 ######################################################################
 ## 						Rotation Operations 						##
 ######################################################################

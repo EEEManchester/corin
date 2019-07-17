@@ -41,7 +41,7 @@
 	<xacro:property name="coxa_com_x" value="0.02471"  />
 	<xacro:property name="coxa_com_y" value="0"  />
 	<xacro:property name="coxa_com_z" value="0"  />
-	<xacro:property name="coxa_m"     value="0.0406" />
+	<xacro:property name="coxa_m"     value="0.040586"  />
 	<xacro:property name="coxa_i_xx"  value="0.000038"  />
 	<xacro:property name="coxa_i_xy"  value="0.0"  />
 	<xacro:property name="coxa_i_xz"  value="0.0"  />
@@ -57,8 +57,8 @@
 	<xacro:property name="femur_com_x" value="0.075"  />
 	<xacro:property name="femur_com_y" value="0"  />
 	<xacro:property name="femur_com_z" value="0"  />
-	<xacro:property name="femur_m"     value="0.35" />
-	<xacro:property name="femur_i_xx"  value="0.000014"  />
+	<xacro:property name="femur_m"     value="0.347529" />
+	<xacro:property name="femur_i_xx"  value="0.000014" />
 	<xacro:property name="femur_i_xy"  value="0"  />
 	<xacro:property name="femur_i_xz"  value="0"  />
 	<xacro:property name="femur_i_yy"  value="0.000047"  />
@@ -73,7 +73,7 @@
 	<xacro:property name="tibia_com_x" value="0.0887"  	/>
 	<xacro:property name="tibia_com_y" value="0"  		/>
 	<xacro:property name="tibia_com_z" value="0"  		/>
-	<xacro:property name="tibia_m"     value="0.076" 	/>
+	<xacro:property name="tibia_m"     value="0.06313" 	/> 	<!-- 0.076 -->
 	<xacro:property name="tibia_i_xx"  value="0.000025" />
 	<xacro:property name="tibia_i_xy"  value="0"  		/>
 	<xacro:property name="tibia_i_xz"  value="0"  		/>

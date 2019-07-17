@@ -9,6 +9,7 @@ import sys; sys.dont_write_bytecode = True
 import math
 import numpy as np
 import time
+from termcolor import colored
 
 from traits import *
 from constant import * 					# constants used
@@ -70,14 +71,8 @@ class RobotState:
 		self.impedance_controller_z = ImpedanceController(2., 2.2, 0.002)	# fn, D, G
 		self.Fault = FaultController()
 
-		leg_stance = self.init_robot_stance("flat")
+		self.init_robot_stance("flat")
 		
-		self.Poly = stabilipy.StabilityPolygon(ROBOT_MASS, 2, -9.81)
-		# self.cb_P6c = robot_transforms.Vector6D() 				# position: current state in Re6
-		# self.cb_V6c = robot_transforms.Vector6D() 				# position: current state in Re6
-		# self.cb_P6c.world_X_base[2] = BODY_HEIGHT
-		# self._initialise(leg_stance)
-
 	def init_robot_stance(self, stance_type="flat"):
 
 		self._initialise( self.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, self.stance_offset, stance_type) )
@@ -112,8 +107,8 @@ class RobotState:
 			self.Leg[j].XHc.world_base_X_PEP = self.Leg[j].XHc.base_X_PEP.copy()
 			self.Leg[j].XHc.update_world_base_X_NRP(self.P6c.world_X_base)
 			self.Leg[j].XHd.update_world_base_X_NRP(self.P6c.world_X_base)
-
 		self.task_X_joint()
+		self.update_stability_region()
 		self.Gait.set_step_stroke(leg_stance, LEG_CLEAR, STEP_STROKE)
 		# print ">> INITIALISED ROBOT CLASS"
 
@@ -163,18 +158,23 @@ class RobotState:
 			qpc = self.qd#self.qc.position
 
 		# update leg states and check if boundary exceeded
-		for j in range(0,self.active_legs):
+		if len(qpc) == 18:
+			for j in range(0,self.active_legs):
 
-			bstate = self.Leg[j].update_joint_state(wXb, qpc[offset+j*3:offset+(j*3)+3], reset, self.Gait.step_stroke)
-			self.cstate[j] = self.Leg[j].update_force_state(self.cforce[j*3:(j*3)+3])
+				bstate = self.Leg[j].update_joint_state(wXb, qpc[offset+j*3:offset+(j*3)+3], reset, self.Gait.step_stroke)
+				self.cstate[j] = self.Leg[j].update_force_state(self.cforce[j*3:(j*3)+3])
 
-			self.Leg[j].P6_world_X_base = self.P6c.world_X_base.copy()
+				self.Leg[j].P6_world_X_base = self.P6c.world_X_base.copy()
 
-			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
-				# print 'Bound exceed ',j
-				# self.suspend = True
-				pass
-		# self.cstate = [1 if i==True else 0 for i in self.cstate ]
+				if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
+					# print 'Bound exceed ',j
+					# self.suspend = True
+					pass
+			# self.cstate = [1 if i==True else 0 for i in self.cstate ]
+			self.XHc.base_X_COM[:3,3:4] = self.Rbdl.update_CoM(qpc)
+			self.XHc.update_world_X_COM()
+		else:
+			print colored("ERROR: Incorrect number of joint states - "+str(len(qpc)), 'red')
 
 	def update_bodypose_state(self, cmode):
 		""" update imu state """
@@ -228,48 +228,42 @@ class RobotState:
 	def update_stability_margin(self):
 		""" updates the current stability margin """
 
+		valid, sm = self.SM.point_in_convex(self.XHc.world_X_COM[:3,3])
 		## Define Variables ##
-		stack_world_bXw = []
+		# stack_world_X_foot = [self.Leg[j].XHc.world_X_foot[:3,3] for j in range(6) if self.Gait.cs[j] == 0]
+		# stack_normals = [self.Leg[j].snorm for j in range(6) if self.Gait.cs[j] == 0]
+		# print stack_world_X_foot
+		# print stack_normals
 
-		for j in range(6):
-			stack_world_bXw.append(self.Leg[j].XHc.world_base_X_foot[:3,3])
-			
-		# Kinematic stability margin
-		valid, sm = self.SM.point_in_convex(self.Rbdl.com, stack_world_bXw, self.Gait.cs)
+		## Kinematic stability margin
+		# valid, sm = self.SM.point_in_convex(self.XHc.world_X_COM[:3,3], stack_world_X_foot)
 
 		if not valid:
-			print 'Convex hull: ', valid, sm
+			print colored("Convex hull violated %.3f %.3f " %(valid, sm), 'red')
 			self.invalid = True
-			self.SM.point_in_convex(self.Rbdl.com, stack_world_bXw, self.Gait.cs, True)
+			self.SM.point_in_convex(self.XHc.world_X_COM[:3,3], True)
 		else:
 			self.invalid = False
 
-		## Static stability (Bretl2008)
-		stack_world_bXw = []
-		stack_normals 	= []
+		## Force/Moment balance
+		# stack_leg_forces = [self.Leg[j].F6c.world_X_foot[:3] for j in range(6) if self.Gait.cs[j] == 0]
+		# stack_leg_normal = [self.Leg[j].snorm for j in range(6) if self.Gait.cs[j] == 0]
+		# self.SM.force_moment(self.XHc.world_X_COM[:3,3], stack_leg_forces, stack_world_X_foot, stack_leg_normal)
+
+		## Check CoM inside support region
+
+		# print '=================================================='
+
+	def update_stability_region(self):
+		""" Updates the stability region for a set of fixed contacts - Bretl2008 """
+
+		## Define Variables ##
+		stack_world_X_foot = [np.round(self.Leg[j].XHc.world_X_foot[:3,3],6).tolist() for j in range(6) if self.Gait.cs[j] == 0]
+		stack_normals = [[self.Leg[j].snorm.tolist()] for j in range(6) if self.Gait.cs[j] == 0]
+		
 		now1 = time.time()
-		for j in range(0,6):
-			if self.Gait.cs[j] == 0:
-				stack_world_bXw.append([self.Leg[j].XHc.world_base_X_foot[:3,3].tolist()])
-				stack_normals.append([self.Leg[j].snorm.flatten().tolist()])
-		# print stack_world_bXw
-		# print stack_normals
-		self.Poly.contacts = [stabilipy.Contact(SURFACE_FRICTION, np.array(p).T,
-								stabilipy.utils.normalize(np.array(n).T))
-								for p, n in zip(stack_world_bXw, stack_normals)]
-		self.Poly.compute(stabilipy.Mode.best, epsilon=1e-3, 
-												maxIter=1, 
-												solver='cdd',
-												plot_error=False,
-												plot_init=False,
-												plot_step=False,
-												record_anim=False,
-												plot_direction=False,
-												plot_final=False)
-		now3 = time.time()
-		print self.Poly.inner
-		# print now3-now1
-		print '=================================================='
+		self.SM.compute_support_region(stack_world_X_foot, stack_normals)
+		print 'td: ', time.time()-now1
 
 	def update_rbdl(self, qb, qp):
 		""" Updates robot CoM and CRBI """
@@ -312,6 +306,8 @@ class RobotState:
 			
 		self.suspend = False
 
+		# self.update_stability_region()
+
 	def task_X_joint(self,legs_phase=None): # TODO - to be revisited
 		""" Convert all leg task space to joint space 		"""
 		""" Output: joint space setpoint for all joints		"""
@@ -350,7 +346,7 @@ class RobotState:
 					err_str = 'Error - no kinematic solution in leg, '
 				else:
 					err_str = 'Unknown error'
-				print err_str
+				print colored(err_str, 'red')
 		
 		## check to ensure size is correct
 		if (len(qp)==18):
@@ -384,7 +380,7 @@ class RobotState:
 		if (len(tau)==18):
 			return tau
 		else:
-			print 'Error in force to torque conversion!'
+			print colored("ERROR: force to torque conversion!", 'red')
 			return None
 
 	def apply_impedance_control(self, force_dist):
@@ -483,7 +479,7 @@ class RobotState:
 			leg_stance[5] = np.array([ stance_width*np.cos(teta_r*np.pi/180), stance_width*np.sin(-teta_r*np.pi/180), -base_height ])
 
 		else:
-			print 'Invalid stance selected!'
+			print colored("ERROR: Invalid stance selected",'red')
 			leg_stance = None
 			
 		return leg_stance
