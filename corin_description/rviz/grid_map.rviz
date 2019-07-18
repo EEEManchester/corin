@@ -7,7 +7,9 @@ Panels:
         - /Global Options1
         - /Status1
         - /Grid1/Offset1
-        - /RobotModel1
+        - /RobotModel1/Links1
+        - /CentreOfMass1
+        - /CentreOfMass1/Status1
       Splitter Ratio: 0.5
     Tree Height: 775
   - Class: rviz/Selection
@@ -66,7 +68,7 @@ Visualization Manager:
       Collision Enabled: false
       Enabled: true
       Links:
-        All Links Enabled: true
+        All Links Enabled: false
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
@@ -75,12 +77,12 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
+          Value: false
         lf_foot:
           Alpha: 1
           Show Axes: false
@@ -270,7 +272,7 @@ Visualization Manager:
       Marker Topic: /corin/footholds
       Name: Footholds
       Namespaces:
-        {}
+        "": true
       Queue Size: 1
       Value: true
     - Alpha: 1
@@ -299,7 +301,7 @@ Visualization Manager:
       Marker Topic: /corin/centre_of_mass
       Name: CentreOfMass
       Namespaces:
-        {}
+        "": true
       Queue Size: 1
       Value: true
     - Class: rviz/Group
@@ -409,25 +411,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.44288135
+      Distance: 1.40162551
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.0616225302
-        Y: -0.0341263488
-        Z: 0.0423159488
+        X: 0.398402393
+        Y: 0.280552536
+        Z: 0.152053967
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.354801714
+      Pitch: 0.52480191
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.47847891
+      Yaw: 3.58342266
     Saved: ~
 Window Geometry:
   Control Interface:

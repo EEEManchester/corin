@@ -640,8 +640,8 @@ class GridMap:
 			m_wall = dict(zip(gprim[1], gprim[1]))
 			m_chim = dict(zip(gprim[2], gprim[2]))
 		
-			# nx.draw_networkx(gprim[0],m_walk,with_labels=labels,node_size=nsize, node_color='#ff6600',	width=0.0);
-			# nx.draw_networkx(gprim[1],m_wall,with_labels=labels,node_size=nsize, node_color='#00ccff',	width=0.0);
+			nx.draw_networkx(gprim[0],m_walk,with_labels=labels,node_size=nsize, node_color='#ff6600',	width=0.0);
+			nx.draw_networkx(gprim[1],m_wall,with_labels=labels,node_size=nsize, node_color='#00ccff',	width=0.0);
 			nx.draw_networkx(gprim[2],m_chim,with_labels=labels,node_size=nsize, node_color='#66ff00',	width=0.0);
 		# nx.draw_networkx(self.GM_walk,m_walk,with_labels=labels,node_size=nsize, node_color='#ff6600',	width=0.0);
 		# nx.draw_networkx(self.GM_wall,m_wall,with_labels=labels,node_size=nsize, node_color='#00ccff',	width=0.0);
@@ -661,7 +661,8 @@ class GridMap:
 		# 	pass
 
 		## enable major and minor grid
-		plt.grid('on');		 plt.grid(which='major', linestyle=':', linewidth='0.5', color='black')
+		plt.grid(True);		 
+		plt.grid(which='major', linewidth='0.5', color='black')
 		# plt.minorticks_on(); plt.grid(which='minor', linestyle=':', linewidth='0.25', color='black')
 
 		# minor_ticks = np.arange(0, 9+1, 0.5)
@@ -674,7 +675,7 @@ class GridMap:
 		# print plt.get_backend()
 		# mng = plt.get_current_fig_manager()
 		# mng.resize(*mng.window.maxsize())
-		plt.tight_layout()
+		# plt.tight_layout()
 		plt.show() 
 		# fig_manager.resize(*fig_manager.window.maxsize())
 
@@ -684,10 +685,11 @@ class GridMap:
 map_offset = (0.33, 0.39)
 ps = np.array([map_offset[0], map_offset[1], 0.1, 0., 0., 0.]).reshape(6,1)
 p = [0.374, 0.745,      0.5       ]
-p = [0.915, 0.745,      0.5       ]
-p = [ 0.299,  0.555,  0.5  ]
-# gmap = GridMap('chimney_corner_053')
-# print gmap.get_cell('norm', p)
+p = [ 0.647, 0.09, 0       ]
+p = [ 0.647, 0.045,  0.1  ]
+gmap = GridMap('hole_demo')
+# gmap.graph_representation()
+print gmap.get_cell('height', p)
 # print gmap.getIndex(p, 0)
  
 # print (26.%7.)

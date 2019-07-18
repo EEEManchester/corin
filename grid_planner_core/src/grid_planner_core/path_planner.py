@@ -15,6 +15,7 @@ import numpy as np
 import math
 from fractions import Fraction
 from collections import OrderedDict 	# remove duplicates
+from termcolor import colored
 # import plotgraph as Plot
 
 import csv
@@ -776,9 +777,9 @@ class PathPlanner:
 			self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4] = mX(rot_Z(v3wp[2]), temp)
 			self.Robot.Leg[j].XHd.world_X_NRP[:3,3] = np.round( (v3cp + self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4]).flatten(),4)
 			
-			print j, '\t', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
-			print by, yy, sy
-			print ROT_BASE_X_LEG[j], LEG_OFFSET[j]
+			# print j, '\t', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
+			# print by, yy, sy
+			# print ROT_BASE_X_LEG[j], LEG_OFFSET[j]
 
 		def compute_wall_footholds(d_wall):
 			""" Compute footholds for legs in wall contact """
@@ -872,8 +873,8 @@ class PathPlanner:
 					v3wp = base_path.W.xp[i].reshape(3,1) #+ self.Robot.P6c.world_X_base[3:6]
 					
 					P6d_world_X_base = np.vstack((v3cp,v3wp))
-					if self.W_WALL:
-						print 'wXb: ', np.round(P6d_world_X_base.flatten(),3)
+					# if self.W_WALL:
+					# 	print 'wXb: ', np.round(P6d_world_X_base.flatten(),3)
 					## update robot's pose
 					self.Robot.XHd.update_world_X_base(P6d_world_X_base)
 					world_X_base_rot = self.Robot.XHd.world_X_base.copy()
@@ -917,7 +918,8 @@ class PathPlanner:
 					for j in range(6):
 						stack_base_X_world.append(self.Robot.Leg[j].XHd.world_base_X_foot[:3,3])
 					
-					sm_valid, sm_distance = self.Robot.SM.point_in_convex(np.zeros(3), stack_base_X_world, self.Robot.Gait.cs)
+					# sm_valid, sm_distance = self.Robot.SM.point_in_convex(np.zeros(3), stack_base_X_world, self.Robot.Gait.cs)
+					sm_valid, sm_distance = self.Robot.SM.kinematic_stability_margin(np.zeros(3), stack_base_X_world, self.Robot.Gait.cs)
 					if sm_distance < 0.0:
 						sm_valid = False
 					if not sm_valid:
@@ -992,14 +994,18 @@ class PathPlanner:
 								compute_ground_footholds()
 						
 					elif (self.W_CHIM):
+						# print 'tran ', self.T_GND_X_CHIM, self.T_CHIM_X_GND
 						if (self.T_GND_X_CHIM):
-							# Set to wall contacts	
+							# Set to wall contacts
 							qj = np.pi/2 if (j < 3) else -np.pi/2 	# generalisation rotation from base to leg frame
 							bXfy = self.di_wall[1]*np.sin(qj)
 							temp = np.array([[self.Robot.Leg[j].XHd.base_X_NRP[0,3]],[bXfy],[0.]])
 							self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4] = mX(rot_Z(v3wp[2]), temp)
 							self.Robot.Leg[j].XHd.world_X_NRP[:3,3] = np.round( (v3cp + self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4]).flatten(),4)
-						
+							# if j >= 3:
+							# 	print 'Setting to wall ', self.di_wall
+							# 	print 'x: ', np.round(v3cp.flatten(),4)
+							# 	print j, self.Robot.Leg[j].XHd.world_X_NRP[:3,3].flatten()
 						elif (self.T_CHIM_X_GND):
 							# set to ground contacts
 							KDL = kdl.KDL()
@@ -1047,11 +1053,12 @@ class PathPlanner:
 					cell_h = np.array([0., 0., self.GridMap.get_cell('height', self.Robot.Leg[j].XHd.world_X_foot[:3,3], j)])
 					
 					## Cell height above threshold gets ignored as this requires advanced motions
+					# Irregular terrain for Ground Walking
 					if (abs(cell_h.item(2)) < 0.1):# and chim_trans is False and self.W_CHIM is False):
 						self.Robot.Leg[j].XHd.world_X_foot[2,3] = cell_h.item(2) 	# set z-component to cell height
 
+					# Threshold for ground walking exceeded, find another foothold
 					elif (abs(cell_h.item(2)) > 0.1 and self.W_GND is True):
-						# if j==3:
 						# 	print 'Search for next valid foothold for leg ', j, 'because cell value ', cell_h.item(2) 
 						# 	print 'ori: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3) #, self.GridMap.getIndex(self.Robot.Leg[j].XHd.world_X_foot[:2,3],j)
 						# print np.round(self.Robot.XHd.world_X_base[:3,3],3)
@@ -1062,12 +1069,12 @@ class PathPlanner:
 						
 						# if j==3:
 						# 	print 'new: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
-					# if (j>=3):
+					# if (j==4):
 						# print 'wbXn: ', np.round(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3],3)
 						# print 'wbXa: ', np.round(self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3],3)
 						# print 'bXa:  ', np.round(self.Robot.Leg[j].XHd.base_X_AEP[:3,3],3)
-					# 	print 'wXb:  ', np.round(self.Robot.XHd.world_X_base[:3,3],3)
-					# 	# print mX(self.Robot.XHd.world_X_base, self.Robot.Leg[j].XHd.base_X_AEP)
+						# print 'wXb:  ', np.round(self.Robot.XHd.world_X_base[:3,3],3)
+						# print mX(self.Robot.XHd.world_X_base, self.Robot.Leg[j].XHd.base_X_AEP)
 						# print 'wXf:  ', np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
 						# print 'cell: ', cell_h
 
@@ -1076,23 +1083,26 @@ class PathPlanner:
 						# height difference between desired foothold location and cell height
 						# valid contact is when dh is (-ve)
 						dh = self.Robot.Leg[j].XHd.world_X_foot[2,3] - cell_h.item(2)
+						
+						# # recompute to ground
+						# if (dh > 0.001):
+						# 	if (j>=3):
+						# 		print j, colored(self.Robot.Leg[j].XHd.world_X_foot[:3,3],'green')
+						# 	KDL = kdl.KDL()
+						# 	self.Robot.Leg[j].XHd.update_base_X_NRP(KDL.leg_IK(leg_stance[j])) 
+						# 	self.Robot.Leg[j].XHd.update_world_base_X_NRP(P6d_world_X_base)
+						# 	self.Robot.Leg[j].XHd.world_X_NRP[:3,3] = np.round( (v3cp + self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4]).flatten(),4)
 
-						# recompute to ground
-						if (dh > 0.001):
-							KDL = kdl.KDL()
-							self.Robot.Leg[j].XHd.update_base_X_NRP(KDL.leg_IK(leg_stance[j])) 
-							self.Robot.Leg[j].XHd.update_world_base_X_NRP(P6d_world_X_base)
-							self.Robot.Leg[j].XHd.world_X_NRP[:3,3] = np.round( (v3cp + self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4]).flatten(),4)
-
-							## Recompute AEP wrt base and world frame					
-							self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + \
-																			np.nan_to_num(v3_uv*self.Robot.Gait.step_stroke/2.)
-							self.Robot.Leg[j].XHd.base_X_AEP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
-																			self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3:4])
-							self.Robot.Leg[j].XHd.base_X_NRP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
-																			self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4])
-							self.Robot.Leg[j].XHd.world_X_foot = mX(self.Robot.world_X_base, self.Robot.Leg[j].XHd.base_X_AEP)
-
+						# 	## Recompute AEP wrt base and world frame					
+						# 	self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3] + \
+						# 													np.nan_to_num(v3_uv*self.Robot.Gait.step_stroke/2.)
+						# 	self.Robot.Leg[j].XHd.base_X_AEP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
+						# 													self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3:4])
+						# 	self.Robot.Leg[j].XHd.base_X_NRP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
+						# 													self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4])
+						# 	self.Robot.Leg[j].XHd.world_X_foot = mX(self.Robot.XHd.world_X_base, self.Robot.Leg[j].XHd.base_X_AEP)
+						# 	if (j>=3):
+						# 		print j, colored(np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3),'green')
 					elif (self.T_CHIM_X_GND):
 						# height difference between desired foothold location and cell height
 						# valid contact is when dh is (-ve)
@@ -1113,7 +1123,7 @@ class PathPlanner:
 																			self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3:4])
 							self.Robot.Leg[j].XHd.base_X_NRP[:3,3:4] = mX(self.Robot.XHd.base_X_world[:3,:3], 
 																			self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4])
-							self.Robot.Leg[j].XHd.world_X_foot = mX(self.Robot.world_X_base, self.Robot.Leg[j].XHd.base_X_AEP)
+							self.Robot.Leg[j].XHd.world_X_foot = mX(self.Robot.XHd.world_X_base, self.Robot.Leg[j].XHd.base_X_AEP)
 
 					## Recompute base_X_AEP based on cell height
 					self.Robot.Leg[j].XHd.base_X_AEP = mX(self.Robot.XHd.base_X_world, 
@@ -1511,6 +1521,8 @@ class PathPlanner:
 		motion_plan = MotionPlan()
 		m = np.zeros(3) 	# motion primitive for next 3 steps
 
+		motion_plan.qb_offset = self.Robot.P6c.world_X_base.copy()
+
 		## Create copy of initial footholds
 		wXf = []
 		bXn = []
@@ -1522,7 +1534,7 @@ class PathPlanner:
 		
 		## cycle through path
 		for i in range(0,len(path)):
-			print 'now: ', path[i], self.base_map.nodes[path[i]]['motion']
+			# print 'now: ', path[i], self.base_map.nodes[path[i]]['motion']
 			temp_path.append(path[i])
 			## check transition
 			m0 = self.base_map.nodes[path[i]]['motion']
@@ -1599,7 +1611,7 @@ class PathPlanner:
 					temp_path = []
 
 				sp = path[i]
-				self.di_wall = np.array([0., self.base_map.nodes[path[i+1]]['width']*self.GridMap.resolution/2, 0.])
+				self.di_wall = np.array([0., self.base_map.nodes[path[i+1]]['width']*self.GridMap.resolution/2 + 0.003, 0.])
 				# Next, set the respective state machine flags
 				self.T_GND_X_CHIM = self.W_CHIM = self.W_GND = False
 
@@ -1660,7 +1672,7 @@ class PathPlanner:
 		self.T_GND_X_CHIM = self.T_CHIM_X_GND = False
 
 		if (len(temp_path) > 1):
-			print 'Final walking interpolation: ', temp_path
+			print 'Final walking interpolation: '#, self.base_map.nodes[temp_path[-1]]['motion'], temp_path
 			if self.base_map.nodes[temp_path[-1]]['motion'] == 0:
 				self.W_GND = True
 				self.W_CHIM = False
@@ -1843,7 +1855,28 @@ class PathPlanner:
 ## ================================================================================================ ##
 
 ## Create map and plan path
-# grid_map = GridMap('chimney_straight')
-# planner = PathPlanner(grid_map)
-# planner.plot_primitive_graph()
+# GridMap = GridMap('hole_demo')
+# Planner = PathPlanner(GridMap)
+# # Planner.plot_primitive_graph()
 
+# ps = (11,13); pf = (22,13)
+
+# from corin_control.robot_class import RobotState
+# def initialise_robot_state(Robot, ps, pf):
+# 	## Set robot to starting position in default configuration
+# 	Robot.P6c.world_X_base = np.array([ps[0]*GridMap.resolution,
+# 										ps[1]*GridMap.resolution,
+# 										BODY_HEIGHT,
+# 										0.,0.,0.]).reshape(6,1)
+# 	Robot.P6c.world_X_base_offset = np.array([ps[0]*GridMap.resolution,
+# 												ps[1]*GridMap.resolution,
+# 													0.,0.,0.,0.]).reshape(6,1)
+# 	Robot.P6d.world_X_base = Robot.P6c.world_X_base.copy()
+# 	Robot.XHc.update_world_X_base(Robot.P6c.world_X_base)
+
+# 	Robot.init_robot_stance()
+# 	return Robot
+
+# Robot = RobotState()
+# Robot = initialise_robot_state(Robot,ps,pf)
+# Planner.generate_motion_plan(Robot, start=ps, end=pf)

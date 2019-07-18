@@ -59,7 +59,7 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
 		self.control_loop = "open" 	# run controller in open or closed loop
 
@@ -96,7 +96,8 @@ class CorinManager:
 				self.pub_imu_bf.publish(Vector3(*self.Robot.state_estimator.bf.tolist()))
 				self.pub_imu_bw.publish(Vector3(*self.Robot.state_estimator.bw.tolist()))
 			except ROSException, e:
-				print e
+				rospy.logerror(e)
+
 	def contact_force_callback_0(self, msg):
 		data = msg.vector
 		self.Robot.cforce[0:3] = np.array([data.x, data.y, data.z]) 
@@ -421,7 +422,6 @@ class CorinManager:
 			print "Returning legs to ground failed"
 			return False
 
-
 	def leg_level_controller(self, setpoints):
 		""" Generates and execute trajectory by specified desired leg position 	"""
 		""" Input: 	setpoints -> tuple of 4 items:-
@@ -570,9 +570,9 @@ class CorinManager:
 					map_offset = (0.33, 0.39)
 					d_travel = np.array([0.,0.21,0.,0.,0.,0.]).reshape(6,1)
 				elif motion == 'chimney':
-					map_offset = (0.45, 0.36)
-					d_travel = np.array([0.15,0.,0.,0.,0.,0.]).reshape(6,1)
-					base_height = 0.3
+					map_offset = (0.33, 0.39)
+					d_travel = np.array([0.93,0.,0.,0.,0.,0.]).reshape(6,1)
+					base_height = 0.0
 				elif motion == 'taros':
 					map_offset = (0.33, 0.39)
 					d_travel = np.array([1.95,0.,0.,0.,0.,0.]).reshape(6,1)

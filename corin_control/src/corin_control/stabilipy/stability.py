@@ -138,6 +138,7 @@ class StabilityPolygon(RecursiveProjectionProblem):
       raise ValueError("Dimension can only be 2 or 3")
 
     self.display_enabled = False
+    self.display_final = False
 
     self.com = np.zeros((3,1))
 

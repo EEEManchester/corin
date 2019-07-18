@@ -26,6 +26,7 @@ class StabilityMargin():
 		self.valid = True
 		self.convex_hull = None
 		self.Poly = stabilipy.StabilityPolygon(ROBOT_MASS, 2, -9.81)
+		self.Poly.display_final = True
 
 	def compute_support_region(self, stack_world_X_foot, stack_normals):
 		""" Computes the stability region for a set of fixed contacts - Bretl2008 """
@@ -47,10 +48,13 @@ class StabilityMargin():
 													plot_final=False)
 			# Construct convex hull from inner_polygon
 			self.convex_hull = self.Poly.inner_polyhedron()
+			
 			# Convex hull triangulation
 			# de_hull = spatial.Delaunay(self.convex_hull[:,0:2])
 			# print de_hull.simplices
 		except RuntimeError,e:
+			print stack_world_X_foot
+			print stack_normals
 			print colored('ERROR: Support region - %s'%e,'red')
 
 	def point_in_convex(self, p, disp=False):
@@ -103,9 +107,10 @@ class StabilityMargin():
 		""" Convex hull formed by supporting legs.
 			Stability is where CoM lies inside hull.  """
 
-		if disp:
-			print p.flatten()
-			print full_stance
+		# if disp:
+		# 	print 'here'
+		# 	print p.flatten()
+		# 	print full_stance
 
 		# Extract stance to 2D
 		stance = [full_stance[j][0:2] for j in range(len(full_stance))]

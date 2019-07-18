@@ -127,9 +127,12 @@ class RobotState:
 				time.sleep(0.002)
 				i += 1
 				if i > 1000:
-					raise Exception("Could not calibrate.")
+					# raise Exception("Could not calibrate.")
+					print colored("ERROR: Failed calibrating state estimator",'red')
+					break
 					pass
-			print "Calibration done"
+			else:
+				print colored("State Estimator calibrated", 'green') 
 
 		self.update_bodypose_state(cmode)
 		self.update_leg_state(reset, cmode)
@@ -188,45 +191,28 @@ class RobotState:
 			self.V6c.world_X_base = self.V6d.world_X_base.copy()
 			self.A6c.world_X_base = self.A6d.world_X_base.copy()
 		else:
-			# Pull data from state estimator
-			pos = np.reshape(self.state_estimator.r, (3,1)) + \
-					np.array([self.P6c.world_X_base_offset.item(0),
- 								self.P6c.world_X_base_offset.item(1),
- 								BODY_HEIGHT]).reshape((3,1))
-			angles = np.reshape(self.state_estimator.get_fixed_angles(), (3,1))
-			vel = np.reshape(self.state_estimator.v, (3,1))
-			angular = np.reshape(self.state_estimator.w, (3,1))
+			if self.state_estimator.calibrated:
+				# Pull data from state estimator
+				pos = np.reshape(self.state_estimator.r, (3,1)) + \
+						np.array([self.P6c.world_X_base_offset.item(0),
+	 								self.P6c.world_X_base_offset.item(1),
+	 								BODY_HEIGHT]).reshape((3,1))
+				vel = np.reshape(self.state_estimator.v, (3,1))
+				angles = np.reshape(self.state_estimator.get_fixed_angles(), (3,1))
+				angular = np.reshape(self.state_estimator.w, (3,1))
 
-			self.P6c.world_X_base = np.vstack((pos, angles))
-			self.V6c.world_X_base = np.vstack((vel, angular))
-			# print np.round(self.P6c.world_X_base.flatten(),3)
-			# print np.round(self.state_estimator.r.flatten(),3)
-			# print np.round(angles.flatten(),3)
-			# print '==============================================='
-
-			# self.imu = None
-			# TODO Sort the logic here
-			if (False and self.imu is not None):
-				## quaternion to euler transformation
-				rpy = np.array(euler_from_quaternion([self.imu.orientation.w, self.imu.orientation.x,
-														 self.imu.orientation.y, self.imu.orientation.z], 'sxyz')).reshape(3,1)
-				wv3 = np.array([ [self.imu.angular_velocity.x], 	[self.imu.angular_velocity.y], 	  [self.imu.angular_velocity.z] ])
-				ca3 = np.array([ [self.imu.linear_acceleration.x], 	[self.imu.linear_acceleration.y], [self.imu.linear_acceleration.z] ])
-
-				## state estimation
-				xyz = np.zeros((3,1))
-				## Updates robot state based on measured states
-				self.XHc.update_base(p6c)
-				self.V6c.world_X_base[3:6] = wv3
-				self.A6c.world_X_base[0:3] = ca3
-
+				self.P6c.world_X_base = np.vstack((pos, angles))
+				self.V6c.world_X_base = np.vstack((vel, angular))
+				# print np.round(self.P6c.world_X_base.flatten(),3)
+				# print np.round(self.state_estimator.r.flatten(),3)
+				# print np.round(angles.flatten(),3)
+				# print '==============================================='
 			else:
-				## Updates robot state using setpoints
-				self.XHc.update_base(self.P6c.world_X_base)
+				# Open-loop control
+				self.P6c.world_X_base = self.P6d.world_X_base.copy()
 				self.V6c.world_X_base = self.V6d.world_X_base.copy()
-				self.A6c.world_X_base = self.A6d.world_X_base.copy()
-
-
+				self.XHc.update_base(self.P6c.world_X_base)
+			
 	def update_stability_margin(self):
 		""" updates the current stability margin """
 
@@ -255,12 +241,10 @@ class RobotState:
 		""" Updates the stability region for a set of fixed contacts - Bretl2008 """
 
 		## Define Variables ##
-		stack_world_X_foot = [np.round(self.Leg[j].XHc.world_X_foot[:3,3],6).tolist() for j in range(6) if self.Gait.cs[j] == 0]
+		stack_world_X_foot = [np.round(self.Leg[j].XHc.world_X_foot[:3,3],4).tolist() for j in range(6) if self.Gait.cs[j] == 0]
 		stack_normals = [[self.Leg[j].snorm.tolist()] for j in range(6) if self.Gait.cs[j] == 0]
 		
-		now1 = time.time()
 		self.SM.compute_support_region(stack_world_X_foot, stack_normals)
-		print 'td: ', time.time()-now1
 
 	def update_rbdl(self, qb, qp):
 		""" Updates robot CoM and CRBI """

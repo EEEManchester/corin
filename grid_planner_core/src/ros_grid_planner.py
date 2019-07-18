@@ -96,13 +96,14 @@ class GridMapRos:
 			self.initialise_robot_state(ps, pf)
 
 			motion_plan = self.Planner.generate_motion_plan(self.Robot, start=ps, end=pf)
-			qbp, qbi, gphase, wXf, bXf, bXN = motionplan_to_planpath(motion_plan, "world")
+			qoff, qbp, qbi, gphase, wXf, bXf, bXN = motionplan_to_planpath(motion_plan, "world")
 			
-			return PlanPathResponse(base_path = qbp, CoB = qbi, 
-																gait_phase = gphase, 
-																f_world_X_foot = wXf,
-																f_base_X_foot = bXf,
-																f_world_base_X_NRP = bXN)
+			return PlanPathResponse(base_offset = qoff,
+									base_path = qbp, CoB = qbi, 
+									gait_phase = gphase, 
+									f_world_X_foot = wXf,
+									f_base_X_foot = bXf,
+									f_world_base_X_NRP = bXN)
 		else:
 			print "Start or End goal out of bounds!"
 			return None
@@ -230,8 +231,8 @@ if __name__ == "__main__":
 	if len(sys.argv) > 1:
 		if sys.argv[1] == 'wall_transition':
 			mapname = 'wall_transition'
-		elif sys.argv[1] == 'chimney_straight':
-			mapname = 'chimney_straight'
+		elif sys.argv[1] == 'hole_demo':
+			mapname = 'hole_demo'
 		# Full Planning
 		elif sys.argv[1] == 'taros':
 			mapname = 'wall_hole_demo'
@@ -255,7 +256,7 @@ if __name__ == "__main__":
 	## Path Planning
 	# ps = (10,13); pf = (150,9) 	# IROS
 	# ps = (11,13); pf = (76,13) 	# TAROS
-	
+	# ps = (11,13); pf = (22,13) 	# TAROS
 	# call_planner(ps, pf)
 
 	# RosGridMap.save_to_yaml()

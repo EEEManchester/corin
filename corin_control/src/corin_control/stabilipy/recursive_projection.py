@@ -183,8 +183,8 @@ class RecursiveProjectionProblem(object):
     else:
       raise ValueError("Unknown mode, please use a value supplied in enum")
 
+    now = time.time()
     while(stop_condition()):
-      print nrSteps
       try:
         self.next_edge(plot_step, plot_direction, record_anim,
                        fname_polys, nrSteps)
@@ -215,8 +215,8 @@ class RecursiveProjectionProblem(object):
         self.fig_error.canvas.draw()
         plt.pause(0.01)
       
-    if self.display_enabled:
-      self.printer("NrIter : {} | Remainder : {}".format(nrSteps, error), Verbosity.info)
+    if self.display_enabled or self.display_final:
+      self.printer("NrIter : {} | Remainder : {} | Time : {}".format(nrSteps, error, time.time()-now), Verbosity.info)
 
     if plot_final and not failure:
       # self.plot()
