@@ -28,7 +28,7 @@
         rm_q1_joint rm_q2_joint rm_q3_joint
         rr_q1_joint rr_q2_joint rr_q3_joint   " if="$(arg gazebo)"/>
     <!-- contact force node -->
-    <node name="contact_force" pkg="corin_control" type="footcontact.py" respawn="false" if="$(arg gazebo)"/>
+    <node name="contact_force" pkg="corin_control" type="foot_contact.py" respawn="false" if="$(arg gazebo)"/>
     <!-- unpause physics engine -->
     <node name="unpause" pkg="corin_description" type="unpause_physics_engine" args="5.0" if="$(arg gazebo)"/>
 

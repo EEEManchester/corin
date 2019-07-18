@@ -24,7 +24,7 @@ L3 = 0.15;	TIBIA_M = 0.10313;	#L3_MASS = 0.116
 
 LEG_MASS = COXA_M + FEMUR_M + TIBIA_M #L1_MASS + L2_MASS + L3_MASS
 ROBOT_MASS = BODY_MASS + LEG_MASS*6
-print ROBOT_MASS
+
 # Link Centre of Mass reference from parent frame
 BODY_COM = [-0.0065, 0.0, 0.0]
 L1_COM   = [0.024713, 0.0, 0.0]

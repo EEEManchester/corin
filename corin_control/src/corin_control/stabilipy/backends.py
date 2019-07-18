@@ -46,6 +46,24 @@ except ImportError:
 
 from .plain_polygon import DoublePolygon
 
+def perturb_matrix(hrep, form):
+  """ Perturbs the matrix to avoid singular configurations 
+      by either moving the point slightly or rounding up """
+
+  # print('perturb:',form)
+  if form == 'epsilon':
+    ineq = np.array(hrep)
+    ineq[1][1] += 0.00001
+    return cdd.Matrix(ineq, number_type='float')
+  elif form == 'round':
+    vertices = np.array(hrep)[:, 1:]
+    newp = seq_convex_points(vertices)
+    newp = np.round(np.hstack((np.ones((len(vertices),1)),newp)),4)
+    mat = cdd.Matrix(newp, number_type='float')
+    mat.rep_type = cdd.RepType.GENERATOR
+    mat.canonicalize()
+    return mat
+
 def seq_convex_points(points):
   hull = ConvexHull(points)
   # Rearrange vertex sequence
@@ -156,15 +174,31 @@ class CDDBackend(object):
 
     if geomengine == 'scipy':
       self.volume_convex = self.scipy_volume_convex
+    self.A_e = None
 
   def scipy_volume_convex(self, hrep, poly=None):
     try:
+      hrep.canonicalize()
+      # print(hrep)
       points = np.array(cdd.Polyhedron(hrep).get_generators())[:, 1:]
     except RuntimeError:
-      return 0
+      # Error occurs from trying to get generators from half-space
+      # print('Perturb matrix for generators\n', hrep.rep_type)
+      try:
+        hrep = perturb_matrix(hrep,'epsilon')
+        points = np.array(cdd.Polyhedron(hrep).get_generators())[:, 1:]
+        # print('Generators perturbed')
+      except RuntimeError:
+        print('ERROR: Perturb failed')
+        return -1
     except IndexError:
-      return 0
-
+      # Error occurs when get_generators returns null - no vertices
+      # print('Index error on\n',hrep)
+      # print(np.array(cdd.Polyhedron(hrep).get_generators()))#[:, 1:]
+      self.A_e = hrep
+      return 0.
+    self.A_e = hrep
+    
     ## Check coincident points - canonicalize does not cope well with close points
     if poly is not None:
       outer_points = seq_convex_points(np.array(cdd.Polyhedron(poly.outer).get_generators())[:, 1:])
@@ -175,8 +209,9 @@ class CDDBackend(object):
         for j in range(len(points)):
           dif = inner_points[p] - points[j]
           mag = np.linalg.norm(dif)
-          if mag < 0.0001:
+          if mag < 0.005:
             log_inner.append(p)
+      # For points coincident with inner polygon, check magnitude with outer polygon points
       if len(log_inner) == 2:
         log = []
         for p in range(len(outer_points)):
@@ -185,14 +220,9 @@ class CDDBackend(object):
             mag = np.linalg.norm(dif)
             if mag < 0.0001:
               log.append(p)
-              # print(p, outer_points[p])
-              # print(j, inner_points[log_inner[j]])
-              # print(mag, dif)
-              # print('-------------------')
-        # print(log)
+        # For points coincident with outer polygon, check if adjacent
         if log and len(log)==2:
           if abs(log[1] - log[0]) == 1:
-            # print('volume is zero')
             return 0.
 
     if points.shape[0] < points.shape[1]+1:
@@ -201,8 +231,6 @@ class CDDBackend(object):
       ch = ConvexHull(points)
     except QhullError:
       return 0
-    # print('points:\n', points)
-    # print('Vol: ', ch.volume)
     return ch.volume
 
   def build_polys(self, poly):
@@ -241,9 +269,14 @@ class CDDBackend(object):
     try:
       ineq = np.array(cdd.Polyhedron(poly.inner).get_inequalities())
     except RuntimeError:
-      raise SteppingException('Numerical inconsistency found')
+      try:
+        # Rounding number to avoid singular configurations
+        poly.inner = perturb_matrix(poly.inner, 'round')
+        ineq = np.array(cdd.Polyhedron(poly.inner).get_inequalities())
+      except:
+        raise SteppingException('Numerical inconsistency found')
     count = 0
-    # print(np.round(ineq,3))
+    
     # For each inequality
     for line in ineq:
       # print('line: ', line)
@@ -263,9 +296,7 @@ class CDDBackend(object):
         else:
           A_e = poly.outer.copy()
           A_e.extend(cdd.Matrix(-line.reshape(1, line.size)))
-          # print('line ',line)
           A_e.canonicalize()
-          # print('A_e',A_e)
           poly.hrep_dic[key] = A_e
 
         if plot:
@@ -273,13 +304,15 @@ class CDDBackend(object):
           poly.plot_polyhedrons()
           poly.plot_polyhedron(A_e, 'm', 0.5)
           poly.show()
-
+        # Compute volume of triangle
         vol = self.volume_convex(A_e, poly)
-        poly.volume_dic[key] = vol
-        volumes.append(vol)
-        poly.vrep_dic[key] = np.array(cdd.Polyhedron(A_e).get_generators())
-      # print(count)
-    
+        if vol >= 0.:
+          poly.volume_dic[key] = vol
+          volumes.append(vol)
+          poly.vrep_dic[key] = np.array(cdd.Polyhedron(self.A_e).get_generators())
+        else:
+          raise SteppingException('ERROR: Backend - Invalid volume')
+      
     ## Recompute volumes for all if inner polygon does not change
     if len(ineq) == count:
       # print('Outer boundary check')
@@ -291,9 +324,12 @@ class CDDBackend(object):
         poly.hrep_dic[key] = A_e
 
         vol = self.volume_convex(A_e, poly)
-        poly.volume_dic[key] = vol
-        volumes.append(vol)
-        poly.vrep_dic[key] = np.array(cdd.Polyhedron(A_e).get_generators())
+        if vol >= 0.:
+          poly.volume_dic[key] = vol
+          volumes.append(vol)
+          poly.vrep_dic[key] = np.array(cdd.Polyhedron(self.A_e).get_generators())
+        else:
+          raise SteppingException('ERROR: Backend - Invalid volume')
 
     # print('volume: ',volumes)
     # print('=======================================')

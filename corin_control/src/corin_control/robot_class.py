@@ -110,6 +110,7 @@ class RobotState:
 		self.task_X_joint()
 		self.update_stability_region()
 		self.Gait.set_step_stroke(leg_stance, LEG_CLEAR, STEP_STROKE)
+		
 		# print ">> INITIALISED ROBOT CLASS"
 
 	def update_state(self,**options):
@@ -176,6 +177,7 @@ class RobotState:
 		else:
 			print colored("ERROR: Incorrect number of joint states - "+str(len(qpc)), 'red')
 
+
 	def update_bodypose_state(self, cmode):
 		""" update imu state """
 		## TODO: INCLUDE STATE ESTIMATION
@@ -229,11 +231,10 @@ class RobotState:
 		""" updates the current stability margin """
 
 		valid, sm = self.SM.point_in_convex(self.XHc.world_X_COM[:3,3])
+
 		## Define Variables ##
-		# stack_world_X_foot = [self.Leg[j].XHc.world_X_foot[:3,3] for j in range(6) if self.Gait.cs[j] == 0]
-		# stack_normals = [self.Leg[j].snorm for j in range(6) if self.Gait.cs[j] == 0]
+		stack_world_X_foot = [self.Leg[j].XHc.world_X_foot[:3,3] for j in range(6) if self.Gait.cs[j] == 0]
 		# print stack_world_X_foot
-		# print stack_normals
 
 		## Kinematic stability margin
 		# valid, sm = self.SM.point_in_convex(self.XHc.world_X_COM[:3,3], stack_world_X_foot)
@@ -249,10 +250,6 @@ class RobotState:
 		# stack_leg_forces = [self.Leg[j].F6c.world_X_foot[:3] for j in range(6) if self.Gait.cs[j] == 0]
 		# stack_leg_normal = [self.Leg[j].snorm for j in range(6) if self.Gait.cs[j] == 0]
 		# self.SM.force_moment(self.XHc.world_X_COM[:3,3], stack_leg_forces, stack_world_X_foot, stack_leg_normal)
-
-		## Check CoM inside support region
-
-		# print '=================================================='
 
 	def update_stability_region(self):
 		""" Updates the stability region for a set of fixed contacts - Bretl2008 """

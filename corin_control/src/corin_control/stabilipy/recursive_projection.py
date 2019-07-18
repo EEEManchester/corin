@@ -354,6 +354,9 @@ class RecursiveProjectionProblem(object):
     self.fig = plt.figure()
     self.ax = self.fig.add_subplot('111', aspect='equal')
 
+    # Set common labels
+    self.ax.set_xlabel('x-axis, m')
+    self.ax.set_ylabel('y-axis, m')
     # tup = [-2, 2]
 
     # self.ax.set_xlim(tup)

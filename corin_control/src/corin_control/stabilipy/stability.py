@@ -688,6 +688,7 @@ class StabilityPolygon(RecursiveProjectionProblem):
 
   def reset_fig_2D(self):
     RecursiveProjectionProblem.reset_fig_2D(self)
+    
     # if self.radius is not None:
     #   tup = [-1.1*self.radius, 1.1*self.radius]
     #   self.ax.set_xlim(tup)

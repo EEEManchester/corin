@@ -138,6 +138,7 @@ class StabilityMargin():
 		self.min = min(darr) if self.valid else -min(darr)
 		self.convex_hull = hull_arr
 		# print type(self.convex_hull)
+
 		# plt.plot(vertices[:,0], vertices[:,1], 'o')
 		# plt.plot(p[0], p[1], '*')
 		# for simplex in hull.simplices:
@@ -166,6 +167,7 @@ p = np.array([0.06,0.,0.])
 
 Legs = [np.array([0.09919876, 0.12064476, 0.29351066]), np.array([-0.01680924,  0.12064476,  0.27825104]), np.array([-0.13281724,  0.12064476,  0.26299141]), np.array([ 0.12504486, -0.07413727, -0.42      ]), np.array([ 0.03175676, -0.08795496, -0.41690475]), np.array([-0.10295665, -0.10439134, -0.42      ])]
 gphase = [0, 0, 0, 0, 1, 0]
+
 # p = np.zeros(3) #
 p = np.array([ 0.25, 0.,  0.      ])
 
@@ -180,4 +182,5 @@ Legs = [np.array([ 0.25, 0.00, 0.]),
 		np.array([ 0.00,-0.3, 0.])]
 SM = StabilityMargin()
 valid, sm = SM.kinematic_stability_margin(p, Legs)
+
 

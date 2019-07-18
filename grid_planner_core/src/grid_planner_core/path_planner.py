@@ -177,8 +177,8 @@ class BodyposeTable:
 
 # tb = BodyposeTable()
 # for i in tb.table:
-# 	print tb.table[i]["footprint"]
-# 	print tb.table[i]["bodypose"]
+# 	print "footprint: ", tb.table[i]["footprint"]
+# 	print "bodypose: ", tb.table[i]["bodypose"]
 # 	print '========================='
 class PathPlanner:
 	def __init__(self, Map):

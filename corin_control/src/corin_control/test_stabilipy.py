@@ -36,7 +36,8 @@ poly = stabilipy.StabilityPolygon(5.0, 2, -9.81, 2., 1., -1, 0.)
 # 			[[0.0, 0.0, 1.0]], 
 # 			[[0.0, 0.0, 1.0]]]
 
-pos =[[0.579985, 0.640869, 0.0], 
+## Nominal Stance - Chimney Walking
+pos =[	[0.579985, 0.640869, 0.0], 
 		[0.33, 0.69, 0.0], 
 		[0.080015, 0.640869, 0.0], 
 		[0.579985, 0.139131, 0.0], 
@@ -49,9 +50,23 @@ normals = [[ [0.0, 1.0, 0.0]],
 			[[0.0,-1.0, 0.0]], 
 			[[0.0,-1.0, 0.0]]]
 
+## Nominal Stance - Wall Walking
+# pos = [ [ 0.25,  0.1, 0.8], 
+# 		[ 0.00,  0.1, 0.8], 
+# 		[-0.25,  0.1, 0.8], 
+# 		[ 0.25, -0.1, 0.0], 
+# 		[ 0.00, -0.1, 0.0]]#, 
+# 		# [-0.25, -0.1, 0.0]]
+# normals = [[ [0.0,-1.0, 0.0]], 
+# 			[[0.0,-1.0, 0.0]], 
+# 			[[0.0,-1.0, 0.0]], 
+# 			[[0.0, 0.0, 1.0]], 
+# 			[[0.0, 0.0, 1.0]]]#, 
+# 			# [[0.0, 0.0, 1.0]]]
+
 axisZ = np.array([[0.0], [1.0], [0.0]])
 n4 = np.transpose(np.transpose(math.rpyToRot(1.0,0.0,0.0)).dot(axisZ))
-normals[0] = n4.tolist()
+# normals[0] = n4.tolist()
 # normals[3] = n4.tolist()
 # friction coefficient
 mu = 0.5
@@ -62,8 +77,8 @@ poly.contacts = contacts
 
 # modes: best, iteration, precision
 now = time.time()
-poly.compute(stabilipy.Mode.best, epsilon=1e-5, 
-									maxIter=10, 
+poly.compute(stabilipy.Mode.best, epsilon=1e-3, 
+									maxIter=15, 
 									solver='cdd',
 									plot_error=False,
 									plot_init=False,
@@ -88,12 +103,19 @@ poly.compute(stabilipy.Mode.best, epsilon=1e-5,
 def seq_convex_points(points):
 	hull = ConvexHull(points)
 	# Rearrange vertex sequence
-	ns = len(outer_points[hull.vertices,0])
+	ns = len(points[hull.vertices,0])
 	xh = points[hull.vertices,0].reshape((ns,1))
 	yh = points[hull.vertices,1].reshape((ns,1))
 	return np.concatenate((xh,yh),axis=1)
 	 
-# import cdd
+import cdd
+mat = cdd.Matrix([ [6.742269945E-02,  -7.385241116E-01,  6.742270661E-01],
+					[4.641596856E-02, -8.875760933E-01,  4.606611321E-01],
+					[-1,  1.922693825E+01, -10] ], number_type='float')
+mat = cdd.Matrix([ [9.999999649E-02,  0,  1],
+ [-1,  0, -10],
+ [ 6.742269945E-02, -7.385241116E-01,  6.742270661E-01],
+ [ 2.674874263E-01,  8.798466141E-01,  4.752577572E-01]], number_type='float')
 # mat = cdd.Matrix([[ 8.299699798E-01, -1,  0],
 # 				 [ 1.699699828E-01,  1,  0],
 # 				 [ 9.408689929E-01,  0, -1],
@@ -102,12 +124,18 @@ def seq_convex_points(points):
 # 				 [ 5.365489497E-01, -7.379147048E-01,  6.748939831E-01],
 # 				 [ 4.819916385E-02,  7.430692952E-01,  6.692144817E-01],
 # 				 [-4.759153493E+06,  1, -2.958403281E+07]], number_type='float')
-# mat.rep_type = cdd.RepType.INEQUALITY
+# print mat
+## Perturb matrix
+mat.rep_type = cdd.RepType.INEQUALITY
+# ineq = np.array(cdd.Polyhedron(mat).get_inequalities())
+# ineq[1][1] += 0.001
+# mat = cdd.Matrix( ineq, number_type='float')
+
 # poly = cdd.Polyhedron(mat)
 # hrep = poly.get_inequalities()
 # hrep.canonicalize()
-# points = np.array(cdd.Polyhedron(hrep).get_generators())[:, 1:]
-# # print points
+# points = np.array(cdd.Polyhedron(mat).get_generators())[:, 1:]
+# print points
 
 # outer = cdd.Matrix( [[8.299699798E-01, -1,  0],
 #   					 [1.699699828E-01,  1,  0],
