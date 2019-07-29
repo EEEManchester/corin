@@ -29,7 +29,7 @@ class ImpedanceController:
 		num, den, dt = signal.cont2discrete(H, 1.0/fs, method='bilinear') #zoh, euler
 		self.num = num[0]
 		self.den = den[1:]
-
+		
 		# Filter state initialisation
 		self.forward_filter = [0] * len(self.num)
 		self.reverse_filter = [0] * len(self.den)
@@ -77,3 +77,13 @@ class ImpedanceController:
 		self.reverse_filter = [0] * len(self.den)
 
 		return self.evaluate(df)
+
+
+## ================================================================================================ ##
+## 												TESTING 											##
+## ================================================================================================ ##
+
+# ic = ImpedanceController()
+H = ([2], [1,2,5])
+# print signal.cont2discrete(H, 0.1, method='bilinear')
+# print signal.cont2discrete(H, 0.1)

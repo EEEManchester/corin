@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="corin">
+
+
+	<!-- Things that are needed only for Gazebo (not the physical robot). These include sensor and controller plugin specifications -->
+	<xacro:include filename="$(find corin_description)/urdfs/guide_rail/guide_rail.gazebo.xacro"/>
+
+	<link name="world"/>
+
+	<!-- ================================ Trunk ================================ -->
+
+	<xacro:macro name="RobotTrunk" params="name *origin">
+		<!-- Fixed link -->
+		<joint name="fixed_link_joint" type="fixed">
+			<!-- <axis xyz="1 0 0"/> -->
+			<origin xyz="0 0 0.1" rpy="0 0 0"/>
+			<!-- <limit effort="30." velocity="2.0" lower="-0.001" upper="0.001"/> -->
+			<!-- <dynamics damping="0.3" friction="0" /> -->
+			<parent link="world"/>
+			<child link="guide_rail"/>
+		</joint>
+
+
+		<!-- Main link -->
+		<link name="guide_rail">
+			<inertial>
+				<origin xyz="${xcom_trunk} ${ycom_trunk} ${zcom_trunk}"/>
+				<mass value="1"/>
+				<inertia ixx="0.0012" iyy="0.0012" izz="0.0018"
+						 ixy="0" ixz="0" iyz="0"/>
+			</inertial>
+			<visual>
+				<geometry>
+			    	<cylinder length="0.4" radius="0.01"/>
+			    </geometry>
+				<material name="orange"/>
+			</visual>
+			<collision>
+				<geometry>
+			    	<cylinder length="0.4" radius="0.01"/>
+			    </geometry>
+				<material name="colli"/>
+			</collision>
+		</link>
+
+		<!-- Linear joint -->
+		<joint name="guide_rail_joint" type="prismatic">
+			<parent link="guide_rail"/>
+			<child link="guide_rail_link"/>
+			<axis xyz="0 0 1"/>
+			<origin xyz="0 0 0.0" rpy="0 0 0"/>
+			<limit effort="30." velocity="2.0" lower="-0.02" upper="0.2"/>
+			<dynamics damping="0.5" friction="0" />
+		</joint>
+
+		<!-- Main link -->
+		<link name="guide_rail_link">
+			<inertial>
+				<origin xyz="0 0 0"/>
+				<mass value="1.0"/>
+				<inertia ixx="0.0012" iyy="0.0012" izz="0.0018"
+						 ixy="0" ixz="0" iyz="0"/>
+			</inertial>
+			<visual>
+				<geometry>
+			    	<cylinder length="0.05" radius="0.02"/>
+			    </geometry>
+				<material name="green"/>
+			</visual>
+			<collision>
+				<geometry>
+			    	<cylinder length="0.01" radius="0.01"/>
+			    </geometry>
+				<material name="colli"/>
+				<origin xyz="0.06 0 0.0" rpy="0 0 0"/>
+			</collision>
+		</link>
+
+		<!-- Extensions -->
+		<xacro:guide_rail_gazebo name="guide_rail"/>
+		<xacro:guide_rail_gazebo name="guide_rail_link"/>
+		
+		<transmission name="guide_rail_trans">
+			<type>transmission_interface/SimpleTransmission</type>
+			<joint name="guide_rail_joint">
+				<hardwareInterface>EffortJointInterface</hardwareInterface>
+			</joint>
+			<actuator name="guide_rail_motor">
+				<hardwareInterface>EffortJointInterface</hardwareInterface>
+				<mechanicalReduction>200</mechanicalReduction>
+			</actuator>
+		</transmission>
+
+		<gazebo reference="guide_rail_joint">
+			<provideFeedback>true</provideFeedback>
+		</gazebo>
+		
+	</xacro:macro>
+
+</robot>

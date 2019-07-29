@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+
+<launch>
+
+    <arg name="gazebo" default="true"/>
+    <arg name="position" default="true"/>
+    <arg name="effort" default="false"/>
+
+    <!-- <param name="gazebo"                   value="false"    type="bool"/> -->
+    <param name="gazebo_robot_name"        value="corin"/>
+
+    <param name="offset_file_path"         value="$(find corin_joint_manager)/config/offset.yaml"/>
+    <param name="robot_file_path"          value="$(find corin_joint_manager)/config/mcorin.robot"/>
+    <param name="init_file_path"           value="$(find corin_joint_manager)/config/dxl_init.yaml"/>
+
+    <!-- Load joint controller configurations from YAML file to parameter server -->
+    <rosparam file="$(find corin_joint_manager)/config/gazebo_controllers/guide_rail_controller.yaml" command="load"/>
+
+    <!-- Guide Rail Manager -->
+    <!-- Gazebo Controllers -->
+    <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" clear_params="true"
+        output="screen" ns="/corin" args="joint_state_controller
+        guide_rail_joint
+        leg_q1_joint leg_q2_joint leg_q3_joint   " if="$(arg gazebo)"/>
+
+    <!-- unpause physics engine -->
+    <node name="unpause" pkg="corin_description" type="unpause_physics_engine" args="5.0" if="$(arg gazebo)"/>
+
+    <!-- Dynamixels -->
+    <node name="corin_manager_node" pkg="corin_joint_manager" type="corin_manager" output="screen" unless="$(arg gazebo)"/>
+    <!-- Torque server - enable/disable torque -->
+    <node name="dxl_server" pkg="corin_joint_manager" type="torque_server.py" output="screen" args="12.5" unless="$(arg gazebo)"/>
+
+    <!-- Default -->
+    <node name="default_pose" pkg="corin_description" type="guide_rail_default.py" output="screen"/>
+
+</launch>

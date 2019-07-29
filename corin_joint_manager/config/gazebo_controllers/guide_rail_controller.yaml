@@ -1,0 +1,31 @@
+corin:
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 200
+
+  ##################### Joint Position Controllers #####################
+  guide_rail_joint:
+    type: effort_controllers/JointEffortController
+    joint: guide_rail_joint
+    pid: {p: 1.001, i: 0.00000, d: 0.01}
+    state_publish_rate:  200
+
+  # Leg 1 ------------------------------------------------------
+  leg_q1_joint:
+    type: effort_controllers/JointPositionController
+    joint: leg_q1_joint
+    pid: {p: 40.001, i: 0.00000, d: 0.101}
+    state_publish_rate:  200
+
+  leg_q2_joint:
+    type: effort_controllers/JointPositionController
+    joint: leg_q2_joint
+    pid: {p: 51.002, i: 0.00000, d: 0.102}
+    state_publish_rate:  200
+
+  leg_q3_joint:
+    type: effort_controllers/JointPositionController
+    joint: leg_q3_joint
+    pid: {p: 51.003, i: 0.00000, d: 0.103}
+    state_publish_rate:  200

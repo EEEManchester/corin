@@ -239,7 +239,7 @@ class LegClass:
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)
 		# if self.number == 0:
-		# 	Plot.plot_2d(self.xspline.t, self.xspline.xp)
+		# Plot.plot_2d(self.xspline.t, self.xspline.xp)
 		## checks spline for kinematic constraint
 		qt = [];	qp = [];	qv = [];	qa = [];
 
