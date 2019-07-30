@@ -87,7 +87,7 @@ class LegClass:
 		self.XHc.update_base_X_foot(q_compensated)
 		self.XHc.update_world_base_X_foot(P6_world_X_base, q_compensated)
 		self.XHc.update_foot_jacobians(q_compensated)
-
+		
 		## Check work envelope
 		bound_exceed = self.check_boundary_limit(self.XHc.world_base_X_foot, self.XHc.world_base_X_NRP, step_stroke)
 
@@ -116,7 +116,7 @@ class LegClass:
 		self.F6c.coxa_X_foot[:3] = mX(self.XHc.coxa_X_foot[:3,:3], self.F6c.tibia_X_foot[:3].flatten()).reshape((3,1))
 		self.F6c.base_X_foot[:3] = mX(self.XHc.base_X_foot[:3,:3], self.F6c.tibia_X_foot[:3].flatten()).reshape((3,1))
 		self.F6c.world_X_foot[:3] = mX(self.XHc.world_base_X_foot[:3,:3], self.F6c.tibia_X_foot[:3].flatten()).reshape((3,1))
-
+		# print np.round(self.F6c.world_X_foot[:3].flatten(),3) 
 		self.check_contact_state()
 		
 		return self.cstate

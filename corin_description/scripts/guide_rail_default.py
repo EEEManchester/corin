@@ -38,10 +38,11 @@ class RobotPose:
 
 	def set_full_pose(self, q):
 		
-		self.guide_pub_.publish(data=20)
+		self.guide_pub_.publish(data=14.8)
 		self.set_leg_pose(q)
+		self.guide_pub_.publish(data=14)
+		rospy.sleep(2)
 		self.guide_pub_.publish(data=0)
-
 	def set_leg_pose(self, q):
 		# Publish joint states
 		for c in range(0,6):

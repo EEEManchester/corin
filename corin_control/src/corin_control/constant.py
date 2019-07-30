@@ -38,12 +38,12 @@ Q2_A_LIM = 2.22     # q2 on all legs
 Q3_A_LIM = 2.79     # q3 on all legs
 
 # Offset from CoB to Leg using Body Frame
-COXA_X = 0.115
-COXA_Y = 0.09
-COXA_Z = 0.0
+COXA_X = 0.
+COXA_Y = 0.
+COXA_Z = 0.
 
 # rotation from base frame to leg frame (deg)
-ROT_BASE_X_LF = 50.
+ROT_BASE_X_LF = 0.
 ROT_BASE_X_LM = 90.
 ROT_BASE_X_LR = 130.
 ROT_BASE_X_RF = -50.
@@ -52,7 +52,7 @@ ROT_BASE_X_RR = -130.
 
 ROT_BASE_X_LEG = [ROT_BASE_X_LF, ROT_BASE_X_LM, ROT_BASE_X_LR,
 				 	ROT_BASE_X_RF,ROT_BASE_X_RM,ROT_BASE_X_RR]
-TRN_BASE_X_LEG = [	(COXA_X,COXA_Y) ,(0.,COXA_Y) ,(-COXA_X,COXA_Y),\
+TRN_BASE_X_LEG = [	(0., 0.) ,(0.,COXA_Y) ,(-COXA_X,COXA_Y),\
 					(COXA_X,-COXA_Y),(0.,-COXA_Y),(-COXA_X,-COXA_Y)]
 
 G 	 = 9.81 	# Gravity
@@ -125,7 +125,7 @@ SM_MIN = 0.0
 ## ================================================================ ##
 ##                  Error Compensation parameters 					##
 ## ================================================================ ##
-QCOMPENSATION = 0.0#33
+QCOMPENSATION = 0.039
 
 ## ================================================================ ##
 ##                  	Inclination parameters 	 					##

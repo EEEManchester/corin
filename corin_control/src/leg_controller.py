@@ -25,6 +25,7 @@ class LegController:
 		self.qc = None
 		self.cf = None
 		self.XHd = robot_transforms.HomogeneousTransform()
+		self.XHc = robot_transforms.HomogeneousTransform()
 
 		self.initialize_topics()
 		self.initialise_controller_variables()
@@ -45,6 +46,8 @@ class LegController:
 		self.joint_pub_[0] = rospy.Publisher(ROBOT_NS + '/leg_q1_joint/command', Float64, queue_size=1)
 		self.joint_pub_[1] = rospy.Publisher(ROBOT_NS + '/leg_q2_joint/command', Float64, queue_size=1)
 		self.joint_pub_[2] = rospy.Publisher(ROBOT_NS + '/leg_q3_joint/command', Float64, queue_size=1)
+		self.log_sp_pub_   = rospy.Publisher(ROBOT_NS + '/log_sp', Float32MultiArray, queue_size=1)
+		self.log_ac_pub_   = rospy.Publisher(ROBOT_NS + '/log_ac', Float32MultiArray, queue_size=1)
 
 		##***************** SUBSCRIBERS ***************##
 		self.joint_sub_  = rospy.Subscriber(ROBOT_NS + '/joint_states', JointState, self.joint_state_callback, queue_size=1)
@@ -53,19 +56,25 @@ class LegController:
 		rospy.sleep(0.5)
 		print colored('Robot Ready!','green')
 
-	def publish_topics(self, qd):
+	def publish_topics(self, qd, log_sp, log_ac):
 		
 		if (self.interface == 'gazebo'):
 			for n in range(0,3):
 				self.joint_pub_[n].publish(data=qd[n])
+		
+		self.log_sp_pub_.publish(Float32MultiArray(data=log_sp))
+		self.log_ac_pub_.publish(Float32MultiArray(data=log_ac))
 
 	def update_states(self):
 		""" Update robot states """
-		wXb = v3_X_m(np.array([0.03, 0., 0.1+self.qc.position[0]]))
-		self.bstate = self.Leg.update_joint_state(wXb, self.qc.position[1:4], False, STEP_STROKE)
+		self.XHc.world_X_base = v3_X_m(np.array([0.03, 0., 0.1+self.qc.position[0]]))
+		# self.XHc.world_X_base = self.XHd.world_X_base
+		self.XHc.base_X_world = np.linalg.inv(self.XHc.world_X_base)
+		self.bstate = self.Leg.update_joint_state(self.XHc.world_X_base, self.qc.position[1:4], False, STEP_STROKE)
 		self.cstate = self.Leg.update_force_state(self.cf)
 
 	def initialise_controller_variables(self):
+
 		# State machine loading/unloading timing parameters
 		self.state_machine = 'hold'
 		self.tload = 1						# loading counter
@@ -85,11 +94,13 @@ class LegController:
 		self.next_gait = 1
 
 		self.XHd.world_X_base[:3,3] = np.array([0.03, 0., 0.1])
+		self.XHd.base_X_world = np.linalg.inv(self.XHd.world_X_base)
 
 	def controller_setup(self):
 		self.control_loop = 'open'
 		self.ctrl_base_tracking = False
 		self.ctrl_leg_impedance = False
+		self.ctrl_contact_detect = True
 
 	def controller(self):
 
@@ -102,7 +113,7 @@ class LegController:
 				gphase = 0
 				self.fmax_lim  = 0
 				self.init_flim = self.Leg.get_normal_force('setpoint') if (self.pre_gphase == 1) else F_MAX
-				# print self.init_flim
+				
 				
 			# reduce max force for legs that will be in transfer phase
 			fmax = self.init_flim+1. - self.tload*(self.init_flim+1.)/float(self.iload) + 0.001
@@ -150,18 +161,13 @@ class LegController:
 				fmax_lim = F_MAX	# max. force array
 				gphase = self.cur_gphase
 				self.Leg.Fmax = F_MAX if gphase == 0 else FORCE_THRES
-				print 'gphase: ', self.cur_gphase
-			# elif (self.s_cnt > s_max/2 and self.ctrl_contact_detect):
+				# print 'gphase: ', self.cur_gphase
+			# elif (self.s_cnt > self.s_max/2 and self.ctrl_contact_detect):
 			# 	# Check if transfer has made contact
-			# 	cearly = map(lambda x,y: x and y, self.Robot.cstate, self.Robot.Gait.cs)
-			# 	cindex = [z for z, y in enumerate(cearly) if y == 1]
-			# 	# Change legs in transfer phase with contact to support
-			# 	if cindex:
-			# 		print i, ' cindex ', cindex, self.Robot.cstate
-			# 		for j in cindex:
-			# 			self.cur_gphase = 0
-			# 			self.Leg.change_phase('support', self.Robot.XHc.world_X_base)
-			# 			self.Leg.snorm = self.GridMap.get_cell('norm', self.Leg.XHc.world_X_foot[0:3,3])
+			# 	if self.cur_gphase==1 and self.cstate:
+			# 		print self.s_cnt, ' cindex ', self.cstate
+			# 		self.cur_gphase = 0
+			# 		self.Leg.change_phase('support', self.XHc.world_X_base)
 
 			# 	# Interpolate Fmax for legs in contact phase
 			# 	fearly = map(lambda x,y: xor(bool(x), bool(y)), gphase, self.Robot.Gait.cs)
@@ -177,7 +183,10 @@ class LegController:
 			# 				fmax_lim.append(self.Leg.Fmax)
 			# 		gphase = list(self.Robot.Gait.cs)
 			# 		print i, 'findex ', findex, gphase, fmax_lim
-
+			# cout3v(self.Leg.XHd.coxa_X_foot[:3,3])
+			# cout3v(self.Leg.Joint.qpd)
+			# cout3v(self.Leg.Joint.qpc)
+			# cout3v(self.Leg.XHc.coxa_X_foot[:3,3])
 			## Generate Transfer Trajectory
 			if self.cur_gphase == 1 and self.Leg.transfer_phase_change == False:
 				print 'Generate transfer trajectory'
@@ -203,25 +212,24 @@ class LegController:
 			self.update_phase_support()
 			
 			if ( self.s_cnt == self.s_max):
-				self.state_machine = 'load'
-				self.s_cnt = 1
-				if self.next_gait == 0:
-					self.next_gait = 1
-					self.Leg.transfer_phase_change = False
-				elif self.next_gait == 1:
-					self.next_gait = 0
-				# # Legs in contact, change phase
-				# if all(self.Robot.cstate) or self.interface == "rviz" or self.control_loop=="open":
-				# 	self.Robot.suspend = False
-				# 	for j in range(0,6):
-				# 		if (self.Robot.Gait.cs[j] == 1):
-				# 			self.Robot.Leg[j].change_phase('support', self.Robot.XHc.world_X_base)
-				# 			self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
-				# 	state_machine = 'load'
-				# 	print i, ' Phase Timeout, Loading ...'
-				# 	# print fmax_lim, gphase
-				# 	# raw_input('next')
-				# 	self.s_cnt = 1
+				# Legs in contact, change phase
+				if self.cstate or self.control_loop=="open":
+					
+					# Change to transfer
+					if self.next_gait == 0:
+						self.next_gait = 1
+						self.Leg.transfer_phase_change = False
+						self.state_machine = 'motion'#'unload'
+						self.s_cnt = 0
+
+					# Change to support
+					elif self.next_gait == 1:
+						self.next_gait = 0
+						# self.Leg.XHc.update_world_X_foot(self.XHc.world_X_base)
+						self.Leg.change_phase('support', self.XHc.world_X_base)
+						self.state_machine = 'motion'#'load'
+						self.s_cnt = 0
+				# raw_input('cont')
 				# # Extend leg swing motion, suspend base
 				# else:
 				# 	# print 'Not all contacts made, suspend robot: ', self.Robot.cstate, self.Robot.Gait.cs
@@ -264,8 +272,10 @@ class LegController:
 				print 'Error Occured, robot invalid! ', err_no
 
 			## Data logging & publishing
-			# qlog = self.set_log_setpoint(v3cp, v3cv, xa_d, v3wp, v3wv, wa_d, qd, joint_torq, force_dist)
-			self.publish_topics(qpd)
+			log_sp = self.set_log([self.Leg.XHd.coxa_X_foot[:3,3].flatten(), qpd])
+			log_ac = self.set_log([self.Leg.XHc.coxa_X_foot[:3,3].flatten(), 
+									self.Leg.Joint.qpc, self.Leg.F6c.tibia_X_foot[:3]])
+			self.publish_topics(qpd, log_sp, log_ac)
 
 		elif self.state_machine == 'hold':
 			""" Holds position - for controller to settle or pause motion """
@@ -282,7 +292,6 @@ class LegController:
 				self.state_machine = 'unload'
 				self.tload = 1
 				
-			# self.update_phase_support(P6e_world_X_base, V6e_world_X_base)
 	def update_phase_support(self):
 
 		# Determine foot position wrt base & coxa. 
@@ -298,7 +307,10 @@ class LegController:
 			# vel_base_X_foot = -V6e_world_X_base[0:3].flatten() - np.cross(V6e_world_X_base[3:6].flatten(), 
 			# 					(self.Leg.XHd.base_X_foot[0:3,3:4] - self.Robot.P6d.world_X_base[0:3]).flatten())
 			# base_X_foot = self.Leg.XHd.base_X_foot[0:3,3] + vel_base_X_foot
-
+			# print self.Leg.XHc.world_X_foot
+			# print self.Leg.XHd.coxa_X_base
+			# print np.round(self.XHd.base_X_world,3)
+			# print '================================'
 			self.Leg.XHd.coxa_X_foot = mX(self.Leg.XHd.coxa_X_base, self.Leg.XHd.base_X_foot)
 
 	def update_phase_transfer(self,delta_d=None):
@@ -315,6 +327,12 @@ class LegController:
 
 		elif (self.cur_gphase == 1 and self.Leg.feedback_state == 2 and delta_d is not None):
 			self.Leg.XHd.coxa_X_foot[:3,3] -= delta_d
+
+	def set_log(self, log_list):
+		log = []
+		for i in log_list:
+			log.append(i.flatten().tolist())
+		return [val for sublist in log for val in sublist]
 
 if __name__ == "__main__":
 
