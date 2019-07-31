@@ -84,7 +84,7 @@ WALL_WIDTH_NARROW = 0.3
 ## ================================================================ ##
 ##                      	Controller Rate 	 					##
 ## ================================================================ ##
-CTR_RATE = 50 			# controller rate for robot, Hz
+CTR_RATE = 100 			# controller rate for robot, Hz
 CTR_INTV = 1./CTR_RATE 	# controller interval for robot, s
 
 ## ================================================================ ##

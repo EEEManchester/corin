@@ -166,13 +166,14 @@ class LegController:
 				gphase = self.cur_gphase
 				self.Leg.Fmax = F_MAX if gphase == 0 else FORCE_THRES
 				# print 'gphase: ', self.cur_gphase
-			# elif (self.s_cnt > self.s_max/2 and self.ctrl_contact_detect):
-			# 	# Check if transfer has made contact
-			# 	if self.cur_gphase==1 and self.cstate:
-			# 		print self.s_cnt, ' cindex ', self.cstate
-			# 		self.cur_gphase = 0
-			# 		self.Leg.change_phase('support', self.XHc.world_X_base)
 
+			elif (self.s_cnt > self.s_max/2 and self.ctrl_contact_detect):
+				# Check if transfer has made contact
+				if self.cur_gphase==1 and self.cstate:
+					print self.s_cnt, ' cindex ', self.cstate
+					self.cur_gphase = 0
+					self.Leg.change_phase('support', self.XHc.world_X_base)
+					self.cur_wXb = self.XHc.world_X_base.copy()
 			# 	# Interpolate Fmax for legs in contact phase
 			# 	fearly = map(lambda x,y: xor(bool(x), bool(y)), gphase, self.Robot.Gait.cs)
 			# 	findex = [z for z, y in enumerate(fearly) if y == True]
@@ -191,6 +192,7 @@ class LegController:
 			# cout3v(self.Leg.Joint.qpd)
 			# cout3v(self.Leg.Joint.qpc)
 			# cout3v(self.Leg.XHc.coxa_X_foot[:3,3])
+
 			## Generate Transfer Trajectory
 			if self.cur_gphase == 1 and self.Leg.transfer_phase_change == False:
 				print 'Generate transfer trajectory'
@@ -201,7 +203,9 @@ class LegController:
 
 				## Generate transfer spline
 				svalid = self.Leg.generate_spline('leg', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
-
+				cout3p(self.Leg.XHd.coxa_X_foot)
+				cout3p(self.Leg.XHc.coxa_X_foot)
+				raw_input('jj')
 				if (svalid is False):
 					# set invalid if trajectory unfeasible for leg's kinematic
 					self.invalid = True
@@ -229,8 +233,9 @@ class LegController:
 					# Change to support
 					elif self.next_gait == 1:
 						self.next_gait = 0
-						# self.Leg.XHc.update_world_X_foot(self.XHc.world_X_base)
-						self.Leg.change_phase('support', self.XHc.world_X_base)
+						if self.cur_gphase != 0:
+							self.Leg.change_phase('support', self.XHc.world_X_base)
+							self.cur_wXb = self.XHc.world_X_base.copy()
 						self.state_machine = 'motion'#'load'
 						self.s_cnt = 0
 						self.P3e_integral = np.zeros(3)
@@ -318,29 +323,24 @@ class LegController:
 			comp_world_X_base = v3_X_m(self.XHc.world_X_base[:3,3] + self.PI_control)
 			comp_base_X_world = np.linalg.inv(comp_world_X_base)
 
-			cout3p(self.XHd.world_X_base)
-			cout3p(self.XHc.world_X_base)
-			# cout3v(self.P3e_integral)
-			cout('==========================')
-			self.ctrl_base_tracking = True
+			# cout3p(self.XHd.world_X_base)
+			# cout3p(self.XHc.world_X_base)
+			# # cout3v(self.P3e_integral)
+			# cout('==========================')
+			# self.ctrl_base_tracking = True
 
 			## Position-control
 			# Closed-loop control on bodypose. Move by sum of desired pose and error
 			if self.ctrl_base_tracking:
 				self.Leg.XHd.base_X_foot = mX(comp_base_X_world, self.Leg.XHc.world_X_foot)
 			else:
-				self.Leg.XHd.base_X_foot = mX(self.XHc.base_X_world, self.Leg.XHc.world_X_foot)
+				# self.Leg.XHd.base_X_foot = mX(self.XHc.base_X_world, self.Leg.XHc.world_X_foot)
+				self.Leg.XHd.base_X_foot = mX(np.linalg.inv(self.cur_wXb), self.Leg.XHc.world_X_foot)
 
-			## Velocity-control - Focchi2018 eq(3) TODO: check robustness
-			# vel_base_X_foot = -V6e_world_X_base[0:3].flatten() - np.cross(V6e_world_X_base[3:6].flatten(), 
-			# 					(self.Leg.XHd.base_X_foot[0:3,3:4] - self.Robot.P6d.world_X_base[0:3]).flatten())
-			# base_X_foot = self.Leg.XHd.base_X_foot[0:3,3] + vel_base_X_foot
-			# print self.Leg.XHc.world_X_foot
-			# print self.Leg.XHd.coxa_X_base
-			# print np.round(self.XHd.base_X_world,3)
-			# print '================================'
 			self.Leg.XHd.coxa_X_foot = mX(self.Leg.XHd.coxa_X_base, self.Leg.XHd.base_X_foot)
-
+		cout3p(self.Leg.XHd.coxa_X_foot)
+		cout3p(self.Leg.XHc.coxa_X_foot)
+		print '==================================='
 	def update_phase_transfer(self,delta_d=None):
 
 		## Transfer phase
