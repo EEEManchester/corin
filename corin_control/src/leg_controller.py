@@ -95,7 +95,9 @@ class LegController:
 
 		self.XHd.world_X_base[:3,3] = np.array([0.03, 0., 0.1])
 		self.XHd.base_X_world = np.linalg.inv(self.XHd.world_X_base)
-		
+		self.Leg.XHd.world_X_foot[:3,3] = np.array([STANCE_WIDTH+0.03, 0., 0.])
+		self.Leg.XHc.world_X_foot = self.Leg.XHd.world_X_foot.copy()
+
 		self.P3e_integral = np.zeros(3)
 		self.P3e_prev_1   = np.zeros(3)
 		self.PI_control = np.zeros(3)
@@ -199,13 +201,14 @@ class LegController:
 				sn1 = np.array([0., 0., 1.])
 				sn2 = np.array([0., 0., 1.])
 
-				self.Leg.XHd.coxa_X_foot[0:3,3] = np.array([STANCE_WIDTH, 0., -BODY_HEIGHT])
-
+				self.Leg.XHd.world_X_foot[0:3,3] = np.array([0.03+STANCE_WIDTH, 0., -BODY_HEIGHT])
+				# self.Leg.XHd.coxa_X_foot[0:3,3] = np.array([STANCE_WIDTH, 0., -BODY_HEIGHT])
+				self.Leg.XHc.coxa_X_foot[0:3,3:4] = self.Leg.KDL.leg_FK(self.qc.position[1:4])
 				## Generate transfer spline
-				svalid = self.Leg.generate_spline('leg', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
-				cout3p(self.Leg.XHd.coxa_X_foot)
-				cout3p(self.Leg.XHc.coxa_X_foot)
-				raw_input('jj')
+				svalid = self.Leg.generate_spline('world', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
+				cout3p(self.Leg.XHd.world_X_foot)
+				cout3p(self.Leg.XHc.world_X_foot)
+				# raw_input('jj')
 				if (svalid is False):
 					# set invalid if trajectory unfeasible for leg's kinematic
 					self.invalid = True

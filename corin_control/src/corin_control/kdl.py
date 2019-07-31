@@ -243,8 +243,8 @@ qp = CK.leg_IK(cd)
 # if (not CK.check_singularity(qp)):
 # 	qd,qdd = CK.joint_speed(qp, v, a)
 # qpd = np.array([0., 0.34, -1.85])
-q = [0.0 , 0.4640929590272851, -1.9360360660532043]
-print CK.leg_FK(q).flatten()
+q = [-1.6328659686593028e-06, 0.4639278490512968, -1.9340102521105171]
+# print np.round(CK.leg_FK(q).flatten() + np.array([0.03, 0., 0.1-0.02]),4)
 
 # code snippet to be executed only once 
 mysetup = "from math import sqrt"
