@@ -18,3 +18,6 @@ def cout3(data):
 
 def cout3v(data):
 	print np.round(data.flatten(),3)
+
+def cout3p(data):
+	print np.round(data[:3,3].flatten(),3)

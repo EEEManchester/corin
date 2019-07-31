@@ -95,6 +95,8 @@ class LegController:
 
 		self.XHd.world_X_base[:3,3] = np.array([0.03, 0., 0.1])
 		self.XHd.base_X_world = np.linalg.inv(self.XHd.world_X_base)
+		
+		self.P3e_integral = np.zeros(3)
 
 	def controller_setup(self):
 		self.control_loop = 'open'
@@ -229,6 +231,7 @@ class LegController:
 						self.Leg.change_phase('support', self.XHc.world_X_base)
 						self.state_machine = 'motion'#'load'
 						self.s_cnt = 0
+						self.P3e_integral = np.zeros(3)
 				# raw_input('cont')
 				# # Extend leg swing motion, suspend base
 				# else:
@@ -296,12 +299,28 @@ class LegController:
 
 		# Determine foot position wrt base & coxa. 
 		if (self.cur_gphase == 0):
+			# Integral controller
+			base_error = self.XHd.world_X_base[:3,3]-self.XHc.world_X_base[:3,3]
+			if np.linalg.norm(base_error) > 0.001:
+				self.P3e_integral += base_error*CTR_INTV
+			else:
+				self.P3e_integral = np.zeros(3)
+			comp_world_X_base = v3_X_m(self.XHc.world_X_base[:3,3] + KI_P_BASE*self.P3e_integral)
+			comp_base_X_world = np.linalg.inv(comp_world_X_base)
+			cout3p(self.XHd.world_X_base)
+			cout3p(self.XHc.world_X_base)
+			cout3v(self.P3e_integral)
+			# cout3v(KI_P_BASE*self.P3e_integral)
+			# cout3p(comp_world_X_base)
+			cout('==========================')
+			self.ctrl_base_tracking = True
+
 			## Position-control
 			# Closed-loop control on bodypose. Move by sum of desired pose and error
 			if self.ctrl_base_tracking:
 				self.Leg.XHd.base_X_foot = mX(comp_base_X_world, self.Leg.XHc.world_X_foot)
 			else:
-				self.Leg.XHd.base_X_foot = mX(self.XHd.base_X_world, self.Leg.XHc.world_X_foot)
+				self.Leg.XHd.base_X_foot = mX(self.XHc.base_X_world, self.Leg.XHc.world_X_foot)
 
 			## Velocity-control - Focchi2018 eq(3) TODO: check robustness
 			# vel_base_X_foot = -V6e_world_X_base[0:3].flatten() - np.cross(V6e_world_X_base[3:6].flatten(), 
