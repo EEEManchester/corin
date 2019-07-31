@@ -163,6 +163,7 @@ BASE_MAX_ANGULAR_VELOCITY = 0.05	# maximum base velocity, rad/s
 ## ================================================================ ##
 ##                   Controller parameters 	 						##
 ## ================================================================ ##
+KP_P_BASE = 0.1
 KI_P_BASE = 0.04
 # KI_W_BASE = 5.0
 

@@ -98,6 +98,7 @@ class LegController:
 		
 		self.P3e_integral = np.zeros(3)
 		self.P3e_prev_1   = np.zeros(3)
+		self.PI_control = np.zeros(3)
 
 	def controller_setup(self):
 		self.control_loop = 'open'
@@ -233,6 +234,7 @@ class LegController:
 						self.state_machine = 'motion'#'load'
 						self.s_cnt = 0
 						self.P3e_integral = np.zeros(3)
+						self.PI_control = np.zeros(3)
 				# raw_input('cont')
 				# # Extend leg swing motion, suspend base
 				# else:
@@ -300,23 +302,25 @@ class LegController:
 
 		# Determine foot position wrt base & coxa. 
 		if (self.cur_gphase == 0):
-			# Integral controller
 			base_error = self.XHd.world_X_base[:3,3]-self.XHc.world_X_base[:3,3]
-			if np.linalg.norm(base_error) > 0.001:
-				# self.P3e_integral += base_error*CTR_INTV*KI_P_BASE 	# Backward-euler
-				self.P3e_integral += (CTR_INTV*KI_P_BASE/2)*(base_error+self.P3e_prev_1) 	# Trapezoidal
-			else:
-				self.P3e_integral = np.zeros(3)
-			comp_world_X_base = v3_X_m(self.XHc.world_X_base[:3,3] + self.P3e_integral)			
+			# Integral controller
+			# if np.linalg.norm(base_error) > 0.001:
+			# 	# self.P3e_integral += base_error*CTR_INTV*KI_P_BASE 	# Backward-euler
+			# 	self.P3e_integral += (CTR_INTV*KI_P_BASE/2)*(base_error+self.P3e_prev_1) 	# Trapezoidal
+			# else:
+			# 	self.P3e_integral = np.zeros(3)
+			# comp_world_X_base = v3_X_m(self.XHc.world_X_base[:3,3] + self.P3e_integral)			
+
+			# PI controller
+			self.PI_control += KP_P_BASE*(base_error-self.P3e_prev_1) + (CTR_INTV*KI_P_BASE/2)*(base_error+self.P3e_prev_1)
+			self.P3e_prev_1 = base_error.copy()
+
+			comp_world_X_base = v3_X_m(self.XHc.world_X_base[:3,3] + self.PI_control)
 			comp_base_X_world = np.linalg.inv(comp_world_X_base)
 
-			self.P3e_prev_1 = base_error.copy()
-			
 			cout3p(self.XHd.world_X_base)
 			cout3p(self.XHc.world_X_base)
-			cout3v(self.P3e_integral)
-			# cout3v(KI_P_BASE*self.P3e_integral)
-			# cout3p(comp_world_X_base)
+			# cout3v(self.P3e_integral)
 			cout('==========================')
 			self.ctrl_base_tracking = True
 
