@@ -112,11 +112,12 @@ CONTACT_COUNT = 5 	# no. of contacts above threshold limit required
 ## ================================================================ ##
 ##                 Impedance Controller parameters 	 				##
 ## ================================================================ ##
-IMPEDANCE_FN = 2. 			# natural frequency
-IMPEDANCE_DAMPING = 2.2 	# damping ratio
-IMPEDANCE_GAIN = 0.002		# m/N (delta distance per delta force)
+IMPEDANCE_FN = 0.5 			# natural frequency
+IMPEDANCE_DAMPING = 3.5 	# damping ratio
+IMPEDANCE_GAIN = 0.003		# m/N (delta distance per delta force)
 #  60 Hz: 2, 1.5, 0.001
 # 200 Hz: 2, 2.2, 0.003
+# 100 Hz: 0.5, 3.5, 0.003
 ## ================================================================ ##
 ##                  	Stability Parameters 						##
 ## ================================================================ ##

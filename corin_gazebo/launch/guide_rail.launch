@@ -24,7 +24,10 @@
 
   <!-- Load the URDF into the ROS Parameter Server -->
   <param name="robot_description"
-   command="$(find xacro)/xacro --inorder '$(find corin_description)/robots/guide_rail_leg.xacro'"/>
+   command="$(find xacro)/xacro --inorder '$(find corin_description)/robots/fixed_leg.xacro'" if="$(arg fixed)"/>
+
+  <param name="robot_description"
+  command="$(find xacro)/xacro --inorder '$(find corin_description)/robots/guide_rail_leg.xacro'" unless="$(arg fixed)"/>
 
   <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"

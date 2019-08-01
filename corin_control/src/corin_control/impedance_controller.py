@@ -38,6 +38,11 @@ class ImpedanceController:
 		self.D = D
 		self.G = G
 
+	def reset(self):
+		# Filter state initialisation
+		self.forward_filter = [0] * len(self.num)
+		self.reverse_filter = [0] * len(self.den)		
+
 	def evaluate(self, df):
 		# delta_force is additional force applied to virtual mass-spring-damper
 		# = measured force - desired force

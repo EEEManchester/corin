@@ -67,10 +67,17 @@ class LegController:
 
 	def update_states(self):
 		""" Update robot states """
-		self.XHc.world_X_base = v3_X_m(np.array([0.03, 0., 0.1+self.qc.position[0]]))
+		if len(self.qc.position) == 4:
+			qpos = self.qc.position[1:4]
+			qbase = self.qc.position[0]
+		else:
+			qpos = self.qc.position
+			qbase = 0.
+
+		self.XHc.world_X_base = v3_X_m(np.array([0.03, 0., 0.1+qbase]))
 		# self.XHc.world_X_base = self.XHd.world_X_base
 		self.XHc.base_X_world = np.linalg.inv(self.XHc.world_X_base)
-		self.bstate = self.Leg.update_joint_state(self.XHc.world_X_base, self.qc.position[1:4], False, STEP_STROKE)
+		self.bstate = self.Leg.update_joint_state(self.XHc.world_X_base, qpos, False, STEP_STROKE)
 		self.cstate = self.Leg.update_force_state(self.cf)
 
 	def initialise_controller_variables(self):
@@ -104,8 +111,8 @@ class LegController:
 
 	def controller_setup(self):
 		self.control_loop = 'open'
-		self.ctrl_base_tracking = True
-		self.ctrl_leg_impedance = False
+		self.ctrl_base_tracking = False
+		self.ctrl_leg_impedance = True
 		self.ctrl_contact_detect = True
 
 	def controller(self):
@@ -176,6 +183,7 @@ class LegController:
 					self.cur_gphase = 0
 					self.Leg.change_phase('support', self.XHc.world_X_base)
 					self.cur_wXb = self.XHc.world_X_base.copy()
+					# raw_input('cstate true')
 			# 	# Interpolate Fmax for legs in contact phase
 			# 	fearly = map(lambda x,y: xor(bool(x), bool(y)), gphase, self.Robot.Gait.cs)
 			# 	findex = [z for z, y in enumerate(fearly) if y == True]
@@ -207,12 +215,13 @@ class LegController:
 
 				# self.Leg.XHd.coxa_X_foot[0:3,3] = np.array([STANCE_WIDTH, 0., -BODY_HEIGHT])
 				# Updates to actual foot position (without Q_COMPENSATION)
-				self.Leg.XHc.coxa_X_foot[0:3,3:4] = self.Leg.KDL.leg_FK(self.qc.position[1:4])
+				qpos = self.qc.position[1:4] if len(self.qc.position[1:4])==4 else self.qc.position 
+				self.Leg.XHc.coxa_X_foot[0:3,3:4] = self.Leg.KDL.leg_FK(qpos)
 				## Generate transfer spline
 				svalid = self.Leg.generate_spline('world', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
-				cout3p(self.Leg.XHd.world_X_foot)
-				cout3p(self.Leg.XHc.world_X_foot)
-				print '==================================='
+				# cout3p(self.Leg.XHd.world_X_foot)
+				# cout3p(self.Leg.XHc.world_X_foot)
+				# print '==================================='
 				# raw_input('jj')
 				if (svalid is False):
 					# set invalid if trajectory unfeasible for leg's kinematic
@@ -237,6 +246,9 @@ class LegController:
 						self.Leg.transfer_phase_change = False
 						self.state_machine = 'motion'#'unload'
 						self.s_cnt = 0
+						# self.P3e_integral = np.zeros(3)
+						self.PI_control = np.zeros(3)
+						self.Leg.reset_impedance_controller()
 
 					# Change to support
 					elif self.next_gait == 1:
@@ -246,8 +258,7 @@ class LegController:
 							self.cur_wXb = self.XHc.world_X_base.copy()
 						self.state_machine = 'motion'#'load'
 						self.s_cnt = 0
-						self.P3e_integral = np.zeros(3)
-						self.PI_control = np.zeros(3)
+						
 				# raw_input('cont')
 				# # Extend leg swing motion, suspend base
 				# else:
@@ -279,16 +290,19 @@ class LegController:
 			# joint_torq = self.Robot.force_to_torque(force_dist)
 			# print i, np.round(force_dist[17],3), np.round(fmax_lim[-1],3)
 			# print temp_gphase, fmax_lim
-			if self.interface != 'rviz' and self.control_loop != "open":
+			if self.interface != 'rviz':# and self.control_loop != "open":
 				# Leg impedance
-				if self.ctrl_leg_impedance:
-					self.apply_impedance_control(force_dist)
+				if self.ctrl_leg_impedance and self.cur_gphase==0:
+					f_des = np.array([0.,0.,15.]).reshape((3,1))
+					offset = self.Leg.apply_impedance_controller(f_des)
+					pos = self.Leg.XHd.coxa_X_foot[:3,3] + offset
+					qpd = self.Leg.KDL.leg_IK(pos)
+					print pos
+					## Recompute task to joint space
+					# err_no, qpd, qvd, qad = self.Leg.tf_task_X_joint()
 
-				## Recompute task to joint space
-				err_no, qpd, qvd, qad = self.Leg.tf_task_X_joint()
-
-			if (err_no != 0):
-				print 'Error Occured, robot invalid! ', err_no
+					# if (err_no != 0):
+					# 	print 'Error Occured, robot invalid! ', err_no
 
 			## Data logging & publishing
 			log_sp = self.set_log([self.Leg.XHd.coxa_X_foot[:3,3].flatten(), qpd])

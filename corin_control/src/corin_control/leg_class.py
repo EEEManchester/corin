@@ -412,8 +412,8 @@ class LegClass:
 		offset_x = self.impedance_controller_x.evaluate(leg_df[0])
 		offset_y = self.impedance_controller_y.evaluate(leg_df[1])
 		offset_z = self.impedance_controller_z.evaluate(leg_df[2])
-		
-		self.XHd.coxa_X_foot[0:3,3] += np.array([offset_x, offset_y, offset_z])
+		return np.array([offset_x, offset_y, offset_z])
+		#self.XHd.coxa_X_foot[0:3,3] += np.array([offset_x, offset_y, offset_z])
 
 		# if self.number == 5:
 		# 	print 'F wXf: ', np.round(self.F6c.world_X_foot[0:3].flatten(),3), np.round(desired_force[0:3].flatten(),3)
@@ -424,6 +424,12 @@ class LegClass:
 		# 	print 'F Ldf: ', np.round(leg_df.flatten(),3)
 			# print 'cXfoo: ', np.round(self.XHd.coxa_X_foot[0:3,3],3)
 		# 	print '========================================='
+
+	def reset_impedance_controller(self):
+
+		self.impedance_controller_x.reset()
+		self.impedance_controller_y.reset()
+		self.impedance_controller_z.reset()
 
 	def singular_recovery(self):
 		""" sets the leg to default position when leg is singular """

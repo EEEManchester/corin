@@ -5,6 +5,7 @@
     <arg name="gazebo" default="true"/>
     <arg name="position" default="true"/>
     <arg name="effort" default="false"/>
+    <arg name="fixed" default="false"/>
 
     <!-- <param name="gazebo"                   value="false"    type="bool"/> -->
     <param name="gazebo_robot_name"        value="corin"/>
@@ -18,11 +19,17 @@
 
     <!-- Guide Rail Manager -->
     <!-- Gazebo Controllers -->
-    <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" clear_params="true"
-        output="screen" ns="/corin" args="joint_state_controller
-        guide_rail_joint
-        leg_q1_joint leg_q2_joint leg_q3_joint   " if="$(arg gazebo)"/>
+    <group if="$(arg gazebo)">
+        <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" clear_params="true"
+                output="screen" ns="/corin" args="joint_state_controller
+                leg_q1_joint leg_q2_joint leg_q3_joint   " if="$(arg fixed)"/>
 
+        <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" clear_params="true"
+                output="screen" ns="/corin" args="joint_state_controller
+                guide_rail_joint
+                leg_q1_joint leg_q2_joint leg_q3_joint   " unless="$(arg fixed)"/>
+    </group>
+    
     <!-- unpause physics engine -->
     <node name="unpause" pkg="corin_description" type="unpause_physics_engine" args="5.0" if="$(arg gazebo)"/>
 
