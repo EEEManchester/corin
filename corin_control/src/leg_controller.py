@@ -104,7 +104,7 @@ class LegController:
 
 	def controller_setup(self):
 		self.control_loop = 'open'
-		self.ctrl_base_tracking = False
+		self.ctrl_base_tracking = True
 		self.ctrl_leg_impedance = False
 		self.ctrl_contact_detect = True
 
@@ -201,13 +201,18 @@ class LegController:
 				sn1 = np.array([0., 0., 1.])
 				sn2 = np.array([0., 0., 1.])
 
-				self.Leg.XHd.world_X_foot[0:3,3] = np.array([0.03+STANCE_WIDTH, 0., -BODY_HEIGHT])
+				# self.Leg.XHd.world_X_foot[0:3,3] = np.array([0.03+STANCE_WIDTH, 0., -BODY_HEIGHT])
+				self.Leg.XH_world_X_base = self.XHc.world_X_base.copy() 
+				self.Leg.XHd.base_X_foot[0:3,3] = np.array([STANCE_WIDTH, 0., -BODY_HEIGHT])
+
 				# self.Leg.XHd.coxa_X_foot[0:3,3] = np.array([STANCE_WIDTH, 0., -BODY_HEIGHT])
+				# Updates to actual foot position (without Q_COMPENSATION)
 				self.Leg.XHc.coxa_X_foot[0:3,3:4] = self.Leg.KDL.leg_FK(self.qc.position[1:4])
 				## Generate transfer spline
 				svalid = self.Leg.generate_spline('world', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
 				cout3p(self.Leg.XHd.world_X_foot)
 				cout3p(self.Leg.XHc.world_X_foot)
+				print '==================================='
 				# raw_input('jj')
 				if (svalid is False):
 					# set invalid if trajectory unfeasible for leg's kinematic
@@ -341,9 +346,9 @@ class LegController:
 				self.Leg.XHd.base_X_foot = mX(np.linalg.inv(self.cur_wXb), self.Leg.XHc.world_X_foot)
 
 			self.Leg.XHd.coxa_X_foot = mX(self.Leg.XHd.coxa_X_base, self.Leg.XHd.base_X_foot)
-		cout3p(self.Leg.XHd.coxa_X_foot)
-		cout3p(self.Leg.XHc.coxa_X_foot)
-		print '==================================='
+		# cout3p(self.Leg.XHd.coxa_X_foot)
+		# cout3p(self.Leg.XHc.coxa_X_foot)
+		# print '==================================='
 	def update_phase_transfer(self,delta_d=None):
 
 		## Transfer phase
