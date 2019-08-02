@@ -107,7 +107,7 @@ F_INC  = 0.05
 D_MOVE = 0.0001	# motion for leg to achieve contact
 
 FORCE_THRES = 0.5 	# threshold limit for contact detection
-CONTACT_COUNT = 5 	# no. of contacts above threshold limit required
+CONTACT_COUNT = 3 	# no. of contacts above threshold limit required
 
 ## ================================================================ ##
 ##                 Impedance Controller parameters 	 				##

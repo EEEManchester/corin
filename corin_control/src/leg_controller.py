@@ -108,6 +108,7 @@ class LegController:
 		self.P3e_integral = np.zeros(3)
 		self.P3e_prev_1   = np.zeros(3)
 		self.PI_control = np.zeros(3)
+		self.pos = self.Leg.XHd.coxa_X_foot[:3,3].copy()
 
 	def controller_setup(self):
 		self.control_loop = 'open'
@@ -169,6 +170,8 @@ class LegController:
 					self.cur_gphase = 0
 				elif self.next_gait == 1:
 					self.cur_gphase = 1
+					self.PI_control = np.zeros(3)
+					self.Leg.reset_impedance_controller()
 				print 'State Machine: Motion'
 				## Force and gait phase array for Force Distribution
 				fmax_lim = F_MAX	# max. force array
@@ -183,7 +186,7 @@ class LegController:
 					self.cur_gphase = 0
 					self.Leg.change_phase('support', self.XHc.world_X_base)
 					self.cur_wXb = self.XHc.world_X_base.copy()
-					# raw_input('cstate true')
+					raw_input('cstate true')
 			# 	# Interpolate Fmax for legs in contact phase
 			# 	fearly = map(lambda x,y: xor(bool(x), bool(y)), gphase, self.Robot.Gait.cs)
 			# 	findex = [z for z, y in enumerate(fearly) if y == True]
@@ -217,6 +220,8 @@ class LegController:
 				# Updates to actual foot position (without Q_COMPENSATION)
 				qpos = self.qc.position[1:4] if len(self.qc.position[1:4])==4 else self.qc.position 
 				self.Leg.XHc.coxa_X_foot[0:3,3:4] = self.Leg.KDL.leg_FK(qpos)
+				# print 'start: ',
+				# cout3p(self.Leg.XHc.coxa_X_foot)
 				## Generate transfer spline
 				svalid = self.Leg.generate_spline('world', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
 				# cout3p(self.Leg.XHd.world_X_foot)
@@ -231,6 +236,7 @@ class LegController:
 					# set flag that phase has changed
 					self.Leg.feedback_state = 1
 					self.Leg.transfer_phase_change = True
+				# raw_input('cont')
 
 			## Compute task space foot position for all legs
 			self.update_phase_transfer()
@@ -247,8 +253,8 @@ class LegController:
 						self.state_machine = 'motion'#'unload'
 						self.s_cnt = 0
 						# self.P3e_integral = np.zeros(3)
-						self.PI_control = np.zeros(3)
-						self.Leg.reset_impedance_controller()
+						# self.PI_control = np.zeros(3)
+						# self.Leg.reset_impedance_controller()
 
 					# Change to support
 					elif self.next_gait == 1:
@@ -259,24 +265,7 @@ class LegController:
 						self.state_machine = 'motion'#'load'
 						self.s_cnt = 0
 						
-				# raw_input('cont')
-				# # Extend leg swing motion, suspend base
-				# else:
-				# 	# print 'Not all contacts made, suspend robot: ', self.Robot.cstate, self.Robot.Gait.cs
-				# 	self.Robot.suspend = True
-				# 	## Foot displacement in surface normal direction
-				# 	for j in [z for z, y in enumerate(self.Robot.cstate) if y == False]:
-				# 		sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
-				# 		# Incremental displacement in world frame - support legs 
-				# 		self.Robot.Leg[j].XHc.world_X_foot[:3,3] -= sn1*np.array([D_MOVE,D_MOVE,D_MOVE])
-				# 		# Transform displacement to leg frame - transfer legs
-				# 		self.Robot.Leg[j].XHc.update_world_X_coxa(self.Robot.Leg[j].XH_world_X_base)
-				# 		delta_d = mX(self.Robot.Leg[j].XHc.coxa_X_world[:3,:3], sn1*np.array([D_MOVE,D_MOVE,D_MOVE]))
-				# 		# Update new foot position
-				# 		self.update_phase_transfer(delta_d)
-				# 		self.update_phase_support(P6e_world_X_base, V6e_world_X_base)
-				# 		# print j, np.round(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3], 4)
-				# 		# print j, np.round(self.Robot.Leg[j].XHc.world_X_foot[:3,3],4)
+				# raw_input('Changing phase')
 			self.s_cnt += 1
 
 			# print state_machine, fmax_lim, self.Robot.Gait.cs, self.Robot.Gait.ps
@@ -294,22 +283,20 @@ class LegController:
 				# Leg impedance
 				if self.ctrl_leg_impedance and self.cur_gphase==0:
 					f_des = np.array([0.,0.,15.]).reshape((3,1))
+					
+					f_refr = self.Leg.control.pi_control(f_des, self.Leg.F6c.world_X_foot[0:3])
+					# offset = self.Leg.apply_impedance_controller(f_refr)
 					offset = self.Leg.apply_impedance_controller(f_des)
 					pos = self.Leg.XHd.coxa_X_foot[:3,3] + offset
 					qpd = self.Leg.KDL.leg_IK(pos)
-					print pos
-					## Recompute task to joint space
-					# err_no, qpd, qvd, qad = self.Leg.tf_task_X_joint()
-
-					# if (err_no != 0):
-					# 	print 'Error Occured, robot invalid! ', err_no
-
+					self.pos = pos.copy()
+				
 			## Data logging & publishing
 			log_sp = self.set_log([self.Leg.XHd.coxa_X_foot[:3,3].flatten(), qpd])
 			log_ac = self.set_log([self.Leg.XHc.coxa_X_foot[:3,3].flatten(), 
 									self.Leg.Joint.qpc, self.Leg.F6c.tibia_X_foot[:3]])
 			self.publish_topics(qpd, log_sp, log_ac)
-
+			
 		elif self.state_machine == 'hold':
 			""" Holds position - for controller to settle or pause motion """
 			

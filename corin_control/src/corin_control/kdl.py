@@ -147,7 +147,7 @@ class KDL():
 			print 'KDL-IK(): ', e
 			return None
 		except Exception, e:
-			print 'KDL-IK(): ', e
+			print 'KDL-IK(): ', e, p
 			return None
 
 	def check_singularity(self, q=None):

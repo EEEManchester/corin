@@ -35,6 +35,8 @@ class LegClass:
 		self.impedance_controller_y = ImpedanceController()
 		self.impedance_controller_z = ImpedanceController()
 
+		self.control = ImpedanceController()
+
 		# transfer phase variables - created in controller class and stored here
 		self.xspline = TrajectoryPoints() 		# trajectory in cartesian position
 		self.qspline = JointTrajectoryPoints()	# trajectory in joint space
@@ -113,10 +115,11 @@ class LegClass:
 						rot_Z(self.Joint.qpc[1]),
 						rot_Z(self.Joint.qpc[2]))
 
-		self.F6c.coxa_X_foot[:3] = mX(self.XHc.coxa_X_foot[:3,:3], self.F6c.tibia_X_foot[:3].flatten()).reshape((3,1))
-		self.F6c.base_X_foot[:3] = mX(self.XHc.base_X_foot[:3,:3], self.F6c.tibia_X_foot[:3].flatten()).reshape((3,1))
-		self.F6c.world_X_foot[:3] = mX(self.XHc.world_base_X_foot[:3,:3], self.F6c.tibia_X_foot[:3].flatten()).reshape((3,1))
-		# print np.round(self.F6c.world_X_foot[:3].flatten(),3) 
+		# self.F6c.coxa_X_foot[:3] = mX(self.XHc.coxa_X_foot[:3,:3], self.F6c.tibia_X_foot[:3].flatten()).reshape((3,1))
+		self.F6c.coxa_X_foot[:3] = mX(coxa_X_foot[:3,:3],self.F6c.tibia_X_foot[:3]).reshape((3,1))
+		self.F6c.base_X_foot[:3] = mX(base_X_coxa, self.F6c.coxa_X_foot[:3].flatten()).reshape((3,1))
+		self.F6c.world_X_foot[:3] = mX(self.XH_world_X_base[:3,:3], self.F6c.base_X_foot[:3].flatten()).reshape((3,1))
+		
 		self.check_contact_state()
 		
 		return self.cstate
@@ -126,7 +129,7 @@ class LegClass:
 		th = self.c_threshold
 		
 		force = np.linalg.norm(self.F6c.world_X_foot[:3])
-
+		print np.round(force, 4)
 		if th > CONTACT_COUNT: # We are in the "contact state"
 			if force < FORCE_THRES:
 				th = 0
@@ -152,39 +155,6 @@ class LegClass:
 			self.XHd.world_X_foot = self.XHc.world_X_foot.copy()
 		elif phase == 'transfer':
 			pass
-
-	def time_domain_passivity(self):
-		""" Minimising contact force (Kim2007) """
-
-		ZPC_MAX = 0.005
-		Fz_now = self.F6c.base_X_foot[2]
-		Pz_now = self.XHc.base_X_foot[2,3]
-		# Get next position from spline
-		try:
-			P2 = self.xspline.xp[self.spline_counter+1]
-		except:
-			P2 = self.xspline.xp[-1]
-
-		d_z1 = Pz_now - self.zk_prev
-		d_z2 = P2[2] - Pz_now
-
-		# Passivity observer - energy
-		w_now  = self.w_prev + Fz_now*d_z1
-		w_next = w_now + Fz_now*d_z2
-
-		# Passivity controller - change in position
-		if w_next < 0:
-			d_zpc = -w_next/Fz_now if -w_next/Fz_now < ZPC_MAX else ZPC_MAX
-		else:
-			d_zpc = 0.
-		# print np.round(self.zk_prev,4)
-		# print np.round(Pz_now,4)
-		# print np.round(P2[2],4)
-		# print 'Energy:  ', np.round(w_now,4), np.round(w_next,4)
-		# print 'Deflect: ', np.round(d_zpc,4)
-		# print 'Fz     : ', np.round(Fz_now,4)
-		
-		self.tdp_offset = np.array([0.,0.,d_zpc])
 
 	def get_normal_force(self,which):
 
@@ -405,13 +375,19 @@ class LegClass:
 
 	def apply_impedance_controller(self, desired_force):
 		
-		world_df = (self.F6c.world_X_foot[0:3] - desired_force[0:3]).flatten()
+		# world_df = (self.F6c.world_X_foot[0:3] - desired_force[0:3]).flatten()
+		world_df = (self.F6c.world_X_foot[0:3].flatten() - desired_force.flatten()).flatten()
 		# Transform to leg frame
 		leg_df = mX(self.XHd.coxa_X_world[:3,:3], world_df)
 
 		offset_x = self.impedance_controller_x.evaluate(leg_df[0])
 		offset_y = self.impedance_controller_y.evaluate(leg_df[1])
 		offset_z = self.impedance_controller_z.evaluate(leg_df[2])
+
+		# out_z = self.impedance_controller_z.adaptive_vel_evaluate(desired_force[0:3].flatten(), 
+		# 													self.F6c.world_X_foot[0:3].flatten(), 
+		# 													self.XHd.coxa_X_world[:3,3].flatten())
+		# return out_z
 		return np.array([offset_x, offset_y, offset_z])
 		#self.XHd.coxa_X_foot[0:3,3] += np.array([offset_x, offset_y, offset_z])
 
@@ -430,6 +406,8 @@ class LegClass:
 		self.impedance_controller_x.reset()
 		self.impedance_controller_y.reset()
 		self.impedance_controller_z.reset()
+		self.impedance_controller_z.reset_adaptive()
+		self.control.reset_pi()
 
 	def singular_recovery(self):
 		""" sets the leg to default position when leg is singular """

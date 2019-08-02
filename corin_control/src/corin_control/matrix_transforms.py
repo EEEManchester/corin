@@ -108,7 +108,6 @@ def rot_Z(q):
     ei[1,0] =  np.sin(q)
     ei[1,1] =  np.cos(q)
     return ei
-# print rot_Y(np.deg2rad(30))
 
 def SO3_selection(qsnorm, axis):
     """Return SO3 matrix with only one non-zero component, or close to it"""

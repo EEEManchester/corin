@@ -8,7 +8,9 @@ Panels:
         - /Status1
         - /Axes1
         - /Grid1/Offset1
-      Splitter Ratio: 0.5
+        - /RobotModel1
+        - /RobotModel1/Links1
+      Splitter Ratio: 0.557894766
     Tree Height: 775
   - Class: rviz/Selection
     Name: Selection
@@ -77,6 +79,26 @@ Visualization Manager:
           Show Trail: false
           Value: true
         guide_rail_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        leg_foot:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        leg_hipassembly:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        leg_lowerleg:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        leg_upperleg:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -263,6 +285,20 @@ Visualization Manager:
           Value: true
       Enabled: true
       Name: Contact Forces
+    - Class: rviz/TF
+      Enabled: false
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        {}
+      Update Interval: 0
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 255; 255; 255
@@ -295,18 +331,18 @@ Visualization Manager:
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.134667426
-        Y: 0.0948944241
-        Z: -0.0287446063
+        X: 0.191309869
+        Y: 0.110786378
+        Z: 0.0479242578
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.494801521
+      Pitch: 0.419801235
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.17348003
+      Yaw: 4.35347319
     Saved: ~
 Window Geometry:
   Control Interface:

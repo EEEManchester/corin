@@ -3,13 +3,13 @@
 
 	<arg name="robotis" default="false"/>
 	<arg name="sensors" default="true"/>
-	<arg name="gui" default="true"/> 		<!-- True: manual control   False: real sensor -->
+	<arg name="gui" default="false"/> 		<!-- True: manual control   False: real sensor -->
 	<arg name="rviz_conf" default="$(find corin_description)/rviz/grid_map.rviz"/>
 
 	<!-- load robot -->
 	<!-- Load the URDF into the ROS Parameter Server -->
   	<param name="robot_description"
-   	 command="$(find xacro)/xacro --inorder '$(find corin_description)/robots/guide_rail_leg.xacro'"/>
+   	 command="$(find xacro)/xacro --inorder '$(find corin_description)/robots/fixed_leg.xacro'"/>
 	<param name="publish_frequency" value="400" /> <!-- Hz -->
 
 	<!-- publish the joint and robot states -->
