@@ -413,6 +413,14 @@ def quaternion_conjugate(quaternion):
     np.negative(q[1:], q[1:])
     return q
 
+def vec_X_vec_rotation(v1, v2):
+    
+    num = (v1+v2)*((v1+v2).transpose())
+    den = ((v1+v2).transpose())(v1+v2)
+    return 2*num/den - eye(3)
+a = np.array([1., 0., 0.])
+b = np.array([0., 0., 1.])
+print vec_X_vec_rotation(a,b)
 # print rotation_matrix(np.deg2rad(30),[0, 1, 0])
 ######################################################################
 ##                      Constant Parameters                         ##

@@ -88,13 +88,12 @@ class CorinManager:
 		self.Robot.estimate_state()
 
 		# Hassan - debugging
-		if(self.Robot.state_estimator.calibrated):
-
-			self.pub_imu_v.publish(Vector3(*(1.0*self.Robot.state_estimator.v).tolist()))
-			self.pub_imu_r.publish(Vector3(*(1.0*self.Robot.state_estimator.r).tolist()))
-			self.pub_imu_q.publish(Vector3(*self.Robot.state_estimator.get_fixed_angles().tolist()))
-			self.pub_imu_bf.publish(Vector3(*self.Robot.state_estimator.bf.tolist()))
-			self.pub_imu_bw.publish(Vector3(*self.Robot.state_estimator.bw.tolist()))
+		# if(self.Robot.state_estimator.calibrated):
+		# 	self.pub_imu_v.publish(Vector3(*(1.0*self.Robot.state_estimator.v).tolist()))
+		# 	self.pub_imu_r.publish(Vector3(*(1.0*self.Robot.state_estimator.r).tolist()))
+		# 	self.pub_imu_q.publish(Vector3(*self.Robot.state_estimator.get_fixed_angles().tolist()))
+		# 	self.pub_imu_bf.publish(Vector3(*self.Robot.state_estimator.bf.tolist()))
+		# 	self.pub_imu_bw.publish(Vector3(*self.Robot.state_estimator.bw.tolist()))
 
 
 	def contact_force_callback_0(self, msg):
@@ -343,6 +342,7 @@ class CorinManager:
 		self.Visualizer.publish_robot_pose(self.Robot.P6d.world_X_base)
 		self.Visualizer.publish_support_polygon(self.Robot.SM.convex_hull)
 		self.Visualizer.publish_com(self.Robot.Rbdl.com + self.Robot.P6c.world_X_base[:3])
+		self.Visualizer.publish_friction_cones(self.Robot, SURFACE_FRICTION)
 		self.stability_pub_.publish(self.Robot.SM.min)
 
 		## Publish setpoints to logging topic

@@ -23,6 +23,7 @@ import rigid_body_inertia as Rbi
 import plotgraph as Plot 				# plot library
 from impedance_controller import ImpedanceController
 from fault_controller import FaultController
+from pid_controller import PIDController
 from state_estimator import StateEstimator  # EKF-based state estimation class
 from time import sleep
 
@@ -67,6 +68,7 @@ class RobotState:
 		self.impedance_controller_y = ImpedanceController(2., 2.2, 0.002)
 		self.impedance_controller_z = ImpedanceController(2., 2.2, 0.002)	# fn, D, G
 		self.Fault = FaultController()
+		self.Base_Ctrl = PIDController('PI')
 
 		leg_stance = self.init_robot_stance("flat")
 		
@@ -293,7 +295,7 @@ class RobotState:
 			
 		self.suspend = False
 
-	def task_X_joint(self,legs_phase=None): # TODO - to be revisited
+	def task_X_joint(self, foot_pos=None): # TODO - to be revisited
 		""" Convert all leg task space to joint space 		"""
 		""" Output: joint space setpoint for all joints		"""
 
@@ -310,8 +312,10 @@ class RobotState:
 			if self.Fault.fault_index[j] == True:
 				self.Leg[j].XHd.coxa_X_foot = mX(self.Leg[j].XHd.coxa_X_base, v3_X_m(self.Fault.base_X_foot[j]))
 
-			err_list[j], qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
-			
+			if foot_pos is None:
+				err_list[j], qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
+			else:
+				err_list[j], qpd, qvd, qad = self.Leg[j].tf_task_X_joint(foot_pos[j*3:j*3+3])
 			# if j == 4:
 			# 	qpd = np.array([0.,  6.12682006e-01,  -2.61484057e+00])
 
@@ -371,9 +375,15 @@ class RobotState:
 	def apply_impedance_control(self, force_dist):
 		""" Applies impedance control to track force for each leg """
 
+		feet_pos = []
 		for j in range(0,6):
-			self.Leg[j].apply_impedance_controller(force_dist[j*3:j*3+3])
-
+			offset = self.Leg[j].apply_impedance_controller(force_dist[j*3:j*3+3])
+			feet_pos.append(self.Leg[j].XHd.coxa_X_foot[:3,3] + offset)
+		
+		feet_pos = [item for sublist in feet_pos for item in sublist]
+		return self.task_X_joint(feet_pos)
+		a, err = self.task_X_joint(feet_pos)
+		# print a.xp
 	def apply_base_impedance(self, desired_force):
 		""" Applies base impedance control to track leg force """
 

@@ -12,6 +12,9 @@ from geometry_msgs.msg import WrenchStamped, PolygonStamped, Point32
 
 from grid_planner_core.numpy_to_rosmsg import *
 from corin_control.constant import *
+from cone_visual.msg import ConeStamped
+from tf.transformations import quaternion_from_euler
+import math
 
 class RvizVisualise:
 	def __init__(self):
@@ -25,6 +28,7 @@ class RvizVisualise:
 		self.cob_pub_  = rospy.Publisher(ROBOT_NS + '/cob', MarkerArray, queue_size=1) 			# CoB position
 		self.poly_pub_ = rospy.Publisher(ROBOT_NS + '/support_polygon', PolygonStamped, queue_size=1) # Support polygon
 		self.com_pub_  = rospy.Publisher(ROBOT_NS + '/centre_of_mass', Marker, queue_size=1) # CoM position
+		self.cone_pub_ = rospy.Publisher('cone_visual/cone_arrays', ConeStamped, queue_size=1)
 		self.wrench_pub_ = {}
 		for j in range(0,6):
 			self.wrench_pub_[j] = rospy.Publisher(ROBOT_NS + '/' + LEG_FORCE_NAME[j], WrenchStamped, queue_size=1)
@@ -145,3 +149,40 @@ class RvizVisualise:
 			self.publish_path(path)
 			self.publish_footholds(footholds)
 			rospy.sleep(0.2)
+
+	def publish_friction_cones(self, robot, mu):
+		# cones_pos, cones_rpy, cones_angle
+		""" Converts custom marker list to ConeStamped """
+
+		cones_pos = []
+		cones_rpy = []
+		cones_angle = []
+		for j in range(6):
+			if robot.Gait.cs[j] == 0:
+				cones_pos.append(robot.Leg[j].XHc.world_X_foot[:3,3])
+				cones_rpy.append(np.array([0.,0.,0.]))
+				cones_angle.append(math.atan(mu))
+
+		## Define Variables ##
+		cone = ConeStamped()
+		cone.header.stamp = rospy.Time.now()
+		cone.header.frame_id = "world"
+		
+		for i in range(len(cones_pos)):
+			pose3d = Pose()
+			pose3d.position.x = cones_pos[i][0]
+			pose3d.position.y = cones_pos[i][1]
+			pose3d.position.z = cones_pos[i][2]
+
+			quat = quaternion_from_euler(cones_rpy[i][0], 
+										 cones_rpy[i][1],
+										 cones_rpy[i][2])
+			pose3d.orientation.x = quat[0]
+			pose3d.orientation.y = quat[1]
+			pose3d.orientation.z = quat[2]
+			pose3d.orientation.w = quat[3]
+
+			cone.pose.append(pose3d)
+			cone.angles.append(Float32(cones_angle[i])) 	# internal angle
+
+		self.cone_pub_.publish(cone)

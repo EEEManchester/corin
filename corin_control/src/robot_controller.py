@@ -21,7 +21,7 @@ class RobotController(CorinManager):
 		# Enable/disable controllers
 		self.ctrl_base_tracking  = False 	# base tracking controller
 		self.ctrl_base_impedance = False 	# base impedance controller - fault
-		self.ctrl_leg_impedance  = False 	# leg impedance controller
+		self.ctrl_leg_impedance  = True 	# leg impedance controller
 		self.ctrl_contact_detect = False 	# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
@@ -101,11 +101,6 @@ class RobotController(CorinManager):
 		# Counts per gait phase interval
 		iahead = int(GAIT_TPHASE/CTR_INTV)
 
-		self.P6e_prev_1 = np.zeros((6,1))
-		self.P6e_prev_2 = np.zeros((6,1))
-
-		self.P6e_integral = np.zeros((6,1))
-
 		## Cycle through trajectory points until complete
 		i = 1 		# skip first point since spline has zero initial differential conditions
 		while (i != path_length and not rospy.is_shutdown()):
@@ -172,12 +167,6 @@ class RobotController(CorinManager):
 			# Error 
 			P6e_world_X_base = self.Robot.P6d.world_X_base - self.Robot.P6c.world_X_base
 			V6e_world_X_base = self.Robot.V6d.world_X_base - self.Robot.V6c.world_X_base
-
-			# Base controller integral correction term
-			self.P6e_integral += P6e_world_X_base*CTR_INTV
-			# print 'err ', np.round(P6e_world_X_base.flatten(),3)
-			# print 'int ', np.round(self.P6e_integral.flatten(),3)
-			# print '======================================='
 			
 			## ====================================================================== ##
 			## State Machine: Motion Execution ##
@@ -252,6 +241,8 @@ class RobotController(CorinManager):
 					gphase = list(self.Robot.Gait.cs)
 					for j in range(6):
 						self.Robot.Leg[j].Fmax = F_MAX if gphase[j] == 0 else FORCE_THRES
+						if self.Robot.Gait.cs[j] == 1:
+							self.Robot.Leg[j].reset_impedance_controller()
 
 				elif (s_cnt > s_max/2 and self.ctrl_contact_detect):
 					# Check if transfer has made contact
@@ -279,10 +270,6 @@ class RobotController(CorinManager):
 								fmax_lim.append(self.Robot.Leg[j].Fmax)
 						gphase = list(self.Robot.Gait.cs)
 						print i, 'findex ', findex, gphase, fmax_lim
-
-					# Start passivity check
-					# if self.Robot.Gait.cs[5] == 1:
-					# 	self.Robot.Leg[5].time_domain_passivity()
 
 				## Generate trajectory for legs in transfer phase
 				for j in range (0, self.Robot.active_legs):
@@ -335,6 +322,8 @@ class RobotController(CorinManager):
 						# 	print j, '\t', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
 						# 	print j, '\t', np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],3)
 						# 	print j, '\t', sn1, sn2
+						## Updates to actual foot position (without Q_COMPENSATION)
+						self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3:4] = self.Robot.Leg[j].KDL.leg_FK(self.Robot.Leg[j].Joint.qpc)
 						## Generate transfer spline
 						svalid = self.Robot.Leg[j].generate_spline('world', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
 
@@ -444,7 +433,7 @@ class RobotController(CorinManager):
 			joint_torq = self.Robot.force_to_torque(force_dist)
 			# print i, np.round(force_dist[17],3), np.round(fmax_lim[-1],3)
 			# print temp_gphase, fmax_lim
-			if self.interface != 'rviz' and self.control_loop != "open":
+			if self.interface != 'rviz':# and self.control_loop != "open":
 				# Base impedance
 				if self.ctrl_base_impedance:
 					offset_base = self.Robot.apply_base_impedance(force_dist)
@@ -463,9 +452,6 @@ class RobotController(CorinManager):
 			## Data logging & publishing
 			qlog = self.set_log_setpoint(v3cp, v3cv, xa_d, v3wp, v3wv, wa_d, qd, joint_torq, force_dist)
 			self.publish_topics(qd, qlog)
-
-			self.P6e_prev_2 = self.P6e_prev_1.copy()
-			self.P6e_prev_1 = P6e_world_X_base.copy()
 
 			## ============================================================================================================================== ##
 		else:
@@ -486,42 +472,16 @@ class RobotController(CorinManager):
 
 	def update_phase_support(self, P6e_world_X_base, V6e_world_X_base):
 
-		kcorrect = np.zeros((6,1))
-
-		# PID controller
-		Ts = CTR_INTV
-		Kp = 0.#0.2
-		Ki = 0.#0.
-		Kd = 0.#0.0005
-
-		a = Kp + Ki*Ts/2 + Kd/Ts
-		b = -Kp + Ki*Ts/2 - 2*Kd/Ts
-		c = Kd/Ts
-		# linear correction only
-		kcorrect[0:3] = a*P6e_world_X_base[0:3] + b*self.P6e_prev_1[0:3] + c*self.P6e_prev_2[0:3]
-		# full body correction
-		kcorrect[3:6] = a*P6e_world_X_base[3:6] + b*self.P6e_prev_1[3:6] + c*self.P6e_prev_2[3:6]
-		comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + kcorrect)
+		## I controller
+		# comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + KI_P_BASE*self.P6e_integral)
+		# 					# mX(np.diag([KI_P_BASE,KI_P_BASE,KI_P_BASE,KI_W_BASE,KI_W_BASE,KI_W_BASE]),self.P6e_integral))
+		# comp_base_X_world = np.linalg.inv(comp_world_X_base)
 		
-		# Integral controller
-		comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + KI_P_BASE*self.P6e_integral)
-							# mX(np.diag([KI_P_BASE,KI_P_BASE,KI_P_BASE,KI_W_BASE,KI_W_BASE,KI_W_BASE]),self.P6e_integral))
+		## PI controller
+		u = self.Robot.Base_Ctrl.update(P6e_world_X_base)
+		
+		comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + u)
 		comp_base_X_world = np.linalg.inv(comp_world_X_base)
-		
-		# Virtual Base controller
-		# xa_d = mX(np.diag(KPcom), P6e_world_X_base[0:3]) + mX(np.diag(KDcom), V6e_world_X_base[0:3])
-		# wa_d = mX(np.diag(KPang), P6e_world_X_base[3:6]) + mX(np.diag(KDang), V6e_world_X_base[3:6])
-		# kcorrect = np.array([xa_d,wa_d]).reshape((6,1))
-		
-		## Kolter2011 correction
-		# alpha = 0.1
-		# comp_world_X_base = mX(np.linalg.inv(vec6d_to_se3(self.Robot.P6d.world_X_base)), 
-		# 										self.Robot.XHc.world_X_base)
-
-		# comp_world_X_base = mX(np.linalg.inv(v3_X_m(self.Robot.P6d.world_X_base[0:3])), v3_X_m(self.Robot.P6c.world_X_base[0:3]))
-		# print '1 ', np.round(vec6d_to_se3(self.Robot.P6d.world_X_base),4)
-		# print '2 ', np.round(self.Robot.XHc.world_X_base,4)
-		# print '=========================================='
 		
 		for j in range (0, 6):
 			# Determine foot position wrt base & coxa. 
@@ -532,11 +492,6 @@ class RobotController(CorinManager):
 					self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 				else:
 					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
-
-				## Velocity-control - Focchi2018 eq(3) TODO: check robustness
-				# vel_base_X_foot = -V6e_world_X_base[0:3].flatten() - np.cross(V6e_world_X_base[3:6].flatten(), 
-				# 					(self.Robot.Leg[j].XHd.base_X_foot[0:3,3:4] - self.Robot.P6d.world_X_base[0:3]).flatten())
-				# base_X_foot = self.Robot.Leg[j].XHd.base_X_foot[0:3,3] + vel_base_X_foot
 
 				self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
 

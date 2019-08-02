@@ -38,6 +38,11 @@ class ImpedanceController:
 		self.D = D
 		self.G = G
 
+	def reset(self):
+		# Filter state initialisation
+		self.forward_filter = [0] * len(self.num)
+		self.reverse_filter = [0] * len(self.den)
+
 	def evaluate(self, df):
 		# delta_force is additional force applied to virtual mass-spring-damper
 		# = measured force - desired force
@@ -61,19 +66,12 @@ class ImpedanceController:
 
 		return output
 
-	def fly_evaluate(self, df):
+## ================================================== ##
+## 					TESTING 						  ##
+## ================================================== ##
 
-		wn = 2*3.142*self.fn 
-		# Continuous transfer function
-		H = ([self.G*wn*wn], [1, 2*self.D*wn, wn*wn])
-
-		# Discretisation
-		num, den, dt = signal.cont2discrete(H, 1.0/CTR_RATE, method='bilinear') #zoh, euler
-		self.num = num[0]
-		self.den = den[1:]
-
-		# Filter state initialisation
-		self.forward_filter = [0] * len(self.num)
-		self.reverse_filter = [0] * len(self.den)
-
-		return self.evaluate(df)
+# ic = ImpedanceController()
+# fd = np.array([0.,0.,15.])
+# f  = np.array([1.,0.,9.77])
+# ic.evaluate(fd-f)
+# ic.reset()

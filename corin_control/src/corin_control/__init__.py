@@ -12,6 +12,7 @@ import plotgraph as Plot 					# library for plotting
 
 from force_distribution import *			# class for force distribution
 from impedance_controller import *			
+from pid_controller import *
 
 import time
 import warnings

@@ -2,7 +2,9 @@
 
 import numpy as np
 import copy
-
+import math
+print math.tan(0.2)
+print math.atan(0.2)
 a = np.array([1,2,3])
 b = np.array([4,5,6])
 c = np.array([a,b]).reshape(6,1)

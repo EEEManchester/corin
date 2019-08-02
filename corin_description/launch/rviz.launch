@@ -33,4 +33,6 @@
 	<param name="use_gui" value="true"/>
 	<node name="rviz" pkg="rviz" type="rviz" output="screen" required="true" args="-d $(arg rviz_conf) -f world" />
 
+	<!-- Friction Cone Visualizer -->
+	<node name="cone_viz" pkg="cone_visual" type="cone_visual_node" output="screen"/>
 </launch>
