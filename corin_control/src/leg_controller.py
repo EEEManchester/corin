@@ -186,33 +186,14 @@ class LegController:
 					self.cur_gphase = 0
 					self.Leg.change_phase('support', self.XHc.world_X_base)
 					self.cur_wXb = self.XHc.world_X_base.copy()
-					raw_input('cstate true')
-			# 	# Interpolate Fmax for legs in contact phase
-			# 	fearly = map(lambda x,y: xor(bool(x), bool(y)), gphase, self.Robot.Gait.cs)
-			# 	findex = [z for z, y in enumerate(fearly) if y == True]
-			# 	# print 'findex ', findex, self.Robot.Gait.cs, gphase
-			# 	if findex:
-			# 		for j in findex:
-			# 			self.Leg.Fmax += F_INC
-			# 			# print self.Leg.Fmax
-			# 		fmax_lim = []
-			# 		for j in range(6):
-			# 			if self.cur_gphase == 0:
-			# 				fmax_lim.append(self.Leg.Fmax)
-			# 		gphase = list(self.Robot.Gait.cs)
-			# 		print i, 'findex ', findex, gphase, fmax_lim
-			# cout3v(self.Leg.XHd.coxa_X_foot[:3,3])
-			# cout3v(self.Leg.Joint.qpd)
-			# cout3v(self.Leg.Joint.qpc)
-			# cout3v(self.Leg.XHc.coxa_X_foot[:3,3])
-
+					# raw_input('cstate true')
+			
 			## Generate Transfer Trajectory
 			if self.cur_gphase == 1 and self.Leg.transfer_phase_change == False:
 				print 'Generate transfer trajectory'
 				sn1 = np.array([0., 0., 1.])
 				sn2 = np.array([0., 0., 1.])
 
-				# self.Leg.XHd.world_X_foot[0:3,3] = np.array([0.03+STANCE_WIDTH, 0., -BODY_HEIGHT])
 				self.Leg.XH_world_X_base = self.XHc.world_X_base.copy() 
 				self.Leg.XHd.base_X_foot[0:3,3] = np.array([STANCE_WIDTH, 0., -BODY_HEIGHT])
 
@@ -220,14 +201,10 @@ class LegController:
 				# Updates to actual foot position (without Q_COMPENSATION)
 				qpos = self.qc.position[1:4] if len(self.qc.position[1:4])==4 else self.qc.position 
 				self.Leg.XHc.coxa_X_foot[0:3,3:4] = self.Leg.KDL.leg_FK(qpos)
-				# print 'start: ',
-				# cout3p(self.Leg.XHc.coxa_X_foot)
+				
 				## Generate transfer spline
 				svalid = self.Leg.generate_spline('world', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
-				# cout3p(self.Leg.XHd.world_X_foot)
-				# cout3p(self.Leg.XHc.world_X_foot)
-				# print '==================================='
-				# raw_input('jj')
+				
 				if (svalid is False):
 					# set invalid if trajectory unfeasible for leg's kinematic
 					self.invalid = True
@@ -268,7 +245,6 @@ class LegController:
 				# raw_input('Changing phase')
 			self.s_cnt += 1
 
-			# print state_machine, fmax_lim, self.Robot.Gait.cs, self.Robot.Gait.ps
 			## Task to joint space
 			err_no, qpd, qvd, qad = self.Leg.tf_task_X_joint()
 			
@@ -277,8 +253,7 @@ class LegController:
 				
 			# force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, temp_gphase, fmax_lim)
 			# joint_torq = self.Robot.force_to_torque(force_dist)
-			# print i, np.round(force_dist[17],3), np.round(fmax_lim[-1],3)
-			# print temp_gphase, fmax_lim
+			
 			if self.interface != 'rviz':# and self.control_loop != "open":
 				# Leg impedance
 				if self.ctrl_leg_impedance and self.cur_gphase==0:
@@ -359,9 +334,7 @@ class LegController:
 				## Stops body from moving until transfer phase completes
 				print 'Suspending in update_phase_transfer()'
 				self.Robot.suspend = True
-			# else:
-			# 	print np.round(self.Leg.XHd.coxa_X_foot[:3,3].flatten(),3)
-
+			
 		elif (self.cur_gphase == 1 and self.Leg.feedback_state == 2 and delta_d is not None):
 			self.Leg.XHd.coxa_X_foot[:3,3] -= delta_d
 

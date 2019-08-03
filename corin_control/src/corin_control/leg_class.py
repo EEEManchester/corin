@@ -129,7 +129,7 @@ class LegClass:
 		th = self.c_threshold
 		
 		force = np.linalg.norm(self.F6c.world_X_foot[:3])
-		print np.round(force, 4)
+		
 		if th > CONTACT_COUNT: # We are in the "contact state"
 			if force < FORCE_THRES:
 				th = 0

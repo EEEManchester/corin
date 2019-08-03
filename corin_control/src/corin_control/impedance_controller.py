@@ -182,8 +182,8 @@ class ImpedanceController:
 
 	def pi_control(self, fd, f):
 
-		KP_FORCE = 1.2
-		KI_FORCE = 0.05
+		KP_FORCE = 0.5
+		KI_FORCE = 1.25
 
 		fe = fd.flatten() - f.flatten()
 		# print 'fd :', np.round(fd.flatten(),5)
@@ -193,13 +193,13 @@ class ImpedanceController:
 		# PI controller
 		p_control = KP_FORCE*(fe-self.prev_fe)
 		i_control = (CTR_INTV*KI_FORCE/2)*(fe+self.prev_fe)
-		self.PI_control +=  i_control
+		self.PI_control += p_control + i_control
 		self.prev_fe = fe.copy()
-		# print np.round(fe,5)
+		# print 'error: ', np.round(fe,5)
 		# print np.round(self.prev_fe,5)
 		# print p_control
 		# print i_control
-		# print self.PI_control
+		# print np.round(self.PI_control,4)
 		return fd.flatten() + self.PI_control
 
 	def reset_pi(self):
