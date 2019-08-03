@@ -16,10 +16,78 @@ from matrix_transforms import *
 # import transformations as TF
 
 Column6D = (6,1)
-
-
 def deg2rad(q):
-	return (q*np.pi/180.)
+	return np.deg2rad(q)
+
+## ============================================================================= ##
+## 									Transforms  								 ##
+## ============================================================================= ##
+
+def update_base_X_foot(j, q):	
+	q1_sin = np.sin(q[0])
+	q2_sin = np.sin(q[1])
+	q3_sin = np.sin(q[2])
+	q1_cos = np.cos(q[0])
+	q2_cos = np.cos(q[1])
+	q3_cos = np.cos(q[2])
+	rZ_sin = np.sin(np.deg2rad(ROT_BASE_X_LEG[j]))
+	rZ_cos = np.cos(np.deg2rad(ROT_BASE_X_LEG[j]))
+	tX = TRN_BASE_X_LEG[j][0]
+	tY = TRN_BASE_X_LEG[j][1]
+
+	base_X_foot = np.eye(4)
+	base_X_foot[0,0] = -(q2_cos*q3_cos - q2_sin*q3_sin)*(rZ_sin*q1_sin - rZ_cos*q1_cos)
+	base_X_foot[0,1] =  (q2_sin*q3_cos + q2_cos*q3_sin)*(rZ_sin*q1_sin - rZ_cos*q1_cos)
+	base_X_foot[0,2] =  rZ_cos*q1_sin + rZ_sin*q1_cos
+	base_X_foot[0,3] = -rZ_sin*(q2_cos*q3_cos - q2_sin*q3_sin)*q1_sin*L3 - rZ_sin*q2_cos*q1_sin*L2 + (q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos*rZ_cos*L3 + q2_cos*q1_cos*rZ_cos*L2 - rZ_sin*q1_sin*L1 + q1_cos*rZ_cos*L1 + tX
+	base_X_foot[1,0] =  (q2_cos*q3_cos - q2_sin*q3_sin)*(rZ_cos*q1_sin + rZ_sin*q1_cos)
+	base_X_foot[1,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*(rZ_cos*q1_sin + rZ_sin*q1_cos)
+	base_X_foot[1,2] =  rZ_sin*q1_sin - rZ_cos*q1_cos
+	base_X_foot[1,3] =  rZ_sin*(q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos*L3 + rZ_sin*q2_cos*q1_cos*L2 + (q2_cos*q3_cos - q2_sin*q3_sin)*rZ_cos*q1_sin*L3 + q2_cos*rZ_cos*q1_sin*L2 + rZ_sin*q1_cos*L1 + rZ_cos*q1_sin*L1 + tY
+	base_X_foot[2,0] =  (q2_sin*q3_cos + q2_cos*q3_sin)
+	base_X_foot[2,1] =  (q2_cos*q3_cos - q2_sin*q3_sin)
+	base_X_foot[2,2] =  0.
+	base_X_foot[2,3] =  (q2_sin*q3_cos + q2_cos*q3_sin)*L3 + q2_sin*L2
+	return base_X_foot
+
+def update_base_X_coxa(j):
+	rZ_sin = np.sin(np.deg2rad(ROT_BASE_X_LEG[j]))
+	rZ_cos = np.cos(np.deg2rad(ROT_BASE_X_LEG[j]))
+	base_X_coxa = np.eye(4)
+	base_X_coxa[0,0] =  rZ_cos#np.cos(deg2rad(q))
+	base_X_coxa[0,1] = -rZ_sin#np.sin(deg2rad(q))
+	base_X_coxa[1,0] =  rZ_sin#np.sin(deg2rad(q))
+	base_X_coxa[1,1] =  rZ_cos#np.cos(deg2rad(q))
+	base_X_coxa[0,3] =  TRN_BASE_X_LEG[j][0]
+	base_X_coxa[1,3] =  TRN_BASE_X_LEG[j][1]
+	return base_X_coxa
+
+def update_coxa_X_foot(q):
+	q1_sin = np.sin(q[0])
+	q2_sin = np.sin(q[1])
+	q3_sin = np.sin(q[2])
+	q1_cos = np.cos(q[0])
+	q2_cos = np.cos(q[1])
+	q3_cos = np.cos(q[2])
+
+	coxa_X_foot = np.eye(4)
+	coxa_X_foot[0,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos
+	coxa_X_foot[0,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_cos
+	coxa_X_foot[0,2] = q1_sin
+	coxa_X_foot[0,3] = q1_cos*(L1 + L3*(q2_cos*q3_cos - q2_sin*q3_sin) + L2*q2_cos)
+	coxa_X_foot[1,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_sin
+	coxa_X_foot[1,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_sin
+	coxa_X_foot[1,2] = -q1_cos
+	coxa_X_foot[1,3] = q1_sin*(L1 + L3*(q2_cos*q3_cos - q2_sin*q3_sin) + L2*q2_cos)
+	coxa_X_foot[2,0] = (q2_sin*q3_cos + q2_cos*q3_sin)
+	coxa_X_foot[2,1] = (q2_cos*q3_cos - q2_sin*q3_sin)
+	coxa_X_foot[2,2] = 0.
+	coxa_X_foot[2,3] = L3*(q2_sin*q3_cos + q2_cos*q3_sin) + L2*q2_sin
+	return coxa_X_foot
+
+## ============================================================================= ##
+## 									Vector Class 								 ##
+## ============================================================================= ##
 
 class Vector6D:
 	""" 6D vector for robot """ 
@@ -91,6 +159,9 @@ class ArrayVector6D:
 		self.coxa_X_NRP   = obj.coxa_X_NRP.copy()
 		self.tibia_X_foot = obj.tibia_X_foot.copy()
 
+## ============================================================================= ##
+## 								Array Transforms 								 ##
+## ============================================================================= ##
 class ArrayHomogeneousTransform:
 	""" SE(3) for robot's leg transformations """
 	def __init__(self, leg_no):
@@ -232,11 +303,14 @@ class ArrayHomogeneousTransform:
 		self.world_X_coxa = np.dot(mx_world_X_base, self.base_X_coxa)
 		self.coxa_X_world = np.linalg.inv(self.world_X_coxa)
 
-	def update_world_X_foot(self, mx_world_X_base):
+	def update_world_X_foot(self, mx_world_X_base, base_X_foot=None):
 		# if (self.n==4):
 		# 	print mx_world_X_base
 		# 	print self.base_X_foot
-		self.world_X_foot = np.dot(mx_world_X_base, self.base_X_foot)
+		if base_X_foot is None:
+			self.world_X_foot = np.dot(mx_world_X_base, self.base_X_foot)
+		else:
+			self.world_X_foot = np.dot(mx_world_X_base, base_X_foot)
 
 	def update_world_base_X_foot(self, P6_wXb, q):
 		self.update_base_X_foot(q)

@@ -77,12 +77,13 @@
 			<material>Gazebo/White</material>
 		</gazebo>
 		<gazebo reference="${name}_foot">
-			<kp>100000.0</kp>
-			<kd>0.1</kd>
+			<kp>1e5</kp>
+            <kd>10.0</kd>
+            <soft_cfm>0.0</soft_cfm>
+            <soft_erp>0.2</soft_erp>
 			<mu1>1.0</mu1>
 			<mu2>1.0</mu2>
-			<!-- <fdir1>1 0 0</fdir1> -->
-			<maxVel>0.00</maxVel> 		<!-- contact correction velocity truncation -->
+			<maxVel>0.0001</maxVel> 		<!-- contact correction velocity truncation -->
 			<minDepth>0.001</minDepth> 	<!-- penetration between objects -->
 			<material>Gazebo/Black</material>
 		</gazebo>

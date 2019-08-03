@@ -84,7 +84,7 @@ WALL_WIDTH_NARROW = 0.3
 ## ================================================================ ##
 ##                      	Controller Rate 	 					##
 ## ================================================================ ##
-CTR_RATE = 200 			# controller rate for robot, Hz
+CTR_RATE = 100 			# controller rate for robot, Hz
 CTR_INTV = 1./CTR_RATE 	# controller interval for robot, s
 
 ## ================================================================ ##
@@ -107,14 +107,14 @@ F_INC  = 0.05
 D_MOVE = 0.0001	# motion for leg to achieve contact
 
 FORCE_THRES = 0.5 	# threshold limit for contact detection
-CONTACT_COUNT = 5 	# no. of contacts above threshold limit required
+CONTACT_COUNT = 2 	# no. of contacts above threshold limit required
 
 ## ================================================================ ##
-##                 Impedance Controller parameters 	 				##
+##                 Admittance Controller parameters 	 				##
 ## ================================================================ ##
-IMPEDANCE_FN = 2. 			# natural frequency
-IMPEDANCE_DAMPING = 2.2 	# damping ratio
-IMPEDANCE_GAIN = 0.002		# m/N (delta distance per delta force)
+IMPEDANCE_FN = 1.5 			# natural frequency
+IMPEDANCE_DAMPING = 3. 	# damping ratio
+IMPEDANCE_GAIN = 0.003		# m/N (delta distance per delta force)
 #  60 Hz: 2, 1.5, 0.001
 # 200 Hz: 2, 2.2, 0.003
 # 100 Hz: 0.5, 3.5, 0.003
@@ -126,7 +126,7 @@ SM_MIN = 0.0
 ## ================================================================ ##
 ##                  Error Compensation parameters 					##
 ## ================================================================ ##
-QCOMPENSATION = 0.0#33
+QCOMPENSATION = 0.039
 
 ## ================================================================ ##
 ##                  	Inclination parameters 	 					##
@@ -153,7 +153,7 @@ STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
 ## ================================================================ ##
 
 ## these gait parameters can be changed during runtime
-GAIT_TYPE 	 = 1 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+GAIT_TYPE 	 = 4 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 GAIT_TPHASE	 = 1.0 	# default period per gait phase
 STEP_HEIGHT  = 0.06	# default step height, z
 STEP_STROKE  = 0.1 	# default step stroke

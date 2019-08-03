@@ -7,6 +7,9 @@ Panels:
         - /Global Options1
         - /Status1
         - /Grid1/Offset1
+        - /CentreOfMass1
+        - /Friction Cones1
+        - /Support Region1
       Splitter Ratio: 0.5
     Tree Height: 775
   - Class: rviz/Selection
@@ -268,7 +271,7 @@ Visualization Manager:
       Marker Topic: /corin/footholds
       Name: Footholds
       Namespaces:
-        {}
+        "": true
       Queue Size: 1
       Value: true
     - Alpha: 1
@@ -284,21 +287,13 @@ Visualization Manager:
       Torque Color: 204; 204; 51
       Unreliable: false
       Value: false
-    - Alpha: 1
-      Class: rviz/Polygon
-      Color: 0; 0; 0
-      Enabled: true
-      Name: SupportPolygon
-      Topic: /corin/support_polygon
-      Unreliable: false
-      Value: true
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /corin/centre_of_mass
       Name: CentreOfMass
       Namespaces:
-        {}
-      Queue Size: 1
+        "": true
+      Queue Size: 10
       Value: true
     - Class: rviz/Group
       Displays:
@@ -384,11 +379,22 @@ Visualization Manager:
       Name: Contact Forces
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: visualization_marker_array
+      Marker Topic: /cone_visual/viz_cone_arrays
       Name: Friction Cones
       Namespaces:
-        {}
-      Queue Size: 100
+        "": true
+      Queue Size: 1
+      Value: true
+    - Class: poly_rviz_plugin/Polygon
+      Enabled: true
+      History Length: 1
+      Line Alpha: 0
+      Line Color: 252; 252; 252
+      Name: Support Region
+      Polygon Alpha: 0.5
+      Polygon Color: 141; 70; 211
+      Topic: /corin/support_polygon
+      Unreliable: false
       Value: true
   Enabled: true
   Global Options:
@@ -415,25 +421,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.42210388
+      Distance: 0.781746864
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.0806252733
-        Y: 0.0823829323
-        Z: 0.0345522501
+        X: 0.513254404
+        Y: 0.293300062
+        Z: 0.1621463
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.409801394
+      Pitch: 0.0898028389
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.45850563
+      Yaw: 5.39840698
     Saved: ~
 Window Geometry:
   Control Interface:

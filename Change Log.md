@@ -8,6 +8,7 @@ In corin_control:
 1) Leg class:
 	- Removed Kim2007 passivity on reducing impact force
 	- Contact forces updated using actual joint position
+	- world_X_foot position updated using actual joint position
 	- Function to reset all admittance controller
 2) Robot class:
 	- Added base controller - PID class type
@@ -15,6 +16,9 @@ In corin_control:
 3) Admittance controller class:
 	- Added reset function
 2) Added PID controller class
+a) RViZ visual:
+	- Added cone visualization
+a) Added rviz_visual package into Corin metapackage
 3) Robot controller:
 	- Leg updated to original position instead of gravity compensation prior to generating transfer phase spline
 	- Leg admittance controllers reset added after leg becomes transfer phase

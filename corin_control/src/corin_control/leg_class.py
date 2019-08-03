@@ -102,14 +102,10 @@ class LegClass:
 		self.F6c.tibia_X_foot[:3] = np.reshape(np.array(cForce),(3,1))
 
 		# Transfrom to world, base and leg
-		base_X_coxa = rot_Z(ROT_BASE_X_LEG[self.number])
-		coxa_X_foot = mX(rot_Z(self.Joint.qpc[0]),
-						rot_X(np.pi/2),
-						rot_Z(self.Joint.qpc[1]),
-						rot_Z(self.Joint.qpc[2]))
+		coxa_X_foot = robot_transforms.update_coxa_X_foot(self.Joint.qpc)
 
-		self.F6c.coxa_X_foot[:3] = mX(coxa_X_foot[:3,:3],self.F6c.tibia_X_foot[:3]).reshape((3,1))
-		self.F6c.base_X_foot[:3] = mX(base_X_coxa, self.F6c.coxa_X_foot[:3].flatten()).reshape((3,1))
+		self.F6c.coxa_X_foot[:3] = mX(coxa_X_foot[:3,:3], self.F6c.tibia_X_foot[:3]).reshape((3,1))
+		self.F6c.base_X_foot[:3] = mX(self.XHd.base_X_coxa[:3,:3], self.F6c.coxa_X_foot[:3].flatten()).reshape((3,1))
 		self.F6c.world_X_foot[:3] = mX(self.XH_world_X_base[:3,:3], self.F6c.base_X_foot[:3].flatten()).reshape((3,1))
 		
 		self.check_contact_state()
@@ -143,7 +139,8 @@ class LegClass:
 		 
 		if phase == 'support':
 			self.transfer_phase_change = False
-			self.XHc.update_world_X_foot(world_X_base)
+			bXf = robot_transforms.update_base_X_foot(self.number, self.Joint.qpc)
+			self.XHc.update_world_X_foot(world_X_base, bXf)
 			self.XHd.world_X_foot = self.XHc.world_X_foot.copy()
 		elif phase == 'transfer':
 			pass
@@ -193,15 +190,15 @@ class LegClass:
 			wcp, td = self.Path.interpolate_leg_path(self.XHc.coxa_X_foot[0:3,3],
 														self.XHd.coxa_X_foot[0:3,3],
 														sn1, sn2, phase, reflex, ctime)
-		# if self.number == 4 or self.number == 0:
-		# 	print np.round(wcp,4)
+		# if self.number == 4:
+		# 	print np.round(wcp,3)
 		# 	print np.round(start,4)
 		# 	print np.round(end,4)
+			# Plot.plot_2d(self.xspline.t, self.xspline.xp)
 		self.xspline = TrajectoryPoints(self.Path.generate_leg_path(wcp, td, tn))
 		self.spline_counter = 1
 		self.spline_length  = len(self.xspline.t)
 		# if self.number == 0:
-		# 	Plot.plot_2d(self.xspline.t, self.xspline.xp)
 		## checks spline for kinematic constraint
 		qt = [];	qp = [];	qv = [];	qa = [];
 
@@ -365,16 +362,21 @@ class LegClass:
 		# print '=================================='
 		return True
 
-	def apply_impedance_controller(self, desired_force):
+	def apply_admittance_controller(self, desired_force):
 		
-		world_df = (self.F6c.world_X_foot[0:3] - desired_force[0:3]).flatten()
+		world_df = (self.F6c.world_X_foot[0:3].flatten() - desired_force.flatten()).flatten()
 		# Transform to leg frame
 		leg_df = mX(self.XHd.coxa_X_world[:3,:3], world_df)
 
 		offset_x = self.impedance_controller_x.evaluate(leg_df[0])
 		offset_y = self.impedance_controller_y.evaluate(leg_df[1])
 		offset_z = self.impedance_controller_z.evaluate(leg_df[2])
-		
+
+		if self.number == 4:
+		# 	print np.round(world_df,3)
+			print np.round(leg_df,3)
+			print np.round(np.array([offset_x, offset_y, offset_z]),4)
+			print '===================================='
 		return np.array([offset_x, offset_y, offset_z])
 		# self.XHd.coxa_X_foot[0:3,3] += np.array([offset_x, offset_y, offset_z])
 

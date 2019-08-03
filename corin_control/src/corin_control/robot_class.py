@@ -198,6 +198,8 @@ class RobotState:
 
 			self.P6c.world_X_base = np.vstack((pos, angles))
 			self.V6c.world_X_base = np.vstack((vel, angular))
+			## TEMP:
+			self.P6c.world_X_base = np.array([0.33, 0.39, 0.08, 0., 0., 0.]).reshape((6,1))
 			# print np.round(self.P6c.world_X_base.flatten(),3)
 			# print np.round(self.state_estimator.r.flatten(),3)
 			# print np.round(angles.flatten(),3)
@@ -224,7 +226,7 @@ class RobotState:
 				self.XHc.update_base(self.P6c.world_X_base)
 				self.V6c.world_X_base = self.V6d.world_X_base.copy()
 				self.A6c.world_X_base = self.A6d.world_X_base.copy()
-
+				# print np.round(self.XHc.base_X_world,4)
 
 	def update_stability_margin(self):
 		""" updates the current stability margin """
@@ -250,7 +252,7 @@ class RobotState:
 		if not valid:
 			print 'Convex hull: ', valid, sm
 			self.invalid = True
-			self.SM.point_in_convex(self.Rbdl.com, stack_world_bXw, self.Gait.cs, True)
+			self.SM.point_in_convex(self.Rbdl.com, stack_world_X_foot, self.Gait.cs, True)
 		else:
 			self.invalid = False
 			
@@ -372,19 +374,31 @@ class RobotState:
 			print 'Error in force to torque conversion!'
 			return None
 
-	def apply_impedance_control(self, force_dist):
+	def apply_leg_admittance(self, force_dist):
 		""" Applies impedance control to track force for each leg """
 
 		feet_pos = []
 		for j in range(0,6):
-			offset = self.Leg[j].apply_impedance_controller(force_dist[j*3:j*3+3])
-			feet_pos.append(self.Leg[j].XHd.coxa_X_foot[:3,3] + offset)
-		
+			# offset = self.Leg[j].apply_impedance_controller(force_dist[j*3:j*3+3])
+			if self.Gait.cs[j]==0:
+				fsetpoint = np.array([0.,0.,15.]).reshape((3,1))
+				offset = self.Leg[j].apply_admittance_controller(fsetpoint)
+			else:
+				offset = np.zeros(3)
+			# offset[0] = 0.
+			new_pos = self.Leg[j].XHd.coxa_X_foot[:3,3] + offset
+			feet_pos.append(new_pos)
+			# if j==4:
+			# 	print np.round(self.Leg[4].XHd.coxa_X_foot[:3,3],4)
+			# 	print np.round(offset,4)
+			# 	print np.round(new_pos,4)
+			# 	print '======================================='
 		feet_pos = [item for sublist in feet_pos for item in sublist]
 		return self.task_X_joint(feet_pos)
-		a, err = self.task_X_joint(feet_pos)
+		# return self.task_X_joint()
+		# a, err = self.task_X_joint(feet_pos)
 		# print a.xp
-	def apply_base_impedance(self, desired_force):
+	def apply_base_admittance(self, desired_force):
 		""" Applies base impedance control to track leg force """
 
 		offset = np.zeros(3)

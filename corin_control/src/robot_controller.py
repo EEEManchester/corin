@@ -20,9 +20,9 @@ class RobotController(CorinManager):
 		
 		# Enable/disable controllers
 		self.ctrl_base_tracking  = False 	# base tracking controller
-		self.ctrl_base_impedance = False 	# base impedance controller - fault
-		self.ctrl_leg_impedance  = True 	# leg impedance controller
-		self.ctrl_contact_detect = False 	# switch gait for early contact detection
+		self.ctrl_base_admittance = False 	# base impedance controller - fault
+		self.ctrl_leg_admittance = True 	# leg impedance controller
+		self.ctrl_contact_detect = True 		# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
 
@@ -126,9 +126,11 @@ class RobotController(CorinManager):
 
 			if motion_plan is not None:
 				# GRID PLAN: base trajectory in world frame
-				v3cp = wXbase_offset[0:3] + base_path.X.xp[i].reshape(3,1) 		\
-								+ offset_base.reshape((3,1))
+				# v3cp = wXbase_offset[0:3] + base_path.X.xp[i].reshape(3,1) 		\
+				# 				+ offset_base.reshape((3,1))
 								# + np.array([0., 0., offset_z]).reshape((3,1))
+				## TEMP: HOLD IN PLACE
+				v3cp = wXbase_offset[0:3] + offset_base.reshape((3,1))
 				# v3cp = base_path.X.xp[i].reshape(3,1); 	# CORNERING: base trajectory relative to world frame
 				v3cv = base_path.X.xv[i].reshape(3,1);
 				v3ca = base_path.X.xa[i].reshape(3,1);
@@ -176,6 +178,7 @@ class RobotController(CorinManager):
 			if state_machine == 'unload' and not self.Robot.support_mode:
 
 				if tload == 1:
+					state_machine == 'motion'
 					print 'State Machine: Unloading'
 					self.Robot.Gait.support_mode()
 					gphase = [0]*6 		# all legs in support phase at start of unloading
@@ -202,6 +205,7 @@ class RobotController(CorinManager):
 			elif state_machine == 'load' and not self.Robot.support_mode:
 
 				if tload == 1:
+					state_machine == 'motion'
 					print 'State Machine: Loading'
 					prev_phase = list(self.Robot.Gait.ps)
 					self.Robot.Gait.support_mode()
@@ -255,6 +259,8 @@ class RobotController(CorinManager):
 							self.Robot.Gait.cs[j] = 0
 							self.Robot.Leg[j].change_phase('support', self.Robot.XHc.world_X_base)
 							self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+							if j==4:
+								raw_input('cont')
 
 					# Interpolate Fmax for legs in contact phase
 					fearly = map(lambda x,y: xor(bool(x), bool(y)), gphase, self.Robot.Gait.cs)
@@ -270,7 +276,7 @@ class RobotController(CorinManager):
 								fmax_lim.append(self.Robot.Leg[j].Fmax)
 						gphase = list(self.Robot.Gait.cs)
 						print i, 'findex ', findex, gphase, fmax_lim
-
+				
 				## Generate trajectory for legs in transfer phase
 				for j in range (0, self.Robot.active_legs):
 					
@@ -309,6 +315,8 @@ class RobotController(CorinManager):
 																		self.Robot.Leg[j].XHd.world_X_foot)
 								## TEMP!
 								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
+						## TEMP: stamping
+						self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
 
 						## Get surface normal at current and desired footholds
 						try:
@@ -434,21 +442,29 @@ class RobotController(CorinManager):
 			# print i, np.round(force_dist[17],3), np.round(fmax_lim[-1],3)
 			# print temp_gphase, fmax_lim
 			if self.interface != 'rviz':# and self.control_loop != "open":
-				# Base impedance
-				if self.ctrl_base_impedance:
-					offset_base = self.Robot.apply_base_impedance(force_dist)
+				
+				## Leg admittance - force tracking
+				if self.ctrl_leg_admittance:
+					## Base admittance - fault force tracking (requires leg force tracking) 
+					if self.ctrl_base_admittance:
+						offset_base = self.Robot.apply_base_admittance(force_dist)
 
-				# Leg impedance
-				if self.ctrl_leg_impedance:
-					self.Robot.apply_impedance_control(force_dist)
+					qd, tXj_error = self.Robot.apply_leg_admittance(force_dist)
 
-				## Recompute task to joint space
-				qd, tXj_error = self.Robot.task_X_joint()
+					if (self.Robot.invalid == True):
+						print 'Error Occured, robot invalid! ', tXj_error
+						break
+			# 	## Recompute task to joint space
+			# 	qd, tXj_error = self.Robot.task_X_joint()
 
-			if (self.Robot.invalid == True):
-				print 'Error Occured, robot invalid! ', tXj_error
-				break
-
+			# if (self.Robot.invalid == True):
+			# 	print 'Error Occured, robot invalid! ', tXj_error
+			# 	break
+			# print np.round(self.Robot.Leg[4].XHd.coxa_X_foot[:3,3],4)
+			# print np.round(self.Robot.Leg[4].XHc.coxa_X_foot[:3,3],4)
+			# cout3(qd.xp[12:15])
+			# cout3(self.Robot.Leg[4].Joint.qpc)
+			# print '======================================='
 			## Data logging & publishing
 			qlog = self.set_log_setpoint(v3cp, v3cv, xa_d, v3wp, v3wv, wa_d, qd, joint_torq, force_dist)
 			self.publish_topics(qd, qlog)
@@ -490,21 +506,18 @@ class RobotController(CorinManager):
 				# Closed-loop control on bodypose. Move by sum of desired pose and error
 				if self.ctrl_base_tracking:
 					self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
+				elif self.ctrl_contact_detect:
+					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHc.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 				else:
 					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 
 				self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
 
-				# if j==5:
-				# 	print j, ' bXw: \n', np.round(comp_base_X_world,3)
-					# print ' wXb: ', np.round(self.Robot.XHd.base_X_world[:3,3],3)
-					# print ' wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
-				# 	print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],3)
-					# print j, ' bXP: ', np.round(self.Robot.Leg[j].XHd.base_X_PEP[0:3,3],3)
-					# temp = mX(self.Robot.Leg[j].XHd.coxa_X_base, base_X_foot)
-					# print j, ' cXf 1: ', np.round(temp[0:3,3], 4)
-					# print j, ' cXf 2: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3],3)
-					# print '========================================================='
+				# if j==4:
+				# 	cout3p(self.Robot.Leg[j].XHd.world_X_foot)
+				# 	cout3p(self.Robot.XHc.base_X_world)
+				# 	cout3p(self.Robot.Leg[j].XHd.base_X_foot)
+				# 	print '========================================================='
 
 	def update_phase_transfer(self,delta_d=None):
 

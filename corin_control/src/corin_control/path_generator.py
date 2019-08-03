@@ -284,8 +284,8 @@ class PathGenerator():
 # Ground walking:
 sn1 = np.array([0.,0.,1.])
 sn2 = np.array([0.,0.,1.])
-sp = np.array([0.0, -0.30, -0.1])
-ep = np.array([0.1, -0.30, -0.1 ])
+sp = np.array([0.0003, -0.2961, -0.1054])
+ep = np.array([0., -0.30, -0.1 ])
 # Ground to wall
 # sn1 = np.array([0.,0.,1.])
 # sn2 = np.array([0.,-0.5,0.5])
@@ -297,7 +297,7 @@ phase = 1
 planner = PathGenerator()
 cxp, tdiv = planner.interpolate_leg_path(sp, ep, sn1, sn2, phase, False, GAIT_TPHASE)
 # cxp, tdiv = planner.new_interpolate_leg_path(sp, ep, sn1, sn2, phase, False, GAIT_TPHASE)
-# print cxp
+# print np.round(cxp,3)
 data = planner.generate_leg_path(cxp, tdiv, CTR_INTV)
 path = TrajectoryPoints(data)
 # Plot.plot_2d(path.xp[:,1], path.xp[:,2])

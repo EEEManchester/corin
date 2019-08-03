@@ -415,12 +415,32 @@ def quaternion_conjugate(quaternion):
 
 def vec_X_vec_rotation(v1, v2):
     
-    num = (v1+v2)*((v1+v2).transpose())
-    den = ((v1+v2).transpose())(v1+v2)
-    return 2*num/den - eye(3)
-a = np.array([1., 0., 0.])
-b = np.array([0., 0., 1.])
-print vec_X_vec_rotation(a,b)
+    out = np.zeros(4)
+    dot = np.dot(v1, v2);
+    if (dot < -0.999999):
+        pass
+        tmp = np.cross(np.array([1.,0.,0.]), v1);
+        if (np.linalg.norm(tmp) < 0.000001):
+            tmp = np.cross(np.array([1.,0.,0.]), v1)
+        tmp = tmp/np.linalg.norm(tmp)
+        print 'Error in matrix transforms'
+        return axisAngle_to_SO3(tmp, math.pi)
+    elif (dot > 0.999999):
+        out[0] = 0;
+        out[1] = 0;
+        out[2] = 0;
+        out[3] = 1;
+        return out
+    else:
+        tmpvec3 = np.cross(v1, v2);
+        out[0] = tmpvec3[0];
+        out[1] = tmpvec3[1];
+        out[2] = tmpvec3[2];
+        out[3] = 1 + dot;
+        out = out/np.linalg.norm(out);
+        return out
+        # return quaternion_matrix(out)[:3,:3]
+
 # print rotation_matrix(np.deg2rad(30),[0, 1, 0])
 ######################################################################
 ##                      Constant Parameters                         ##
@@ -444,3 +464,5 @@ _AXES2TUPLE = {
     'rzxz': (2, 0, 1, 1), 'rxyz': (2, 1, 0, 1), 'rzyz': (2, 1, 1, 1)}
 
 _TUPLE2AXES = dict((v, k) for k, v in _AXES2TUPLE.items())
+
+

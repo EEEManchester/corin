@@ -9,6 +9,7 @@ import path_generator as Pathgenerator 		# generates path from via points
 from matrix_transforms 	import *			# SE(3) transformation library
 from robot_transforms import *
 import plotgraph as Plot 					# library for plotting
+from display import *
 
 from force_distribution import *			# class for force distribution
 from impedance_controller import *			

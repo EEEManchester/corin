@@ -327,7 +327,8 @@ class CorinManager:
 					dqp.name.append(str(JOINT_NAME[n])) 	# joint name
 					dqp.position.append(q.xp[n])			# joint angle
 				self.joint_pub_.publish(dqp)
-				
+				self.Visualizer.publish_robot_pose(self.Robot.P6d.world_X_base)
+
 			elif (self.interface == 'robotis'):
 				dqp = SyncWriteMultiFloat()
 				dqp.item_name 	= str("goal_position") 	# register to start first write
@@ -339,7 +340,6 @@ class CorinManager:
 
 				self.joint_pub_.publish(dqp)
 
-		self.Visualizer.publish_robot_pose(self.Robot.P6d.world_X_base)
 		self.Visualizer.publish_support_polygon(self.Robot.SM.convex_hull)
 		self.Visualizer.publish_com(self.Robot.Rbdl.com + self.Robot.P6c.world_X_base[:3])
 		self.Visualizer.publish_friction_cones(self.Robot, SURFACE_FRICTION)
@@ -563,7 +563,7 @@ class CorinManager:
 			
 				if motion == 'forward':
 					map_offset = (0.33, 0.39)
-					d_travel = np.array([0.2,0.,0.,0.,0.,0.]).reshape(6,1)
+					d_travel = np.array([1.6,0.,0.,0.,0.,0.]).reshape(6,1)
 				elif motion == 'transition':
 					map_offset = (0.33, 0.39)
 					d_travel = np.array([0.,0.21,0.,0.,0.,0.]).reshape(6,1)
