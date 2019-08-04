@@ -11,7 +11,7 @@
 	<xacro:property name="trunk_z" value="0.07"/>
 
 	<!--  Joint parameters -->
-	<xacro:property name="MX64_damping"   value="0.15" /> 					<!-- real: 0.2 		-->
+	<xacro:property name="MX64_damping"   value="0.20" /> 					<!-- real: 0.2 		-->
 	<xacro:property name="MX64_effort"    value="2.85" /> 					<!-- real: 2.85 Nm 	-->
 	<xacro:property name="MX64_velocity"  value="5.23" />
 

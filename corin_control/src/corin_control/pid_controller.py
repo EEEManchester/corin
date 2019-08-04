@@ -24,10 +24,18 @@ class PIDController:
 		self.output = np.zeros((6,1))
 
 	def update(self, e):
+
+		self.error.pop()
 		self.error.insert(0,e)
+		
 		if self.type == 'PI':
 			self.output += KP_P_BASE*(self.error[0]-self.error[1]) + \
 								(CTR_INTV*KI_P_BASE/2)*(self.error[0]+self.error[1])
+			pout = KP_P_BASE*(self.error[0]-self.error[1])
+			iout = (CTR_INTV*KI_P_BASE/2)*(self.error[0]+self.error[1])
+			# print np.round(pout.flatten(),4)
+			# print np.round(iout.flatten(),4)
+			# print np.round(self.output.flatten(),4)
 		else:
 			print colored('Controller type %s not implemented'%self.type, 'red')
 

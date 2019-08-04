@@ -196,10 +196,10 @@ class RobotState:
 			vel = np.reshape(self.state_estimator.v, (3,1))
 			angular = np.reshape(self.state_estimator.w, (3,1))
 
-			self.P6c.world_X_base = np.vstack((pos, angles))
-			self.V6c.world_X_base = np.vstack((vel, angular))
+			# self.P6c.world_X_base = np.vstack((pos, angles))
+			# self.V6c.world_X_base = np.vstack((vel, angular))
 			## TEMP:
-			self.P6c.world_X_base = np.array([0.33, 0.39, 0.08, 0., 0., 0.]).reshape((6,1))
+			# self.P6c.world_X_base = np.array([0.33, 0.39, 0.08, 0., 0., 0.]).reshape((6,1))
 			# print np.round(self.P6c.world_X_base.flatten(),3)
 			# print np.round(self.state_estimator.r.flatten(),3)
 			# print np.round(angles.flatten(),3)
@@ -413,6 +413,13 @@ class RobotState:
 			offset[2] = self.impedance_controller_z.evaluate(world_df[2])
 
 		return offset
+
+	def apply_base_pos_ctrl(self, P6e_world_X_base):
+		u = []
+		for j in range(0,6):
+			if self.Gait.cs[j]==0:
+				u.append(self.Leg[j].PosCont.update(P6e_world_X_base))
+		return u
 
 	def check_contact(self):
 		""" Checks for leg contact """

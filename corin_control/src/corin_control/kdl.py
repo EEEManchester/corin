@@ -234,16 +234,16 @@ bodypose = np.array([0.,0.,BODY_HEIGHT, 0.,0.,0.])
 # print CK.singularity_approach(qs)
 # cd = CK.leg_FK(qs)
 # print cd.flatten()
-cd = [0.15 , -0.0,  -0.06]
+cd = [0.2096,  0.0003, -0.0934]
 qp = CK.leg_IK(cd)
-
+# print np.round(qp,3)
 # print np.rad2deg(qp[1])
 # print qp
 # CK.check_singularity(qp)
 # if (not CK.check_singularity(qp)):
 # 	qd,qdd = CK.joint_speed(qp, v, a)
 # qpd = np.array([0., 0.34, -1.85])
-q = [0.0, 0.7953988301841435, -1.590797660368287]
+q = [0.2096,  0.0003, -0.0981]
 # print CK.leg_FK(q)
 
 # code snippet to be executed only once 

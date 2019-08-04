@@ -16,7 +16,7 @@ import kdl 											# kinematic & dynamics library
 import path_generator
 # import gait_class as Gaitgen						# class for gait coordinator
 from impedance_controller import ImpedanceController
-
+from pid_controller import PIDController
 import plotgraph as Plot 							# plot library
 import matplotlib.pyplot as plt
 
@@ -63,6 +63,8 @@ class LegClass:
 		self.snorm = np.array([0., 0., 1.]) 	# leg surface normal in world frame
 		self.c_threshold = 0 	# Number of times threshold has been crossed for each leg
 		self.Fmax = F_MAX 		# Maximum contact force
+
+		self.PosCont = PIDController('PI') 
 
 	## Update functions
 	def update_joint_state(self, P6_world_X_base, jointState, resetState, step_stroke):

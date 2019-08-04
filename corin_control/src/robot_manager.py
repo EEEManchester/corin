@@ -134,12 +134,12 @@ class CorinManager:
 		idx = msg.name.index(ROBOT_NS)
 		rpy = np.array(euler_from_quaternion([msg.pose[idx].orientation.w, msg.pose[idx].orientation.x,
 												msg.pose[idx].orientation.y, msg.pose[idx].orientation.z], 'sxyz'))
-		# self.Robot.P6c.world_X_base[0] = msg.pose[idx].position.x + self.Robot.P6c.world_X_base_offset.item(0)
-		# self.Robot.P6c.world_X_base[1] = msg.pose[idx].position.y + self.Robot.P6c.world_X_base_offset.item(1)
-		# self.Robot.P6c.world_X_base[2] = msg.pose[idx].position.z
-		# self.Robot.P6c.world_X_base[3] = rpy.item(0)
-		# self.Robot.P6c.world_X_base[4] = rpy.item(1)
-		# self.Robot.P6c.world_X_base[5] = rpy.item(2)
+		self.Robot.P6c.world_X_base[0] = msg.pose[idx].position.x + self.Robot.P6c.world_X_base_offset.item(0)
+		self.Robot.P6c.world_X_base[1] = msg.pose[idx].position.y + self.Robot.P6c.world_X_base_offset.item(1)
+		self.Robot.P6c.world_X_base[2] = msg.pose[idx].position.z
+		self.Robot.P6c.world_X_base[3] = rpy.item(0)
+		self.Robot.P6c.world_X_base[4] = rpy.item(1)
+		self.Robot.P6c.world_X_base[5] = rpy.item(2)
 
 		# self.Robot.cb_V6c.world_X_base[0] = msg.twist[idx].linear.x
 		# self.Robot.cb_V6c.world_X_base[1] = msg.twist[idx].linear.y

@@ -39,7 +39,7 @@
             <bounce/>
             <contact>
               <ode>
-                <kp>1e7</kp>
+                <kp>1e5</kp>
                 <kd>10.0</kd>
                 <soft_cfm>0.0</soft_cfm>
                 <soft_erp>0.2</soft_erp>

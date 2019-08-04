@@ -19,9 +19,9 @@ class RobotController(CorinManager):
 		CorinManager.__init__(self, initialise)
 		
 		# Enable/disable controllers
-		self.ctrl_base_tracking  = False 	# base tracking controller
+		self.ctrl_base_tracking  = True 	# base tracking controller
 		self.ctrl_base_admittance = False 	# base impedance controller - fault
-		self.ctrl_leg_admittance = True 	# leg impedance controller
+		self.ctrl_leg_admittance = False 	# leg impedance controller
 		self.ctrl_contact_detect = True 		# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
@@ -259,8 +259,10 @@ class RobotController(CorinManager):
 							self.Robot.Gait.cs[j] = 0
 							self.Robot.Leg[j].change_phase('support', self.Robot.XHc.world_X_base)
 							self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
-							if j==4:
-								raw_input('cont')
+							# if j==4:
+							# self.Robot.Base_Ctrl.reset()
+							self.Robot.Leg[j].PosCont.reset()
+							raw_input('cont')
 
 					# Interpolate Fmax for legs in contact phase
 					fearly = map(lambda x,y: xor(bool(x), bool(y)), gphase, self.Robot.Gait.cs)
@@ -365,8 +367,10 @@ class RobotController(CorinManager):
 							if (self.Robot.Gait.cs[j] == 1):
 								self.Robot.Leg[j].change_phase('support', self.Robot.XHc.world_X_base)
 								self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+								self.Robot.Leg[j].PosCont.reset()
 						state_machine = 'load'
 						print i, ' Phase Timeout, Loading ...'
+						# self.Robot.Base_Ctrl.reset()
 						# print fmax_lim, gphase
 						# raw_input('next')
 						s_cnt = 1
@@ -460,11 +464,12 @@ class RobotController(CorinManager):
 			# if (self.Robot.invalid == True):
 			# 	print 'Error Occured, robot invalid! ', tXj_error
 			# 	break
-			# print np.round(self.Robot.Leg[4].XHd.coxa_X_foot[:3,3],4)
-			# print np.round(self.Robot.Leg[4].XHc.coxa_X_foot[:3,3],4)
-			# cout3(qd.xp[12:15])
+			
+			print 'c cXf: ', np.round(self.Robot.Leg[4].XHc.coxa_X_foot[:3,3],4)
+			# print 'qd: ', np.round(qd.xp[12:15],3)
+			# print 'qc: ', np.round(self.Robot.Leg[4].Joint.qpc,3)
 			# cout3(self.Robot.Leg[4].Joint.qpc)
-			# print '======================================='
+			print '======================================='
 			## Data logging & publishing
 			qlog = self.set_log_setpoint(v3cp, v3cv, xa_d, v3wp, v3wv, wa_d, qd, joint_torq, force_dist)
 			self.publish_topics(qd, qlog)
@@ -494,16 +499,36 @@ class RobotController(CorinManager):
 		# comp_base_X_world = np.linalg.inv(comp_world_X_base)
 		
 		## PI controller
-		u = self.Robot.Base_Ctrl.update(P6e_world_X_base)
-		
-		comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + u)
-		comp_base_X_world = np.linalg.inv(comp_world_X_base)
-		
+		# u = self.Robot.Base_Ctrl.update(P6e_world_X_base)
+		# cout3v(u)
+		# comp_world_X_base = vec6d_to_se3(self.Robot.P6c.world_X_base + u)
+		# comp_base_X_world = np.linalg.inv(comp_world_X_base)
+
+		# for j in range (0, 6):
+		# 	# Determine foot position wrt base & coxa. 
+		# 	if (self.Robot.Gait.cs[j] == 0):
+		# 		## Position-control
+		# 		# Closed-loop control on bodypose. Move by sum of desired pose and error
+		# 		if self.ctrl_base_tracking:
+		# 			self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
+		# 		elif self.ctrl_contact_detect:
+		# 			self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHc.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
+		# 		else:
+		# 			self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
+
+		# 		self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
+
+
+		u_arr = self.Robot.apply_base_pos_ctrl(P6e_world_X_base)
+
 		for j in range (0, 6):
 			# Determine foot position wrt base & coxa. 
 			if (self.Robot.Gait.cs[j] == 0):
 				## Position-control
 				# Closed-loop control on bodypose. Move by sum of desired pose and error
+				u = u_arr.pop()
+				comp_world_X_base = vec6d_to_se3(self.Robot.P6c.world_X_base + u)
+				comp_base_X_world = np.linalg.inv(comp_world_X_base)
 				if self.ctrl_base_tracking:
 					self.Robot.Leg[j].XHd.base_X_foot = mX(comp_base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 				elif self.ctrl_contact_detect:
@@ -512,12 +537,17 @@ class RobotController(CorinManager):
 					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 
 				self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
-
-				# if j==4:
-				# 	cout3p(self.Robot.Leg[j].XHd.world_X_foot)
-				# 	cout3p(self.Robot.XHc.base_X_world)
-				# 	cout3p(self.Robot.Leg[j].XHd.base_X_foot)
-				# 	print '========================================================='
+				if j==4:
+					print self.Robot.Leg[j].PosCont.error
+					print 'u: ', np.round(u.flatten(),4)
+					print 'S c wXb: ', np.round(self.Robot.XHc.world_X_base[:3,3],4)
+					print 'S c wXb: ', np.round(comp_world_X_base[:3,3],4)
+					temp1 = mX(self.Robot.XHc.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
+					temp2 = mX(self.Robot.Leg[j].XHd.coxa_X_base, temp1)
+					# print 'S c wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[:3,3],4)
+					print 'S d cXf: ', np.round(self.Robot.Leg[4].XHd.coxa_X_foot[:3,3],4)
+					# print 'temp1: ', np.round(temp2,3)
+					print 'temp2: ', np.round(temp2[:3,3],3)
 
 	def update_phase_transfer(self,delta_d=None):
 
@@ -529,6 +559,8 @@ class RobotController(CorinManager):
 					## Stops body from moving until transfer phase completes
 					print 'Suspending in update_phase_transfer()'
 					self.Robot.suspend = True
+				if j==4:
+					print 'T d cXf: ', np.round(self.Robot.Leg[4].XHd.coxa_X_foot[:3,3],4)
 			elif (self.Robot.Gait.cs[j] == 1 and self.Robot.Leg[j].feedback_state == 2 and delta_d is not None):
 				self.Robot.Leg[j].XHd.coxa_X_foot[:3,3] -= delta_d
 				# print delta_d
