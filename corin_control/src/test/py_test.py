@@ -22,13 +22,9 @@ tphase = 1.8
 lenp = seq(0, tphase*5, tphase)
 # print len(lenp), lenp
 
-a = []
-b = np.array([1,2])
-b = np.vstack((b, np.array([3,4])))
-b = np.vstack((b, np.array([10,4])))
+a = [[1],[2],[3],[4],[5],[6]]
+print a
+b = list(a)
+a.pop(0)
+print a
 print b
-print np.sum(b[:,0])
-
-a = [1,2]
-b = [0,1]
-print np.round([1,2],3)

@@ -61,8 +61,8 @@ class RobotController(CorinManager):
 
 			## Use gait phase from planner if exists
 			try:
-				gait_stack = cycle(gait_phase)
-				self.Robot.Gait.cs = next(gait_stack)
+				gait_list = list(gait_phase)
+				self.Robot.Gait.cs = gait_list[0]
 			except:
 				print 'No defined gait phases, using periodic'
 
@@ -100,7 +100,7 @@ class RobotController(CorinManager):
 		s_cnt = 1
 		# Counts per gait phase interval
 		iahead = int(GAIT_TPHASE/CTR_INTV)
-
+		
 		## Cycle through trajectory points until complete
 		i = 1 		# skip first point since spline has zero initial differential conditions
 		while (i != path_length and not rospy.is_shutdown()):
@@ -179,9 +179,11 @@ class RobotController(CorinManager):
 
 				if tload == 1:
 					print 'State Machine: Unloading'
+					raw_input('cont')
 					self.Robot.Gait.support_mode()
 					gphase = [0]*6 		# all legs in support phase at start of unloading
 					fmax_lim = [F_MAX]*6	# max. force array
+					print 'Next gait: ', gait_list[0]
 					# for j in range(0,6):
 					# 	# init_flim[j] = self.Robot.Leg[j].F6c.world_X_foot[2] if (self.Robot.Gait.ps[j] == 1) else F_MAX
 						# init_flim[j] = self.Robot.Leg[j].get_normal_force('setpoint') if (self.Robot.Gait.ps[j] == 1) else F_MAX
@@ -200,15 +202,15 @@ class RobotController(CorinManager):
 					tload = 1
 					s_cnt = 1
 					state_machine = 'motion'
-					self.Robot.Gait.walk_mode()
+					# self.Robot.Gait.walk_mode()
 					
 			elif state_machine == 'load' and not self.Robot.support_mode:
 
 				if tload == 1:
-					# state_machine == 'motion'
 					print 'State Machine: Loading'
-					prev_phase = list(self.Robot.Gait.ps)
+					raw_input('cont')
 					self.Robot.Gait.support_mode()
+					prev_phase = list(self.Robot.Gait.ps)
 					gphase = [0]*6 		# all legs in support phase at start of unloading
 					fmax_lim = [0]*6	# max. force array
 
@@ -224,23 +226,14 @@ class RobotController(CorinManager):
 				if tload == iload+1:
 					tload = 1
 					state_machine = 'unload'
-					# Checks if robot meant to be in support mode 
-					if prev_phase == [0]*6:
-						self.Robot.Gait.support_mode()
-					else:
-						# alternate gait phase as robot meant to walk
-						try:
-							self.Robot.alternate_phase(next(gait_stack))
-						except:
-							self.Robot.alternate_phase()
-					self.Robot.Gait.walk_mode()
 				
 			elif state_machine ==  'motion':
 				
-				## Halfway through TIMEOUT - check swing leg contact state 
+				## Update gait phase and force interpolation; reset force controllers
 				if s_cnt == 1:
 					print 'State Machine: Motion'
-					# raw_input('motion')
+					self.Robot.Gait.cs = gait_list[0]
+					gait_list.pop(0)
 					## Force and gait phase array for Force Distribution
 					fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
 					gphase = list(self.Robot.Gait.cs)
@@ -248,7 +241,7 @@ class RobotController(CorinManager):
 						self.Robot.Leg[j].Fmax = F_MAX if gphase[j] == 0 else FORCE_THRES
 						if self.Robot.Gait.cs[j] == 1:
 							self.Robot.Leg[j].reset_impedance_controller()
-
+				## Halfway through TIMEOUT - check swing leg contact state 
 				elif (s_cnt > s_max/2 and self.ctrl_contact_detect):
 					# Check if transfer has made contact
 					cearly = map(lambda x,y: x and y, self.Robot.cstate, self.Robot.Gait.cs)
@@ -367,7 +360,7 @@ class RobotController(CorinManager):
 							if (self.Robot.Gait.cs[j] == 1):
 								self.Robot.Leg[j].change_phase('support', self.Robot.XHc.world_X_base)
 								self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
-								self.Robot.Leg[j].PosCont.reset()
+								
 						state_machine = 'load'
 						print i, ' Phase Timeout, Loading ...'
 						# print fmax_lim, gphase
@@ -412,7 +405,7 @@ class RobotController(CorinManager):
 					else:
 						state_machine = 'unload'
 						tload = 1
-						self.Robot.Gait.walk_mode()
+						# self.Robot.Gait.walk_mode()
 				self.update_phase_support(P6e_world_X_base, V6e_world_X_base)
 				i += 1
 
@@ -445,7 +438,7 @@ class RobotController(CorinManager):
 			# print i, np.round(force_dist[17],3), np.round(fmax_lim[-1],3)
 			# print temp_gphase, fmax_lim
 			if self.interface != 'rviz':# and self.control_loop != "open":
-				
+				print self.Robot.Gait.cs
 				## Leg admittance - force tracking
 				if self.ctrl_leg_admittance:
 					## Base admittance - fault force tracking (requires leg force tracking) 
@@ -465,11 +458,11 @@ class RobotController(CorinManager):
 			# 	break
 			# print 'd cXf: ', np.round(self.Robot.Leg[4].XHc.coxa_X_foot[:3,3],4)
 			# print 'c cXf: ', np.round(self.Robot.Leg[4].XHc.coxa_X_foot[:3,3],4)
-			print 'qd: ', np.round(qd.xp[12:15],4)
-			print 'qc: ', np.round(self.Robot.Leg[4].Joint.qpc,4)
+			# print 'qd: ', np.round(qd.xp[12:15],4)
+			# print 'qc: ', np.round(self.Robot.Leg[4].Joint.qpc,4)
 			# print 'qn: ', np.round(self.Robot.qc.position[12:15],4)
 			# cout3(self.Robot.Leg[4].Joint.qpc)
-			print '======================================='
+			# print '======================================='
 			## Data logging & publishing
 			qlog = self.set_log_setpoint(v3cp, v3cv, xa_d, v3wp, v3wv, wa_d, qd, joint_torq, force_dist)
 			self.publish_topics(qd, qlog)
@@ -519,7 +512,7 @@ class RobotController(CorinManager):
 					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 
 				self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
-				if j==4:
+				# if j==4:
 				# 	print 'u: ', np.round(u.flatten(),4)
 				# 	print slide_gain
 				# 	print 'S c wXb: ', np.round(self.Robot.XHc.world_X_base[:3,3],4)
@@ -527,8 +520,8 @@ class RobotController(CorinManager):
 				# 	temp1 = mX(self.Robot.XHc.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 				# 	temp2 = mX(self.Robot.Leg[j].XHd.coxa_X_base, temp1)
 				# 	# print 'S c wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[:3,3],4)
-					print 'S d cXf: ', np.round(self.Robot.Leg[4].XHd.coxa_X_foot[:3,3],4)
-					print 'S c cXf: ', np.round(self.Robot.Leg[4].XHc.coxa_X_foot[:3,3],4)
+					# print 'S d cXf: ', np.round(self.Robot.Leg[4].XHd.coxa_X_foot[:3,3],4)
+					# print 'S c cXf: ', np.round(self.Robot.Leg[4].XHc.coxa_X_foot[:3,3],4)
 				# 	# print 'temp1: ', np.round(temp2,3)
 				# 	print 'temp2: ', np.round(temp2[:3,3],3)
 
