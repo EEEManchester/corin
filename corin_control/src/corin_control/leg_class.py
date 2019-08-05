@@ -66,8 +66,8 @@ class LegClass:
 		self.c_threshold = 0 	# Number of times threshold has been crossed for each leg
 		self.Fmax = F_MAX 		# Maximum contact force
 
-		self.PosCont = PIDController('PI') 
 		self.SlidingGain = SlidingGain()
+		self.ForcePI = PIDController('PI', 3, KP_F_LEG, KI_F_LEG)
 
 	## Update functions
 	def update_joint_state(self, P6_world_X_base, jointState, resetState, step_stroke):
@@ -367,21 +367,27 @@ class LegClass:
 		# print '=================================='
 		return True
 
-	def apply_admittance_controller(self, desired_force):
+	def apply_admittance_controller(self, desired_force, pi_control):
+
+		# Error in world frame
+		wf_error = (self.F6c.world_X_foot[0:3].flatten() - desired_force.flatten()).flatten()
+
+		if pi_control:
+			wf_error = self.ForcePI.update(wf_error.reshape((3,1))).flatten()
+			
+		# Transform error to leg frame
+		lf_error = mX(self.XHd.coxa_X_world[:3,:3], wf_error)
 		
-		world_df = (self.F6c.world_X_foot[0:3].flatten() - desired_force.flatten()).flatten()
-		# Transform to leg frame
-		leg_df = mX(self.XHd.coxa_X_world[:3,:3], world_df)
+		offset_x = self.impedance_controller_x.evaluate(lf_error[0])
+		offset_y = self.impedance_controller_y.evaluate(lf_error[1])
+		offset_z = self.impedance_controller_z.evaluate(lf_error[2])
 
-		offset_x = self.impedance_controller_x.evaluate(leg_df[0])
-		offset_y = self.impedance_controller_y.evaluate(leg_df[1])
-		offset_z = self.impedance_controller_z.evaluate(leg_df[2])
-
-		if self.number == 4:
-		# 	print np.round(world_df,3)
-			print np.round(leg_df,3)
-			print np.round(np.array([offset_x, offset_y, offset_z]),4)
-			print '===================================='
+		# if self.number == 4:
+		# 	print 'W err: ', np.round(wf_error.flatten(),3)
+		# 	print 'L err: ', np.round(lf_error.flatten(),3)
+		# 	print offset_x, offset_y, offset_z
+		# 	print 'L off: ', np.round(np.array([offset_x, offset_y, offset_z]),4)
+		# 	print '===================================='
 		return np.array([offset_x, offset_y, offset_z])
 		# self.XHd.coxa_X_foot[0:3,3] += np.array([offset_x, offset_y, offset_z])
 
@@ -390,7 +396,7 @@ class LegClass:
 		# 	print 'offst: ', np.round(offset_z,4)
 		# 	print 'cXf  : ', np.round(self.XHd.coxa_X_foot[0:3,3].flatten(),3)
 			# print 'F des: ', np.round(desired_force[0:3].flatten(),3)
-			# print 'F Wdf: ', np.round(world_df.flatten(),3)
+			# print 'F Wdf: ', np.round(wf_error.flatten(),3)
 		# 	print 'F Ldf: ', np.round(leg_df.flatten(),3)
 			# print 'cXfoo: ', np.round(self.XHd.coxa_X_foot[0:3,3],3)
 		# 	print '========================================='
@@ -400,7 +406,7 @@ class LegClass:
 		self.impedance_controller_x.reset()
 		self.impedance_controller_y.reset()
 		self.impedance_controller_z.reset()
-
+		self.ForcePI.reset()
 
 	def singular_recovery(self):
 		""" sets the leg to default position when leg is singular """

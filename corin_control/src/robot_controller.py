@@ -21,7 +21,7 @@ class RobotController(CorinManager):
 		# Enable/disable controllers
 		self.ctrl_base_tracking  = True 	# base tracking controller
 		self.ctrl_base_admittance = False 	# base impedance controller - fault
-		self.ctrl_leg_admittance = False 	# leg impedance controller
+		self.ctrl_leg_admittance = True 	# leg impedance controller
 		self.ctrl_contact_detect = True 		# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
@@ -87,7 +87,7 @@ class RobotController(CorinManager):
 		# State machine loading/unloading timing parameters
 		tload = 1						# loading counter
 		iload = int(LOAD_T/CTR_INTV) 	# no. of intervals for loading
-		hload = int(2./CTR_INTV)		# no. of intervals for initial holding
+		hload = int(1./CTR_INTV)		# no. of intervals for initial holding
 		# Force Distribution variables
 		fmax_lim  = [F_MAX]*6			# maximum force array
 		init_flim = [F_MAX]*6			# current force for linear decrease in unloading
@@ -178,20 +178,20 @@ class RobotController(CorinManager):
 			if state_machine == 'unload' and not self.Robot.support_mode:
 
 				if tload == 1:
-					state_machine == 'motion'
 					print 'State Machine: Unloading'
 					self.Robot.Gait.support_mode()
 					gphase = [0]*6 		# all legs in support phase at start of unloading
-					fmax_lim = [0]*6	# max. force array
-					for j in range(0,6):
-						# init_flim[j] = self.Robot.Leg[j].F6c.world_X_foot[2] if (self.Robot.Gait.ps[j] == 1) else F_MAX
-						init_flim[j] = self.Robot.Leg[j].get_normal_force('setpoint') if (self.Robot.Gait.ps[j] == 1) else F_MAX
+					fmax_lim = [F_MAX]*6	# max. force array
+					# for j in range(0,6):
+					# 	# init_flim[j] = self.Robot.Leg[j].F6c.world_X_foot[2] if (self.Robot.Gait.ps[j] == 1) else F_MAX
+						# init_flim[j] = self.Robot.Leg[j].get_normal_force('setpoint') if (self.Robot.Gait.ps[j] == 1) else F_MAX
 					# print init_flim
-					
+				print 'tload: ', tload
+				# raw_input('here')
 				# reduce max force for legs that will be in transfer phase
-				for j in range(0,6):
-					fmax = init_flim[j]+1. - tload*(init_flim[j]+1.)/float(iload) + 0.001
-					fmax_lim[j] = fmax if (self.Robot.Gait.ps[j] == 1) else F_MAX
+				# for j in range(0,6):
+					# fmax = init_flim[j]+1. - tload*(init_flim[j]+1.)/float(iload) + 0.001
+					# fmax_lim[j] = fmax if (self.Robot.Gait.ps[j] == 1) else F_MAX
 				tload += 1
 				
 				self.update_phase_support(P6e_world_X_base, V6e_world_X_base)
@@ -205,7 +205,7 @@ class RobotController(CorinManager):
 			elif state_machine == 'load' and not self.Robot.support_mode:
 
 				if tload == 1:
-					state_machine == 'motion'
+					# state_machine == 'motion'
 					print 'State Machine: Loading'
 					prev_phase = list(self.Robot.Gait.ps)
 					self.Robot.Gait.support_mode()
@@ -240,6 +240,7 @@ class RobotController(CorinManager):
 				## Halfway through TIMEOUT - check swing leg contact state 
 				if s_cnt == 1:
 					print 'State Machine: Motion'
+					# raw_input('motion')
 					## Force and gait phase array for Force Distribution
 					fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
 					gphase = list(self.Robot.Gait.cs)
@@ -462,10 +463,11 @@ class RobotController(CorinManager):
 			# if (self.Robot.invalid == True):
 			# 	print 'Error Occured, robot invalid! ', tXj_error
 			# 	break
-			
+			# print 'd cXf: ', np.round(self.Robot.Leg[4].XHc.coxa_X_foot[:3,3],4)
 			# print 'c cXf: ', np.round(self.Robot.Leg[4].XHc.coxa_X_foot[:3,3],4)
-			# print 'qd: ', np.round(qd.xp[12:15],3)
-			# print 'qc: ', np.round(self.Robot.Leg[4].Joint.qpc,3)
+			print 'qd: ', np.round(qd.xp[12:15],4)
+			print 'qc: ', np.round(self.Robot.Leg[4].Joint.qpc,4)
+			# print 'qn: ', np.round(self.Robot.qc.position[12:15],4)
 			# cout3(self.Robot.Leg[4].Joint.qpc)
 			print '======================================='
 			## Data logging & publishing
@@ -517,7 +519,7 @@ class RobotController(CorinManager):
 					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 
 				self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
-				# if j==4:
+				if j==4:
 				# 	print 'u: ', np.round(u.flatten(),4)
 				# 	print slide_gain
 				# 	print 'S c wXb: ', np.round(self.Robot.XHc.world_X_base[:3,3],4)
@@ -525,7 +527,8 @@ class RobotController(CorinManager):
 				# 	temp1 = mX(self.Robot.XHc.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 				# 	temp2 = mX(self.Robot.Leg[j].XHd.coxa_X_base, temp1)
 				# 	# print 'S c wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[:3,3],4)
-				# 	print 'S d cXf: ', np.round(self.Robot.Leg[4].XHd.coxa_X_foot[:3,3],4)
+					print 'S d cXf: ', np.round(self.Robot.Leg[4].XHd.coxa_X_foot[:3,3],4)
+					print 'S c cXf: ', np.round(self.Robot.Leg[4].XHc.coxa_X_foot[:3,3],4)
 				# 	# print 'temp1: ', np.round(temp2,3)
 				# 	print 'temp2: ', np.round(temp2[:3,3],3)
 
@@ -539,8 +542,8 @@ class RobotController(CorinManager):
 					## Stops body from moving until transfer phase completes
 					print 'Suspending in update_phase_transfer()'
 					self.Robot.suspend = True
-				# if j==4:
-				# 	print 'T d cXf: ', np.round(self.Robot.Leg[4].XHd.coxa_X_foot[:3,3],4)
+				if j==4:
+					print 'T d cXf: ', np.round(self.Robot.Leg[4].XHd.coxa_X_foot[:3,3],4)
 			elif (self.Robot.Gait.cs[j] == 1 and self.Robot.Leg[j].feedback_state == 2 and delta_d is not None):
 				self.Robot.Leg[j].XHd.coxa_X_foot[:3,3] -= delta_d
 				# print delta_d

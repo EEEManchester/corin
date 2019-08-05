@@ -26,9 +26,6 @@ from std_msgs.msg import String 			# ui control
 import tf 		 							# ROS transform library
 from geometry_msgs.msg import Vector3Stamped # Force sensor readings
 from geometry_msgs.msg import Vector3 		# debugging
-# from geometry_msgs.msg import PolygonStamped
-# from geometry_msgs.msg import Point32
-# from geometry_msgs.msg import Polygon
 
 ## Services
 from service_handler import ServiceHandler
@@ -61,7 +58,7 @@ class CorinManager:
 		self.on_start  = False 		# variable for resetting to leg suspended in air
 		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
-		self.control_loop = "open" 	# run controller in open or closed loop
+		self.control_loop = "close" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
 		self.MotionPlan = MotionPlan()
@@ -257,7 +254,6 @@ class CorinManager:
 
 		# Sleep for short while for topics to be initiated properly
 		rospy.sleep(0.5)
-		# print 'Completed'
 
 	def __initialise_services__(self):
 		""" Initialises services used in manager """
@@ -606,8 +602,7 @@ class CorinManager:
 				
 				ps = self.Robot.P6c.world_X_base
 				pf = np.vstack((self.Robot.P6c.world_X_base[0:3]+d_travel[0:3], np.array([0.,0.,0.]).reshape((3,1))))
-				print ps
-				print pf
+				
 				# Use Cheah2019 grid planning service if available 
 				if (self.grid_serv_.available):
 					if (self.GridMap.get_index_exists(ps[0:2]) and self.GridMap.get_index_exists(pf[0:2])):

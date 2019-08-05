@@ -13,15 +13,19 @@ from termcolor import colored
 
 class PIDController:
 
-	def __init__(self, ctrl_type):
-		self.error  = [np.zeros((6,1))]*3
-		self.output = np.zeros((6,1))
+	def __init__(self, ctrl_type='P', vec=6, kp=0, ki=0, kd=0):
+		self.error  = [np.zeros((vec,1))]*3
+		self.output = np.zeros((vec,1))
+		self.size = vec
 		self.type = ctrl_type
+		self.Kp = kp
+		self.Ki = ki
+		self.Kd = kd
 
 	def reset(self):
 		# Reset controller
-		self.error  = [np.zeros((6,1))]*3
-		self.output = np.zeros((6,1))
+		self.error  = [np.zeros((self.size,1))]*3
+		self.output = np.zeros((self.size,1))
 
 	def update(self, e):
 
@@ -29,13 +33,13 @@ class PIDController:
 		self.error.insert(0,e)
 		
 		if self.type == 'P':
-			self.output = KP_P_BASE*self.error[0]
+			self.output = self.Kp*self.error[0]
 			
 		elif self.type == 'PI':
-			self.output += KP_P_BASE*(self.error[0]-self.error[1]) + \
-								(CTR_INTV*KI_P_BASE/2)*(self.error[0]+self.error[1])
-			pout = KP_P_BASE*(self.error[0]-self.error[1])
-			iout = (CTR_INTV*KI_P_BASE/2)*(self.error[0]+self.error[1])
+			self.output += self.Kp*(self.error[0]-self.error[1]) + \
+								(CTR_INTV*self.Ki/2)*(self.error[0]+self.error[1])
+			pout = self.Kp*(self.error[0]-self.error[1])
+			iout = (CTR_INTV*self.Ki/2)*(self.error[0]+self.error[1])
 			# print 'e1: ', np.round(self.error[0].flatten(),4)
 			# print 'e2: ', np.round(self.error[1].flatten(),4)
 			# print np.round(pout.flatten(),4)

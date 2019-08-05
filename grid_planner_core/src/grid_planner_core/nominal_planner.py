@@ -40,8 +40,8 @@ class PathPlanner:
 		ps = start.flatten()	# world frame
 		pf = end.flatten()		# world frame
 		print 'Planning Path:-'
-		print 'Start:\t', np.round(ps.flatten(),3)
-		print 'End:\t', np.round(pf.flatten(),3)
+		print 'Start:\t', np.round(ps.flatten(),4)
+		print 'End:\t', np.round(pf.flatten(),4)
 
 		Gait = gait_class.GaitClass(GAIT_TYPE)	# gait class
 

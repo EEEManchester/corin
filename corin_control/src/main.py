@@ -8,12 +8,13 @@ import sys
 import rospy
 import numpy as np
 import robot_controller as Control_Framework
+from termcolor import colored
 
 if __name__ == "__main__":
 
-	print 'Initialising Robot ....'
+	print colored('Initialising Robot ....','yellow')
 	manager = Control_Framework.RobotController(False)
-	rospy.loginfo('Robot Ready!')
+	print colored('Robot Ready!','green')
 	
 	motion = None
 	if len(sys.argv) == 2: 

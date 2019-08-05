@@ -73,5 +73,4 @@ class ImpedanceController:
 # ic = ImpedanceController()
 # fd = np.array([0.,0.,15.])
 # f  = np.array([1.,0.,9.77])
-# ic.evaluate(fd-f)
-# ic.reset()
+# out = ic.evaluate(fd[2]-f[2])

@@ -95,7 +95,7 @@ IMU_RATE = 192 			# IMU publishing rate, Hz
 ## ================================================================ ##
 ##                 Force Distribution parameters 	 				##
 ## ================================================================ ##
-LOAD_T = 0.1	# time for leg load & unloading
+LOAD_T = 0.05	# time for leg load & unloading
 F_MAX = 40.0	# maximum force for leg
 F_MIN = 0.0		# minimum force for leg
 KPcom = np.array([1.0, 1.0, 1.0])*0.3	#1000. #
@@ -118,6 +118,17 @@ IMPEDANCE_GAIN = 0.003		# m/N (delta distance per delta force)
 #  60 Hz: 2, 1.5, 0.001
 # 200 Hz: 2, 2.2, 0.003
 # 100 Hz: 0.5, 3.5, 0.003
+
+## ================================================================ ##
+##                   Controller parameters 	 						##
+## ================================================================ ##
+# Base tracking controller gains
+KP_P_BASE = 0.8
+KI_P_BASE = 1.0
+# Leg admittance controller gains
+KP_F_LEG = 0.5
+KI_F_LEG = 1.25
+
 ## ================================================================ ##
 ##                  	Stability Parameters 						##
 ## ================================================================ ##
@@ -153,19 +164,13 @@ STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
 ## ================================================================ ##
 
 ## these gait parameters can be changed during runtime
-GAIT_TYPE 	 = 1 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+GAIT_TYPE 	 = 4 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 GAIT_TPHASE	 = 2.0 	# default period per gait phase
 STEP_HEIGHT  = 0.06	# default step height, z
 STEP_STROKE  = 0.1 	# default step stroke
 
 BASE_MAX_LINEAR_VELOCITY  = 0.05	# maximum base velocity, m/s - walking: 0.025
 BASE_MAX_ANGULAR_VELOCITY = 0.05	# maximum base velocity, rad/s
-
-## ================================================================ ##
-##                   Controller parameters 	 						##
-## ================================================================ ##
-KP_P_BASE = 0.8
-KI_P_BASE = 1.0
 
 ##########################################################################################################################################
 
