@@ -14,6 +14,7 @@ from display import *
 from force_distribution import *			# class for force distribution
 from impedance_controller import *			
 from pid_controller import *
+from sliding_gain import *
 
 import time
 import warnings

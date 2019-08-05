@@ -605,7 +605,9 @@ class CorinManager:
 						self.publish_topics(qd)
 				
 				ps = self.Robot.P6c.world_X_base
-				pf = self.Robot.P6c.world_X_base + d_travel
+				pf = np.vstack((self.Robot.P6c.world_X_base[0:3]+d_travel[0:3], np.array([0.,0.,0.]).reshape((3,1))))
+				print ps
+				print pf
 				# Use Cheah2019 grid planning service if available 
 				if (self.grid_serv_.available):
 					if (self.GridMap.get_index_exists(ps[0:2]) and self.GridMap.get_index_exists(pf[0:2])):

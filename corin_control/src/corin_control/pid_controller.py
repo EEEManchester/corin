@@ -28,11 +28,16 @@ class PIDController:
 		self.error.pop()
 		self.error.insert(0,e)
 		
-		if self.type == 'PI':
+		if self.type == 'P':
+			self.output = KP_P_BASE*self.error[0]
+			
+		elif self.type == 'PI':
 			self.output += KP_P_BASE*(self.error[0]-self.error[1]) + \
 								(CTR_INTV*KI_P_BASE/2)*(self.error[0]+self.error[1])
 			pout = KP_P_BASE*(self.error[0]-self.error[1])
 			iout = (CTR_INTV*KI_P_BASE/2)*(self.error[0]+self.error[1])
+			# print 'e1: ', np.round(self.error[0].flatten(),4)
+			# print 'e2: ', np.round(self.error[1].flatten(),4)
 			# print np.round(pout.flatten(),4)
 			# print np.round(iout.flatten(),4)
 			# print np.round(self.output.flatten(),4)

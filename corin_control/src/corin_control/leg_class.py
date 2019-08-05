@@ -17,6 +17,8 @@ import path_generator
 # import gait_class as Gaitgen						# class for gait coordinator
 from impedance_controller import ImpedanceController
 from pid_controller import PIDController
+from sliding_gain import *
+
 import plotgraph as Plot 							# plot library
 import matplotlib.pyplot as plt
 
@@ -65,6 +67,7 @@ class LegClass:
 		self.Fmax = F_MAX 		# Maximum contact force
 
 		self.PosCont = PIDController('PI') 
+		self.SlidingGain = SlidingGain()
 
 	## Update functions
 	def update_joint_state(self, P6_world_X_base, jointState, resetState, step_stroke):
@@ -397,6 +400,7 @@ class LegClass:
 		self.impedance_controller_x.reset()
 		self.impedance_controller_y.reset()
 		self.impedance_controller_z.reset()
+
 
 	def singular_recovery(self):
 		""" sets the leg to default position when leg is singular """
