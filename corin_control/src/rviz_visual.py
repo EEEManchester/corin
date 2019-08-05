@@ -77,25 +77,6 @@ class RvizVisualise:
 		
 		self.cob_pub_.publish(list_to_marker_array(cob, rospy.Time.now(), self.fr_fix))
 
-	def publish_foot_force(self, cstate, forces):
-		""" Publishes foot force expressed in 
-				world frame BUT located in foot frame 
-				Input: 1) cstate: Re^6, list of leg contact state
-							 2) forces: Re^3c, list of contact forces 	"""
-
-		counter = 0
-		for j in range(0,6):
-			if (cstate[j] == 0):
-				data = WrenchStamped()
-				data.header.frame_id = LEG_FORCE_FRAME[j]
-				data.wrench.force.x = forces[counter]
-				data.wrench.force.y = forces[counter+1]
-				data.wrench.force.z = forces[counter+2]
-				self.wrench_pub_[j].publish(data)
-				# if j==1:
-				# 	print np.round(forces[counter:counter+3].flatten(),3)
-				counter += 3
-
 	def publish_support_polygon(self, footholds, offset=None):
 		""" Support polygon publisher 
 			Input:  footholds: list of footholds
@@ -151,19 +132,30 @@ class RvizVisualise:
 			self.publish_footholds(footholds)
 			rospy.sleep(0.2)
 
+	def publish_foot_force(self, robot):
+		""" Publishes foot force as 'measured' by force sensor	"""
+
+		for j in range(0,6):
+			data = WrenchStamped()
+			data.header.frame_id = LEG_FORCE_FRAME[j]
+			data.wrench.force.x = robot.Leg[j].F6c.tibia_X_foot[0]
+			data.wrench.force.y = robot.Leg[j].F6c.tibia_X_foot[1]
+			data.wrench.force.z = robot.Leg[j].F6c.tibia_X_foot[2]
+			self.wrench_pub_[j].publish(data)
+
 	def publish_friction_cones(self, robot, mu):
-		# cones_pos, cones_rpy, cones_angle
-		""" Converts custom marker list to ConeStamped """
-		# self.clear_markers()
+		""" Publishes friction cones for each leg in contact """
+		
 		if robot.Gait.cs == self.prev_gait:
 			return
-		# self.clear_markers()
+		
+		# Clear markers by sending empty array
 		cone = ConeStamped()
 		cone.header.stamp = rospy.Time.now()
-		cone.header.frame_id = "world"
+		cone.header.frame_id = self.fr_fix
 		self.cone_pub_.publish(cone)
-		# print cone
-		# raw_input('cont')
+
+		# Create markers for MarkerArray & publish
 		cones_pos = []
 		cones_rpy = []
 		cones_angle = []
@@ -177,7 +169,7 @@ class RvizVisualise:
 		## Define Variables ##
 		cone = ConeStamped()
 		cone.header.stamp = rospy.Time.now()
-		cone.header.frame_id = "world"
+		cone.header.frame_id = self.fr_fix
 		
 		for i in range(len(cones_pos)):
 			pose3d = Pose()
@@ -185,9 +177,6 @@ class RvizVisualise:
 			pose3d.position.y = cones_pos[i][1]
 			pose3d.position.z = cones_pos[i][2]
 
-			# quat = quaternion_from_euler(cones_rpy[i][0], 
-			# 							 cones_rpy[i][1],
-			# 							 cones_rpy[i][2])
 			quat = cones_rpy[i]
 			pose3d.orientation.x = quat[0]
 			pose3d.orientation.y = quat[1]
@@ -199,13 +188,3 @@ class RvizVisualise:
 
 		self.cone_pub_.publish(cone)
 		self.prev_gait = list(robot.Gait.cs)
-
-	def clear_markers(self):
-
-		reset_marker_ = Marker()
-		reset_marker_.header.frame_id = "world";
-		reset_marker_.header.stamp = rospy.Time.now()
-		reset_marker_.ns = "deleteAllMarkers";  # helps during debugging
-		reset_marker_.action = 3;               # TODO(davetcoleman): In ROS-J set to visualization_msgs::Marker::DELETEALL;
-		reset_marker_.pose.orientation.w = 1;
-		self.com_pub_.publish(reset_marker_)

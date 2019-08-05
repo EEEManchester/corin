@@ -75,6 +75,7 @@ class RobotController(CorinManager):
 			w_base_X_NRP = []
 
 		## User input
+		print gait_list
 		print '==============================================='
 		print 'Execute Path in', self.interface, '?',
 		if (self.interface == 'gazebo' or self.interface == 'robotis'):
@@ -179,21 +180,21 @@ class RobotController(CorinManager):
 
 				if tload == 1:
 					print 'State Machine: Unloading'
-					raw_input('cont')
+					# raw_input('cont')
 					self.Robot.Gait.support_mode()
 					gphase = [0]*6 		# all legs in support phase at start of unloading
 					fmax_lim = [F_MAX]*6	# max. force array
 					print 'Next gait: ', gait_list[0]
-					# for j in range(0,6):
+					for j in range(0,6):
 					# 	# init_flim[j] = self.Robot.Leg[j].F6c.world_X_foot[2] if (self.Robot.Gait.ps[j] == 1) else F_MAX
-						# init_flim[j] = self.Robot.Leg[j].get_normal_force('setpoint') if (self.Robot.Gait.ps[j] == 1) else F_MAX
-					# print init_flim
-				print 'tload: ', tload
-				# raw_input('here')
+						init_flim[j] = self.Robot.Leg[j].get_normal_force('setpoint') if (gait_list[0][j] == 1) else F_MAX
+					print init_flim
+				# print 'tload: ', tload
+				
 				# reduce max force for legs that will be in transfer phase
-				# for j in range(0,6):
-					# fmax = init_flim[j]+1. - tload*(init_flim[j]+1.)/float(iload) + 0.001
-					# fmax_lim[j] = fmax if (self.Robot.Gait.ps[j] == 1) else F_MAX
+				for j in range(0,6):
+					fmax = init_flim[j]+1. - tload*(init_flim[j]+1.)/float(iload) + 0.001
+					fmax_lim[j] = fmax if (gait_list[0][j] == 1) else F_MAX
 				tload += 1
 				
 				self.update_phase_support(P6e_world_X_base, V6e_world_X_base)
@@ -202,13 +203,12 @@ class RobotController(CorinManager):
 					tload = 1
 					s_cnt = 1
 					state_machine = 'motion'
-					# self.Robot.Gait.walk_mode()
 					
 			elif state_machine == 'load' and not self.Robot.support_mode:
 
 				if tload == 1:
 					print 'State Machine: Loading'
-					raw_input('cont')
+					# raw_input('cont')
 					self.Robot.Gait.support_mode()
 					prev_phase = list(self.Robot.Gait.ps)
 					gphase = [0]*6 		# all legs in support phase at start of unloading
@@ -232,8 +232,9 @@ class RobotController(CorinManager):
 				## Update gait phase and force interpolation; reset force controllers
 				if s_cnt == 1:
 					print 'State Machine: Motion'
-					self.Robot.Gait.cs = gait_list[0]
+					self.Robot.Gait.cs = list(gait_list[0])
 					gait_list.pop(0)
+					# raw_input('motion')
 					## Force and gait phase array for Force Distribution
 					fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
 					gphase = list(self.Robot.Gait.cs)
@@ -365,7 +366,7 @@ class RobotController(CorinManager):
 						print i, ' Phase Timeout, Loading ...'
 						# print fmax_lim, gphase
 						# raw_input('next')
-						s_cnt = 1
+						# s_cnt = 1
 					# Extend leg swing motion, suspend base
 					else:
 						# print 'Not all contacts made, suspend robot: ', self.Robot.cstate, self.Robot.Gait.cs

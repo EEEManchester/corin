@@ -40,7 +40,9 @@
 					<mesh filename="package://corin_description/meshes/Body.STL" scale="1 1 1"/>
 					<!-- <box size= "${trunk_x} ${trunk_y} ${trunk_z}"/> -->
 				</geometry>
-				<material name="orange"/>
+				<material name="MidGrey">
+			       <color rgba="0.5 0.5 0.5 0.7"/>
+			    </material>
 			</visual>
 
 			<collision>

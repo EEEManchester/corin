@@ -339,6 +339,7 @@ class CorinManager:
 		self.Visualizer.publish_support_polygon(self.Robot.SM.convex_hull)
 		self.Visualizer.publish_com(self.Robot.Rbdl.com + self.Robot.P6c.world_X_base[:3])
 		self.Visualizer.publish_friction_cones(self.Robot, SURFACE_FRICTION)
+		self.Visualizer.publish_foot_force(self.Robot)
 		self.stability_pub_.publish(self.Robot.SM.min)
 
 		## Publish setpoints to logging topic
