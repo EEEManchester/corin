@@ -292,7 +292,7 @@ Visualization Manager:
           Force Color: 0; 255; 0
           History Length: 1
           Name: LF_foot_wrench
-          Topic: /corin/LF_foot_force
+          Topic: /corin/lf_foot_force
           Torque Arrow Scale: 0
           Torque Color: 204; 204; 51
           Unreliable: false
@@ -305,7 +305,7 @@ Visualization Manager:
           Force Color: 0; 255; 0
           History Length: 1
           Name: LM_foot_wrench
-          Topic: /corin/LM_foot_force
+          Topic: /corin/lm_foot_force
           Torque Arrow Scale: 2
           Torque Color: 204; 204; 51
           Unreliable: false
@@ -318,7 +318,7 @@ Visualization Manager:
           Force Color: 0; 255; 0
           History Length: 1
           Name: LR_foot_wrench
-          Topic: /corin/LR_foot_force
+          Topic: /corin/lr_foot_force
           Torque Arrow Scale: 2
           Torque Color: 204; 204; 51
           Unreliable: false
@@ -331,7 +331,7 @@ Visualization Manager:
           Force Color: 0; 255; 0
           History Length: 1
           Name: RF_foot_wrench
-          Topic: /corin/RF_foot_force
+          Topic: /corin/rf_foot_force
           Torque Arrow Scale: 2
           Torque Color: 204; 204; 51
           Unreliable: false
@@ -344,7 +344,7 @@ Visualization Manager:
           Force Color: 0; 250; 153
           History Length: 1
           Name: RM_foot_wrench
-          Topic: /corin/RM_foot_force
+          Topic: /corin/rm_foot_force
           Torque Arrow Scale: 2
           Torque Color: 204; 204; 51
           Unreliable: false
@@ -357,7 +357,7 @@ Visualization Manager:
           Force Color: 0; 255; 0
           History Length: 1
           Name: RR_foot_wrench
-          Topic: /corin/RR_foot_force
+          Topic: /corin/rr_foot_force
           Torque Arrow Scale: 2
           Torque Color: 204; 204; 51
           Unreliable: false

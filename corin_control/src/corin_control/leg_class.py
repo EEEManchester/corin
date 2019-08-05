@@ -389,17 +389,6 @@ class LegClass:
 		# 	print 'L off: ', np.round(np.array([offset_x, offset_y, offset_z]),4)
 		# 	print '===================================='
 		return np.array([offset_x, offset_y, offset_z])
-		# self.XHd.coxa_X_foot[0:3,3] += np.array([offset_x, offset_y, offset_z])
-
-		# if self.number == 5:
-		# 	print 'F wXf: ', np.round(self.F6c.world_X_foot[0:3].flatten(),3), np.round(desired_force[0:3].flatten(),3)
-		# 	print 'offst: ', np.round(offset_z,4)
-		# 	print 'cXf  : ', np.round(self.XHd.coxa_X_foot[0:3,3].flatten(),3)
-			# print 'F des: ', np.round(desired_force[0:3].flatten(),3)
-			# print 'F Wdf: ', np.round(wf_error.flatten(),3)
-		# 	print 'F Ldf: ', np.round(leg_df.flatten(),3)
-			# print 'cXfoo: ', np.round(self.XHd.coxa_X_foot[0:3,3],3)
-		# 	print '========================================='
 
 	def reset_impedance_controller(self):
 

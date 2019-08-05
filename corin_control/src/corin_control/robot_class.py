@@ -376,20 +376,15 @@ class RobotState:
 
 	def apply_leg_admittance(self, force_dist):
 		""" Applies impedance control to track force for each leg """
-		print self.Gait.cs
+		
 		feet_pos = []
 		for j in range(0,6):
 			# offset = self.Leg[j].apply_impedance_controller(force_dist[j*3:j*3+3])
 			if self.Gait.cs[j]==0:
 				fsetpoint = np.array([0.,0.,15.]).reshape((3,1))
 				offset = self.Leg[j].apply_admittance_controller(fsetpoint, True)
-				if j==4:
-					print 'S r: ', np.round(offset,4)
 			else:
 				offset = np.zeros(3)
-				if j==4:
-					print 'T r: ', np.round(offset,4)
-			# offset[0] = 0.
 			new_pos = self.Leg[j].XHd.coxa_X_foot[:3,3] + offset
 			feet_pos.append(new_pos)
 			# if j==4:
@@ -400,8 +395,7 @@ class RobotState:
 		feet_pos = [item for sublist in feet_pos for item in sublist]
 		return self.task_X_joint(feet_pos)
 		# return self.task_X_joint()
-		# a, err = self.task_X_joint(feet_pos)
-		# print a.xp
+
 	def apply_base_admittance(self, desired_force):
 		""" Applies base impedance control to track leg force """
 

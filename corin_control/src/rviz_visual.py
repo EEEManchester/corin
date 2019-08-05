@@ -32,7 +32,7 @@ class RvizVisualise:
 		self.cone_pub_ = rospy.Publisher('cone_visual/cone_arrays', ConeStamped, queue_size=1)
 		self.wrench_pub_ = {}
 		for j in range(0,6):
-			self.wrench_pub_[j] = rospy.Publisher(ROBOT_NS + '/' + LEG_FORCE_NAME[j], WrenchStamped, queue_size=1)
+			self.wrench_pub_[j] = rospy.Publisher(ROBOT_NS + '/' + LEG_FORCE_FRAME[j] + '_force', WrenchStamped, queue_size=1)
 
 		self.robot_broadcaster = tf.TransformBroadcaster()	# Transform for robot pose		
 

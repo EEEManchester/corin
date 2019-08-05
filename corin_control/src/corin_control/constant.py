@@ -95,7 +95,7 @@ IMU_RATE = 192 			# IMU publishing rate, Hz
 ## ================================================================ ##
 ##                 Force Distribution parameters 	 				##
 ## ================================================================ ##
-LOAD_T = 0.05	# time for leg load & unloading
+LOAD_T = 0.5	# time for leg load & unloading
 F_MAX = 40.0	# maximum force for leg
 F_MIN = 0.0		# minimum force for leg
 KPcom = np.array([1.0, 1.0, 1.0])*0.3	#1000. #
@@ -221,14 +221,6 @@ JOINT_NAME[16] = 'rr_q2_joint'
 JOINT_NAME[17] = 'rr_q3_joint'
 
 ROBOT_STATE = ['x','y','z','r','p','y']
-
-LEG_FORCE_NAME = {}
-LEG_FORCE_NAME[0] = 'LF_foot_force'
-LEG_FORCE_NAME[1] = 'LM_foot_force'
-LEG_FORCE_NAME[2] = 'LR_foot_force'
-LEG_FORCE_NAME[3] = 'RF_foot_force'
-LEG_FORCE_NAME[4] = 'RM_foot_force'
-LEG_FORCE_NAME[5] = 'RR_foot_force'
 
 LEG_FORCE_FRAME = {}
 LEG_FORCE_FRAME[0] = 'lf_foot'

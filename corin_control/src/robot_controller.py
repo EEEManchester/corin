@@ -75,7 +75,6 @@ class RobotController(CorinManager):
 			w_base_X_NRP = []
 
 		## User input
-		print gait_list
 		print '==============================================='
 		print 'Execute Path in', self.interface, '?',
 		if (self.interface == 'gazebo' or self.interface == 'robotis'):
@@ -180,23 +179,22 @@ class RobotController(CorinManager):
 
 				if tload == 1:
 					print 'State Machine: Unloading'
-					# raw_input('cont')
+					raw_input('cont')
 					self.Robot.Gait.support_mode()
 					gphase = [0]*6 		# all legs in support phase at start of unloading
 					fmax_lim = [F_MAX]*6	# max. force array
-					print 'Next gait: ', gait_list[0]
+					
 					for j in range(0,6):
-					# 	# init_flim[j] = self.Robot.Leg[j].F6c.world_X_foot[2] if (self.Robot.Gait.ps[j] == 1) else F_MAX
 						init_flim[j] = self.Robot.Leg[j].get_normal_force('setpoint') if (gait_list[0][j] == 1) else F_MAX
-					print init_flim
-				# print 'tload: ', tload
+					# print 'init f: ', init_flim
 				
 				# reduce max force for legs that will be in transfer phase
 				for j in range(0,6):
+					# Small force offset (WHY?)
 					fmax = init_flim[j]+1. - tload*(init_flim[j]+1.)/float(iload) + 0.001
 					fmax_lim[j] = fmax if (gait_list[0][j] == 1) else F_MAX
 				tload += 1
-				
+				# print 'fmax: ', fmax_lim
 				self.update_phase_support(P6e_world_X_base, V6e_world_X_base)
 				
 				if tload == iload+1 or iload == 0:
@@ -208,7 +206,8 @@ class RobotController(CorinManager):
 
 				if tload == 1:
 					print 'State Machine: Loading'
-					# raw_input('cont')
+					print 'prev: ', self.Robot.Gait.ps
+					raw_input('cont')
 					self.Robot.Gait.support_mode()
 					prev_phase = list(self.Robot.Gait.ps)
 					gphase = [0]*6 		# all legs in support phase at start of unloading
@@ -222,7 +221,7 @@ class RobotController(CorinManager):
 					fmax_lim[j] = fmax + self.Robot.Leg[j].Fmax if (prev_phase[j] == 1) else F_MAX	
 				tload += 1
 				self.update_phase_support(P6e_world_X_base, V6e_world_X_base)
-
+				# print 'fmax: ', fmax_lim
 				if tload == iload+1:
 					tload = 1
 					state_machine = 'unload'
@@ -234,7 +233,7 @@ class RobotController(CorinManager):
 					print 'State Machine: Motion'
 					self.Robot.Gait.cs = list(gait_list[0])
 					gait_list.pop(0)
-					# raw_input('motion')
+					raw_input('motion')
 					## Force and gait phase array for Force Distribution
 					fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
 					gphase = list(self.Robot.Gait.cs)
@@ -272,7 +271,8 @@ class RobotController(CorinManager):
 								fmax_lim.append(self.Robot.Leg[j].Fmax)
 						gphase = list(self.Robot.Gait.cs)
 						print i, 'findex ', findex, gphase, fmax_lim
-				
+						## CONT: INCREASE
+						
 				## Generate trajectory for legs in transfer phase
 				for j in range (0, self.Robot.active_legs):
 					
@@ -438,8 +438,8 @@ class RobotController(CorinManager):
 			joint_torq = self.Robot.force_to_torque(force_dist)
 			# print i, np.round(force_dist[17],3), np.round(fmax_lim[-1],3)
 			# print temp_gphase, fmax_lim
-			if self.interface != 'rviz':# and self.control_loop != "open":
-				print self.Robot.Gait.cs
+			if self.interface != 'rviz' and self.control_loop != "open":
+
 				## Leg admittance - force tracking
 				if self.ctrl_leg_admittance:
 					## Base admittance - fault force tracking (requires leg force tracking) 
