@@ -84,7 +84,7 @@ WALL_WIDTH_NARROW = 0.3
 ## ================================================================ ##
 ##                      	Controller Rate 	 					##
 ## ================================================================ ##
-CTR_RATE = 100 			# controller rate for robot, Hz
+CTR_RATE = 200 			# controller rate for robot, Hz
 CTR_INTV = 1./CTR_RATE 	# controller interval for robot, s
 
 ## ================================================================ ##
@@ -103,7 +103,7 @@ KDcom = np.array([0.0, 0.0, 1.0])*0.015	#0.5
 KPang = np.array([1.0, 1.0, 1.0])*0.	#500.
 KDang = np.array([1.0, 1.0, 1.0])*0.	#0.5
 SURFACE_FRICTION = 1.0
-F_INC  = 0.05
+F_INC  = 0.1
 D_MOVE = 0.0001	# motion for leg to achieve contact
 
 FORCE_THRES = 0.5 	# threshold limit for contact detection
@@ -114,7 +114,7 @@ CONTACT_COUNT = 2 	# no. of contacts above threshold limit required
 ## ================================================================ ##
 IMPEDANCE_FN = 1.5 			# natural frequency
 IMPEDANCE_DAMPING = 3. 	# damping ratio
-IMPEDANCE_GAIN = 0.003		# m/N (delta distance per delta force)
+IMPEDANCE_GAIN = 0.004		# m/N (delta distance per delta force)
 #  60 Hz: 2, 1.5, 0.001
 # 200 Hz: 2, 2.2, 0.003
 # 100 Hz: 0.5, 3.5, 0.003
@@ -126,8 +126,8 @@ IMPEDANCE_GAIN = 0.003		# m/N (delta distance per delta force)
 KP_P_BASE = 0.8
 KI_P_BASE = 1.0
 # Leg admittance controller gains
-KP_F_LEG = 0.5
-KI_F_LEG = 1.25
+KP_F_LEG = 1.1
+KI_F_LEG = 0.#1.25
 
 ## ================================================================ ##
 ##                  	Stability Parameters 						##
@@ -164,7 +164,7 @@ STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
 ## ================================================================ ##
 
 ## these gait parameters can be changed during runtime
-GAIT_TYPE 	 = 4 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+GAIT_TYPE 	 = 1 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 GAIT_TPHASE	 = 2.0 	# default period per gait phase
 STEP_HEIGHT  = 0.06	# default step height, z
 STEP_STROKE  = 0.1 	# default step stroke

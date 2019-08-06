@@ -163,8 +163,8 @@ class QPForceDistribution():
 		W = np.zeros((3*n_contact, 3*n_contact))	# secondary hessian matrix
 		J = np.zeros((3*n_contact, 3*n_contact))	# contact jacobian matrix
 
-		s_weight = np.array([1, 1, 1, 1, 1, 1]);
-		w_weight = np.array([5, 50, 2])*10e-3;
+		s_weight = np.array([1, 1, 1, 1, 1, 1])
+		w_weight = np.array([5, 50, 2])*10e-3
 		# print A
 		# print b
 		## =================== Bounded Force ============================ ##
@@ -210,16 +210,17 @@ class QPForceDistribution():
 		# print np.round(inq_C,3)
 		# print np.round(inq_D.flatten(),3)
 
-		## Method A: Using system equation with weightage
 		S = np.diag(s_weight)
+		## Method A: Using system equation with weightage
 
 		H = 2*mX(A.T, S, A)
 		q = (-2*mX(b.T, S, A)).T
 
 		## Method B: System equation with weightage AND regularization on joint torque
-		alpha = 0.01
-		H = 2*mX(A.T, S, A) + alpha*mX(J.T, W, J)
-		q = (-2*mX(b.T, S, A)).T
+		if q is not None:
+			alpha = 0.01
+			H = 2*mX(A.T, S, A) + alpha*mX(J, W, J.T)
+			q = (-2*mX(b.T, S, A)).T
 
 		## Solve QP
 		# qpg_sol = cvxopt_solve_qp(H, q, inq_C, inq_D)
@@ -318,6 +319,7 @@ snorm.append(np.array([0., 1., 0.]))
 # for i in range(3,6):
 # 	snorm.append(np.array([0., 1., 0.]))
 farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
+# farr = [F_MAX,0.,F_MAX,0.,F_MAX,0.]
 
 ## Test set - 2 legs in contact
 # c2 = np.array([ 0,  0.3, 0.0])
@@ -345,13 +347,18 @@ qb = np.zeros(3)
 # contacts = [0, 0, 0, 0, 0, 0]
 # farr = [0.0, 80.0, 80.0, 80.0, 80.0, 80.0]
 
+# q = [np.array([ 2.55445094e-09,  4.78384373e-01, -1.93668339e+00]), 
+# 	np.array([ 1.41067822e-09,  4.78384381e-01, -1.93668339e+00]), 
+# 	np.array([ 1.23548414e-09,  4.78384355e-01, -1.93668338e+00])]
+
+p_foot = [np.array([ 0.2521582 ,  0.25086926, -0.08014902]), np.array([-0.2478126 ,  0.25086926, -0.08014902]), np.array([ 0.0021728 , -0.30000007, -0.08014903])]
+contacts = [0,1,0,1,0,1]
+farr = [F_MAX,F_MAX,F_MAX]
+snorm = [np.array([0., 0., 1.]), np.array([0., 0., 1.]), np.array([0., 0., 1.])]
+q = [0., 0.4783, -1.936, 
+	 0., 0.4783, -1.936, 
+	 0., 0.4783, -1.936]
+
 # force_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm)
-# force_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm, qb, q)
+force_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm, qb, q)
 # print np.round(force_vector.flatten(),3)
-
-# from robot_transforms import *
-# F6c = ArrayVector6D()
-# snorm = np.array([1.,0.,1.])
-# F6c.world_X_foot[:3] = np.array([2.,5.,10.]).reshape((3,1))
-
-# print np.linalg.norm(mX(np.diag(snorm), F6c.world_X_foot[0:3]))

@@ -379,10 +379,10 @@ class RobotState:
 		
 		feet_pos = []
 		for j in range(0,6):
-			# offset = self.Leg[j].apply_impedance_controller(force_dist[j*3:j*3+3])
 			if self.Gait.cs[j]==0:
-				fsetpoint = np.array([0.,0.,15.]).reshape((3,1))
-				offset = self.Leg[j].apply_admittance_controller(fsetpoint, True)
+				offset = self.Leg[j].apply_admittance_controller(force_dist[j*3:j*3+3], True)
+				# fsetpoint = np.array([0.,0.,15.]).reshape((3,1))
+				# offset = self.Leg[j].apply_admittance_controller(fsetpoint, True)
 			else:
 				offset = np.zeros(3)
 			new_pos = self.Leg[j].XHd.coxa_X_foot[:3,3] + offset

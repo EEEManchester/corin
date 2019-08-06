@@ -6,7 +6,7 @@ from scipy import signal
 
 class SlidingGain:
 	def __init__(self):
-		self.step_num  = 20
+		self.step_num  = 40
 		self.step_size = 0.1
 
 		self.reset()

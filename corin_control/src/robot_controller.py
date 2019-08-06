@@ -179,7 +179,7 @@ class RobotController(CorinManager):
 
 				if tload == 1:
 					print 'State Machine: Unloading'
-					raw_input('cont')
+					# raw_input('cont')
 					self.Robot.Gait.support_mode()
 					gphase = [0]*6 		# all legs in support phase at start of unloading
 					fmax_lim = [F_MAX]*6	# max. force array
@@ -203,25 +203,22 @@ class RobotController(CorinManager):
 					state_machine = 'motion'
 					
 			elif state_machine == 'load' and not self.Robot.support_mode:
-
+				""" Increases the force limit for contact legs """
 				if tload == 1:
 					print 'State Machine: Loading'
-					print 'prev: ', self.Robot.Gait.ps
-					raw_input('cont')
+					# raw_input('cont')
 					self.Robot.Gait.support_mode()
-					prev_phase = list(self.Robot.Gait.ps)
 					gphase = [0]*6 		# all legs in support phase at start of unloading
 					fmax_lim = [0]*6	# max. force array
+					fint = F_MAX/float(iload)
 
-				# reduce max force for legs that will be in transfer phase
-				# fmax = F_THRES + tload*(F_MAX-F_THRES)/float(iload)
-				fmax = tload*F_MAX/float(iload)
+				# Increase force limit linearly until maximum reached
 				for j in range(0,6):
-					# gait phase updated prior to this state, so use previous gait phase
-					fmax_lim[j] = fmax + self.Robot.Leg[j].Fmax if (prev_phase[j] == 1) else F_MAX	
+					self.Robot.Leg[j].Fmax += fint if (self.Robot.Leg[j].Fmax < F_MAX) else 0.
+					fmax_lim[j] = F_MAX if (self.Robot.Leg[j].Fmax > F_MAX) else self.Robot.Leg[j].Fmax
 				tload += 1
 				self.update_phase_support(P6e_world_X_base, V6e_world_X_base)
-				# print 'fmax: ', fmax_lim
+				# print 'Load fmax: ', fmax_lim
 				if tload == iload+1:
 					tload = 1
 					state_machine = 'unload'
@@ -233,12 +230,13 @@ class RobotController(CorinManager):
 					print 'State Machine: Motion'
 					self.Robot.Gait.cs = list(gait_list[0])
 					gait_list.pop(0)
-					raw_input('motion')
+					# raw_input('motion')
 					## Force and gait phase array for Force Distribution
-					fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
+					fmax_lim = [0]*6	# max. force array
 					gphase = list(self.Robot.Gait.cs)
 					for j in range(6):
-						self.Robot.Leg[j].Fmax = F_MAX if gphase[j] == 0 else FORCE_THRES
+						self.Robot.Leg[j].Fmax = F_MAX if gphase[j] == 0 else 0.
+						fmax_lim[j] = self.Robot.Leg[j].Fmax
 						if self.Robot.Gait.cs[j] == 1:
 							self.Robot.Leg[j].reset_impedance_controller()
 				## Halfway through TIMEOUT - check swing leg contact state 
@@ -248,30 +246,30 @@ class RobotController(CorinManager):
 					cindex = [z for z, y in enumerate(cearly) if y == 1]
 					# Change legs in transfer phase with contact to support
 					if cindex:
-						print i, ' cindex ', cindex, self.Robot.cstate
+						# print i, ' cindex ', cindex, self.Robot.cstate
 						for j in cindex:
 							self.Robot.Gait.cs[j] = 0
 							self.Robot.Leg[j].change_phase('support', self.Robot.XHc.world_X_base)
 							self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+							## TODO: CHECK IF INITIAL OR ZERO BETTER
+							self.Robot.Leg[j].Fmax = self.Robot.Leg[j].get_normal_force('current')
+							# self.Robot.Leg[j].Fmax = 0.
 							self.Robot.Leg[j].SlidingGain.reset()
-							# if j==4:
-							# raw_input('cont')
-
+							self.Robot.Leg[j].reset_impedance_controller()
+						# raw_input('next')
 					# Interpolate Fmax for legs in contact phase
 					fearly = map(lambda x,y: xor(bool(x), bool(y)), gphase, self.Robot.Gait.cs)
 					findex = [z for z, y in enumerate(fearly) if y == True]
 					# print 'findex ', findex, self.Robot.Gait.cs, gphase
 					if findex:
+						# Increase force limit linearly
 						for j in findex:
 							self.Robot.Leg[j].Fmax += F_INC
 							# print self.Robot.Leg[j].Fmax
-						fmax_lim = []
+						# Updates force limit array
 						for j in range(6):
-							if self.Robot.Gait.cs[j] == 0:
-								fmax_lim.append(self.Robot.Leg[j].Fmax)
-						gphase = list(self.Robot.Gait.cs)
-						print i, 'findex ', findex, gphase, fmax_lim
-						## CONT: INCREASE
+							fmax_lim[j] = self.Robot.Leg[j].Fmax
+						# print 'Motion fmax: ', fmax_lim
 						
 				## Generate trajectory for legs in transfer phase
 				for j in range (0, self.Robot.active_legs):
@@ -351,7 +349,6 @@ class RobotController(CorinManager):
 				self.update_phase_transfer()
 				self.update_phase_support(P6e_world_X_base, V6e_world_X_base)
 				
-				# print i, s_cnt, s_max
 				## Gait phase TIMEOUT
 				if ( s_cnt == s_max  and not self.Robot.support_mode):
 					# Legs in contact, change phase
@@ -361,12 +358,10 @@ class RobotController(CorinManager):
 							if (self.Robot.Gait.cs[j] == 1):
 								self.Robot.Leg[j].change_phase('support', self.Robot.XHc.world_X_base)
 								self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
-								
 						state_machine = 'load'
-						print i, ' Phase Timeout, Loading ...'
-						# print fmax_lim, gphase
-						# raw_input('next')
-						# s_cnt = 1
+						print i, ' Phase Timeout, going to load ...'
+						gphase = list(self.Robot.Gait.cs)
+						
 					# Extend leg swing motion, suspend base
 					else:
 						# print 'Not all contacts made, suspend robot: ', self.Robot.cstate, self.Robot.Gait.cs
@@ -410,7 +405,6 @@ class RobotController(CorinManager):
 				self.update_phase_support(P6e_world_X_base, V6e_world_X_base)
 				i += 1
 
-			# print state_machine, fmax_lim, self.Robot.Gait.cs, self.Robot.Gait.ps
 			## Task to joint space
 			qd, tXj_error = self.Robot.task_X_joint()
 
@@ -427,17 +421,17 @@ class RobotController(CorinManager):
 			xa_d = np.array([0.,0.,.0])
 			wa_d = np.array([0.,0.,.0])
 
-			temp_gphase = gphase
+			temp_gphase = list(self.Robot.Gait.cs) if state_machine=='motion' else gphase
 			# Fault tolerance: discontinuous phase
 			if (all( map(lambda x: x == self.Robot.Gait.cs[0], self.Robot.Gait.cs ) ) and 
 				state_machine == 'motion' and
 				self.Robot.Fault.status):
 				temp_gphase = map(lambda x: 0 if x is False else 1, self.Robot.Fault.fault_index )
 			
+			# print temp_gphase, fmax_lim
 			force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, temp_gphase, fmax_lim)
 			joint_torq = self.Robot.force_to_torque(force_dist)
-			# print i, np.round(force_dist[17],3), np.round(fmax_lim[-1],3)
-			# print temp_gphase, fmax_lim
+			# print np.round(force_dist[12:15],3)
 			if self.interface != 'rviz' and self.control_loop != "open":
 
 				## Leg admittance - force tracking
@@ -451,12 +445,7 @@ class RobotController(CorinManager):
 					if (self.Robot.invalid == True):
 						print 'Error Occured, robot invalid! ', tXj_error
 						break
-			# 	## Recompute task to joint space
-			# 	qd, tXj_error = self.Robot.task_X_joint()
-
-			# if (self.Robot.invalid == True):
-			# 	print 'Error Occured, robot invalid! ', tXj_error
-			# 	break
+			
 			# print 'd cXf: ', np.round(self.Robot.Leg[4].XHc.coxa_X_foot[:3,3],4)
 			# print 'c cXf: ', np.round(self.Robot.Leg[4].XHc.coxa_X_foot[:3,3],4)
 			# print 'qd: ', np.round(qd.xp[12:15],4)
@@ -513,7 +502,7 @@ class RobotController(CorinManager):
 					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 
 				self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
-				# if j==4:
+				# if j==5:
 				# 	print 'u: ', np.round(u.flatten(),4)
 				# 	print slide_gain
 				# 	print 'S c wXb: ', np.round(self.Robot.XHc.world_X_base[:3,3],4)
@@ -536,8 +525,8 @@ class RobotController(CorinManager):
 					## Stops body from moving until transfer phase completes
 					print 'Suspending in update_phase_transfer()'
 					self.Robot.suspend = True
-				if j==4:
-					print 'T d cXf: ', np.round(self.Robot.Leg[4].XHd.coxa_X_foot[:3,3],4)
+				# if j==4:
+				# 	print 'T d cXf: ', np.round(self.Robot.Leg[4].XHd.coxa_X_foot[:3,3],4)
 			elif (self.Robot.Gait.cs[j] == 1 and self.Robot.Leg[j].feedback_state == 2 and delta_d is not None):
 				self.Robot.Leg[j].XHd.coxa_X_foot[:3,3] -= delta_d
 				# print delta_d
@@ -547,39 +536,29 @@ class RobotController(CorinManager):
 		 	and CoM which are both function of leg joint angles. Next, compute foot force in
 		 	world frame using Quadratic Programming (QP)
 		 	Input: 	qb: base pose, Re^6
-		 			qp: joint angles, Re^18
+		 			qp: desired joint angles, Re^18
 					v3ca: base linear acceleration, Re^3
 					v3wa: base angular acceleration, Re^3
 		 	Output: foot force for legs in stance phase """
 
 		# now = rospy.get_time()
-
 		## Compute CRBI and CoM, then compute foot force distribution and joint torque
 		self.Robot.update_rbdl(qb, qp)
-		# if (self.rbim_serv_.available):
-		# 	try:
-		# 		resp1 = self.rbim_serv_.call(qp)
-		# 		self.Robot.update_rbdl(resp1.CoM, resp1.CRBI)
-		# 	except:
-		# 		rbim_valid = False
-		
+
 		## Append legs and joint angles in stance phase
 		s_norm = []
 		p_foot = [] 		
+		f_max  = []
 		q_contact = []
-		# print np.round(self.Robot.P6c.base_X_CoM[:3].flatten(),3)
-		# print np.round(self.Robot.Rbdl.com.flatten(),3)
 		for j in range(0,6):
 			if (gphase[j] == 0):
-				# world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3],
-				# 	  					(-self.Robot.P6c.base_X_CoM[:3].flatten()+self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
-				
 				world_CoM_X_foot = mX( self.Robot.XHd.world_X_base[:3,:3],
 					  					(-self.Robot.Rbdl.com.flatten() + self.Robot.Leg[j].XHd.base_X_foot[:3,3]) )
 				p_foot.append(world_CoM_X_foot.copy())
-				q_contact.append(qp[(j*3):(j*3)+3])
+				q_contact.append(qp[(j*3):(j*3)+3].tolist())
 				s_norm.append(self.Robot.Leg[j].snorm)
-				# s_norm.append(np.array([0., 0., 1.]))
+				f_max.append(fmax[j])
+
 				# snorm_left  = np.array([0., 0., 1.]) # np.array([0., -1., 0.])
 				# snorm_right = np.array([0., 0., 1.]) # np.array([0.,  1., 0.])
 				# if j <3:
@@ -588,18 +567,20 @@ class RobotController(CorinManager):
 				# else:
 				# 	s_norm.append(snorm_right)
 				# 	self.Robot.Leg[j].snorm = snorm_right
+		q_contact = [item for i in q_contact for item in i]
 		# print gphase, fmax
 		# print p_foot
 		# print s_norm
-		# print '======================'
+		# print q_contact
 		# print np.round(v3ca.flatten(),3) 
 		# print np.round(v3wa.flatten(),3) 
 		## Compute force distribution using QP
 		foot_force = self.ForceDist.resolve_force(v3ca, v3wa, p_foot,
 													self.Robot.Rbdl.com,
-													self.Robot.Rbdl.crbi, gphase, fmax, #)
-													s_norm, qb[3:6], qp)
-		# print np.round(foot_force[17],3), np.round(fmax[-1],3)
+													self.Robot.Rbdl.crbi, gphase, 
+													f_max, s_norm)#, qb[3:6], q_contact)
+		# print 'fout: ', np.round(foot_force.flatten(),3)
+		# print '======================'
 		# end = rospy.get_time()
 		# print 'Tdiff: ', end - now
 		if abs(foot_force[16]) > 38:

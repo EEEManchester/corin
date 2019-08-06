@@ -371,7 +371,8 @@ class LegClass:
 
 		# Error in world frame
 		wf_error = (self.F6c.world_X_foot[0:3].flatten() - desired_force.flatten()).flatten()
-
+		# if self.number == 5:
+		# 	print 'W ori: ', np.round(wf_error.flatten(),6)
 		if pi_control:
 			wf_error = self.ForcePI.update(wf_error.reshape((3,1))).flatten()
 			
@@ -382,12 +383,11 @@ class LegClass:
 		offset_y = self.impedance_controller_y.evaluate(lf_error[1])
 		offset_z = self.impedance_controller_z.evaluate(lf_error[2])
 
-		# if self.number == 4:
-		# 	print 'W err: ', np.round(wf_error.flatten(),3)
-		# 	print 'L err: ', np.round(lf_error.flatten(),3)
-		# 	print offset_x, offset_y, offset_z
-		# 	print 'L off: ', np.round(np.array([offset_x, offset_y, offset_z]),4)
-		# 	print '===================================='
+		# if self.number == 5:
+		# 	print 'W err: ', np.round(wf_error.flatten(),6)
+			# print 'L err: ', np.round(lf_error.flatten(),3)
+			# print 'L off: ', np.round(np.array([offset_x, offset_y, offset_z]),4)
+			# print '===================================='
 		return np.array([offset_x, offset_y, offset_z])
 
 	def reset_impedance_controller(self):
