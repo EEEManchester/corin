@@ -560,7 +560,7 @@ class CorinManager:
 			
 				if motion == 'forward':
 					map_offset = (0.33, 0.39)
-					d_travel = np.array([1.6,0.,0.,0.,0.,0.]).reshape(6,1)
+					d_travel = np.array([0.2,0.,0.,0.,0.,0.]).reshape(6,1)
 				elif motion == 'transition':
 					map_offset = (0.33, 0.39)
 					d_travel = np.array([0.,0.21,0.,0.,0.,0.]).reshape(6,1)

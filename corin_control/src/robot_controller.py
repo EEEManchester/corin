@@ -126,11 +126,11 @@ class RobotController(CorinManager):
 
 			if motion_plan is not None:
 				# GRID PLAN: base trajectory in world frame
-				# v3cp = wXbase_offset[0:3] + base_path.X.xp[i].reshape(3,1) 		\
-				# 				+ offset_base.reshape((3,1))
+				v3cp = wXbase_offset[0:3] + base_path.X.xp[i].reshape(3,1) 		\
+								+ offset_base.reshape((3,1))
 								# + np.array([0., 0., offset_z]).reshape((3,1))
 				## TEMP: HOLD IN PLACE
-				v3cp = wXbase_offset[0:3] + offset_base.reshape((3,1))
+				# v3cp = wXbase_offset[0:3] + offset_base.reshape((3,1))
 				# v3cp = base_path.X.xp[i].reshape(3,1); 	# CORNERING: base trajectory relative to world frame
 				v3cv = base_path.X.xv[i].reshape(3,1);
 				v3ca = base_path.X.xa[i].reshape(3,1);
@@ -310,7 +310,7 @@ class RobotController(CorinManager):
 								## TEMP!
 								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
 						## TEMP: stamping
-						self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
+						# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
 
 						## Get surface normal at current and desired footholds
 						try:
@@ -418,8 +418,8 @@ class RobotController(CorinManager):
 			# xa_d = mX(np.diag(KPcom), P6e_world_X_base[0:3]) + mX(np.diag(KDcom), V6e_world_X_base[0:3])
 			# wa_d = mX(np.diag(KPang), P6e_world_X_base[3:6]) + mX(np.diag(KDang), V6e_world_X_base[3:6])
 			# else:
-			xa_d = np.array([0.,0.,.0])
-			wa_d = np.array([0.,0.,.0])
+			xa_d = v3ca#np.array([0.,0.,.0])
+			wa_d = v3wa#np.array([0.,0.,.0])
 
 			temp_gphase = list(self.Robot.Gait.cs) if state_machine=='motion' else gphase
 			# Fault tolerance: discontinuous phase
@@ -428,7 +428,6 @@ class RobotController(CorinManager):
 				self.Robot.Fault.status):
 				temp_gphase = map(lambda x: 0 if x is False else 1, self.Robot.Fault.fault_index )
 			
-			# print temp_gphase, fmax_lim
 			force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, temp_gphase, fmax_lim)
 			joint_torq = self.Robot.force_to_torque(force_dist)
 			# print np.round(force_dist[12:15],3)
