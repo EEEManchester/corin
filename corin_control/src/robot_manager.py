@@ -156,8 +156,8 @@ class CorinManager:
 		self.__initialise_services__()
 
 		## initialises robot transform
-		self.Visualizer.robot_broadcaster.sendTransform( (0.,0.,BODY_HEIGHT), (0.,0.,0.,1.),
-													rospy.Time.now(), "trunk", "world");
+		# self.Visualizer.robot_broadcaster.sendTransform( (0.,0.,BODY_HEIGHT), (0.,0.,0.,1.),
+		# 											rospy.Time.now(), "trunk", "world");
 		## setup RVIZ JointState topic
 		if (self.interface == 'rviz'):
 			rospy.set_param(ROBOT_NS + '/standing', True)
@@ -386,6 +386,7 @@ class CorinManager:
 		""" Executes remaining leg trajectories in transfer phase """
 		""" Checks remaining points on trajectory and finish off  """
 
+		print colored("INFO: Finishing up leg trajectory", 'green')
 		## Define Variables ##
 		sc_new = 0	# current spline count for transfer phase legs
 		sc_max = 0	# maximum spline count among the transfer phase legs
@@ -414,7 +415,7 @@ class CorinManager:
 
 			return True
 		except Exception, e:
-			print "Error: ", e
+			print colored("ERROR: %s" %e, 'red')
 			print "Returning legs to ground failed"
 			return False
 
@@ -428,7 +429,8 @@ class CorinManager:
 							- leg_phase -> type of trajectory
 							- period -> timing of leg execution
 			Output: flag -> True: execution complete, False: error occured 		"""
-		print 'Leg level controller'
+		
+		print colored("INFO: Leg-level controller", 'green')
 		self.Robot.update_state(control_mode=self.control_rate) 		# get current state
 
 		## Define Variables ##
@@ -512,6 +514,7 @@ class CorinManager:
 
 		## update robot state prior to starting action
 		self.Robot.Gait.support_mode()
+		self.Robot.update_stability_region()
 		self.Robot.update_state(control_mode=self.control_rate)
 		self.Robot.Gait.walk_mode()
 
@@ -526,23 +529,23 @@ class CorinManager:
 			# mode = 2 	# HARDCODED 
 			## Stand up if at rest
 			if ( (mode == 1 or mode == 2) and self.resting == True):
-				print 'Going to standup'
+				print colored("INFO: Standing up", 'green')
 				self.default_pose()
 
 			## condition for support (1), walk (2), reset (3)
 			if (mode == 3):
 				if (self.resting == False): 	# rest robot
-					print 'Rest'
+					print colored("INFO: Rest", 'green')
 					self.routine_air_suspend_legs()
 					self.resting = True
 
 				elif (self.resting == True): 	# standup from rest
-					print 'Standup'
+					print colored("INFO: Stand", 'green')
 					self.default_pose()
 					self.resting = False
 
 			elif (mode == 4):
-				print 'Bodypose'
+				print colored("INFO: Bodypose", 'green')
 				prev_suspend = self.Robot.suspend
 				self.Robot.support_mode = True
 				self.Robot.suspend = False 		# clear suspension flag
@@ -555,7 +558,7 @@ class CorinManager:
 
 			elif (mode == 5):
 				""" Local planning and execution """
-
+				print colored("INFO: Walk", 'green')
 				self.Robot.support_mode = False
 			
 				if motion == 'forward':
@@ -637,7 +640,7 @@ class CorinManager:
 
 			elif (mode == 6):
 				# Execute motion plan from ros_grid_planner
-				print 'Importing motion plan to execute'
+				print colored("INFO: Importing motion plan", 'green')
 				# filename = 'wall_transition.yaml'
 				if motion == 'chimney_nom':
 					filename = 'chimney_nom.csv'

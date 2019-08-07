@@ -239,6 +239,7 @@ class RobotController(CorinManager):
 						fmax_lim[j] = self.Robot.Leg[j].Fmax
 						if self.Robot.Gait.cs[j] == 1:
 							self.Robot.Leg[j].reset_impedance_controller()
+
 				## Halfway through TIMEOUT - check swing leg contact state 
 				elif (s_cnt > s_max/2 and self.ctrl_contact_detect):
 					# Check if transfer has made contact
@@ -353,7 +354,7 @@ class RobotController(CorinManager):
 				if ( s_cnt == s_max  and not self.Robot.support_mode):
 					# Legs in contact, change phase
 					if all(self.Robot.cstate) or self.interface == "rviz" or self.control_loop=="open":
-						self.Robot.suspend = False
+						bool_update_sm = False
 						for j in range(0,6):
 							if (self.Robot.Gait.cs[j] == 1):
 								self.Robot.Leg[j].change_phase('support', self.Robot.XHc.world_X_base)

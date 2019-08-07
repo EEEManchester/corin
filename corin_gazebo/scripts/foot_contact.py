@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 
+""" Subscribes to gazebo contact forces and republishes
+	them in 3D force state only, custom for Corin """
+
 import rospy
 import os
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'library'))
 
 import numpy as np
-
-from corin_control.constant import *
-
 from gazebo_msgs.msg import ContactsState
 from std_msgs.msg import ByteMultiArray
 from std_msgs.msg import Float32MultiArray
@@ -16,8 +15,8 @@ from std_msgs.msg import Float32MultiArray
 
 class ContactForce:
 	def __init__(self):
-		rospy.init_node('contact_controller') 		#Initialises node
-		self.robot_ns = ROBOT_NS
+		rospy.init_node('contact_force') 		#Initialises node
+		self.robot_ns = 'corin'
 		self.rate 	  = rospy.Rate(200)	# frequency: 200 Hz
 
 		self.contact_force = [None]*18 	# three (xyz) for each leg
@@ -31,16 +30,15 @@ class ContactForce:
 
 		##***************** SUBSCRIBERS ***************##
 		## Foot contact
-		self.contact_lf_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/lf', ContactsState, self.contact_callback)
-		self.contact_lm_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/lm', ContactsState, self.contact_callback)
-		self.contact_lr_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/lr', ContactsState, self.contact_callback)
-
-		self.contact_rf_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/rf', ContactsState, self.contact_callback)
-		self.contact_rm_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/rm', ContactsState, self.contact_callback)
-		self.contact_rr_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/rr', ContactsState, self.contact_callback)
+		self.contact_lf_sub_ = rospy.Subscriber(self.robot_ns + '/foot_wrench/lf', ContactsState, self.contact_callback)
+		self.contact_lm_sub_ = rospy.Subscriber(self.robot_ns + '/foot_wrench/lm', ContactsState, self.contact_callback)
+		self.contact_lr_sub_ = rospy.Subscriber(self.robot_ns + '/foot_wrench/lr', ContactsState, self.contact_callback)
+		self.contact_rf_sub_ = rospy.Subscriber(self.robot_ns + '/foot_wrench/rf', ContactsState, self.contact_callback)
+		self.contact_rm_sub_ = rospy.Subscriber(self.robot_ns + '/foot_wrench/rm', ContactsState, self.contact_callback)
+		self.contact_rr_sub_ = rospy.Subscriber(self.robot_ns + '/foot_wrench/rr', ContactsState, self.contact_callback)
 
 		##***************** PUBLISHERS ***************##
-		self.contact_force_pub_ = rospy.Publisher(ROBOT_NS + '/contact_force', Float32MultiArray, queue_size=1)
+		self.contact_force_pub_ = rospy.Publisher(self.robot_ns + '/contact_force', Float32MultiArray, queue_size=1)
 
 	def set_to_zero(self, i):
 		## set forces to zero when there's no contact ##

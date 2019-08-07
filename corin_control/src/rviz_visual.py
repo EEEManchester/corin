@@ -104,7 +104,7 @@ class RvizVisualise:
 		mark.header.stamp = rospy.Time.now()
 		mark.header.frame_id = self.fr_fix
 
-		mark.type = 2
+		mark.type = 3
 		mark.id = 0
 		mark.pose.position.x = com[0]
 		mark.pose.position.y = com[1]
@@ -115,8 +115,11 @@ class RvizVisualise:
 		mark.pose.orientation.w = 1.0;
 		mark.scale.x = 0.03
 		mark.scale.y = 0.03
-		mark.scale.z = 0.03
+		mark.scale.z = 0.001
 		mark.color.a = 1.0; # transparency level
+		mark.color.r = 1.0
+		mark.color.g = 0.0
+		mark.color.b = 0.0
 
 		self.com_pub_.publish(mark)
 

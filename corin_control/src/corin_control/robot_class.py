@@ -8,6 +8,8 @@ import sys; sys.dont_write_bytecode = True
 
 import math
 import numpy as np
+import time
+from termcolor import colored
 
 from traits import *
 from constant import * 					# constants used
@@ -25,7 +27,7 @@ from impedance_controller import ImpedanceController
 from fault_controller import FaultController
 from pid_controller import PIDController
 from state_estimator import StateEstimator  # EKF-based state estimation class
-from time import sleep
+import stabilipy
 
 class RobotState:
 	def __init__(self):
@@ -70,13 +72,8 @@ class RobotState:
 		self.Fault = FaultController()
 		self.Base_Ctrl = PIDController('PI', 6, KP_P_BASE, KI_P_BASE)
 
-		leg_stance = self.init_robot_stance("flat")
+		self.init_robot_stance("flat")
 		
-		# self.cb_P6c = robot_transforms.Vector6D() 				# position: current state in Re6
-		# self.cb_V6c = robot_transforms.Vector6D() 				# position: current state in Re6
-		# self.cb_P6c.world_X_base[2] = BODY_HEIGHT
-		# self._initialise(leg_stance)
-
 	def init_robot_stance(self, stance_type="flat"):
 
 		self._initialise( self.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, self.stance_offset, stance_type) )
@@ -112,6 +109,7 @@ class RobotState:
 			self.Leg[j].XHc.update_world_base_X_NRP(self.P6c.world_X_base)
 			self.Leg[j].XHd.update_world_base_X_NRP(self.P6c.world_X_base)
 		self.task_X_joint()
+		self.update_stability_region()
 		self.Gait.set_step_stroke(leg_stance, LEG_CLEAR, STEP_STROKE)
 		
 		# print ">> INITIALISED ROBOT CLASS"
@@ -127,15 +125,18 @@ class RobotState:
 			self.state_estimator.reset_state()
 			# Wait for esimtate_state to be called enough times for calibration
 			while not self.state_estimator.calibrated:
-				sleep(0.002)
+				time.sleep(0.002)
 				i += 1
 				if i > 1000:
-					raise Exception("Could not calibrate.")
-					pass
-			print "Calibration done"
+					# raise Exception("Could not calibrate.")
+					print colored("ERROR: Failed calibrating state estimator",'red')
+					break
+			else:
+				print colored("State Estimator calibrated", 'green') 
 
 		self.update_bodypose_state(cmode)
 		self.update_leg_state(reset, cmode)
+		self.update_stability_region()
 		self.update_stability_margin()
 
 	def estimate_state(self):
@@ -198,14 +199,7 @@ class RobotState:
 
 			# self.P6c.world_X_base = np.vstack((pos, angles))
 			# self.V6c.world_X_base = np.vstack((vel, angular))
-			## TEMP:
-			# self.P6c.world_X_base = np.array([0.33, 0.39, 0.08, 0., 0., 0.]).reshape((6,1))
-			# print np.round(self.P6c.world_X_base.flatten(),3)
-			# print np.round(self.state_estimator.r.flatten(),3)
-			# print np.round(angles.flatten(),3)
-			# print '==============================================='
-
-			# self.imu = None
+			
 			# TODO Sort the logic here
 			if (False and self.imu is not None):
 				## quaternion to euler transformation
@@ -215,47 +209,47 @@ class RobotState:
 				ca3 = np.array([ [self.imu.linear_acceleration.x], 	[self.imu.linear_acceleration.y], [self.imu.linear_acceleration.z] ])
 
 				## state estimation
-				xyz = np.zeros((3,1))
+				self.P6c.world_X_base = np.vstack((np.zeros((3,1)), rpy))
 				## Updates robot state based on measured states
-				self.XHc.update_base(p6c)
 				self.V6c.world_X_base[3:6] = wv3
 				self.A6c.world_X_base[0:3] = ca3
 
-			else:
-				## Updates robot state using setpoints
-				self.XHc.update_base(self.P6c.world_X_base)
-				self.V6c.world_X_base = self.V6d.world_X_base.copy()
-				self.A6c.world_X_base = self.A6d.world_X_base.copy()
-				# print np.round(self.XHc.base_X_world,4)
+			self.XHc.update_base(self.P6c.world_X_base)
 
 	def update_stability_margin(self):
 		""" updates the current stability margin """
 
-		## Define Variables ##
-		# stack_world_bXw = []
-		
-		# for j in range(6):
-		# 	stack_world_bXw.append(self.Leg[j].XHc.world_base_X_foot[:3,3])
-		
-		# # Kinematic stability margin
-		# valid, sm = self.SM.point_in_convex(self.Rbdl.com, stack_world_bXw, self.Gait.cs)
-
-		## Define Variables ##
-		stack_world_X_foot = []
-		
-		for j in range(6):
-			stack_world_X_foot.append(self.Leg[j].XHc.world_X_foot[:3,3])
-		
-		# Kinematic stability margin
-		valid, sm = self.SM.point_in_convex(self.XHc.world_X_COM[:3,3], stack_world_X_foot, self.Gait.cs)
+		valid, sm = self.SM.point_in_convex(self.XHc.world_X_COM[:3,3])
+		# valid, sm = self.SM.point_in_polygon(self.XHc.world_X_COM[:3,3])
 
 		if not valid:
-			print 'Convex hull: ', valid, sm
+			print colored("Convex hull violated %.3f %.3f " %(valid, sm), 'red')
 			self.invalid = True
-			self.SM.point_in_convex(self.Rbdl.com, stack_world_X_foot, self.Gait.cs, True)
+			self.SM.point_in_convex(self.XHc.world_X_COM[:3,3], True)
+			# self.SM.point_in_polygon(self.XHc.world_X_COM[:3,3])
 		else:
 			self.invalid = False
+
+		## Force/Moment balance
+		# stack_leg_forces = [self.Leg[j].F6c.world_X_foot[:3] for j in range(6) if self.Gait.cs[j] == 0]
+		# stack_leg_normal = [self.Leg[j].snorm for j in range(6) if self.Gait.cs[j] == 0]
+		# self.SM.force_moment(self.XHc.world_X_COM[:3,3], stack_leg_forces, stack_world_X_foot, stack_leg_normal)
+	
+	def update_stability_region(self):
+		""" Updates the stability region for a set of fixed contacts - Bretl2008 """
+
+		## Computes region if previous topology is different
+		if self.Gait.cs != self.SM.prev_topology:
+			## Define Variables ##
+			stack_world_X_foot = [np.round(self.Leg[j].XHc.world_X_foot[:3,3],4).tolist() for j in range(6) if self.Gait.cs[j] == 0]
+			stack_normals = [[self.Leg[j].snorm.tolist()] for j in range(6) if self.Gait.cs[j] == 0]
 			
+			self.SM.compute_support_region(stack_world_X_foot, stack_normals)
+			# self.SM.compute_support_polygon(stack_world_X_foot)
+			self.SM.prev_topology = list(self.Gait.cs)
+		else:
+			pass
+
 	def update_rbdl(self, qb, qp):
 		""" Updates robot CoM and CRBI """
 
@@ -337,7 +331,7 @@ class RobotState:
 					err_str = 'Error - no kinematic solution in leg, '
 				else:
 					err_str = 'Unknown error'
-				print err_str
+				print colored(err_str, 'red')
 		
 		## check to ensure size is correct
 		if (len(qp)==18):
