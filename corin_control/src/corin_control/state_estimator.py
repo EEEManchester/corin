@@ -231,7 +231,8 @@ class StateEstimator:
 
 	def get_fixed_angles(self):
 		# euler angles of rotation that maps vectors from world frame to body frame
-		angles_tuple = euler_from_quaternion_JPL(self.q, 'rxyz') # relative: rxyz
+		# angles_tuple = euler_from_quaternion_JPL(self.q, 'rxyz') # relative: rxyz
+		angles_tuple = euler_from_quaternion(self.q, 'rxyz') # relative: rxyz
 		return np.asarray(angles_tuple)#*180.0/np.pi
 
 	def get_IMU_fixed_angles(self):

@@ -26,6 +26,7 @@ from std_msgs.msg import String 			# ui control
 import tf 		 							# ROS transform library
 from geometry_msgs.msg import Vector3Stamped # Force sensor readings
 from geometry_msgs.msg import Vector3 		# debugging
+from nav_msgs.msg import Odometry
 
 ## Services
 from service_handler import ServiceHandler
@@ -62,9 +63,13 @@ class CorinManager:
 
 		self.ui_state = "hold" 		# user interface for commanding motions
 		self.MotionPlan = MotionPlan()
-		self.Visualizer = RvizVisualise() 	# visualisation for rviz
+		self.Visualizer = RvizVisualise(self.interface) 	# visualisation for rviz
 
 		self.Planner = None#PathPlanner(self.GridMap)
+
+		## TEMP
+		self.pose_compare = [0]*12
+		self.twist_compare = [0]*12
 
 		self.__initialise__()
 
@@ -131,13 +136,15 @@ class CorinManager:
 		idx = msg.name.index(ROBOT_NS)
 		rpy = np.array(euler_from_quaternion([msg.pose[idx].orientation.w, msg.pose[idx].orientation.x,
 												msg.pose[idx].orientation.y, msg.pose[idx].orientation.z], 'sxyz'))
-		self.Robot.P6c.world_X_base[0] = msg.pose[idx].position.x + self.Robot.P6c.world_X_base_offset.item(0)
-		self.Robot.P6c.world_X_base[1] = msg.pose[idx].position.y + self.Robot.P6c.world_X_base_offset.item(1)
-		self.Robot.P6c.world_X_base[2] = msg.pose[idx].position.z
-		self.Robot.P6c.world_X_base[3] = rpy.item(0)
-		self.Robot.P6c.world_X_base[4] = rpy.item(1)
-		self.Robot.P6c.world_X_base[5] = rpy.item(2)
-
+		# self.Robot.P6c.world_X_base[0] = msg.pose[idx].position.x + self.Robot.P6c.world_X_base_offset.item(0)
+		# self.Robot.P6c.world_X_base[1] = msg.pose[idx].position.y + self.Robot.P6c.world_X_base_offset.item(1)
+		# self.Robot.P6c.world_X_base[2] = msg.pose[idx].position.z
+		# self.Robot.P6c.world_X_base[3] = rpy.item(0)
+		# self.Robot.P6c.world_X_base[4] = rpy.item(1)
+		# self.Robot.P6c.world_X_base[5] = rpy.item(2)
+		# print np.round(rpy,3)
+		# print np.round(self.Robot.P6c.world_X_base[3:6].flatten(),3)
+		# print '===================================='
 		# self.Robot.cb_V6c.world_X_base[0] = msg.twist[idx].linear.x
 		# self.Robot.cb_V6c.world_X_base[1] = msg.twist[idx].linear.y
 		# self.Robot.cb_V6c.world_X_base[2] = msg.twist[idx].linear.z
@@ -145,20 +152,32 @@ class CorinManager:
 		# self.Robot.cb_V6c.world_X_base[4] = msg.twist[idx].angular.y
 		# self.Robot.cb_V6c.world_X_base[5] = msg.twist[idx].angular.z
 
+		# self.pose_compare[6:12] = self.Robot.P6c.world_X_base.flatten().tolist()
+		# error = map(lambda x,y: x-y, self.pose_compare[0:6], self.pose_compare[6:12])
+		# print np.round(error, 4)
+
+	# def ground_truth(self, msg):
+	# 	xyz = np.array([msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z])
+	# 	rpy = list(euler_from_quaternion([msg.pose.pose.orientation.w, 
+	# 																				msg.pose.pose.orientation.x,
+	# 																				msg.pose.pose.orientation.y,
+	# 																				msg.pose.pose.orientation.z], 'sxyz'))
+	# 	self.pose_compare[0:3] = [msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z]
+	# 	self.pose_compare[3:6] = rpy
+	# 	gnd_pose = np.vstack((xyz,rpy))
+	# 	pose_error = gnd_pose - self.P6c.world_X_base
+
 	def __initialise__(self):
 		""" Initialises robot and classes """
 
 		## Setup hardware
 		self.__initialise_imu__()
 
-		## set up publisher and subscriber topics
+		## Set up publisher and subscriber topics
 		self.__initialise_topics__()
 		self.__initialise_services__()
 
-		## initialises robot transform
-		# self.Visualizer.robot_broadcaster.sendTransform( (0.,0.,BODY_HEIGHT), (0.,0.,0.,1.),
-		# 											rospy.Time.now(), "trunk", "world");
-		## setup RVIZ JointState topic
+		## Set up RVIZ JointState topic
 		if (self.interface == 'rviz'):
 			rospy.set_param(ROBOT_NS + '/standing', True)
 			qd, err_list = self.Robot.task_X_joint()
@@ -340,6 +359,7 @@ class CorinManager:
 		self.Visualizer.publish_com(self.Robot.Rbdl.com + self.Robot.P6c.world_X_base[:3])
 		self.Visualizer.publish_friction_cones(self.Robot, SURFACE_FRICTION)
 		self.Visualizer.publish_foot_force(self.Robot)
+
 		self.stability_pub_.publish(self.Robot.SM.min)
 
 		## Publish setpoints to logging topic

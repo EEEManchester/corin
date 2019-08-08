@@ -127,7 +127,7 @@ class RobotState:
 			while not self.state_estimator.calibrated:
 				time.sleep(0.002)
 				i += 1
-				if i > 1000:
+				if i > 2000:
 					# raise Exception("Could not calibrate.")
 					print colored("ERROR: Failed calibrating state estimator",'red')
 					break
@@ -199,7 +199,11 @@ class RobotState:
 
 			# self.P6c.world_X_base = np.vstack((pos, angles))
 			# self.V6c.world_X_base = np.vstack((vel, angular))
-			
+			# print np.round(self.P6c.world_X_base.flatten(),4)
+			self.P6c.world_X_base[0:3] = pos
+			self.P6c.world_X_base[3:6] = angles
+			err = self.P6c.world_X_base - np.vstack((pos, angles))
+			# print np.round(err.flatten(),3)
 			# TODO Sort the logic here
 			if (False and self.imu is not None):
 				## quaternion to euler transformation

@@ -28,10 +28,8 @@
                 rf_q1_joint rf_q2_joint rf_q3_joint
                 rm_q1_joint rm_q2_joint rm_q3_joint
                 rr_q1_joint rr_q2_joint rr_q3_joint   "/>
-        <!-- contact force node -->
-        <node name="contact_force" pkg="corin_control" type="footcontact.py" respawn="false"/>
         <!-- unpause physics engine -->
-        <node name="unpause" pkg="corin_description" type="unpause_physics_engine" args="5.0"/>
+        <node name="unpause" pkg="corin_gazebo" type="unpause_physics_engine" args="5.0"/>
     </group>
 
     <!-- Dynamixels -->

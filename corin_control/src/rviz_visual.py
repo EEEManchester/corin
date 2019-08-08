@@ -17,7 +17,7 @@ from tf.transformations import quaternion_from_euler
 import math
 
 class RvizVisualise:
-	def __init__(self):
+	def __init__(self, robot_type):
 		self.fr_fix = "world"
 		self.fr_robot = "trunk"
 		self.prev_gait = [0]*6
@@ -34,8 +34,9 @@ class RvizVisualise:
 		for j in range(0,6):
 			self.wrench_pub_[j] = rospy.Publisher(ROBOT_NS + '/' + LEG_FORCE_FRAME[j] + '_force', WrenchStamped, queue_size=1)
 
-		self.robot_broadcaster = tf.TransformBroadcaster()	# Transform for robot pose		
-
+		# Transform for robot pose
+		self.robot_broadcaster = tf.TransformBroadcaster() if robot_type != 'gazebo' else None
+		
 		rospy.sleep(0.5)
 		self.clear_visualisation()
 
@@ -55,8 +56,9 @@ class RvizVisualise:
 	def publish_robot_pose(self, qb):
 		""" Robot transform publisher """
 		# print 'pub: ', np.round(qb[:3].flatten(),4)
-		quat = tf.transformations.quaternion_from_euler(qb[3].copy(), qb[4].copy(), qb[5].copy())
-		self.robot_broadcaster.sendTransform( (qb[0],qb[1],qb[2]), quat, rospy.Time.now(), self.fr_robot, self.fr_fix);
+		if self.robot_broadcaster is not None: 
+			quat = tf.transformations.quaternion_from_euler(qb[3].copy(), qb[4].copy(), qb[5].copy())
+			self.robot_broadcaster.sendTransform( (qb[0],qb[1],qb[2]), quat, rospy.Time.now(), self.fr_robot, self.fr_fix);
 
 	def publish_path(self, xb, xoff=None):
 		""" Trajectory path publisher 
@@ -130,7 +132,7 @@ class RvizVisualise:
 					footholds: footholds for all six legs 	"""
 
 		for c in range(0,3):
-			self.publish_robot_pose(robot_pose)
+			# self.publish_robot_pose(robot_pose)
 			self.publish_path(path)
 			self.publish_footholds(footholds)
 			rospy.sleep(0.2)

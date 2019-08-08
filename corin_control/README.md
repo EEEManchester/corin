@@ -1,5 +1,26 @@
 # corin_control
 
+## Dependencies
+This package depends on:
+
+	- [StabiliPy](https://github.com/haudren/stabilipy.git)
+
+Run the following:
+
+	sudo apt-get install liblapack-dev libatlas-dev libblas-dev libgmp-dev libppl-dev
+
+Navigate to the cloned Stabilipy folder:
+
+	pip install cython && pip install -r requirements.txt
+
+### Additional Notes on Installation:
+The newer version of Scipy required may not install with an error about it being a dist package. Install the latest version as follows:
+
+	cd usr/lib/python2.7/dist-packages/
+	sudo rm -r scipy
+	sudo rm scipy-0.17.0.egg-info
+	sudo pip install --upgrade scipy
+
 ## Overview
 
 This package is the robot's core controller. The file 'main.py', creates an instance of the robot controller and all actions are invoked from here. 

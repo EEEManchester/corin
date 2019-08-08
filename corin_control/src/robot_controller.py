@@ -228,8 +228,11 @@ class RobotController(CorinManager):
 				## Update gait phase and force interpolation; reset force controllers
 				if s_cnt == 1:
 					print 'State Machine: Motion'
-					self.Robot.Gait.cs = list(gait_list[0])
-					gait_list.pop(0)
+					try:
+						self.Robot.Gait.cs = list(gait_list[0])
+						gait_list.pop(0)
+					except:
+						pass
 					# raw_input('motion')
 					## Force and gait phase array for Force Distribution
 					fmax_lim = [0]*6	# max. force array
@@ -395,7 +398,7 @@ class RobotController(CorinManager):
 				
 				tload += 1
 
-				if tload == hload+1:# and motion_plan:
+				if tload == hload+1 and motion_plan:
 					if self.Robot.support_mode:
 						state_machine = 'motion'
 						print 'Support mode: Motion'
@@ -464,7 +467,7 @@ class RobotController(CorinManager):
 			self.Robot.update_state(control_mode=self.control_rate)
 
 			if motion_plan is not None:
-				print 'Motion Plan Execution Success!'
+				print colored('INFO: Motion Plan Execution Success!', 'green')
 				print 'Desired Goal: ', np.round(base_path.X.xp[-1],4), np.round(base_path.W.xp[-1],4)
 				print 'Tracked Goal: ', np.round(cob_X_desired.flatten(),4), np.round(cob_W_desired.flatten(),4)
 

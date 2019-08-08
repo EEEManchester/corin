@@ -2,11 +2,13 @@
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="corin">
 	<gazebo>
+		<!-- Controllers for robot's joints -->
 	  	<plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
 	    	<robotNamespace>/corin</robotNamespace>
 	    	<legacyModeNS>true</legacyModeNS>
 	  	</plugin>
 
+	  	<!-- Provides ground truth of robot -->
 	  	<plugin filename="libgazebo_ros_p3d.so" name="gazebo_ros_p3d">
 			<robotNamespace>/corin</robotNamespace>
 		 	<bodyName>trunk</bodyName>
