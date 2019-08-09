@@ -47,7 +47,7 @@ class RobotController(CorinManager):
 			if (self.interface == 'rviz'):
 				self.publish_topics(JointTrajectoryPoints(18,([],self.Robot.qc.position,[],[])))
 
-			# Plot.plot_2d(base_path.X.t, base_path.X.xp)
+			# Plot.plot_2d(base_path.X.t, base_path.X.xv)
 			# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 			# print world_X_footholds[0].xp
 			## Remove initial set of footholds (visualization purpose)
@@ -190,7 +190,7 @@ class RobotController(CorinManager):
 				
 				# reduce max force for legs that will be in transfer phase
 				for j in range(0,6):
-					# Small force offset (WHY?)
+					# Small force offset - prevent shape change
 					fmax = init_flim[j]+1. - tload*(init_flim[j]+1.)/float(iload) + 0.001
 					fmax_lim[j] = fmax if (gait_list[0][j] == 1) else F_MAX
 				tload += 1
@@ -232,6 +232,7 @@ class RobotController(CorinManager):
 						self.Robot.Gait.cs = list(gait_list[0])
 						gait_list.pop(0)
 					except:
+						print colored('ERROR: no gait to unstack','red')
 						pass
 					# raw_input('motion')
 					## Force and gait phase array for Force Distribution
@@ -399,6 +400,7 @@ class RobotController(CorinManager):
 				tload += 1
 
 				if tload == hload+1 and motion_plan:
+					s_cnt = 0
 					if self.Robot.support_mode:
 						state_machine = 'motion'
 						print 'Support mode: Motion'

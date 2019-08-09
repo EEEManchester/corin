@@ -72,6 +72,8 @@ class RobotState:
 		self.Fault = FaultController()
 		self.Base_Ctrl = PIDController('PI', 6, KP_P_BASE, KI_P_BASE)
 
+		self.cop = np.zeros(3)
+		self.Sp = SMargin.StabilityMargin()
 		self.init_robot_stance("flat")
 		
 	def init_robot_stance(self, stance_type="flat"):
@@ -138,7 +140,8 @@ class RobotState:
 		self.update_leg_state(reset, cmode)
 		self.update_stability_region()
 		self.update_stability_margin()
-
+		self.update_cop()
+		
 	def estimate_state(self):
 		# Gets called at IMU rate
 		self.state_estimator.estimate()
@@ -224,16 +227,16 @@ class RobotState:
 		""" updates the current stability margin """
 
 		valid, sm = self.SM.point_in_convex(self.XHc.world_X_COM[:3,3])
-		# valid, sm = self.SM.point_in_polygon(self.XHc.world_X_COM[:3,3])
+		pvalid, psm = self.Sp.point_in_polygon(self.XHc.world_X_COM[:3,3])
 
 		if not valid:
 			print colored("Convex hull violated %.3f %.3f " %(valid, sm), 'red')
-			self.invalid = True
+			# self.invalid = True
 			self.SM.point_in_convex(self.XHc.world_X_COM[:3,3], True)
 			# self.SM.point_in_polygon(self.XHc.world_X_COM[:3,3])
 		else:
 			self.invalid = False
-
+			# pass
 		## Force/Moment balance
 		# stack_leg_forces = [self.Leg[j].F6c.world_X_foot[:3] for j in range(6) if self.Gait.cs[j] == 0]
 		# stack_leg_normal = [self.Leg[j].snorm for j in range(6) if self.Gait.cs[j] == 0]
@@ -249,7 +252,7 @@ class RobotState:
 			stack_normals = [[self.Leg[j].snorm.tolist()] for j in range(6) if self.Gait.cs[j] == 0]
 			
 			self.SM.compute_support_region(stack_world_X_foot, stack_normals)
-			# self.SM.compute_support_polygon(stack_world_X_foot)
+			self.Sp.compute_support_polygon(stack_world_X_foot)
 			self.SM.prev_topology = list(self.Gait.cs)
 		else:
 			pass
@@ -438,6 +441,16 @@ class RobotState:
 		else:
 			return False, transfer_index
 		
+	def update_cop(self):
+		""" Computes the CoP point """
+
+		cop = np.zeros(3)
+		frn = 0.
+		for j in range(0,6):
+			if self.Gait.cs[j] == 0:
+				cop += self.Leg[j].XHc.world_X_foot[:3,3]*self.Leg[j].get_normal_force('current')
+				frn += self.Leg[j].get_normal_force('current')
+		self.cop = cop/frn
 
 	def duplicate_self(self, robot):
 		""" Duplicates robot state by creating local copy of input robot """

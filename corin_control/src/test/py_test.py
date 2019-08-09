@@ -3,8 +3,6 @@
 import numpy as np
 import copy
 import math
-print math.tan(0.2)
-print math.atan(0.2)
 a = np.array([1,2,3])
 b = np.array([4,5,6])
 c = np.array([a,b]).reshape(6,1)
@@ -22,9 +20,19 @@ tphase = 1.8
 lenp = seq(0, tphase*5, tphase)
 # print len(lenp), lenp
 
-a = [[1],[2],[3],[4],[5],[6]]
-print a
-b = list(a)
-a.pop(0)
-print a
-print b
+a = [np.array([1,2,3]), 0.5, [11,12], np.array([100,200]).reshape((2,1))]
+
+data = []
+for i in a:
+	try:
+		temp = iter(i)
+		try:
+			for item in i.flatten():
+				data.append(item) 
+		except:
+			for item in i:
+				data.append(item)
+	except:
+		data.append(i)
+		
+print data#[item for i in data for item in i]

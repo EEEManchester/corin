@@ -26,9 +26,11 @@ class RvizVisualise:
 		self.map_pub_  = rospy.Publisher(ROBOT_NS + '/point_cloud', PointCloud2, queue_size=1) 	# grid map
 		self.path_pub_ = rospy.Publisher(ROBOT_NS + '/path', Path, queue_size=1) 				# splined path
 		self.mark_pub_ = rospy.Publisher(ROBOT_NS + '/footholds', MarkerArray, queue_size=1)	# fooholds
+		self.spol_pub_ = rospy.Publisher(ROBOT_NS + '/support_polygon', PolygonStamped, queue_size=1) # Support polygon
+		self.sreg_pub_ = rospy.Publisher(ROBOT_NS + '/support_region', PolygonStamped, queue_size=1) # Support region
 		self.cob_pub_  = rospy.Publisher(ROBOT_NS + '/cob', MarkerArray, queue_size=1) 			# CoB position
-		self.poly_pub_ = rospy.Publisher(ROBOT_NS + '/support_polygon', PolygonStamped, queue_size=1) # Support polygon
 		self.com_pub_  = rospy.Publisher(ROBOT_NS + '/centre_of_mass', Marker, queue_size=5) # CoM position
+		self.cop_pub_  = rospy.Publisher(ROBOT_NS + '/cop', Marker, queue_size=1) 			# CoP position
 		self.cone_pub_ = rospy.Publisher('cone_visual/cone_arrays', ConeStamped, queue_size=1)
 		self.wrench_pub_ = {}
 		for j in range(0,6):
@@ -94,10 +96,30 @@ class RvizVisualise:
 			p = Point32()
 			p.x = f[0] + offset[0]
 			p.y = f[1] + offset[1]
-			p.z = 0. #+ offset[2]
+			p.z = offset[2]
 			poly.polygon.points.append(p)
 			
-		self.poly_pub_.publish(poly)
+		self.spol_pub_.publish(poly)
+
+	def publish_support_region(self, footholds, offset=None):
+		""" Support polygon publisher 
+			Input:  footholds: list of footholds
+					offset: offsets the polygon """
+		
+		if offset is None:
+			offset = [0,0,0]
+
+		poly = PolygonStamped()
+		poly.header.stamp = rospy.Time.now()
+		poly.header.frame_id = self.fr_fix
+		for f in footholds:
+			p = Point32()
+			p.x = f[0] + offset[0]
+			p.y = f[1] + offset[1]
+			p.z = offset[2]
+			poly.polygon.points.append(p)
+			
+		self.sreg_pub_.publish(poly)
 
 	def publish_com(self, com):
 		""" Publishes the CoM position """
@@ -124,6 +146,32 @@ class RvizVisualise:
 		mark.color.b = 0.0
 
 		self.com_pub_.publish(mark)
+
+	def publish_cop(self, com):
+		""" Publishes the CoM position """
+		
+		mark = Marker()
+		mark.header.stamp = rospy.Time.now()
+		mark.header.frame_id = self.fr_fix
+
+		mark.type = 3
+		mark.id = 201
+		mark.pose.position.x = com[0]
+		mark.pose.position.y = com[1]
+		mark.pose.position.z = 0.
+		mark.pose.orientation.x = 0.0;
+		mark.pose.orientation.y = 0.0;
+		mark.pose.orientation.z = 0.0;
+		mark.pose.orientation.w = 1.0;
+		mark.scale.x = 0.03
+		mark.scale.y = 0.03
+		mark.scale.z = 0.001
+		mark.color.a = 1.0; # transparency level
+		mark.color.r = 0.0
+		mark.color.g = 1.0
+		mark.color.b = 0.0
+
+		self.cop_pub_.publish(mark)
 
 	def show_motion_plan(self, robot_pose, path, footholds):
 		""" Publishes the motion plan

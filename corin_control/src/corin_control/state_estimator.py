@@ -38,11 +38,7 @@ class StateEstimator:
 
 		self.y = np.zeros(18) # feet position errors
 
-		self.IMU_r = np.array([-123, 5.25, 24.5]) # Body frame origin relative to IMU frame, described in the IMU frame
-		self.IMU_R = np.array([[-1, 0, 0],
-								[0, 1, 0],
-								[0, 0, -1]])	# Rotation matrix mapping vectors from IMU frame to body frame
-
+		# Position and orientation offset from IMU to base frame expressed in IMU frame
 		self.IMU_r = np.zeros(3)
 		self.IMU_R = np.eye(3) # for Gazebo
 

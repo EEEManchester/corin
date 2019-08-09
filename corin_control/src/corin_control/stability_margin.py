@@ -181,7 +181,6 @@ Legs = [np.array([ 0.25, 0.00, 0.]),
 		np.array([-0.25, 0.00, 0.]),
 		np.array([ 0.00, 0.3, 0.]),
 		np.array([ 0.00,-0.3, 0.])]
-SM = StabilityMargin()
-SM.compute_support_polygon(Legs)
+# SM = StabilityMargin()
+# SM.compute_support_polygon(Legs)
 # print SM.point_in_polygon(p)
-

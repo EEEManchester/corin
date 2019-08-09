@@ -154,7 +154,7 @@ LEG_CLEAR 	 = 0.06 	# clearance between leg workplane boundaries
 STANCE_WIDTH = 0.21		# ori: 0.21, chimney: 0.23, 0.27, 0.31 for tripod
 BODY_HEIGHT  = 0.10		# ori: 0.10, chimney: 0.0
 # Offset for front and rear legs
-TETA_F = 0.;
+TETA_F = 40.;
 TETA_R = -TETA_F;
 LEG_OFFSET = [TETA_F, 0., TETA_R, -TETA_F, 0., -TETA_R]
 STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"

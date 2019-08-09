@@ -11,6 +11,8 @@ Panels:
         - /Contact Forces1/RF_foot_wrench1
         - /Contact Forces1/RM_foot_wrench1
         - /Support Region1
+        - /Support Polygon1
+        - /CoP1
       Splitter Ratio: 0.5
     Tree Height: 775
   - Class: rviz/Selection
@@ -38,12 +40,12 @@ Visualization Manager:
   Class: ""
   Displays:
     - Class: rviz/Axes
-      Enabled: true
+      Enabled: false
       Length: 0.200000003
       Name: Axes
       Radius: 0.0149999997
       Reference Frame: <Fixed Frame>
-      Value: true
+      Value: false
     - Alpha: 0.5
       Cell Size: 0.5
       Class: rviz/Grid
@@ -380,8 +382,24 @@ Visualization Manager:
       Name: Support Region
       Polygon Alpha: 0.5
       Polygon Color: 141; 70; 211
+      Topic: /corin/support_region
+      Unreliable: false
+      Value: true
+    - Alpha: 1
+      Class: rviz/Polygon
+      Color: 0; 0; 0
+      Enabled: true
+      Name: Support Polygon
       Topic: /corin/support_polygon
       Unreliable: false
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /corin/cop
+      Name: CoP
+      Namespaces:
+        "": true
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
@@ -408,25 +426,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.07663381
+      Distance: 1.51259303
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.054812137
-        Y: -0.106265046
-        Z: 0.158415556
+        X: 0.0707383603
+        Y: 0.173727036
+        Z: 0.0739776865
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.254802853
+      Pitch: 0.504802704
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.66337872
+      Yaw: 4.65336895
     Saved: ~
 Window Geometry:
   Control Interface:

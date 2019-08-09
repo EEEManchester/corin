@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
 	if len(sys.argv) != 6:
 		offset = [0,0,0]
-	elif len(sys.argv == 6):
+	elif len(sys.argv) == 6:
 		offset = map(lambda x: float(x), sys.argv[1:4])
 		
 	n = Node_class(offset)

@@ -22,6 +22,7 @@ from sensor_msgs.msg import JointState 		# sub msg for joint states
 from std_msgs.msg import Float64 			# pub msg for Gazebo joints
 from std_msgs.msg import ByteMultiArray 	# foot contact state
 from std_msgs.msg import Float32MultiArray	# foot contact force
+from std_msgs.msg import Float64MultiArray 	# misc. logging items
 from std_msgs.msg import String 			# ui control
 import tf 		 							# ROS transform library
 from geometry_msgs.msg import Vector3Stamped # Force sensor readings
@@ -221,8 +222,9 @@ class CorinManager:
 		self.log_sp_pub_ = rospy.Publisher(ROBOT_NS + '/log_setpoints', LoggingState, queue_size=1)	# LOGGING setpoint publisher
 		self.log_ac_pub_ = rospy.Publisher(ROBOT_NS + '/log_actual', LoggingState, queue_size=1)		# LOGGING actual publisher
 		self.log_er_pub_ = rospy.Publisher(ROBOT_NS + '/log_error', LoggingState, queue_size=1)		# LOGGING error publisher
+		self.log_misc_pub_ = rospy.Publisher(ROBOT_NS + '/log_misc', Float64MultiArray, queue_size=1)		# LOGGING misc. items
 
-		self.stability_pub_ = rospy.Publisher(ROBOT_NS + '/stability_margin', Float64, queue_size=1) # Stability margin publisher
+		self.stability_pub_ = rospy.Publisher(ROBOT_NS + '/stability_margin', Float64MultiArray, queue_size=1) # Stability margin publisher
 		self.cstate_pub_  	= rospy.Publisher(ROBOT_NS + '/contact_state', ByteMultiArray, queue_size=1)
 
 		## Hardware Specific Publishers ##
@@ -291,6 +293,7 @@ class CorinManager:
 			self.IMU = "gazebo"
 
 		if self.IMU == "LORD":
+			# Offset from IMU to base frame expressed in IMU frame - translate then rotate
 			self.Robot.state_estimator.IMU_r = 0.001*np.array([-123, 5.25, 24.5]) # Body frame origin relative to IMU frame, described in the IMU frame
 			self.Robot.state_estimator.IMU_R = np.array([[-1, 0, 0],
 															[0, 1, 0],
@@ -355,12 +358,17 @@ class CorinManager:
 
 				self.joint_pub_.publish(dqp)
 
-		self.Visualizer.publish_support_polygon(self.Robot.SM.convex_hull)
+		self.Visualizer.publish_support_polygon(self.Robot.Sp.convex_hull)
+		self.Visualizer.publish_support_region(self.Robot.SM.convex_hull)
 		self.Visualizer.publish_com(self.Robot.Rbdl.com + self.Robot.P6c.world_X_base[:3])
+		self.Visualizer.publish_cop(self.Robot.cop)
 		self.Visualizer.publish_friction_cones(self.Robot, SURFACE_FRICTION)
 		self.Visualizer.publish_foot_force(self.Robot)
 
-		self.stability_pub_.publish(self.Robot.SM.min)
+		# self.stability_pub_.publish(self.Robot.SM.min)
+		self.log_misc_pub_.publish(
+			Float64MultiArray(data = self.set_log_misc([self.Robot.SM.min, 
+				self.Robot.Sp.min, self.Robot.cop, self.Robot.Rbdl.com])))
 
 		## Publish setpoints to logging topic
 		# if (qlog is not None):
@@ -371,8 +379,8 @@ class CorinManager:
 			self.log_sp_pub_.publish(qlog)
 			self.log_ac_pub_.publish(qlog_ac)
 			self.log_er_pub_.publish(qlog_er)
-			cstate_msg = ByteMultiArray(data = self.Robot.cstate)
-			self.cstate_pub_.publish(cstate_msg)
+			# cstate_msg = ByteMultiArray(data = self.Robot.cstate)
+			# self.cstate_pub_.publish(cstate_msg)
 
 		## Runs controller at desired rate for normal control mode
 		if (self.control_rate is "normal" or self.interface is 'robotis'):
@@ -452,7 +460,7 @@ class CorinManager:
 		
 		print colored("INFO: Leg-level controller", 'green')
 		self.Robot.update_state(control_mode=self.control_rate) 		# get current state
-
+		self.invalid = False
 		## Define Variables ##
 		te = 0 		# end time of motion
 		td = 0 		# duration of trajectory
@@ -513,7 +521,7 @@ class CorinManager:
 		# Set all legs to support mode for bodyposing, prevent AEP from being set
 		if (self.Robot.support_mode == True):
 			self.Robot.Gait.support_mode()
-			PathGenerator.V_MAX = PathGenerator.W_MAX = 0.4
+			PathGenerator.V_MAX = PathGenerator.W_MAX = 0.05
 		else:
 			self.Robot.Gait.walk_mode()
 
@@ -521,7 +529,7 @@ class CorinManager:
 		base_path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV)
 		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
-
+		
 		## Plan foothold for robot - world_X_base, world_X_footholds not used
 		# mplan = self.Map.foothold_planner(base_path, self.Robot)
 		motion_plan = MotionPlan()
@@ -759,6 +767,23 @@ class CorinManager:
 		qlog_er.forces = cforce_error
 
 		return qlog_ac, qlog_er
+
+	def set_log_misc(self, log_items):
+		""" Extracts input and lays out in 1D list for logging in MultiArray format """
+
+		data = []
+		for i in log_items:
+			try:
+				temp = iter(i)
+				try:
+					for item in i.flatten():
+						data.append(item) 
+				except:
+					for item in i:
+						data.append(item)
+			except:
+				data.append(i)
+		return data
 
 	def get_snorm(self, p, j):
 		## surface normal for chimney
