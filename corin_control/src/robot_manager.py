@@ -68,10 +68,6 @@ class CorinManager:
 
 		self.Planner = None#PathPlanner(self.GridMap)
 
-		## TEMP
-		self.pose_compare = [0]*12
-		self.twist_compare = [0]*12
-
 		self.__initialise__()
 
 	def joint_state_callback(self, msg):
@@ -97,7 +93,6 @@ class CorinManager:
 		# 	self.pub_imu_q.publish(Vector3(*self.Robot.state_estimator.get_fixed_angles().tolist()))
 		# 	self.pub_imu_bf.publish(Vector3(*self.Robot.state_estimator.bf.tolist()))
 		# 	self.pub_imu_bw.publish(Vector3(*self.Robot.state_estimator.bw.tolist()))
-
 
 	def contact_force_callback_0(self, msg):
 		data = msg.vector
@@ -137,36 +132,12 @@ class CorinManager:
 		idx = msg.name.index(ROBOT_NS)
 		rpy = np.array(euler_from_quaternion([msg.pose[idx].orientation.w, msg.pose[idx].orientation.x,
 												msg.pose[idx].orientation.y, msg.pose[idx].orientation.z], 'sxyz'))
-		# self.Robot.P6c.world_X_base[0] = msg.pose[idx].position.x + self.Robot.P6c.world_X_base_offset.item(0)
-		# self.Robot.P6c.world_X_base[1] = msg.pose[idx].position.y + self.Robot.P6c.world_X_base_offset.item(1)
-		# self.Robot.P6c.world_X_base[2] = msg.pose[idx].position.z
-		# self.Robot.P6c.world_X_base[3] = rpy.item(0)
-		# self.Robot.P6c.world_X_base[4] = rpy.item(1)
-		# self.Robot.P6c.world_X_base[5] = rpy.item(2)
-		# print np.round(rpy,3)
-		# print np.round(self.Robot.P6c.world_X_base[3:6].flatten(),3)
-		# print '===================================='
-		# self.Robot.cb_V6c.world_X_base[0] = msg.twist[idx].linear.x
-		# self.Robot.cb_V6c.world_X_base[1] = msg.twist[idx].linear.y
-		# self.Robot.cb_V6c.world_X_base[2] = msg.twist[idx].linear.z
-		# self.Robot.cb_V6c.world_X_base[3] = msg.twist[idx].angular.x
-		# self.Robot.cb_V6c.world_X_base[4] = msg.twist[idx].angular.y
-		# self.Robot.cb_V6c.world_X_base[5] = msg.twist[idx].angular.z
-
-		# self.pose_compare[6:12] = self.Robot.P6c.world_X_base.flatten().tolist()
-		# error = map(lambda x,y: x-y, self.pose_compare[0:6], self.pose_compare[6:12])
-		# print np.round(error, 4)
-
-	# def ground_truth(self, msg):
-	# 	xyz = np.array([msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z])
-	# 	rpy = list(euler_from_quaternion([msg.pose.pose.orientation.w, 
-	# 																				msg.pose.pose.orientation.x,
-	# 																				msg.pose.pose.orientation.y,
-	# 																				msg.pose.pose.orientation.z], 'sxyz'))
-	# 	self.pose_compare[0:3] = [msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z]
-	# 	self.pose_compare[3:6] = rpy
-	# 	gnd_pose = np.vstack((xyz,rpy))
-	# 	pose_error = gnd_pose - self.P6c.world_X_base
+		self.Robot.P6c.world_X_base[0] = msg.pose[idx].position.x + self.Robot.P6c.world_X_base_offset.item(0)
+		self.Robot.P6c.world_X_base[1] = msg.pose[idx].position.y + self.Robot.P6c.world_X_base_offset.item(1)
+		self.Robot.P6c.world_X_base[2] = msg.pose[idx].position.z
+		self.Robot.P6c.world_X_base[3] = rpy.item(0)
+		self.Robot.P6c.world_X_base[4] = rpy.item(1)
+		self.Robot.P6c.world_X_base[5] = rpy.item(2)
 
 	def __initialise__(self):
 		""" Initialises robot and classes """
@@ -195,11 +166,11 @@ class CorinManager:
 
 		## update and reset robot states
 		self.Robot.suspend = False
-		self.Robot.update_state(reset=True,control_mode=self.control_rate)
-
 		for j in range(0,self.Robot.active_legs):
 			self.Robot.Leg[j].feedback_state = 2 	# trajectory completed
-
+			self.Robot.Gait.cs[j] = 0
+		
+		self.Robot.update_state(reset=True,control_mode=self.control_rate,no_stability=True)
 		## Override control flag states
 		# if (self.interface == 'rviz'):
 		# 	self.control_loop = 'open'
@@ -404,7 +375,7 @@ class CorinManager:
 			setpoints = Routine.shuffle_legs(leg_stance)
 		else:
 			# Stands up from sit down position
-			leg_stance = self.Robot.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, self.Robot.stance_offset, 'flat')
+			leg_stance = self.Robot.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, self.Robot.stance_offset, STANCE_TYPE)
 			setpoints = (range(0,6), leg_stance, [0]*6, GAIT_TPHASE)
 
 		self.leg_level_controller(setpoints)
@@ -447,7 +418,6 @@ class CorinManager:
 			print "Returning legs to ground failed"
 			return False
 
-
 	def leg_level_controller(self, setpoints):
 		""" Generates and execute trajectory by specified desired leg position 	"""
 		""" Input: 	setpoints -> tuple of 4 items:-
@@ -459,8 +429,8 @@ class CorinManager:
 			Output: flag -> True: execution complete, False: error occured 		"""
 		
 		print colored("INFO: Leg-level controller", 'green')
-		self.Robot.update_state(control_mode=self.control_rate) 		# get current state
-		self.invalid = False
+		self.Robot.update_state(control_mode=self.control_rate, no_stability=True)
+
 		## Define Variables ##
 		te = 0 		# end time of motion
 		td = 0 		# duration of trajectory
@@ -521,7 +491,7 @@ class CorinManager:
 		# Set all legs to support mode for bodyposing, prevent AEP from being set
 		if (self.Robot.support_mode == True):
 			self.Robot.Gait.support_mode()
-			PathGenerator.V_MAX = PathGenerator.W_MAX = 0.05
+			PathGenerator.V_MAX = PathGenerator.W_MAX = 0.06
 		else:
 			self.Robot.Gait.walk_mode()
 
@@ -574,9 +544,21 @@ class CorinManager:
 
 			elif (mode == 4):
 				print colored("INFO: Bodypose", 'green')
+				## TEMP:
+				if STANCE_TYPE == 'wall':
+					
+					# print self.Robot.P6c.world_X_base.flatten()
+					self.Robot.P6d.world_X_base = np.zeros((6,1))# self.Robot.P6c.world_X_base.copy()
+					self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
+					for j in range(3):
+						self.Robot.Leg[j].snorm = np.array([0., -1., 0.])
+
 				prev_suspend = self.Robot.suspend
 				self.Robot.support_mode = True
 				self.Robot.suspend = False 		# clear suspension flag
+				self.Robot.init_robot_stance(STANCE_TYPE)
+				# print 'here ', np.round(self.Robot.P6c.world_X_base.flatten(),3)
+				# print 'wXb: ', np.round(self.Robot.XHd.world_X_base[:3,3],3)
 				self.path_tracking(x_cob, w_cob)
 
 				self.Robot.suspend = prev_suspend

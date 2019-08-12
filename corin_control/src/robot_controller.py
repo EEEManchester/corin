@@ -19,10 +19,10 @@ class RobotController(CorinManager):
 		CorinManager.__init__(self, initialise)
 		
 		# Enable/disable controllers
-		self.ctrl_base_tracking  = True 	# base tracking controller
+		self.ctrl_base_tracking  = False 	# base tracking controller
 		self.ctrl_base_admittance = False 	# base impedance controller - fault
-		self.ctrl_leg_admittance = True 	# leg impedance controller
-		self.ctrl_contact_detect = True 		# switch gait for early contact detection
+		self.ctrl_leg_admittance = False 	# leg impedance controller
+		self.ctrl_contact_detect = False 		# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
 
@@ -76,6 +76,13 @@ class RobotController(CorinManager):
 
 		## User input
 		print '==============================================='
+		# print self.Robot.Gait.cs
+		self.Robot.SM.prev_topology = [1,2,3,4,5,6]
+		# print 'wXb: ', np.round(self.Robot.XHd.world_X_base[:3,3],3)
+		# print 'bXw: ', np.round(self.Robot.XHd.base_X_world[:3,3],3)
+		# print 'wXf: ', np.round(self.Robot.Leg[4].XHc.world_X_foot[:3,3],3)
+		# print 'bXf: ', np.round(self.Robot.Leg[4].XHd.base_X_foot[:3,3],3)
+		# print 'bXf: ', np.round(self.Robot.Leg[4].XHd.coxa_X_foot[:3,3],3)
 		print 'Execute Path in', self.interface, '?',
 		if (self.interface == 'gazebo' or self.interface == 'robotis'):
 			raw_input('')
@@ -87,7 +94,7 @@ class RobotController(CorinManager):
 		# State machine loading/unloading timing parameters
 		tload = 1						# loading counter
 		iload = int(LOAD_T/CTR_INTV) 	# no. of intervals for loading
-		hload = int(1./CTR_INTV)		# no. of intervals for initial holding
+		hload = int(2./CTR_INTV)		# no. of intervals for initial holding
 		# Force Distribution variables
 		fmax_lim  = [F_MAX]*6			# maximum force array
 		init_flim = [F_MAX]*6			# current force for linear decrease in unloading
@@ -101,6 +108,8 @@ class RobotController(CorinManager):
 		# Counts per gait phase interval
 		iahead = int(GAIT_TPHASE/CTR_INTV)
 		
+		## TEMP:
+		suspend_length = 0.02
 		## Cycle through trajectory points until complete
 		i = 1 		# skip first point since spline has zero initial differential conditions
 		while (i != path_length and not rospy.is_shutdown()):
@@ -149,6 +158,11 @@ class RobotController(CorinManager):
 				v3wv = np.zeros((3,1))
 				v3wa = np.zeros((3,1))
 			
+			print 'path: ', base_path.X.xp[i]
+			if base_path.X.xp[i][0] > suspend_length:
+				raw_input('Suspend')
+				suspend_length += 0.02
+				
 			# Update robot's desired position, velocity & acceleration to next point on spline
 			self.Robot.P6d.world_X_base = np.vstack((v3cp,v3wp))
 			self.Robot.V6d.world_X_base = np.vstack((v3cv,v3wv)) 	# not used atm
@@ -234,6 +248,8 @@ class RobotController(CorinManager):
 					except:
 						print colored('ERROR: no gait to unstack','red')
 						pass
+					## TEMP: Stability Evaluation
+					self.Robot.Gait.cs = [0,0,0,2,0,0]
 					# raw_input('motion')
 					## Force and gait phase array for Force Distribution
 					fmax_lim = [0]*6	# max. force array
@@ -391,7 +407,9 @@ class RobotController(CorinManager):
 				""" Holds position - for controller to settle or pause motion """
 				# print 'Holding State'
 				gphase = [0]*6
-				fmax_lim = [F_MAX]*gphase.count(0)	# max. force array
+				fmax_lim = [F_MAX]*6	# max. force array
+				## TEMP: Stability Evaluation
+				gphase = [0,0,0,2,0,0]
 
 				if tload == 1:
 					print 'State Machine: Holding'
@@ -458,6 +476,10 @@ class RobotController(CorinManager):
 			# print 'qn: ', np.round(self.Robot.qc.position[12:15],4)
 			# cout3(self.Robot.Leg[4].Joint.qpc)
 			# print '======================================='
+			## TEMP: Stability Evaluation
+			qd.xp[9] = -0.698125654154321
+			qd.xp[10] = 1.5
+			qd.xp[11] = -2.0
 			## Data logging & publishing
 			qlog = self.set_log_setpoint(v3cp, v3cv, xa_d, v3wp, v3wv, wa_d, qd, joint_torq, force_dist)
 			self.publish_topics(qd, qlog)
@@ -489,7 +511,6 @@ class RobotController(CorinManager):
 		## PI controller
 		u = self.Robot.Base_Ctrl.update(P6e_world_X_base)
 		
-
 		for j in range (0, 6):
 			# Determine foot position wrt base & coxa. 
 			if (self.Robot.Gait.cs[j] == 0):
@@ -507,7 +528,12 @@ class RobotController(CorinManager):
 					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 
 				self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
-				# if j==5:
+				# if j==4:
+				# 	print 'bXw: ', np.round(self.Robot.XHd.base_X_world[:3,3],3)
+				# 	print 'wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[:3,3],3)
+				# 	print 'bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3],3)
+				# 	print 'bXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3],3)
+				# 	print '======================================'
 				# 	print 'u: ', np.round(u.flatten(),4)
 				# 	print slide_gain
 				# 	print 'S c wXb: ', np.round(self.Robot.XHc.world_X_base[:3,3],4)
@@ -515,7 +541,7 @@ class RobotController(CorinManager):
 				# 	temp1 = mX(self.Robot.XHc.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 				# 	temp2 = mX(self.Robot.Leg[j].XHd.coxa_X_base, temp1)
 				# 	# print 'S c wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[:3,3],4)
-					# print 'S d cXf: ', np.round(self.Robot.Leg[4].XHd.coxa_X_foot[:3,3],4)
+				# print j, ' S d cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3],4)
 					# print 'S c cXf: ', np.round(self.Robot.Leg[4].XHc.coxa_X_foot[:3,3],4)
 				# 	# print 'temp1: ', np.round(temp2,3)
 				# 	print 'temp2: ', np.round(temp2[:3,3],3)

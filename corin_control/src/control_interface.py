@@ -51,11 +51,15 @@ class ControlInterface:
 			x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.0])))
 
 		## Sideways Demo
-		elif (STANCE_TYPE == "sideways"):
+		elif (STANCE_TYPE == "wall"):
 
-			x_cob = np.vstack((x_cob,np.array([ 0.025, 0., 0.])))
-			x_cob = np.vstack((x_cob,np.array([-0.025, 0., 0.])))
-			x_cob = np.vstack((x_cob,np.array([ 0.0  , 0., 0. ])))
+			## Validate stability
+			x_cob = np.vstack((x_cob,np.array([0.2,  0.0, 0.])))
+			w_cob = np.vstack((w_cob,np.array([0.0,  0.0, 0.])))
+
+			# x_cob = np.vstack((x_cob,np.array([ 0.025, 0., 0.])))
+			# x_cob = np.vstack((x_cob,np.array([-0.025, 0., 0.])))
+			# x_cob = np.vstack((x_cob,np.array([ 0.0  , 0., 0. ])))
 
 			## 90 degrees
 			# x_cob = np.vstack((x_cob,np.array([0.0,-0.05, BODY_HEIGHT])))
@@ -66,13 +70,13 @@ class ControlInterface:
 			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0, BODY_HEIGHT ])))
 
 			## 30 and 60 deg
-			x_cob = np.vstack((x_cob,np.array([0.0,-0.025, 0.])))
-			x_cob = np.vstack((x_cob,np.array([0.0, 0.025, 0.])))
-			x_cob = np.vstack((x_cob,np.array([0.0, 0.0  , 0. ])))
+			# x_cob = np.vstack((x_cob,np.array([0.0,-0.025, 0.])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.025, 0.])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0  , 0. ])))
 
-			x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.+0.025])))
-			x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.-0.025])))
-			x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.+0.025])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.-0.025])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.])))
 
 			# left/right & up/down
 			# x_cob = np.vstack((x_cob,np.array([0.0, 0.025, BODY_HEIGHT+0.025])))
@@ -88,7 +92,7 @@ class ControlInterface:
 			# x_cob = np.vstack((x_cob,np.array([ 0.0, 0., BODY_HEIGHT])))
 
 		## Full bodypose demo
-		elif (STANCE_TYPE == "flat"):
+		elif (STANCE_TYPE == "ground"):
 			
 			# x_cob = np.vstack((x_cob,np.array([0. , -0.04, 0.])))
 			# x_cob = np.vstack((x_cob,np.array([0.03,  0.04, 0.])))
