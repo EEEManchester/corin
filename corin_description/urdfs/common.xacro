@@ -13,7 +13,7 @@
 	<!--  Joint parameters -->
 	<xacro:property name="MX64_damping"   value="0.20" /> 					<!-- real: 0.2 		-->
 	<xacro:property name="MX64_effort"    value="2.85" /> 					<!-- real: 2.85 Nm 	-->
-	<xacro:property name="MX64_velocity"  value="6.6" />
+	<xacro:property name="MX64_velocity"  value="5.23" />
 
 	<xacro:property name="cox_joint_lim" value="2.05" />	<!-- 57 deg = 1.05 rad -->
 	<xacro:property name="cxm_joint_lim" value="2.84" />	<!-- 48 deg = 0.84 rad -->

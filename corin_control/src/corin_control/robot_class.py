@@ -74,9 +74,9 @@ class RobotState:
 
 		self.cop = np.zeros(3)
 		self.Sp = SMargin.StabilityMargin()
-		self.init_robot_stance(STANCE_TYPE)
+		self.init_robot_stance("flat")
 		
-	def init_robot_stance(self, stance_type="ground"):
+	def init_robot_stance(self, stance_type="flat"):
 
 		self._initialise( self.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, self.stance_offset, stance_type) )
 
@@ -121,10 +121,8 @@ class RobotState:
 
 		reset = True if options.get("reset") == True else False
 		cmode = "fast" if options.get("control_mode") == "fast" else "normal"
-		istab = True if options.get("no_stability") == True else False
 
 		if reset:
-			print colored("Calibrating state estimator ...",'yellow')
 			i = 0
 			self.state_estimator.reset_state()
 			# Wait for esimtate_state to be called enough times for calibration
@@ -137,15 +135,12 @@ class RobotState:
 					break
 			else:
 				print colored("State Estimator calibrated", 'green') 
-				self.update_bodypose_state(cmode)
-				print np.round(self.P6c.world_X_base.flatten(),4)
 
 		self.update_bodypose_state(cmode)
 		self.update_leg_state(reset, cmode)
-		if not istab:
-			self.update_stability_region()
-			self.update_stability_margin()
-		# self.update_cop()
+		self.update_stability_region()
+		self.update_stability_margin()
+		self.update_cop()
 		
 	def estimate_state(self):
 		# Gets called at IMU rate
@@ -200,16 +195,16 @@ class RobotState:
 			pos = np.reshape(self.state_estimator.r, (3,1)) + \
 					np.array([self.P6c.world_X_base_offset.item(0),
  								self.P6c.world_X_base_offset.item(1),
- 								0.]).reshape((3,1))
+ 								BODY_HEIGHT]).reshape((3,1))
 			angles = np.reshape(self.state_estimator.get_fixed_angles(), (3,1))
 			vel = np.reshape(self.state_estimator.v, (3,1))
 			angular = np.reshape(self.state_estimator.w, (3,1))
-			# print 'this: ', np.round(pos.flatten(),4)
+
 			# self.P6c.world_X_base = np.vstack((pos, angles))
 			# self.V6c.world_X_base = np.vstack((vel, angular))
 			# print np.round(self.P6c.world_X_base.flatten(),4)
-			# self.P6c.world_X_base[0:3] = pos
-			# self.P6c.world_X_base[3:6] = angles
+			self.P6c.world_X_base[0:3] = pos
+			self.P6c.world_X_base[3:6] = angles
 			err = self.P6c.world_X_base - np.vstack((pos, angles))
 			# print np.round(err.flatten(),3)
 			# TODO Sort the logic here
@@ -230,18 +225,18 @@ class RobotState:
 
 	def update_stability_margin(self):
 		""" updates the current stability margin """
-		
+
 		valid, sm = self.SM.point_in_convex(self.XHc.world_X_COM[:3,3])
 		pvalid, psm = self.Sp.point_in_polygon(self.XHc.world_X_COM[:3,3])
 
-		if not valid:# and abs(sm) > 0.008:
-		# if abs(sm) < 0.005:
-			pass
-			# print colored("Convex hull violated %s %.3f " %(valid, sm), 'red')
+		if not valid:
+			print colored("Convex hull violated %.3f %.3f " %(valid, sm), 'red')
 			# self.invalid = True
-			# self.SM.point_in_convex(self.XHc.world_X_COM[:3,3], True)
+			self.SM.point_in_convex(self.XHc.world_X_COM[:3,3], True)
 			# self.SM.point_in_polygon(self.XHc.world_X_COM[:3,3])
-
+		else:
+			self.invalid = False
+			# pass
 		## Force/Moment balance
 		# stack_leg_forces = [self.Leg[j].F6c.world_X_foot[:3] for j in range(6) if self.Gait.cs[j] == 0]
 		# stack_leg_normal = [self.Leg[j].snorm for j in range(6) if self.Gait.cs[j] == 0]
@@ -259,8 +254,6 @@ class RobotState:
 			self.SM.compute_support_region(stack_world_X_foot, stack_normals)
 			self.Sp.compute_support_polygon(stack_world_X_foot)
 			self.SM.prev_topology = list(self.Gait.cs)
-			for j in range(6):
-				print np.round(self.Leg[j].XHc.world_X_foot[:3,3].flatten(),4)
 		else:
 			pass
 
@@ -477,15 +470,15 @@ class RobotState:
 		for j in range(0,6):
 			self.Leg[j].duplicate_self(robot.Leg[j])
 
-	def set_leg_stance(self, stance_width, base_height, stance_offset, stance_type="ground"):
+	def set_leg_stance(self, stance_width, base_height, stance_offset, stance_type="flat"):
 		""" Sets leg stance according to front & rear leg offset """
 
 		leg_stance = {}
 		teta_f = stance_offset[0]
 		teta_r = stance_offset[1]
 
-		# Ground walking stance
-		if (stance_type == "ground"):
+		# Flat ground stance - original
+		if (stance_type == "flat"):
 			# print 'Flat selected'
 			leg_stance[0] = np.array([ stance_width*np.cos(teta_f*np.pi/180), stance_width*np.sin(teta_f*np.pi/180), -base_height ])
 			leg_stance[1] = np.array([ stance_width, 0, -base_height])
@@ -494,7 +487,9 @@ class RobotState:
 			leg_stance[4] = np.array([ stance_width, 0, -base_height])
 			leg_stance[5] = np.array([ stance_width*np.cos(teta_r*np.pi/180), stance_width*np.sin(-teta_r*np.pi/180), -base_height ])
 
-		# Chimney walking stance
+			# for j in range(5):
+			# 	leg_stance[j][2] = 0.0
+
 		elif (stance_type == "chimney"):
 			# base_height = 0.
 			# stance_width = STANCE_WIDTH
@@ -508,17 +503,6 @@ class RobotState:
 			leg_stance[4] = np.array([ stance_width, 0, -base_height])
 			leg_stance[5] = np.array([ stance_width*np.cos(teta_r*np.pi/180), stance_width*np.sin(-teta_r*np.pi/180), -base_height ])
 
-		# Wall walking stance
-		elif stance_type == "wall":
-			wg_stance = 0.30;	wg_height = 0.05
-			ww_stance = 0.21;	ww_height = -0.05
-			leg_stance[0] = np.array([ ww_stance*np.cos(teta_f*np.pi/180), ww_stance*np.sin(teta_f*np.pi/180), ww_height ])
-			leg_stance[1] = np.array([ ww_stance, 0, ww_height])
-			leg_stance[2] = np.array([ ww_stance*np.cos(teta_r*np.pi/180), ww_stance*np.sin(teta_r*np.pi/180), ww_height ])
-			leg_stance[3] = np.array([ wg_stance*np.cos(teta_f*np.pi/180), wg_stance*np.sin(-teta_f*np.pi/180), wg_height ])
-			leg_stance[4] = np.array([ wg_stance, 0, wg_height])
-			leg_stance[5] = np.array([ wg_stance*np.cos(teta_r*np.pi/180), wg_stance*np.sin(-teta_r*np.pi/180), wg_height ])
-		
 		else:
 			print 'Invalid stance selected!'
 			leg_stance = None
