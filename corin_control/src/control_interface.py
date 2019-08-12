@@ -109,7 +109,7 @@ class ControlInterface:
 			# w_cob = np.vstack((w_cob,np.array([0.,  0.0, 0.])))
 
 			## Validate stability
-			x_cob = np.vstack((x_cob,np.array([0.2,  0.0, 0.])))
+			x_cob = np.vstack((x_cob,np.array([-0.2,  0.0, 0.])))
 			# x_cob = np.vstack((x_cob,np.array([0.,  0.0, 0.])))
 			w_cob = np.vstack((w_cob,np.array([0.0,  0.0, 0.])))
 			# w_cob = np.vstack((w_cob,np.array([0.4,  0.0, 0.])))

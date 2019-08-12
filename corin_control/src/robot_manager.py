@@ -26,6 +26,7 @@ from std_msgs.msg import Float64MultiArray 	# misc. logging items
 from std_msgs.msg import String 			# ui control
 import tf 		 							# ROS transform library
 from geometry_msgs.msg import Vector3Stamped # Force sensor readings
+from geometry_msgs.msg import Quaternion 	# IMU orientation
 from geometry_msgs.msg import Vector3 		# debugging
 from nav_msgs.msg import Odometry
 
@@ -58,9 +59,9 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "robotis"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
-		self.control_loop = "close" 	# run controller in open or closed loop
+		self.control_loop = "open" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
 		self.MotionPlan = MotionPlan()
@@ -85,7 +86,7 @@ class CorinManager:
 
 		self.Robot.imu = msg
 		self.Robot.estimate_state()
-
+		
 		# Hassan - debugging
 		# if(self.Robot.state_estimator.calibrated):
 		# 	self.pub_imu_v.publish(Vector3(*(1.0*self.Robot.state_estimator.v).tolist()))
@@ -223,7 +224,10 @@ class CorinManager:
 
 		##***************** SUBSCRIBERS ***************##
 		## Robot State ##
-		self.imu_sub_	 = rospy.Subscriber(ROBOT_NS + '/imu/base/data', Imu, self.imu_callback, queue_size=1)
+		if self.interface == 'robotis':
+			self.imu_sub_	 = rospy.Subscriber('/imu_LORD/data', Imu, self.imu_callback, queue_size=1)
+		else:
+			self.imu_sub_	 = rospy.Subscriber(ROBOT_NS + '/imu/base/data', Imu, self.imu_callback, queue_size=1)
 		
 		## Hardware Specific Subscribers ##
 		if (self.interface == 'robotis'):

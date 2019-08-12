@@ -159,7 +159,7 @@ class RobotController(CorinManager):
 				v3wa = np.zeros((3,1))
 			
 			print 'path: ', base_path.X.xp[i]
-			if base_path.X.xp[i][0] > suspend_length:
+			if abs(base_path.X.xp[i][0]) > suspend_length:
 				raw_input('Suspend')
 				suspend_length += 0.02
 				
@@ -249,7 +249,7 @@ class RobotController(CorinManager):
 						print colored('ERROR: no gait to unstack','red')
 						pass
 					## TEMP: Stability Evaluation
-					self.Robot.Gait.cs = [0,0,0,2,0,0]
+					self.Robot.Gait.cs = [0,0,2,0,0,0]
 					# raw_input('motion')
 					## Force and gait phase array for Force Distribution
 					fmax_lim = [0]*6	# max. force array
@@ -409,7 +409,7 @@ class RobotController(CorinManager):
 				gphase = [0]*6
 				fmax_lim = [F_MAX]*6	# max. force array
 				## TEMP: Stability Evaluation
-				gphase = [0,0,0,2,0,0]
+				gphase = [0,0,2,0,0,0]
 
 				if tload == 1:
 					print 'State Machine: Holding'
@@ -476,10 +476,10 @@ class RobotController(CorinManager):
 			# print 'qn: ', np.round(self.Robot.qc.position[12:15],4)
 			# cout3(self.Robot.Leg[4].Joint.qpc)
 			# print '======================================='
-			## TEMP: Stability Evaluation
-			qd.xp[9] = -0.698125654154321
-			qd.xp[10] = 1.5
-			qd.xp[11] = -2.0
+			## TEMP: Stability Evaluation - RF 9-11; LR 6-8
+			qd.xp[6] = -0.698125654154321
+			qd.xp[7] = 1.5
+			qd.xp[8] = -2.0
 			## Data logging & publishing
 			qlog = self.set_log_setpoint(v3cp, v3cv, xa_d, v3wp, v3wv, wa_d, qd, joint_torq, force_dist)
 			self.publish_topics(qd, qlog)

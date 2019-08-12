@@ -205,7 +205,7 @@ class RobotState:
 			vel = np.reshape(self.state_estimator.v, (3,1))
 			angular = np.reshape(self.state_estimator.w, (3,1))
 			# print 'this: ', np.round(pos.flatten(),4)
-			# self.P6c.world_X_base = np.vstack((pos, angles))
+			self.P6c.world_X_base = np.vstack((pos, angles))
 			# self.V6c.world_X_base = np.vstack((vel, angular))
 			# print np.round(self.P6c.world_X_base.flatten(),4)
 			# self.P6c.world_X_base[0:3] = pos
