@@ -3,8 +3,8 @@ lf_q1_joint :   # MX-64
    operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
    homing_offset         : 0
-   max_position_limit    : 4091   # 2700 = 57.3 deg
-   min_position_limit    : 1   # 1396 = -57.3 deg
+   max_position_limit    : 2700   #  57.3 deg
+   min_position_limit    : 1396   # -57.3 deg
    velocity_limit        : 150
    goal_position         : 2048   # 0-4095
    goal_current          : 1941   # 0-1941
@@ -22,8 +22,8 @@ lf_q2_joint :   # MX-64
    operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
-   max_position_limit    : 4093   #  127 deg
-   min_position_limit    : 1    # -127 deg
+   max_position_limit    : 3500   #  127 deg
+   min_position_limit    : 596    # -127 deg
    velocity_limit        : 150
    goal_position         : 3500   # 0-4095
    goal_current          : 1941   # 0-1941
@@ -60,8 +60,8 @@ lm_q1_joint :   # MX-64
    operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
    homing_offset         : 0
-   max_position_limit    : 4090   #  48 deg
-   min_position_limit    : 5   # -48 deg
+   max_position_limit    : 2594   #  48 deg
+   min_position_limit    : 1502   # -48 deg
    velocity_limit        : 150
    goal_position         : 2048   # 0-4095
    goal_current          : 1941   # 0-1941
@@ -79,8 +79,8 @@ lm_q2_joint :   # MX-64
    operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
-   max_position_limit    : 4093   #  127 deg
-   min_position_limit    : 1    # -127 deg
+   max_position_limit    : 3500   #  127 deg
+   min_position_limit    : 596    # -127 deg
    velocity_limit        : 150
    goal_position         : 3500   # 0-4095
    goal_current          : 1941   # 0-1941
@@ -117,8 +117,8 @@ lr_q1_joint :   # MX-64
    operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
    homing_offset         : 0
-   max_position_limit    : 4092   # 2685 =  56.0 deg
-   min_position_limit    : 6   # 1411 = -56.0 deg
+   max_position_limit    : 2685   #  56.0 deg
+   min_position_limit    : 1396   # -57.3 deg
    velocity_limit        : 150
    goal_position         : 2048   # 0-4095
    goal_current          : 1941   # 0-1941
@@ -136,8 +136,8 @@ lr_q2_joint :   # MX-64
    operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
-   max_position_limit    : 4093   #  127 deg
-   min_position_limit    : 1    # -127 deg
+   max_position_limit    : 3500   #  127 deg
+   min_position_limit    : 596    # -127 deg
    velocity_limit        : 150
    goal_position         : 3500   # 0-4095
    goal_current          : 1941   # 0-1941
@@ -174,8 +174,8 @@ rf_q1_joint :   # MX-64
    operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
    homing_offset         : 0
-   max_position_limit    : 4091   #  57.3 deg
-   min_position_limit    : 1   # -57.3 deg
+   max_position_limit    : 2700   #  57.3 deg
+   min_position_limit    : 1396   # -57.3 deg
    velocity_limit        : 150
    goal_position         : 2048   # 0-4095
    goal_current          : 1941   # 0-1941
@@ -193,8 +193,8 @@ rf_q2_joint :   # MX-64
    operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
-   max_position_limit    : 4093   #  127 deg
-   min_position_limit    : 1    # -127 deg
+   max_position_limit    : 3500   #  127 deg
+   min_position_limit    : 596    # -127 deg
    velocity_limit        : 150
    goal_position         : 3500   # 0-4095
    goal_current          : 1941   # 0-1941
@@ -231,8 +231,8 @@ rm_q1_joint :   # MX-64
    operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
    homing_offset         : 0
-   max_position_limit    : 4090   #  48 deg
-   min_position_limit    : 5   # -48 deg
+   max_position_limit    : 2594   #  48 deg
+   min_position_limit    : 1502   # -48 deg
    velocity_limit        : 150
    goal_position         : 2048   # 0-4095
    goal_current          : 1941   # 0-1941
@@ -250,8 +250,8 @@ rm_q2_joint :   # MX-64
    operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
-   max_position_limit    : 4093   #  127 deg
-   min_position_limit    : 1    # -127 deg
+   max_position_limit    : 3500   #  127 deg
+   min_position_limit    : 596    # -127 deg
    velocity_limit        : 150
    goal_position         : 3500   # 0-4095
    goal_current          : 1941   # 0-1941
@@ -288,8 +288,8 @@ rr_q1_joint :   # MX-64
    operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
    homing_offset         : 0
-   max_position_limit    : 4092   #  56.0 deg
-   min_position_limit    : 6   # -56.0 deg
+   max_position_limit    : 2685   #  56.0 deg
+   min_position_limit    : 1411   # -56.0 deg
    velocity_limit        : 150
    goal_position         : 2048   # 0-4095
    goal_current          : 1941   # 0-1941
@@ -307,8 +307,8 @@ rr_q2_joint :   # MX-64
    operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
-   max_position_limit    : 4093   #  127 deg
-   min_position_limit    : 1    # -127 deg
+   max_position_limit    : 3500   #  127 deg
+   min_position_limit    : 596    # -127 deg
    velocity_limit        : 150
    goal_position         : 3500   # 0-4095
    goal_current          : 1941   # 0-1941
