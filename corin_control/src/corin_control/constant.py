@@ -157,7 +157,7 @@ BODY_HEIGHT  = 0.10		# ori: 0.10, chimney: 0.0
 TETA_F = 40.;
 TETA_R = -TETA_F;
 LEG_OFFSET = [TETA_F, 0., TETA_R, -TETA_F, 0., -TETA_R]
-STANCE_TYPE = "flat" 	# "flat", "chimney", "sideways"
+STANCE_TYPE = "wall" 	# "ground", "chimney", "wall"
 
 ## ================================================================ ##
 ##                       Gait parameters 	 						##

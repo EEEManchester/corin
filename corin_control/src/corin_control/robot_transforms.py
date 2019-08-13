@@ -85,6 +85,28 @@ def update_coxa_X_foot(q):
 	coxa_X_foot[2,3] = L3*(q2_sin*q3_cos + q2_cos*q3_sin) + L2*q2_sin
 	return coxa_X_foot
 
+def update_foot_X_coxa(q):
+	q1_sin = np.sin(q[0])
+	q2_sin = np.sin(q[1])
+	q3_sin = np.sin(q[2])
+	q1_cos = np.cos(q[0])
+	q2_cos = np.cos(q[1])
+	q3_cos = np.cos(q[2])
+	foot_X_coxa = np.linalg.inv(update_coxa_X_foot(q))
+	# foot_X_coxa = np.eye(4)
+	# foot_X_coxa[0,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_cos
+	# foot_X_coxa[0,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_cos
+	# foot_X_coxa[0,2] = q1_sin
+	# foot_X_coxa[0,3] = q1_cos*(L1 + L3*(q2_cos*q3_cos - q2_sin*q3_sin) + L2*q2_cos)
+	# foot_X_coxa[1,0] = (q2_cos*q3_cos - q2_sin*q3_sin)*q1_sin
+	# foot_X_coxa[1,1] = -(q2_sin*q3_cos + q2_cos*q3_sin)*q1_sin
+	# foot_X_coxa[1,2] = -q1_cos
+	# foot_X_coxa[1,3] = q1_sin*(L1 + L3*(q2_cos*q3_cos - q2_sin*q3_sin) + L2*q2_cos)
+	# foot_X_coxa[2,0] = (q2_sin*q3_cos + q2_cos*q3_sin)
+	# foot_X_coxa[2,1] = (q2_cos*q3_cos - q2_sin*q3_sin)
+	# foot_X_coxa[2,2] = 0.
+	# foot_X_coxa[2,3] = L3*(q2_sin*q3_cos + q2_cos*q3_sin) + L2*q2_sin
+	return foot_X_coxa
 ## ============================================================================= ##
 ## 									Vector Class 								 ##
 ## ============================================================================= ##
@@ -199,6 +221,7 @@ class ArrayHomogeneousTransform:
 		self.coxa_X_coxa_COM  = np.identity(4)
 		self.coxa_X_femur_COM = np.identity(4)
 		self.coxa_X_tibia_COM = np.identity(4)
+		self.foot_X_coxa = np.identity(4)
 
 		## CoM ##
 		self.base_X_COM = np.identity(4)		# done
@@ -362,6 +385,12 @@ class ArrayHomogeneousTransform:
 		self.coxa_X_foot[2,2] = 0.
 		self.coxa_X_foot[2,3] = L3*(q2_sin*q3_cos + q2_cos*q3_sin) + L2*q2_sin
 
+	def update_foot_X_coxa(self, q):
+
+		self.update_coxa_X_foot(q)
+		self.foot_X_coxa[:3,:3] = np.transpose(self.coxa_X_foot[:3,:3]).copy()
+		self.foot_X_coxa[:3,3]  = np.dot(self.foot_X_coxa[:3,:3], self.coxa_X_foot[:3,3] )
+
 	def update_coxa_X_NRP(self, q):
 		q1_sin = np.sin(q[0])
 		q2_sin = np.sin(q[1])
@@ -479,9 +508,12 @@ q3 = 0.
 XH = ArrayHomogeneousTransform(3)
 XH.update_base_X_foot(np.array([0.5,0.,0.]))
 XH.update_coxa_X_foot(np.array([0.5,0.,0.]))
+print np.round(XH.coxa_X_foot,3)
+XH.update_foot_X_coxa(np.array([0.5,0.,0.]))
 # print np.round(XH.base_X_coxa,3)
 # print np.round(XH.base_X_foot[:3,:3],3)
-# print np.round(XH.coxa_X_foot[:3,:3],3)
+
+# print np.round(XH.foot_X_coxa,3)
 # print np.round(mX(rot_Z(q1), rot_X(PI/2), rot_Z(q2), rot_Z(q3)),3)
 # wForce = np.array([0.,0.,10.])
 # print np.round(mX(XH.base_X_foot[:3,:3], wForce),3)

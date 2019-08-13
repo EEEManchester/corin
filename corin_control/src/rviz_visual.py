@@ -185,15 +185,20 @@ class RvizVisualise:
 			self.publish_footholds(footholds)
 			rospy.sleep(0.2)
 
-	def publish_foot_force(self, robot):
+	def publish_foot_force(self, robot, interface):
 		""" Publishes foot force as 'measured' by force sensor	"""
 
 		for j in range(0,6):
 			data = WrenchStamped()
 			data.header.frame_id = LEG_FORCE_FRAME[j]
-			data.wrench.force.x = robot.Leg[j].F6c.tibia_X_foot[0]
-			data.wrench.force.y = robot.Leg[j].F6c.tibia_X_foot[1]
-			data.wrench.force.z = robot.Leg[j].F6c.tibia_X_foot[2]
+			if interface != "rviz":
+				data.wrench.force.x = robot.Leg[j].F6c.tibia_X_foot[0]
+				data.wrench.force.y = robot.Leg[j].F6c.tibia_X_foot[1]
+				data.wrench.force.z = robot.Leg[j].F6c.tibia_X_foot[2]
+			else:
+				data.wrench.force.x = robot.Leg[j].F6d.tibia_X_foot[0]
+				data.wrench.force.y = robot.Leg[j].F6d.tibia_X_foot[1]
+				data.wrench.force.z = robot.Leg[j].F6d.tibia_X_foot[2]
 			self.wrench_pub_[j].publish(data)
 
 	def publish_friction_cones(self, robot, mu):

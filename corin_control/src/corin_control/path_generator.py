@@ -109,7 +109,6 @@ class PathGenerator():
 			t_cob = np.round(t_cob*ndiv,1) 	# set new time interval
 			# regenerate spline
 			x_out = SplineGenerator.generate_spline(x_cob, t_cob, tn)
-			print 'wcob: ', w_cob
 			w_out = SplineGenerator.generate_spline(w_cob, t_cob, tn)
 
 		# check if base angular velocity exceeds limit

@@ -26,6 +26,7 @@ from std_msgs.msg import Float64MultiArray 	# misc. logging items
 from std_msgs.msg import String 			# ui control
 import tf 		 							# ROS transform library
 from geometry_msgs.msg import Vector3Stamped # Force sensor readings
+from geometry_msgs.msg import Quaternion 	# LORD IMU
 from geometry_msgs.msg import Vector3 		# debugging
 from nav_msgs.msg import Odometry
 
@@ -58,7 +59,7 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
 		self.control_loop = "close" 	# run controller in open or closed loop
 
@@ -67,10 +68,6 @@ class CorinManager:
 		self.Visualizer = RvizVisualise(self.interface) 	# visualisation for rviz
 
 		self.Planner = None#PathPlanner(self.GridMap)
-
-		## TEMP
-		self.pose_compare = [0]*12
-		self.twist_compare = [0]*12
 
 		self.__initialise__()
 
@@ -97,7 +94,6 @@ class CorinManager:
 		# 	self.pub_imu_q.publish(Vector3(*self.Robot.state_estimator.get_fixed_angles().tolist()))
 		# 	self.pub_imu_bf.publish(Vector3(*self.Robot.state_estimator.bf.tolist()))
 		# 	self.pub_imu_bw.publish(Vector3(*self.Robot.state_estimator.bw.tolist()))
-
 
 	def contact_force_callback_0(self, msg):
 		data = msg.vector
@@ -137,12 +133,12 @@ class CorinManager:
 		idx = msg.name.index(ROBOT_NS)
 		rpy = np.array(euler_from_quaternion([msg.pose[idx].orientation.w, msg.pose[idx].orientation.x,
 												msg.pose[idx].orientation.y, msg.pose[idx].orientation.z], 'sxyz'))
-		# self.Robot.P6c.world_X_base[0] = msg.pose[idx].position.x + self.Robot.P6c.world_X_base_offset.item(0)
-		# self.Robot.P6c.world_X_base[1] = msg.pose[idx].position.y + self.Robot.P6c.world_X_base_offset.item(1)
-		# self.Robot.P6c.world_X_base[2] = msg.pose[idx].position.z
-		# self.Robot.P6c.world_X_base[3] = rpy.item(0)
-		# self.Robot.P6c.world_X_base[4] = rpy.item(1)
-		# self.Robot.P6c.world_X_base[5] = rpy.item(2)
+		self.Robot.P6c.world_X_base[0] = msg.pose[idx].position.x + self.Robot.P6c.world_X_base_offset.item(0)
+		self.Robot.P6c.world_X_base[1] = msg.pose[idx].position.y + self.Robot.P6c.world_X_base_offset.item(1)
+		self.Robot.P6c.world_X_base[2] = msg.pose[idx].position.z
+		self.Robot.P6c.world_X_base[3] = rpy.item(0)
+		self.Robot.P6c.world_X_base[4] = rpy.item(1)
+		self.Robot.P6c.world_X_base[5] = rpy.item(2)
 		# print np.round(rpy,3)
 		# print np.round(self.Robot.P6c.world_X_base[3:6].flatten(),3)
 		# print '===================================='
@@ -152,21 +148,6 @@ class CorinManager:
 		# self.Robot.cb_V6c.world_X_base[3] = msg.twist[idx].angular.x
 		# self.Robot.cb_V6c.world_X_base[4] = msg.twist[idx].angular.y
 		# self.Robot.cb_V6c.world_X_base[5] = msg.twist[idx].angular.z
-
-		# self.pose_compare[6:12] = self.Robot.P6c.world_X_base.flatten().tolist()
-		# error = map(lambda x,y: x-y, self.pose_compare[0:6], self.pose_compare[6:12])
-		# print np.round(error, 4)
-
-	# def ground_truth(self, msg):
-	# 	xyz = np.array([msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z])
-	# 	rpy = list(euler_from_quaternion([msg.pose.pose.orientation.w, 
-	# 																				msg.pose.pose.orientation.x,
-	# 																				msg.pose.pose.orientation.y,
-	# 																				msg.pose.pose.orientation.z], 'sxyz'))
-	# 	self.pose_compare[0:3] = [msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z]
-	# 	self.pose_compare[3:6] = rpy
-	# 	gnd_pose = np.vstack((xyz,rpy))
-	# 	pose_error = gnd_pose - self.P6c.world_X_base
 
 	def __initialise__(self):
 		""" Initialises robot and classes """
@@ -201,8 +182,8 @@ class CorinManager:
 			self.Robot.Leg[j].feedback_state = 2 	# trajectory completed
 
 		## Override control flag states
-		# if (self.interface == 'rviz'):
-		# 	self.control_loop = 'open'
+		if (self.interface == 'rviz'):
+			self.control_loop = 'open'
 
 		## Set map to that available in service
 		print '==============================================='
@@ -358,12 +339,13 @@ class CorinManager:
 
 				self.joint_pub_.publish(dqp)
 
+		## Visualization topics
 		self.Visualizer.publish_support_polygon(self.Robot.Sp.convex_hull)
 		self.Visualizer.publish_support_region(self.Robot.SM.convex_hull)
 		self.Visualizer.publish_com(self.Robot.Rbdl.com + self.Robot.P6c.world_X_base[:3])
-		self.Visualizer.publish_cop(self.Robot.cop)
 		self.Visualizer.publish_friction_cones(self.Robot, SURFACE_FRICTION)
-		self.Visualizer.publish_foot_force(self.Robot)
+		self.Visualizer.publish_foot_force(self.Robot, self.interface)
+		# self.Visualizer.publish_cop(self.Robot.cop)
 
 		# self.stability_pub_.publish(self.Robot.SM.min)
 		self.log_misc_pub_.publish(
@@ -404,7 +386,9 @@ class CorinManager:
 			setpoints = Routine.shuffle_legs(leg_stance)
 		else:
 			# Stands up from sit down position
-			leg_stance = self.Robot.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, self.Robot.stance_offset, 'flat')
+			leg_stance = self.Robot.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, 
+													self.Robot.stance_offset, 
+													STANCE_TYPE)
 			setpoints = (range(0,6), leg_stance, [0]*6, GAIT_TPHASE)
 
 		self.leg_level_controller(setpoints)
@@ -459,8 +443,9 @@ class CorinManager:
 			Output: flag -> True: execution complete, False: error occured 		"""
 		
 		print colored("INFO: Leg-level controller", 'green')
-		self.Robot.update_state(control_mode=self.control_rate) 		# get current state
-		self.invalid = False
+		self.Robot.update_state(control_mode=self.control_rate,
+								no_stability=True) 		# get current state
+		
 		## Define Variables ##
 		te = 0 		# end time of motion
 		td = 0 		# duration of trajectory
@@ -518,6 +503,10 @@ class CorinManager:
 		## Define Variables ##
 		PathGenerator = Pathgenerator.PathGenerator() 	# path generator for robot's base
 
+		## Set to support mode first for support region
+		self.Robot.Gait.cs = [0]*6
+		self.Robot.init_robot_stance(STANCE_TYPE)
+
 		# Set all legs to support mode for bodyposing, prevent AEP from being set
 		if (self.Robot.support_mode == True):
 			self.Robot.Gait.support_mode()
@@ -531,7 +520,6 @@ class CorinManager:
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 		
 		## Plan foothold for robot - world_X_base, world_X_footholds not used
-		# mplan = self.Map.foothold_planner(base_path, self.Robot)
 		motion_plan = MotionPlan()
 		motion_plan.qb = base_path
 		self.main_controller(motion_plan)
@@ -541,11 +529,8 @@ class CorinManager:
 		## TODO: alternative for this - using action server
 
 		## update robot state prior to starting action
-		self.Robot.Gait.support_mode()
-		self.Robot.update_stability_region()
 		self.Robot.update_state(control_mode=self.control_rate)
-		self.Robot.Gait.walk_mode()
-
+		
 		## check action to take - rosparam server
 		data = self.Action.action_to_take()
 		# data = None
@@ -574,12 +559,26 @@ class CorinManager:
 
 			elif (mode == 4):
 				print colored("INFO: Bodypose", 'green')
+				
+				# Set robot pose according to stance type
+				if STANCE_TYPE == "wall":
+					self.Robot.P6d.world_X_base = np.array([0.,0.,0.38,1.42,0.,0.]).reshape((6,1))
+					for j in range(3):
+						self.Robot.Leg[j].snorm = np.array([0., -1., 0.])
+				elif STANCE_TYPE == "ground":
+					self.Robot.P6d.world_X_base = np.array([0.,0.,BODY_HEIGHT,0.,0.,0.]).reshape((6,1))
+
+				self.Robot.P6c.world_X_base = self.Robot.P6d.world_X_base.copy()
+				self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
+				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
+				
+				# Save robot state and reinitialise
 				prev_suspend = self.Robot.suspend
 				self.Robot.support_mode = True
 				self.Robot.suspend = False 		# clear suspension flag
-				self.path_tracking(x_cob, w_cob)
-
-				self.Robot.suspend = prev_suspend
+				
+				self.path_tracking(x_cob, w_cob) 		# Generate tracking trajectory
+				self.Robot.suspend = prev_suspend 	# Revert robot state
 				## Move back to nominal position
 				# self.default_pose()
 				# self.default_pose(1) 	# required for resetting stance for walking

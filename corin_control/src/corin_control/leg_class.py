@@ -258,6 +258,7 @@ class LegClass:
 		# 	print np.round(delta_qpd,3)
 
 		if (self.Joint.qpd is not None):
+			self.XHd.update_foot_X_coxa(self.Joint.qpd) 	# updates coxa_X_foot as well
 			# checks if joint limit exceeded and singularity occurs
 			if (self.check_joint_limit(self.Joint.qpd) is True):
 				error = 1

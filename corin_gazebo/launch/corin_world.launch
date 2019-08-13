@@ -14,7 +14,7 @@
   <arg name="world" default="empty" />        <!-- world to use -->
   <arg name="x" default="0"/>                 <!-- robot spawn position in world x-axis -->
   <arg name="y" default="0"/>                 <!-- robot spawn position in world y-axis -->
-  <arg name="z" default="0.08"/>              <!-- robot spawn position in world z-axis -->
+  <arg name="z" default="0.11"/>              <!-- robot spawn position in world z-axis -->
 
   <!--Set world to be launched -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">

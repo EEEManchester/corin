@@ -74,9 +74,9 @@ class RobotState:
 
 		self.cop = np.zeros(3)
 		self.Sp = SMargin.StabilityMargin()
-		self.init_robot_stance("flat")
+		self.init_robot_stance(STANCE_TYPE)
 		
-	def init_robot_stance(self, stance_type="flat"):
+	def init_robot_stance(self, stance_type="ground"):
 
 		self._initialise( self.set_leg_stance(STANCE_WIDTH, BODY_HEIGHT, self.stance_offset, stance_type) )
 
@@ -121,7 +121,7 @@ class RobotState:
 
 		reset = True if options.get("reset") == True else False
 		cmode = "fast" if options.get("control_mode") == "fast" else "normal"
-
+		no_stability = True if options.get("no_stability") == True else False
 		if reset:
 			i = 0
 			self.state_estimator.reset_state()
@@ -138,9 +138,10 @@ class RobotState:
 
 		self.update_bodypose_state(cmode)
 		self.update_leg_state(reset, cmode)
-		self.update_stability_region()
-		self.update_stability_margin()
-		self.update_cop()
+		if no_stability != True:
+			self.update_stability_region()
+			self.update_stability_margin()
+		# self.update_cop()
 		
 	def estimate_state(self):
 		# Gets called at IMU rate
@@ -182,8 +183,7 @@ class RobotState:
 		self.XHc.update_world_X_COM()
 
 	def update_bodypose_state(self, cmode):
-		""" update imu state """
-		## TODO: INCLUDE STATE ESTIMATION
+		""" update bodypose from state estimation """
 
 		if (cmode == "fast"):
 			## Updates robot state using setpoints
@@ -203,9 +203,9 @@ class RobotState:
 			# self.P6c.world_X_base = np.vstack((pos, angles))
 			# self.V6c.world_X_base = np.vstack((vel, angular))
 			# print np.round(self.P6c.world_X_base.flatten(),4)
-			self.P6c.world_X_base[0:3] = pos
-			self.P6c.world_X_base[3:6] = angles
-			err = self.P6c.world_X_base - np.vstack((pos, angles))
+			# self.P6c.world_X_base[0:3] = pos
+			# self.P6c.world_X_base[3:6] = angles
+			# err = self.P6c.world_X_base - np.vstack((pos, angles))
 			# print np.round(err.flatten(),3)
 			# TODO Sort the logic here
 			if (False and self.imu is not None):
@@ -357,7 +357,8 @@ class RobotState:
 			# Transform foot force from world to hip frame
 			# self.Leg[j].XHd.update_world_X_coxa(self.XHd.world_X_base)
 			self.Leg[j].F6d.world_X_foot[:3] = fforce[j*3:j*3+3]
-			self.Leg[j].F6d.coxa_X_foot[:3] = mX(self.Leg[j].XHd.coxa_X_world[:3,:3],self.Leg[j].F6d.world_X_foot[:3])
+			self.Leg[j].F6d.coxa_X_foot[:3] = mX(self.Leg[j].XHd.coxa_X_world[:3,:3], self.Leg[j].F6d.world_X_foot[:3])
+			self.Leg[j].F6d.tibia_X_foot[:3] = mX(self.Leg[j].XHd.foot_X_coxa[:3,:3], self.Leg[j].F6d.coxa_X_foot[:3])
 
 			# Determine joint torque using Jacobian from hip to foot, tau = J^T.f
 			tau_leg = self.KDL.force_to_torque(self.qd[j*3:j*3+3], self.Leg[j].F6d.coxa_X_foot[:3])
@@ -470,15 +471,15 @@ class RobotState:
 		for j in range(0,6):
 			self.Leg[j].duplicate_self(robot.Leg[j])
 
-	def set_leg_stance(self, stance_width, base_height, stance_offset, stance_type="flat"):
+	def set_leg_stance(self, stance_width, base_height, stance_offset, stance_type="ground"):
 		""" Sets leg stance according to front & rear leg offset """
 
 		leg_stance = {}
 		teta_f = stance_offset[0]
 		teta_r = stance_offset[1]
 
-		# Flat ground stance - original
-		if (stance_type == "flat"):
+		## Select stance according to motion primitive 
+		if (stance_type == "ground"):
 			# print 'Flat selected'
 			leg_stance[0] = np.array([ stance_width*np.cos(teta_f*np.pi/180), stance_width*np.sin(teta_f*np.pi/180), -base_height ])
 			leg_stance[1] = np.array([ stance_width, 0, -base_height])
@@ -487,21 +488,23 @@ class RobotState:
 			leg_stance[4] = np.array([ stance_width, 0, -base_height])
 			leg_stance[5] = np.array([ stance_width*np.cos(teta_r*np.pi/180), stance_width*np.sin(-teta_r*np.pi/180), -base_height ])
 
-			# for j in range(5):
-			# 	leg_stance[j][2] = 0.0
-
 		elif (stance_type == "chimney"):
-			# base_height = 0.
-			# stance_width = STANCE_WIDTH
-			# teta_f = stance_offset[0]
-			# teta_r = stance_offset[1]
-
 			leg_stance[0] = np.array([ stance_width*np.cos(teta_f*np.pi/180), stance_width*np.sin(teta_f*np.pi/180), -base_height ])
 			leg_stance[1] = np.array([ stance_width, 0, -base_height])
 			leg_stance[2] = np.array([ stance_width*np.cos(teta_r*np.pi/180), stance_width*np.sin(teta_r*np.pi/180), -base_height ])
 			leg_stance[3] = np.array([ stance_width*np.cos(teta_f*np.pi/180), stance_width*np.sin(-teta_f*np.pi/180), -base_height ])
 			leg_stance[4] = np.array([ stance_width, 0, -base_height])
 			leg_stance[5] = np.array([ stance_width*np.cos(teta_r*np.pi/180), stance_width*np.sin(-teta_r*np.pi/180), -base_height ])
+
+		elif stance_type == "wall":
+			wg_stance = 0.30;	wg_height = 0.05
+			ww_stance = 0.21;	ww_height = -0.05
+			leg_stance[0] = np.array([ ww_stance*np.cos(teta_f*np.pi/180), ww_stance*np.sin(teta_f*np.pi/180), ww_height ])
+			leg_stance[1] = np.array([ ww_stance, 0, ww_height])
+			leg_stance[2] = np.array([ ww_stance*np.cos(teta_r*np.pi/180), ww_stance*np.sin(teta_r*np.pi/180), ww_height ])
+			leg_stance[3] = np.array([ wg_stance*np.cos(teta_f*np.pi/180), wg_stance*np.sin(-teta_f*np.pi/180), wg_height ])
+			leg_stance[4] = np.array([ wg_stance, 0, wg_height])
+			leg_stance[5] = np.array([ wg_stance*np.cos(teta_r*np.pi/180), wg_stance*np.sin(-teta_r*np.pi/180), wg_height ])
 
 		else:
 			print 'Invalid stance selected!'
