@@ -115,7 +115,7 @@ class CorinStateTester:
             self.T_imu = 0.01
             self.update_N = 2
 
-        self.messages_to_read = 100000
+        self.messages_to_read = 200000
 
         if (self.ideal_q == True):
             Qw = [0]
@@ -267,7 +267,7 @@ class CorinStateTester:
             if i > self.messages_to_read:
                 break
 
-        print "messages read: ", i
+        # print "messages read: ", i
 
         # e_max_norm = error_norms.max()
         # e_max_x = np.abs(errors[:,0]).max()
@@ -335,8 +335,8 @@ class CorinStateTester:
         # error_row.append(e_ratio2)
 
         #error_table.append(error_row)
-        print "Time elsapsed: ", time.time()-self.t0
-        print "Trial done in %.1f s" % (time.time()-t_trial)
+        # print "Time elsapsed: ", time.time()-self.t0
+        # print "Trial done in %.1f s" % (time.time()-t_trial)
 
         return e_ratio #e_rms_norm
 
@@ -709,34 +709,22 @@ if __name__ == "__main__":
 
     # print mp.cpu_count()
 
+    exp_list = [21, 22, 23, 25, 26, 27, 29, 30, 31,
+                41, 42, 43, 45, 46, 47, 49, 51,
+                70, 71, 72]
 
+    pool = mp.Pool(10)
 
-    # pars = np.array([   1E-6,
-    #                     1E-6,
-    #                     1E-7,
-    #                     1E-8,
-    #                     1E-5,
-    #                     1E-3,
-    #                     3])
-    # exp_list = [30, 50]
-    # pars_list = [pars]*len(exp_list)
-    # exp_pars = zip(exp_list, pars_list)
-    #
-    # pool = mp.Pool(2)
-    # results = pool.map(run_estimator, exp_pars)
-    # print results
-    # exit()
+    csv_data_path = rospkg.RosPack().get_path('data') + "/PSO/PSO_total_2.csv"
 
-    exp_list = range(20, 32)
-    pool = mp.Pool(len(exp_list))
-
-    # init_estimators(exp_list)
-
-    iterations = 15
-    particles = 25
-    swarm_best_value = 1000
+	# PSO parameters
+    iterations = 20
+    particles = 50
     w_max = 0.9
     w_min = 0.4
+
+
+	swarm_best_value = 1000
     swarm_best_position = Particle().position
 
 
@@ -753,6 +741,7 @@ if __name__ == "__main__":
         print "iteration", i+1, " of ", iterations
         Particle.w = w_max - (w_max-w_min)*i/iterations
         for j in range(particles):
+            t0 = time.time()
             print "particle", j+1, " of ", particles
 
             # new_value = state.evaluate(swarm[j].position)
@@ -769,7 +758,8 @@ if __name__ == "__main__":
             # print results
             # print "max:", max(results)
             # print "sum:", sum(results)
-            new_value = max(results)
+            # print "rms:", np.sqrt(np.mean(np.square(results)))
+            new_value = np.sqrt(np.mean(np.square(results))) #max(results)
             swarm[j].evaluate(new_value)
 
             if swarm[j].best_value < swarm_best_value:
@@ -779,6 +769,14 @@ if __name__ == "__main__":
             swarm[j].move(swarm_best_position)
 
             particle_positions[j] = np.vstack([particle_positions[j], swarm[j].position])
+
+            print "Particle value evaluated in ", time.time()-t0
+
+        data_row = [swarm_best_value] + list(swarm_best_position)
+        with open(csv_data_path, 'ab') as myfile:
+            wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
+            wr.writerow(data_row)
+
 
 
         best_values = np.append(best_values, swarm_best_value)
@@ -817,7 +815,7 @@ if __name__ == "__main__":
     #     plt.xlabel('Iteration')
     #     plt.ylabel('Parameter value')
 
-    plt.show()
+    # plt.show()
 
     print swarm_best_position, swarm_best_value
 

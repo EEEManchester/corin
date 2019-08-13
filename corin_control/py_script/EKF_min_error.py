@@ -3,9 +3,9 @@ import os
 import sys
 import csv
 from experiment_numbers import *
+import rospkg
 
-# experiments = range(60,69)
-experiments = [10, 11, 23, 25, 29, 30, 42, 43, 47, 49, 60, 61, 64, 65, 68, 70, 74, 76, 77, 80, 83, 84, 87, 88]
+experiments = [10, 22, 26, 41, 42, 46, 50, 65, 71, 72, 80, 84]
 
 # 8: max position
 # 12: rms position
@@ -22,7 +22,8 @@ for exp_no in experiments:
 
     print 'experiment: ' + str(exp_no)
 
-    csv_file = './2019_optimisation_results_1/2019_optimisation_results_'+ str(exp_no) + '.csv'
+    data_path = rospkg.RosPack().get_path('data')
+    csv_file = data_path + '/2019_optimisation_results/2019_optimisation_results_'+ str(exp_no) + '.csv'
 
     unordered_list = []
     with open(csv_file, 'rb') as csvfile:

@@ -25,6 +25,8 @@ from shutil import copyfile
 import multiprocess as mp
 from joblib import Parallel, delayed
 
+import copy
+
 
 
 ## ROS messages
@@ -247,21 +249,21 @@ class CorinStateTester:
                     #if self.vicon_r.size > 0:
                     if self.vicon_r is not None:
                         error = self.vicon_r - self.estimator.r
-                        error2 = self.vicon_angles - self.estimator.get_fixed_angles()
-                        error2 = (error2 + np.pi) % (2*np.pi)  - np.pi
+                        # error2 = self.vicon_angles - self.estimator.get_fixed_angles()
+                        # error2 = (error2 + np.pi) % (2*np.pi)  - np.pi
 
                         # errors = np.vstack([errors, error])
                         # error_norm = np.linalg.norm(error)
                         # error_norms = np.append(error_norms, error_norm)
-                        # error_ratio = np.linalg.norm(error)/np.linalg.norm(self.vicon_r)
-                        # error_ratios = np.append(error_ratios, error_ratio)
+                        error_ratio = np.linalg.norm(error)/np.linalg.norm(self.vicon_r)
+                        error_ratios = np.append(error_ratios, error_ratio)
 
 
                         # errors2 = np.vstack([errors2, error2])
-                        error_norm2 = np.linalg.norm(error2)
-                        error_norms2 = np.append(error_norms2, error_norm2)
-                        error_ratio2 = np.linalg.norm(error2)/abs(self.vicon_angles[2])#np.linalg.norm(self.vicon_angles)
-                        error_ratios2 = np.append(error_ratios2, error_ratio2)
+                        # error_norm2 = np.linalg.norm(error2)
+                        # error_norms2 = np.append(error_norms2, error_norm2)
+                        # error_ratio2 = np.linalg.norm(error2)/abs(self.vicon_angles[2])#np.linalg.norm(self.vicon_angles)
+                        # error_ratios2 = np.append(error_ratios2, error_ratio2)
             # print t, topic
             i += 1
             if i > self.messages_to_read:
@@ -278,7 +280,7 @@ class CorinStateTester:
         # e_rms_y = np.sqrt(np.mean(np.square(errors[:,1])))
         # e_rms_z = np.sqrt(np.mean(np.square(errors[:,2])))
         #
-        # e_ratio = error_ratios[-1]
+        e_ratio = error_ratios[-1]
 
         # print "max position error:", e_max_norm
         # print "rms position error:", e_rms_norm
@@ -294,7 +296,7 @@ class CorinStateTester:
         # e_rms_y2 = np.sqrt(np.mean(np.square(errors2[:,1])))
         # e_rms_z2 = np.sqrt(np.mean(np.square(errors2[:,2])))
         #
-        e_ratio2 = error_ratios2[-1]
+        # e_ratio2 = error_ratios2[-1]
 
         # print "max angle error:", e_max_norm2
         # print "rms angle error:", e_rms_norm2
@@ -338,7 +340,7 @@ class CorinStateTester:
         # print "Time elsapsed: ", time.time()-self.t0
         # print "Trial done in %.1f s" % (time.time()-t_trial)
 
-        return e_ratio2 #e_rms_norm
+        return e_ratio #e_rms_norm
 
         # with open(csv_file, 'ab') as myfile:
         #     wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
@@ -558,30 +560,9 @@ class CorinStateTester:
                 self.estimator.bf = np.zeros(3)
 
 
-            # self.imu_r = np.append(self.imu_r, self.estimator.r, axis=0)
-            # self.imu_r = np.vstack([self.imu_r, self.estimator.r])
-            # self.imu_angles = np.vstack([self.imu_angles, self.estimator.get_fixed_angles()])
-            # self.imu_t = np.append(self.imu_t, t)
 
     def imu_callback0(self, msg, t):
         pass
-        # o = msg.orientation
-        # av = msg.angular_velocity
-        # o = np.array([o.w, o.x, o.y, o.z])
-        # if self.IMU != "LORD":
-        #     # only for LORD IMU (to put the orientation from NED to the correct frame)
-        #     o = quaternion_multiply(np.array([0, 1, 0, 0]), o)
-        #
-        # angular_velocity = np.array([av.x, av.y, av.z])
-        # self.imu0 = o
-        #
-        # if self.q1 is None:
-        #     if self.q0 is not None:
-        #         q1_conj = o.copy()
-        #         q1_conj[1:4] = - q1_conj[1:4]
-        #         self.q1 = quaternion_multiply(self.q0, q1_conj)
-        # else:
-        #     print "q1", quaternion_multiply(self.q1, o)
 
 
     def vicon_foot_callback(self, msg, t):
@@ -611,7 +592,7 @@ class Particle():
     # Speed clamping coefficient
     k = 0.2
 
-    def __init__(self):
+    def __init__(self, value_len):
         self.position = np.array([])
         self.velocity = np.array([])
         for i in range(Particle.N):
@@ -622,7 +603,7 @@ class Particle():
             self.velocity = np.append(self.velocity, random.uniform(-v_max_mag, v_max_mag))
             # self.velocity = np.append(self.velocity, random.uniform(Particle.vel_lims[0], Particle.vel_lims[1]))
         self.best_position = self.position.copy()
-        self.best_value = 1000 # very high value
+        self.best_value = ParticleValue([1000] * value_len)  # very high value
 
     def __str__(self):
         print("I am at ", self.position, " meu pbest is ", self.pbest_position)
@@ -631,7 +612,7 @@ class Particle():
         # check to see if the current position is an individual best
         if new_value < self.best_value:
             self.best_position = self.position.copy()
-            self.best_value = new_value
+            self.best_value = copy.deepcopy(new_value)
 
     def move(self, swarm_best_position):
         gb = swarm_best_position
@@ -657,6 +638,38 @@ class Particle():
                     self.velocity[i] = - self.velocity[i]
             else:
                 self.position[i] = new_position
+
+class ParticleValue:
+
+    def __init__(self, errors):
+        self.errors = copy.copy(errors)
+
+    # Override less than operator
+    def __lt__(self,other):
+        self.validate_comparison(other)
+        self.errors.sort(reverse=True)
+        other.errors.sort(reverse=True)
+
+        for i, j in zip(self.errors, other.errors):
+            i_round = round(i*1000) # round to nearest thenth of percent (error is a ratio)
+            j_round = round(j*1000)
+            if i_round < j_round:
+                return True
+            elif i_round > j_round:
+                return False
+
+        return False
+
+
+    def validate_comparison (self,other):
+        if len(self) != len(other):
+            raise Exception("Compared error lists are not the same length.")
+
+    def __len__(self):
+        return len(self.errors)
+
+    def __str__(self):
+        return str(self.errors)
 
 # Some function with a minimum at ideal
 def func(position):
@@ -689,68 +702,36 @@ def run_estimator(exp_pars):
     state.terminate()
     return error
 
-# def init_estimators(exp_list):
-#     global state_list
-#     for i in exp_list:
-#         state_list[i] = CorinStateTester(i)
-#     print state_list
-#
-# def run_estimator(exp_pars):
-#     state, pars = exp_pars
-#     error = state.evaluate(pars)
-#     return error
-#
-# def terminate_estimators():
-#     global state_list
-#     for state in state_list:
-#         state.terminate()
 
 if __name__ == "__main__":
 
     # print mp.cpu_count()
 
+    exp_list = [28, 29, 82, 86, 43, 47, 48, 51, 70, 72]
+    exp_no = len(exp_list) # number of experiments
 
+    pool = mp.Pool(11)
 
-    # pars = np.array([   1E-6,
-    #                     1E-6,
-    #                     1E-7,
-    #                     1E-8,
-    #                     1E-5,
-    #                     1E-3,
-    #                     3])
-    # exp_list = [30, 50]
-    # pars_list = [pars]*len(exp_list)
-    # exp_pars = zip(exp_list, pars_list)
-    #
-    # pool = mp.Pool(2)
-    # results = pool.map(run_estimator, exp_pars)
-    # print results
-    # exit()
-
-    exp_list = [40, 41, 42, 43, 45, 46, 47, 48, 49, 51]
-
-    pool = mp.Pool(10)
-
-    csv_data_path = rospkg.RosPack().get_path('data') + "/PSO/PSO_sideways_2.csv"
+    csv_data_path = rospkg.RosPack().get_path('data') + "/PSO/PSO_total_4.csv"
 
     # init_estimators(exp_list)
 
-    iterations = 15
-    particles = 50
-    swarm_best_value = 1000
+    iterations = 20
+    particles = 100
+    swarm_best_value = ParticleValue([1000] * exp_no)
     w_max = 0.9
     w_min = 0.4
-    swarm_best_position = Particle().position
+    swarm_best_position = Particle(exp_no).position
 
 
     # list of particles
     swarm = []
     for j in range(particles):
-        swarm.append(Particle())
+        swarm.append(Particle(exp_no))
 
     best_positions = np.empty((0,swarm_best_position.shape[0]))
     particle_positions = [np.empty((0,swarm_best_position.shape[0]))]*particles
-    best_values = np.array([])
+    best_values = np.array([]) #  for display only
     for i in range(iterations):
         print "iteration", i+1, " of ", iterations
         Particle.w = w_max - (w_max-w_min)*i/iterations
@@ -774,12 +755,13 @@ if __name__ == "__main__":
             # print "max:", max(results)
             # print "sum:", sum(results)
             # print "rms:", np.sqrt(np.mean(np.square(results)))
-            new_value = np.sqrt(np.mean(np.square(results)))#max(results)
+            #new_value = np.sqrt(np.mean(np.square(results)))#max(results)
+            new_value = ParticleValue(results)
             swarm[j].evaluate(new_value)
 
             if swarm[j].best_value < swarm_best_value:
                 swarm_best_position = swarm[j].best_position.copy()
-                swarm_best_value = swarm[j].best_value
+                swarm_best_value = copy.deepcopy(swarm[j].best_value)
 
             swarm[j].move(swarm_best_position)
 
@@ -787,14 +769,14 @@ if __name__ == "__main__":
 
             print "Particle value evaluated in ", time.time()-t0
 
-        data_row = [swarm_best_value] + list(swarm_best_position)
+        data_row = list(swarm_best_position) + swarm_best_value.errors
         with open(csv_data_path, 'ab') as myfile:
             wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
             wr.writerow(data_row)
 
 
 
-        best_values = np.append(best_values, swarm_best_value)
+        best_values = np.append(best_values, max(swarm_best_value.errors))
         best_positions = np.vstack([best_positions, swarm_best_position])
 
     plt.figure()

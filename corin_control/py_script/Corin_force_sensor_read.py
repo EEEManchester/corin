@@ -38,6 +38,7 @@ from robotis_controller_msgs.msg import SyncWriteMulti 	# pub msg for Robotis jo
 
 from State_Estimator import StateEstimator
 
+import rospkg
 import rosbag
 
 np.set_printoptions(suppress=True) # suppress scientific notation
@@ -54,13 +55,20 @@ class CorinStateTester:
         t0 = time.time()
 
         #experiment number
-        exp_no = 43
+        if len(sys.argv) > 1:
+            exp_no = int(sys.argv[1])
+        else:
+            exp_no = 60 #experiment number
+
+        print 'experiment: ' + str(exp_no)
+
         if exp_no in no_offset_list:
             self.f_sensor4_offset = np.array([0, 0, 0])
         else:
             self.f_sensor4_offset = np.array([3, 0, 4])
 
-        bag = rosbag.Bag(experiment[exp_no])
+        data_path = rospkg.RosPack().get_path('data')
+        bag = rosbag.Bag(data_path + experiment[exp_no])
 
         self.f_sensor0 = np.empty((0,3))
         self.f_base0 = np.empty((0,3))

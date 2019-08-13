@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import rospkg
 print os.path.dirname(__file__)
 
-# all experiments
+# all experiments 
 experiments = [26, 46, 64, 71, 72, 84]
 experiments = ([10, 11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 40, 41, 42, 43, 44,
                 46, 70, 71, 72, 81, 84, 87] + [61, 64, 67])

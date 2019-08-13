@@ -11,7 +11,7 @@ print os.path.dirname(__file__)
 experiments = [26, 46, 64, 71, 72, 84]
 experiments = ([10, 11, 12, 20, 21, 22, 23, 25, 26, 27, 40, 41,
                 46, 70, 71, 72, 81, 84] + [61, 64])
-
+ 
 
 if len(sys.argv) > 1:
     par = sys.argv[1]

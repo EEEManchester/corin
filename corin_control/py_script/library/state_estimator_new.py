@@ -160,13 +160,13 @@ class StateEstimator:
 
 			# Move on to state estimation only after foot positions are reset
 			if self.reset_foot_positions():
-				print "reset foot positions"
+				# print "reset foot positions"
 				self.cal_i += 1
-			print "calibrating", self.cal_i
-			print q_mean
-			print self.q
-			print "acc bias:", ab
-			print "gyro bias:", bw
+			# print "calibrating", self.cal_i
+			# print q_mean
+			# print self.q
+			# print "acc bias:", ab
+			# print "gyro bias:", bw
 
 			return True
 

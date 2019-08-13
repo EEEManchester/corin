@@ -4,7 +4,7 @@ import sys
 import csv
 from experiment_numbers import *
 import matplotlib.pyplot as plt
-
+import rospkg
 print os.path.dirname(__file__)
 
 # all experiments
@@ -42,9 +42,10 @@ for exp_no in experiments:
 
     print 'experiment: ' + str(exp_no)
 
+    data_path = rospkg.RosPack().get_path('data')
 
     # csv_file = os.path.dirname(__file__) + '/2019_sensitivity_results_'+ str(exp_no) + '.csv'
-    csv_file = './2019_sensitivity_results_3/2019_sensitivity_results_'+ str(exp_no) + '_3.csv'
+    csv_file = data_path + '/2019_sensitivity_results_3/2019_sensitivity_results_'+ str(exp_no) + '_3.csv'
 
     unordered_list = []
     with open(csv_file, 'rb') as csvfile:

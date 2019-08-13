@@ -40,6 +40,7 @@ from robotis_controller_msgs.msg import SyncWriteMulti 	# pub msg for Robotis jo
 
 from State_Estimator import StateEstimator
 
+import rospkg
 import rosbag
 
 np.set_printoptions(suppress=True) # suppress scientific notation
@@ -60,9 +61,11 @@ class CorinStateTester:
 
         print 'experiment: ' + str(exp_no)
 
-        csv_file = os.path.dirname(__file__) + '/2019_sensitivity_results_'+ str(exp_no) + '.csv'
+        data_path = rospkg.RosPack().get_path('data')
+
+        csv_file = data_path + '/2019_sensitivity_results_3/2019_sensitivity_results_'+ str(exp_no) + '_3.csv'
         # copyfile(src, dst)
-        src = os.path.dirname(__file__) + '/2019_sensitivity_results_template_3.csv'
+        src = data_path  + '/2019_sensitivity_results_template_3.csv'
 
         if os.path.exists(csv_file):
             raise Exception("Destination file exists!")
@@ -78,7 +81,7 @@ class CorinStateTester:
         else:
             self.f_sensor4_offset = np.array([3, 0, 4])
 
-        bag = rosbag.Bag(experiment[exp_no])
+        bag = rosbag.Bag(data_path + experiment[exp_no])
 
         t0 = time.time()
 

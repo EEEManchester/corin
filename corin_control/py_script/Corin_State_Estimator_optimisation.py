@@ -40,6 +40,7 @@ from robotis_controller_msgs.msg import SyncWriteMulti 	# pub msg for Robotis jo
 
 from State_Estimator import StateEstimator
 
+import rospkg
 import rosbag
 
 np.set_printoptions(suppress=True) # suppress scientific notation
@@ -60,9 +61,14 @@ class CorinStateTester:
 
         print 'experiment: ' + str(exp_no)
 
-        csv_file = './2019_optimisation_results_'+ str(exp_no) + '.csv'
+        data_path = rospkg.RosPack().get_path('data')
+
+        # experiment defined in experiments.py
+        bag = rosbag.Bag(data_path + experiment[exp_no])
+
+        csv_file = data_path + '/2019_optimisation_results/2019_optimisation_results_'+ str(exp_no) + '.csv'
         # copyfile(src, dst)
-        src = './2018_Dec_optimisation_results_template_2.csv'
+        src = data_path + '/2018_Dec_optimisation_results_template_2.csv'
 
         if os.path.exists(csv_file):
             raise Exception("Destination file exists!")
@@ -77,8 +83,6 @@ class CorinStateTester:
             self.f_sensor4_offset = np.array([0, 0, 0])
         else:
             self.f_sensor4_offset = np.array([3, 0, 4])
-
-        bag = rosbag.Bag(experiment[exp_no])
 
         t0 = time.time()
 
@@ -114,31 +118,21 @@ class CorinStateTester:
         # Rs = [0.00001] #[0.0001**2]
         # Ra = [0.0001**1, 0.001**1, 0.0001**1]#0.00000001] #[0.0001**2]
 
-        self.messages_to_read = 130000
+        self.messages_to_read = 65000
 
-        # Qf = [1E-1, 1E-2, 1E-3, 1E-4, 1E-5, 1E-6, 1E-7, 1E-8, 1E-9, 1E-10, 1E-11, 1E-12, 1E-13]
-        # Qbf = [1E-1, 1E-2, 1E-3, 1E-4, 1E-5, 1E-6, 1E-7, 1E-8, 1E-9, 1E-10, 1E-11, 1E-12, 1E-13]
-        # Qw = [1E-1, 1E-2, 1E-3, 1E-4, 1E-5, 1E-6, 1E-7, 1E-8, 1E-9, 1E-10, 1E-11, 1E-12, 1E-13]
-        # Qbw = [1E-1, 1E-2, 1E-3, 1E-4, 1E-5, 1E-6, 1E-7, 1E-8, 1E-9, 1E-10, 1E-11, 1E-12, 1E-13]
-        # Qp = [1E-3, 1E-4, 1E-5, 1E-6, 1E-7, 1E-8, 1E-9, 1E-10, 1E-11, 1E-12]
-        # Rs = [1E-3, 1E-4, 1E-5, 1E-6, 1E-7, 1E-8, 1E-9, 1E-10]
-        # Ra = [0.0004]
-
-        # Qf = [7E-7, 7E-8, 7E-9]
-        # Qbf = [3E-9, 3E-10, 3E-11]
-        Qf = [7E-1, 7E-2, 7E-3, 7E-4, 7E-5, 7E-6, 7E-7, 7E-8, 7E-9, 7E-10, 7E-11, 7E-12, 7E-13]
-        Qbf = [3E-30]
-        Qw = [8E-8]
+        Qf = [7E-5, 7E-6, 7E-7, 7E-8, 7E-9, 7E-10]
+        Qbf = [3E-9]
+        Qw = [8E-7, 8E-7, 8E-8, 8E-9, 8E-10, 8E-11]
         Qbw = [7E-11]
-        Qp = [1E-6]
-        Rs = [1E-5]
+        Qp = [1E-3, 1E-4, 1E-5, 1E-6, 1E-7, 1E-8, 1E-9]
+        Rs = [1E-2, 1E-3, 1E-4, 1E-5, 1E-6, 1E-7, 1E-8]
         Ra = [0.0003]
 
 
         # Qp = [0.000001]
         # Rs = [0.000001]
         # Th = [3, 5, 8, 10]
-        Th = [5]
+        Th = [3]
 
         if (self.ideal_q == True):
             Qw = [0]
