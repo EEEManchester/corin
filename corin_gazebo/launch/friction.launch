@@ -1,0 +1,29 @@
+<launch>
+
+  <!-- Launch file to run gazebo and spawn the robot -->
+  <!-- Run in terminal: roslaunch corin_gazebo corin_world.launch <arg name>:=<value_name> --> 
+  <!-- arg to run is optional, include or exclude as required -->
+  <!-- For robot to retain its default standing up position, launch joint control file then enable physics -->
+
+  <!-- launch file arguments -->              
+  <arg name="fixed" default="false"/>         <!-- robot fixed in place -->
+  <arg name="paused" default="false"/>         <!-- pause the physics engine -->
+  <arg name="use_sim_time" default="true"/>   <!-- use simulation time -->
+  <arg name="debug" default="false"/>         <!-- debug mode -->
+  <arg name="gui" default="true"/>            <!-- enable gazebo gui -->
+  <arg name="world" default="friction" />        <!-- world to use -->
+  <arg name="x" default="0"/>                 <!-- robot spawn position in world x-axis -->
+  <arg name="y" default="0"/>                 <!-- robot spawn position in world y-axis -->
+  <arg name="z" default="0.11"/>              <!-- robot spawn position in world z-axis -->
+
+  <!--Set world to be launched -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find corin_gazebo)/worlds/$(arg world).world"/>
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+  </include>
+
+
+</launch>
