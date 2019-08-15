@@ -508,7 +508,7 @@ q3 = 0.
 XH = ArrayHomogeneousTransform(3)
 XH.update_base_X_foot(np.array([0.5,0.,0.]))
 XH.update_coxa_X_foot(np.array([0.5,0.,0.]))
-print np.round(XH.coxa_X_foot,3)
+
 XH.update_foot_X_coxa(np.array([0.5,0.,0.]))
 # print np.round(XH.base_X_coxa,3)
 # print np.round(XH.base_X_foot[:3,:3],3)

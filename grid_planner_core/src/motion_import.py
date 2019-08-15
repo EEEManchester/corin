@@ -16,6 +16,7 @@ from grid_planner_msgs.srv import *
 import csv
 import numpy as np
 import yaml
+from termcolor import colored
 
 def seq(start, stop, step=1):
 	n = int(round((stop - start)/float(step)))
@@ -134,8 +135,7 @@ class CsvImport:
 					
 					world_X_footholds[j].t.append(counter*CTR_INTV)
 					world_X_footholds[j].xp.append(mod_foothold.copy())
-					if j == 5:
-						print mod_foothold
+					
 				self.joint_states.append( np.asarray(map(lambda x: float(x), row[24:42])) )
 				
 				counter += 1
@@ -151,6 +151,13 @@ class CsvImport:
 		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 		
+		## Generate gait sequence
+		# gait_list = []
+		# for i in range(len(motion_plan.qbp)):
+		# 	gait_list.append(self.Robot.Gait.phases)
+		# gait_list = [item for i in gait_list for item in i]
+		# motion_plan.gait_phase = gait_list
+
 		self.motion_plan.set_base_path(qb_bias, base_path, world_X_base, None)
 		self.motion_plan.set_footholds(world_X_footholds, base_X_footholds, world_base_X_NRP)
 
@@ -251,6 +258,8 @@ if __name__ == "__main__":
 
 	MotionImport = MotionImport()
 	
+	print colored('Motion import service ready!','green')
+
 	filename = None
 	if len(sys.argv) > 1: 
 		if sys.argv[1] == 'chimney_nominal':

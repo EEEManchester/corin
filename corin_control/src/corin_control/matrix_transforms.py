@@ -418,13 +418,11 @@ def vec_X_vec_rotation(v1, v2):
     out = np.zeros(4)
     dot = np.dot(v1, v2);
     if (dot < -0.999999):
-        pass
         tmp = np.cross(np.array([1.,0.,0.]), v1);
         if (np.linalg.norm(tmp) < 0.000001):
-            tmp = np.cross(np.array([1.,0.,0.]), v1)
+            tmp = np.cross(np.array([0.,1.,0.]), v1)
         tmp = tmp/np.linalg.norm(tmp)
-        print 'Error in matrix transforms'
-        return axisAngle_to_SO3(tmp, math.pi)
+        return quaternion_from_matrix(axisAngle_to_SO3(tmp, math.pi))
     elif (dot > 0.999999):
         out[0] = 0;
         out[1] = 0;
@@ -440,7 +438,7 @@ def vec_X_vec_rotation(v1, v2):
         out = out/np.linalg.norm(out);
         return out
         # return quaternion_matrix(out)[:3,:3]
-
+# print vec_X_vec_rotation(np.array([1., 0., 0.]), [-1.,0.,0.])
 # print rotation_matrix(np.deg2rad(30),[0, 1, 0])
 ######################################################################
 ##                      Constant Parameters                         ##

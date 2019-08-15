@@ -159,8 +159,9 @@ class CorinManager:
 		self.__initialise_topics__()
 		self.__initialise_services__()
 
-		## Set up RVIZ JointState topic
+		## ## Override control flag states and stand up
 		if (self.interface == 'rviz'):
+			self.control_loop = 'open'
 			rospy.set_param(ROBOT_NS + '/standing', True)
 			qd, err_list = self.Robot.task_X_joint()
 			for i in range(0,5):
@@ -176,14 +177,13 @@ class CorinManager:
 
 		## update and reset robot states
 		self.Robot.suspend = False
-		self.Robot.update_state(reset=True,control_mode=self.control_rate)
+		if (self.interface == 'rviz'):
+			self.Robot.update_state(control_mode=self.control_rate)
+		else:
+			self.Robot.update_state(reset=True,control_mode=self.control_rate)
 
 		for j in range(0,self.Robot.active_legs):
 			self.Robot.Leg[j].feedback_state = 2 	# trajectory completed
-
-		## Override control flag states
-		if (self.interface == 'rviz'):
-			self.control_loop = 'open'
 
 		## Set map to that available in service
 		print '==============================================='
@@ -343,19 +343,16 @@ class CorinManager:
 		self.Visualizer.publish_support_polygon(self.Robot.Sp.convex_hull)
 		self.Visualizer.publish_support_region(self.Robot.SM.convex_hull)
 		self.Visualizer.publish_com(self.Robot.Rbdl.com + self.Robot.P6c.world_X_base[:3])
-		self.Visualizer.publish_friction_cones(self.Robot, SURFACE_FRICTION)
 		self.Visualizer.publish_foot_force(self.Robot, self.interface)
+		self.Visualizer.publish_friction_cones(self.Robot, SURFACE_FRICTION)
 		# self.Visualizer.publish_cop(self.Robot.cop)
 
 		# self.stability_pub_.publish(self.Robot.SM.min)
 		self.log_misc_pub_.publish(
 			Float64MultiArray(data = self.set_log_misc([self.Robot.SM.min, 
-				self.Robot.Sp.min, self.Robot.cop, self.Robot.Rbdl.com])))
+				self.Robot.Sp.min, self.Robot.Rbdl.com])))
 
 		## Publish setpoints to logging topic
-		# if (qlog is not None):
-		# 	self.log_sp_pub_.publish(qlog)
-		# if self.interface != 'rviz' and 
 		if qlog is not None:
 			qlog_ac, qlog_er = self.set_log_actual()
 			self.log_sp_pub_.publish(qlog)
@@ -677,10 +674,10 @@ class CorinManager:
 				try:
 					path_planner = rospy.ServiceProxy(ROBOT_NS + '/import_motion_plan', PlanPath)
 					motion_plan  = planpath_to_motionplan( path_planner(Pose(), Pose(), String(filename)) )
-					print 'Motion plan service imported!'
+					print colored('Motion plan imported!', 'green')
 					self.GridMap.set_map(mapname)
 				except:
-					print 'Motion plan service call error!'
+					print colored('Motion plan service call error!', 'red')
 				# motion_plan = planpath_to_motionplan( path_planner(Pose(), Pose()) )
 				# motion_plan = planpath_to_motionplan(plan_generat)
 				# Plot.plot_2d(motion_plan.qb.X.t, motion_plan.qb.X.xp)
@@ -711,15 +708,22 @@ class CorinManager:
 				self.Robot._initialise(leg_stance)
 				self.Robot.qc.position = self.Robot.qd
 
+				## Generate gait sequence
+				gait_list = []
+				for i in range(len(motion_plan.qbp)):
+					gait_list.append(self.Robot.Gait.phases)
+				gait_list = [item for i in gait_list for item in i]
+				motion_plan.gait_phase = gait_list
+
 				# print 'moving to default'
 				# self.default_pose(0, leg_stance)
 				if motion_plan is not None:
 					if (self.main_controller(motion_plan)):
 						self.Robot.alternate_phase()
 					else:
-						print 'Planning Failed'	
+						print colored('Planning Failed', 'red')	
 				else:
-					print 'Error: No motion plan! Exiting....'
+					print colored('Error: No motion plan! Exiting....', 'red')
 
 		else:
 			self.Robot.Gait.support_mode()

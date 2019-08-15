@@ -8,11 +8,7 @@ Panels:
         - /Status1
         - /Grid1/Offset1
         - /CentreOfMass1
-        - /Contact Forces1/RF_foot_wrench1
-        - /Contact Forces1/RM_foot_wrench1
-        - /Support Region1
-        - /Support Polygon1
-        - /CoP1
+        - /Contact Forces1
       Splitter Ratio: 0.5
     Tree Height: 775
   - Class: rviz/Selection
@@ -36,6 +32,8 @@ Panels:
     SyncSource: ""
   - Class: corin_rviz_plugin/Control Interface
     Name: Control Interface
+Toolbars:
+  toolButtonStyle: 2
 Visualization Manager:
   Class: ""
   Displays:
@@ -273,7 +271,7 @@ Visualization Manager:
       Marker Topic: /corin/footholds
       Name: Footholds
       Namespaces:
-        {}
+        "": true
       Queue Size: 1
       Value: true
     - Class: rviz/Marker
@@ -290,7 +288,7 @@ Visualization Manager:
           Arrow Width: 0.0500000007
           Class: rviz/WrenchStamped
           Enabled: true
-          Force Arrow Scale: 0.00999999978
+          Force Arrow Scale: 0.0199999996
           Force Color: 0; 255; 0
           History Length: 1
           Name: LF_foot_wrench
@@ -303,7 +301,7 @@ Visualization Manager:
           Arrow Width: 0.0500000007
           Class: rviz/WrenchStamped
           Enabled: true
-          Force Arrow Scale: 0.00999999978
+          Force Arrow Scale: 0.0199999996
           Force Color: 0; 255; 0
           History Length: 1
           Name: LM_foot_wrench
@@ -316,7 +314,7 @@ Visualization Manager:
           Arrow Width: 0.0500000007
           Class: rviz/WrenchStamped
           Enabled: true
-          Force Arrow Scale: 0.00999999978
+          Force Arrow Scale: 0.0199999996
           Force Color: 0; 255; 0
           History Length: 1
           Name: LR_foot_wrench
@@ -329,7 +327,7 @@ Visualization Manager:
           Arrow Width: 0.0500000007
           Class: rviz/WrenchStamped
           Enabled: true
-          Force Arrow Scale: 0.00999999978
+          Force Arrow Scale: 0.0199999996
           Force Color: 0; 255; 0
           History Length: 1
           Name: RF_foot_wrench
@@ -342,7 +340,7 @@ Visualization Manager:
           Arrow Width: 0.0500000007
           Class: rviz/WrenchStamped
           Enabled: true
-          Force Arrow Scale: 0.00999999978
+          Force Arrow Scale: 0.0199999996
           Force Color: 0; 255; 0
           History Length: 1
           Name: RM_foot_wrench
@@ -371,7 +369,7 @@ Visualization Manager:
       Marker Topic: /cone_visual/viz_cone_arrays
       Name: Friction Cones
       Namespaces:
-        {}
+        "": true
       Queue Size: 1
       Value: true
     - Class: poly_rviz_plugin/Polygon
@@ -398,7 +396,7 @@ Visualization Manager:
       Marker Topic: /corin/cop
       Name: CoP
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true
@@ -426,25 +424,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.51259303
+      Distance: 1.09935343
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.0707383603
-        Y: 0.173727036
-        Z: 0.0739776865
+        X: 0.494444668
+        Y: 0.219567046
+        Z: 0.194996178
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.504802704
+      Pitch: 0.364803076
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.65336895
+      Yaw: 5.46838522
     Saved: ~
 Window Geometry:
   Control Interface:

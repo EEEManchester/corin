@@ -133,7 +133,7 @@ class QPForceDistribution():
 
 		return t1, t2
 
-	def resolve_force(self, v3ca, w3ca, p_foot, x_com, Ig_com, gphase, fmax=None, snorm=0, qb=None, q=None):
+	def resolve_force(self, v3ca, w3ca, p_foot, x_com, Ig_com, gphase, fmax=None, snorm=0, qb=None, qj=None):
 		""" QP problem to resolve foot force distribution 
 			Input: 	v3ca: Re(1x3) linear acceleration for body
 					w3ca: Re(1x3) angular acceleration for body
@@ -200,9 +200,9 @@ class QPForceDistribution():
 			inq_C[(i*6):(i+1)*6,(i*3):(i+1)*3] = C
 			
 			# Indirect torque minimization
-			if q is not None:
+			if qj is not None:
 				leg_no = index_c[i]
-				J[(i*3):(i*3)+3, (i*3):(i*3)+3] = self.KDL.world_leg_jacobian(leg_no, qb, q[(i*3):(i*3)+3])
+				J[(i*3):(i*3)+3, (i*3):(i*3)+3] = self.KDL.world_leg_jacobian(leg_no, qb, qj[(i*3):(i*3)+3])
 				W[(i*3):(i*3)+3, (i*3):(i*3)+3] = np.diag(w_weight)
 			
 		# print np.round(J,3)
@@ -211,13 +211,12 @@ class QPForceDistribution():
 		# print np.round(inq_D.flatten(),3)
 
 		S = np.diag(s_weight)
-		## Method A: Using system equation with weightage
-
-		H = 2*mX(A.T, S, A)
-		q = (-2*mX(b.T, S, A)).T
-
-		## Method B: System equation with weightage AND regularization on joint torque
-		if q is not None:
+		if qj is None:
+			## Method A: Using system equation with weightage
+			H = 2*mX(A.T, S, A)
+			q = (-2*mX(b.T, S, A)).T
+		else:
+			## Method B: System equation with weightage AND regularization on joint torque
 			alpha = 0.01
 			H = 2*mX(A.T, S, A) + alpha*mX(J, W, J.T)
 			q = (-2*mX(b.T, S, A)).T
@@ -235,19 +234,23 @@ class QPForceDistribution():
 			print fmax
 			
 		qp_sol = qpg_sol
+		tau_sol = -np.dot(J.T, qp_sol)
 
 		## Rearrange to publish output
 		qc = 0
 		force_vector = np.zeros((18,))
+		torque_vector = np.zeros((18,))
 
 		for i in range(0,6):
 			if (gphase[i] == 0):
 				for j in range(0,3):
 					force_vector[i*3+j,] = qp_sol[qc]
+					torque_vector[i*3+j,] = tau_sol[qc]
 					qc += 1
 			else:
 				for j in range(0,3):
 					force_vector[i*3+j,] = 0.0
+					torque_vector[i*3+j,] = 0.0
 		# print np.round(inq_D[15:18].flatten(),3)
 		# print np.round(force_vector[15:18],3)
 		## Check solution
@@ -275,8 +278,23 @@ class QPForceDistribution():
 		# print 'Me :', np.transpose(np.round(error_moment,4))
 		# print '========================================='
 		
-		return force_vector.reshape((18,1))
+		return force_vector.reshape((18,1)), torque_vector.reshape((18,1))
 
+	def get_torque(self, force_vector, p_foot, contacts, qb, q):
+		if q is not None:
+			J = np.zeros((3*len(p_foot), 3*len(p_foot)))
+			F = np.zeros(3*len(p_foot))
+			index_c = [i for i, j in enumerate(contacts) if j == 0.]
+			for i in range(0,len(p_foot)):
+				leg_no = index_c[i]
+				J[(i*3):(i*3)+3, (i*3):(i*3)+3] = qprog.KDL.world_leg_jacobian(leg_no, qb, q[(i*3):(i*3)+3])
+				F[i*3:i*3+3] = force_vector[index_c[i]*3:index_c[i]*3+3].flatten()
+
+			# F[0:3] = force_vector[index_c[0]*3:index_c[0]*3+3].flatten()
+			# F[3:6] = force_vector[index_c[1]*3:index_c[1]*3+3].flatten()
+
+		return np.dot(-J.T, F)
+		
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
@@ -307,33 +325,18 @@ p6 = np.array([ [-0.125],[-0.285],[-0.1] ])
 p_foot = [p1, p2, p3, p4, p5, p6] 			# leg position wrt CoM expressed in world frame
 contacts = [0,0,0,0,0,0]
 
-p_foot = [p1, p3, p5] 			# leg position wrt CoM expressed in world frame
-contacts = [0,1,0,1,0,1]
+# p_foot = [p1, p3, p5] 			# leg position wrt CoM expressed in world frame
+# contacts = [0,1,0,1,0,1]
 
 snorm =  []
-snorm.append(np.array([0., -1., 0.]))
-snorm.append(np.array([0., -1., 0.]))
-snorm.append(np.array([0., 1., 0.]))
+## Ground walking
+snorm = [np.array([0.,0.,1.])]*6
+## Chimney walking
 # for i in range(0,3):
 # 	snorm.append(np.array([0., -1., 0.]))
 # for i in range(3,6):
 # 	snorm.append(np.array([0., 1., 0.]))
 farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
-# farr = [F_MAX,0.,F_MAX,0.,F_MAX,0.]
-
-## Test set - 2 legs in contact
-# c2 = np.array([ 0,  0.3, 0.0])
-# c5 = np.array([ 0, -0.3, 0.0])
-# pb = np.array([ 0,  0.0, 0.1])
-# p2 = (-pb + c2).reshape((3,1))
-# p5 = (-pb + c5).reshape((3,1))
-# p_foot = [p2,p5]
-# contacts = [1,0,1,1,0,1]
-# q = np.array([0, 0.3381, -1.8523, 0, 0.3381, -1.8523])
-qb = np.zeros(3)
-
-# snorm = np.array([0., -1., 0., 0., 1., 0.])
-# farr = [80., 80.]
 
 ## Test set - Inconsistent solution 
 # xb_com = np.array( [[ 0.06581812], [ 0.        ], [ 0.]]) 
@@ -347,18 +350,59 @@ qb = np.zeros(3)
 # contacts = [0, 0, 0, 0, 0, 0]
 # farr = [0.0, 80.0, 80.0, 80.0, 80.0, 80.0]
 
-# q = [np.array([ 2.55445094e-09,  4.78384373e-01, -1.93668339e+00]), 
-# 	np.array([ 1.41067822e-09,  4.78384381e-01, -1.93668339e+00]), 
-# 	np.array([ 1.23548414e-09,  4.78384355e-01, -1.93668338e+00])]
 
-p_foot = [np.array([ 0.2521582 ,  0.25086926, -0.08014902]), np.array([-0.2478126 ,  0.25086926, -0.08014902]), np.array([ 0.0021728 , -0.30000007, -0.08014903])]
-contacts = [0,1,0,1,0,1]
-farr = [F_MAX,F_MAX,F_MAX]
-snorm = [np.array([0., 0., 1.]), np.array([0., 0., 1.]), np.array([0., 0., 1.])]
+## Ground nominal stance
+p_foot = [p1, p2, p3, p4, p5, p6] 			# leg position wrt CoM expressed in world frame
+contacts = [0,0,0,0,0,0]
+snorm = [np.array([0.,0.,1.])]*6
+farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
+qb = np.zeros(3)
 q = [0., 0.4783, -1.936, 
+	 0., 0.4783, -1.936, 
+	 0., 0.4783, -1.936,
+	 0., 0.4783, -1.936,
+	 0., 0.4783, -1.936,
+	 0., 0.4783, -1.936]
+
+## Simple two leg
+# p_foot = [p2, p5]
+# contacts = [1,0,1,1,0,1]
+# snorm = [np.array([0.,0.,1.])]*2
+# farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
+# qb = np.zeros(3)
+# q = [0., 0.4783, -1.936, 
+# 	 0., 0.4783, -1.936]
+
+## Three legs
+p_foot = [p1, p3, p5]
+contacts = [0,1,0,1,0,1]
+snorm = [np.array([0.,0.,1.])]*3
+farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
+qb = np.zeros(3)
+q = [0., 0.4783, -1.936,
 	 0., 0.4783, -1.936, 
 	 0., 0.4783, -1.936]
 
-# force_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm)
-force_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm, qb, q)
+## Four legs
+p_foot = [p1, p3, p4, p6]
+contacts = [0,1,0,0,1,0]
+snorm = [np.array([0.,0.,1.])]*4
+farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
+qb = np.zeros(3)
+q = [0., 0.4783, -1.936,
+	 0., 0.4783, -1.936,
+	 0., 0.4783, -1.936, 
+	 0., 0.4783, -1.936]
+
+## Compare regularization
+
+force_vector, torque_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm)
+torque_vector = qprog.get_torque(force_vector, p_foot, contacts, qb, q)
 # print np.round(force_vector.flatten(),3)
+# print np.round(torque_vector.flatten(),3)
+# print 'Without reg:', sum(abs(torque_vector**2))
+
+force_vector, torque_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm, qb, q)
+# print np.round(force_vector.flatten(),3)
+# print np.round(torque_vector.flatten(),3)
+# print 'With reg:', sum(abs(torque_vector**2))

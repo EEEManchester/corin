@@ -227,13 +227,13 @@ class RobotState:
 		""" updates the current stability margin """
 
 		valid, sm = self.SM.point_in_convex(self.XHc.world_X_COM[:3,3])
-		pvalid, psm = self.Sp.point_in_polygon(self.XHc.world_X_COM[:3,3])
+		valid, sm = self.Sp.point_in_polygon(self.XHc.world_X_COM[:3,3])
 
 		if not valid:
 			print colored("Convex hull violated %.3f %.3f " %(valid, sm), 'red')
 			# self.invalid = True
-			self.SM.point_in_convex(self.XHc.world_X_COM[:3,3], True)
-			# self.SM.point_in_polygon(self.XHc.world_X_COM[:3,3])
+			# self.SM.point_in_convex(self.XHc.world_X_COM[:3,3], True)
+			self.Sp.point_in_polygon(self.XHc.world_X_COM[:3,3])
 		else:
 			self.invalid = False
 			# pass

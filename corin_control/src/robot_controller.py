@@ -299,9 +299,9 @@ class RobotController(CorinManager):
 								self.Robot.Leg[j].XHc.world_base_X_NRP = self.Robot.Leg[j].XHd.world_base_X_NRP.copy()
 								## Set bodypose in leg class
 								self.Robot.Leg[j].XH_world_X_base = self.Robot.XHd.world_X_base.copy()
-
+								
 							except IndexError:
-								# Get bodypose at end of gait phase, or end of trajectory
+								# Get bodypose at end of gait phase, or end of trajectory - used in motion_import
 								try:
 									x_ahead = base_path.X.xp[i+iahead].reshape(3,1) + wXbase_offset[0:3]
 									w_ahead = base_path.W.xp[i+iahead].reshape(3,1) + wXbase_offset[3:6]
@@ -313,7 +313,7 @@ class RobotController(CorinManager):
 								self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
 																		self.Robot.Leg[j].XHd.world_X_foot)
 								## TEMP!
-								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
+								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
 						## TEMP: stamping
 						# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
 
@@ -321,6 +321,9 @@ class RobotController(CorinManager):
 						try:
 							sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
 							sn2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
+							## TEMP: RViZ normal
+							if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
+								sn2 = np.array([1., 0., 0.])
 						except:
 							sn1 = np.array([0., 0., 1.])
 							sn2 = np.array([0., 0., 1.])
@@ -363,6 +366,9 @@ class RobotController(CorinManager):
 							if (self.Robot.Gait.cs[j] == 1):
 								self.Robot.Leg[j].change_phase('support', self.Robot.XHc.world_X_base)
 								self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+								## TEMP: RViZ normal
+								if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
+									self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
 						state_machine = 'load'
 						print i, ' Phase Timeout, going to load ...'
 						gphase = list(self.Robot.Gait.cs)
@@ -408,6 +414,7 @@ class RobotController(CorinManager):
 						state_machine = 'unload'
 						tload = 1
 						# self.Robot.Gait.walk_mode()
+					raw_input('cont')
 				self.update_phase_support(P6e_world_X_base, V6e_world_X_base)
 				i += 1
 
@@ -435,6 +442,7 @@ class RobotController(CorinManager):
 				temp_gphase = map(lambda x: 0 if x is False else 1, self.Robot.Fault.fault_index )
 			
 			force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, temp_gphase, fmax_lim)
+			# force_dist = np.zeros((18,1))
 			joint_torq = self.Robot.force_to_torque(force_dist)
 			# print np.round(force_dist[12:15],3)
 			if self.interface != 'rviz' and self.control_loop != "open":
@@ -572,24 +580,27 @@ class RobotController(CorinManager):
 				# else:
 				# 	s_norm.append(snorm_right)
 				# 	self.Robot.Leg[j].snorm = snorm_right
+				# if j == 1:
+				# 	print np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3].flatten(),4)
+				# 	print self.Robot.Leg[j].snorm
 		q_contact = [item for i in q_contact for item in i]
 		# print gphase, fmax
 		# print p_foot
 		# print s_norm
 		# print q_contact
-		# print np.round(v3ca.flatten(),3) 
-		# print np.round(v3wa.flatten(),3) 
+		# print np.round(v3ca.flatten(),3), np.round(v3wa.flatten(),3) 
+
 		## Compute force distribution using QP
-		foot_force = self.ForceDist.resolve_force(v3ca, v3wa, p_foot,
-													self.Robot.Rbdl.com,
-													self.Robot.Rbdl.crbi, gphase, 
-													f_max, s_norm)#, qb[3:6], q_contact)
+		foot_force, tau = self.ForceDist.resolve_force(v3ca, v3wa, p_foot,
+														self.Robot.Rbdl.com,
+														self.Robot.Rbdl.crbi, gphase, 
+														f_max, s_norm, qb[3:6], q_contact)
 		# print 'fout: ', np.round(foot_force.flatten(),3)
 		# print '======================'
 		# end = rospy.get_time()
 		# print 'Tdiff: ', end - now
-		if abs(foot_force[16]) > 38:
-			raw_input('force high')
+		# if abs(foot_force[16]) > 38:
+		# 	raw_input('force high')
 		return foot_force
 
 	def suspend_controller(self):

@@ -31,7 +31,7 @@ class RvizVisualise:
 		self.cob_pub_  = rospy.Publisher(ROBOT_NS + '/cob', MarkerArray, queue_size=1) 			# CoB position
 		self.com_pub_  = rospy.Publisher(ROBOT_NS + '/centre_of_mass', Marker, queue_size=5) # CoM position
 		self.cop_pub_  = rospy.Publisher(ROBOT_NS + '/cop', Marker, queue_size=1) 			# CoP position
-		self.cone_pub_ = rospy.Publisher('cone_visual/cone_arrays', ConeStamped, queue_size=1)
+		self.cone_pub_ = rospy.Publisher('/cone_visual/cone_arrays', ConeStamped, queue_size=1)
 		self.wrench_pub_ = {}
 		for j in range(0,6):
 			self.wrench_pub_[j] = rospy.Publisher(ROBOT_NS + '/' + LEG_FORCE_FRAME[j] + '_force', WrenchStamped, queue_size=1)
@@ -92,15 +92,18 @@ class RvizVisualise:
 		poly = PolygonStamped()
 		poly.header.stamp = rospy.Time.now()
 		poly.header.frame_id = self.fr_fix
-		for f in footholds:
-			p = Point32()
-			p.x = f[0] + offset[0]
-			p.y = f[1] + offset[1]
-			p.z = offset[2]
-			poly.polygon.points.append(p)
+		try:
+			for f in footholds:
+				p = Point32()
+				p.x = f[0] + offset[0]
+				p.y = f[1] + offset[1]
+				p.z = offset[2]
+				poly.polygon.points.append(p)
+				
+			self.spol_pub_.publish(poly)
+		except:
+			pass
 			
-		self.spol_pub_.publish(poly)
-
 	def publish_support_region(self, footholds, offset=None):
 		""" Support polygon publisher 
 			Input:  footholds: list of footholds
@@ -112,14 +115,17 @@ class RvizVisualise:
 		poly = PolygonStamped()
 		poly.header.stamp = rospy.Time.now()
 		poly.header.frame_id = self.fr_fix
-		for f in footholds:
-			p = Point32()
-			p.x = f[0] + offset[0]
-			p.y = f[1] + offset[1]
-			p.z = offset[2]
-			poly.polygon.points.append(p)
-			
-		self.sreg_pub_.publish(poly)
+		try:
+			for f in footholds:
+				p = Point32()
+				p.x = f[0] + offset[0]
+				p.y = f[1] + offset[1]
+				p.z = offset[2]
+				poly.polygon.points.append(p)
+				
+			self.sreg_pub_.publish(poly)
+		except:
+			pass
 
 	def publish_com(self, com):
 		""" Publishes the CoM position """
@@ -222,8 +228,8 @@ class RvizVisualise:
 				quat = vec_X_vec_rotation(np.array([1., 0., 0.]), robot.Leg[j].snorm)
 				cones_pos.append(robot.Leg[j].XHc.world_X_foot[:3,3])
 				cones_rpy.append(quat)
-				cones_angle.append(math.atan(mu))
-
+				cones_angle.append(2.*math.atan(mu))
+				
 		## Define Variables ##
 		cone = ConeStamped()
 		cone.header.stamp = rospy.Time.now()

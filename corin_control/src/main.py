@@ -30,7 +30,6 @@ if __name__ == "__main__":
 		# Loads motion plan
 		motion = sys.argv[2]
 		rospy.set_param('/corin/load_plan', True)
-		pass
 
 	## Run continuously
 	# while not rospy.is_shutdown():

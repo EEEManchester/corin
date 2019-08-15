@@ -177,25 +177,10 @@ leg = 1
 for i in range(0, len(gait.phases)):
 	gait.change_phase()
 
-# print xor(bool(a), bool(b))
-# 	a = None
-# b = np.array([2,3,4])
-# print np.divide(b, 0.)
-# print a
-# gait.reverse_gait()
-
-# print 'now reversed'
-# for i in range(0,12):
-# 	gait.change_phase()
-# 	print gait.cs, gait.np
-# print gait.phase[-3]
-# print '============='
-# print gait.cs
-# gait.support_mode()
-# print gait.cs
-
-# gait.walk_mode()
-# print '============='
-# for i in range(0,3):
-# 	print gait.cs
-# 	gait.change_phase()
+# gait_list = []
+# for i in range(2):
+# 	gait_list.append(gait.phases)
+# gait_list = [item for i in gait_list for item in i]
+# print gait_list
+# for item in gait_list:
+# 	print item

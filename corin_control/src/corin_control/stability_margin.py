@@ -12,10 +12,10 @@ from constant import *
 import matplotlib.pyplot as plt
 import stabilipy
 
-def shortest_distance(p1, p2):
+def shortest_distance(p, p1, p2):
 
 	v_lr  = p2 - p1 												# support edge vector
-	p_p   = ( np.dot(-p1,v_lr)/np.linalg.norm(v_lr)**2 )*v_lr 		# foot vector projected onto support edge
+	p_p   = ( np.dot(-p1+p,v_lr)/np.linalg.norm(v_lr)**2 )*v_lr 		# foot vector projected onto support edge
 	p_f   = p1 + p_p  												# rejection vector from base
 	return np.sqrt(p_f[0]**2 + p_f[1]**2) 							# magnitude of rejection vector
 
@@ -32,8 +32,8 @@ class StabilityMargin():
 	def compute_support_region(self, stack_world_X_foot, stack_normals):
 		""" Computes the stability region for a set of fixed contacts - Bretl2008 """
 
-		# print stack_world_X_foot
-		# print stack_normals
+		print stack_world_X_foot
+		print stack_normals
 		self.Poly.contacts = [stabilipy.Contact(SURFACE_FRICTION, np.array(p).T,
 								stabilipy.utils.normalize(np.array(n).T))
 								for p, n in zip(stack_world_X_foot, stack_normals)]
@@ -126,7 +126,7 @@ class StabilityMargin():
 		if not isinstance(self.convex_hull, spatial.Delaunay):
 			de_hull = spatial.Delaunay(self.convex_hull)
 		self.valid = de_hull.find_simplex(p[0:2].flatten())>=0
-
+		# print self.convex_hull
 		# Get shortest distance
 		darr = []
 		ns = len(self.convex_hull)
@@ -136,10 +136,11 @@ class StabilityMargin():
 				p2 = self.convex_hull[0,:]
 			else:
 				p2 = self.convex_hull[i+1,:]
-			darr.append(shortest_distance(p1, p2))
+			# print p1, p2
+			darr.append(shortest_distance(p[0:2], p1, p2))
 		
 		self.min = min(darr) if self.valid else -min(darr)
-		
+		# print p, self.min
 		# plt.plot(vertices[:,0], vertices[:,1], 'o')
 		# plt.plot(p[0], p[1], '*')
 		# for simplex in hull.simplices:
@@ -181,6 +182,60 @@ Legs = [np.array([ 0.25, 0.00, 0.]),
 		np.array([-0.25, 0.00, 0.]),
 		np.array([ 0.00, 0.3, 0.]),
 		np.array([ 0.00,-0.3, 0.])]
-# SM = StabilityMargin()
-# SM.compute_support_polygon(Legs)
-# print SM.point_in_polygon(p)
+# RR transfer
+Legs = [[0.374, 0.556, 0.5], [0.299, 0.556, 0.5], [0.224, 0.556, 0.5], [0.414, 0.011, 0.5], [0.299, 0.011, 0.5]]
+p = np.array([0.29682765, 0.28308646, 0.50082906])
+# RM transfer
+Legs = [[0.374, 0.556, 0.5], [0.299, 0.556, 0.5], [0.224, 0.556, 0.5], [0.414, 0.011, 0.5], [0.2222, 0.0111, 0.5]]
+# p = np.array([0.29776476, 0.28311895, 0.50082744])
+
+## Test set
+# Legs = [[ 0.2, 0.2, 0.],
+# 		[-0.2, 0.2, 0.],
+# 		[ 0.0,-0.2, 0.],
+# 		[-0.2,-0.2, 0.]]
+# p = np.array([0., 0., 0.])
+
+SP = StabilityMargin()
+SP.compute_support_polygon(Legs)
+print SP.point_in_polygon(p)
+
+# normals = [[[0.0, -1.0, 0.0]], 
+# 		   [[0.0, -1.0, 0.0]], 
+# 		   [[-1.0, 0.0, 0.0]], 
+# 		   [[0.0, 1.0, 0.0]], 
+# 		   [[0.0, 1.0, 0.0]]]
+normals = [[[0.0, 0.0, 1.0]], 
+		   [[0.0, 0.0, 1.0]], 
+		   [[0.0, 0.0, 1.0]], 
+		   [[0.0, 0.0, 1.0]], 
+		   [[0.0, 0.0, 1.0]]]
+SR = StabilityMargin()
+# SR.compute_support_region(Legs, normals)
+# print SR.point_in_polygon(p)
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
+
+points = SP.convex_hull
+hull = spatial.ConvexHull(points)
+
+plt.plot(points[:,0], points[:,1], 'o')
+plt.plot(p[0],p[1], '*')
+cent = np.mean(points, 0)
+pts = []
+for pt in points[hull.simplices]:
+    pts.append(pt[0].tolist())
+    pts.append(pt[1].tolist())
+
+pts.sort(key=lambda p: np.arctan2(p[1] - cent[1],
+                                p[0] - cent[0]))
+pts = pts[0::2]  # Deleting duplicates
+pts.insert(len(pts), pts[0])
+k = 1.
+color = 'green'
+poly = Polygon(k*(np.array(pts)- cent) + cent,
+               facecolor=color, alpha=0.2)
+poly.set_capstyle('round')
+plt.gca().add_patch(poly)
+# plt.show()
