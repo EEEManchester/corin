@@ -571,11 +571,11 @@ class StabilityPolygon(RecursiveProjectionProblem):
     darr = []
     # Convert inner polygon to half-space representation
     hrep = self.backend.vrep_to_hrep(self.inner)
-    # print hrep
     # Check for each hrep that p lies on correct side
     for h in hrep:
-      # Distance from p to half plane |b-Ax|/||A||
-      d = abs(h[0]+(h[1]*p[0]+h[2]*p[1]))/np.sqrt(h[1]**2+h[2]**2)
+      # Distance from p to half plane |Ax-b|/||A||
+      d = abs(-h[0]-(h[1]*p[0]+h[2]*p[1]))/np.sqrt(h[1]**2+h[2]**2)
+      
       # Check if point constrained by b-Ax >= 0
       c = h[0]+(h[1]*p[0]+h[2]*p[1])
       if c < 0:
@@ -583,7 +583,7 @@ class StabilityPolygon(RecursiveProjectionProblem):
         d = d*-1.
       # print h, '\t', c
       darr.append(d)
-    # print darr
+    
     return valid, min(darr)
 
   def reset_fig(self):

@@ -73,15 +73,15 @@ poly.contacts = contacts
 
 # modes: best, iteration, precision
 now = time.time()
-poly.compute(stabilipy.Mode.best, epsilon=1e-3, 
-									maxIter=15, 
-									solver='cdd',
-									plot_error=False,
-									plot_init=False,
-									plot_step=False,
-									record_anim=True,
-									plot_direction=False,
-									plot_final=False)
+# poly.compute(stabilipy.Mode.best, epsilon=1e-3, 
+# 									maxIter=15, 
+# 									solver='cdd',
+# 									plot_error=False,
+# 									plot_init=False,
+# 									plot_step=False,
+# 									record_anim=True,
+# 									plot_direction=False,
+# 									plot_final=False)
 # end = time.time()
 # print 'td: ', end-now
 # # # convert to 2D array
@@ -105,6 +105,15 @@ def seq_convex_points(points):
 	return np.concatenate((xh,yh),axis=1)
 	 
 import cdd
+mat = cdd.Matrix([  [1, 2.0, 0.],
+					[1, 0., 2.0] ], number_type='float')
+mat.rep_type = cdd.RepType.GENERATOR# INEQUALITY
+# ineq = np.array(cdd.Polyhedron(mat).get_inequalities())
+# poly = cdd.Polyhedron(mat)
+print mat
+print cdd.Polyhedron(mat).get_inequalities()
+
+
 mat = cdd.Matrix([ [6.742269945E-02,  -7.385241116E-01,  6.742270661E-01],
 					[4.641596856E-02, -8.875760933E-01,  4.606611321E-01],
 					[-1,  1.922693825E+01, -10] ], number_type='float')
