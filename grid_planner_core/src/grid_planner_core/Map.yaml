@@ -119,41 +119,6 @@ Map:
     hole:
       i1: { s1: [1,2], s2: [50,22], sh: -1} # 0.63m width
       # i1: { s1: [1,2], s2: [50,24], sh: -1} # 0.69m width
-      
-  chimney_corner_066:
-    wall_height: 1.5
-    offset: {x: 0.023, y: -1.135, z: -0.4}
-    size: { sx: 1.11, sy: 1.31}
-    wall: 
-      i1: { s1: [0,25], s2: [12,25], sh: 0.9}
-      i2: { s1: [12,25], s2: [12,43], sh: 0.9}
-      i3: { s1: [0,2], s2: [37,2], sh: 0.9}   # width 0.66m
-      i4: { s1: [35,0], s2: [35,43], sh: 0.9} # width 0.66m
-      
-    hole:
-      i1: { s1: [0,3], s2: [34,24], sh: -1}   # vertical hole
-      i2: { s1: [13,25], s2: [34,43], sh: -1} # horizontal hole
-      i3: { s1: [0,26], s2: [11,43], sh: -1}  # corner hole
-      i4: { s1: [0,0], s2: [37,1], sh: -1}  # vertical left hole
-      i5: { s1: [36,2], s2: [37,43], sh: -1}  # horizontal front hole
-
-  # chimney_corner_053:
-  #   wall_height: 1.5
-  #   # offset: {x: 0.023, y: -1.135, z: 0.}
-  #   offset: {x: 0.0, y: 0., z: 0.}
-  #   size: { sx: 1.11, sy: 1.31}
-  #   wall: 
-  #     i1: { s1: [0,25], s2: [12,25], sh: 0.9}
-  #     i2: { s1: [12,25], s2: [12,43], sh: 0.9}
-  #     i3: { s1: [0,6], s2: [31,6], sh: 0.9}   # width 0.5352m
-  #     i4: { s1: [31,6], s2: [31,43], sh: 0.9} # width 0.5352m
-      
-  #   hole:
-      # i1: { s1: [0,7], s2: [30,24], sh: -1}   # vertical hole
-      # i2: { s1: [13,25], s2: [30,43], sh: -1} # horizontal hole
-      # i3: { s1: [0,26], s2: [11,43], sh: -1}  # corner hole
-      # # i4: { s1: [0,0], s2: [37,5], sh: -1}  # vertical left hole
-      # i5: { s1: [32,6], s2: [37,43], sh: -1}  # vertical left hole
 
   chimney_corner_053:
     wall_height: 1.5
@@ -171,3 +136,20 @@ Map:
       i1: { s1: [0,1], s2: [30,18], sh: -1}   # vertical hole
       i2: { s1: [13,19], s2: [30,37], sh: -1} # horizontal hole
       i3: { s1: [0,21], s2: [10,37], sh: -1}  # corner hole
+
+  chimney_corner_066:
+    wall_height: 1.5
+    offset: {x: 0.0, y: 0., z: 0.}
+    size: { sx: 1.09, sy: 1.31}
+    wall:
+      # Outer Wall 
+      i1: { s1: [0,0], s2: [36,1], sh: 0.9}   # width 0.66m
+      i2: { s1: [35,0], s2: [36,43], sh: 0.9} # width 0.66m
+      # Inner wall
+      i3: { s1: [ 0,24], s2: [12,25], sh: 0.9}
+      i4: { s1: [11,24], s2: [12,43], sh: 0.9}
+      
+    hole:
+      i1: { s1: [0,2], s2: [34,23], sh: -1}   # vertical hole
+      i2: { s1: [13,23], s2: [34,43], sh: -1} # horizontal hole
+      i3: { s1: [0,26], s2: [10,43], sh: -1}  # corner hole

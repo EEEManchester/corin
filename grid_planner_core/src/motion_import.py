@@ -89,10 +89,13 @@ class CsvImport:
 		self.motion_plan = MotionPlan()
 
 	def get_MotionPlan(self, filename):
+		""" Import motion plan from csv file """
 
 		fpath, fname = os.path.split(filename)
 		if fname == 'chimney_nom.csv':
-			base_offset = np.array([-0.026,0.668+0.287,0.,0.,0.,0.]).reshape(6,1)
+			base_offset = np.array([-0.026,0.955,0.,0.,0.,0.]).reshape(6,1)
+		elif fname == 'chimney_heu.csv':
+			base_offset = np.array([-0.026,1.107,0.,0.,0.,0.]).reshape(6,1)
 		else:
 			base_offset = np.zeros((6,1))
 
@@ -151,17 +154,38 @@ class CsvImport:
 		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 		
-		## Generate gait sequence
-		# gait_list = []
-		# for i in range(len(motion_plan.qbp)):
-		# 	gait_list.append(self.Robot.Gait.phases)
-		# gait_list = [item for i in gait_list for item in i]
-		# motion_plan.gait_phase = gait_list
+		# Generate gait sequence
+		gait_list = self.set_gait_phase(fname, x_cob)
 
-		self.motion_plan.set_base_path(qb_bias, base_path, world_X_base, None)
+		self.motion_plan.set_base_path(qb_bias, base_path, world_X_base, gait_list)
 		self.motion_plan.set_footholds(world_X_footholds, base_X_footholds, world_base_X_NRP)
 
 		return self.motion_plan
+
+	def set_gait_phase(self, fname, x_cob):
+		""" Generate gait phase based on CoB position """
+
+		gait_list = []
+		Gait = gait_class.GaitClass(GAIT_TYPE)
+		
+		if fname == 'chimney_heu.csv':
+			for i in range(9):
+				gait_list.append(Gait.phases)
+			# Start custom phase
+			for i in range(2):
+				gait_list.append([[0,0,1,0,0,0], [0,0,0,0,1,0], [0,0,0,1,0,0]])
+			for i in range(2):
+				gait_list.append([[0,0,0,0,0,0],[0,0,0,0,1,0],[0,0,0,1,0,0],[0,0,1,0,0,0],[0,1,0,0,0,0],[1,0,0,0,0,0]])
+			for i in range(2):
+				gait_list.append([[0,0,0,0,1,0],[0,0,0,1,0,0],[0,0,0,0,0,1],[0,0,1,0,0,0],[0,1,0,0,0,0],[1,0,0,0,0,0]])
+			for i in range(8):
+				gait_list.append(Gait.phases)
+		else:
+			for i in range(len(x_cob)):
+				gait_list.append(Gait.phases)
+		gait_list = [item for i in gait_list for item in i]
+		# print len(gait_list)
+		return gait_list
 
 class MotionImport:
 	def __init__(self):

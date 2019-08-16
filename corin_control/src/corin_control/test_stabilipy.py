@@ -57,15 +57,24 @@ normals = [[[0.0, 0.0, 1.0]],
 # normals = [[[0.0, -1.0, 0.0]], [[0.0, -1.0, 0.0]], [[-1.0, 0.0, 0.0]], [[-1.0, 0.0, 0.0]], [[0.0, 1.0, 0.0]]]
 
 ## Small region
-pos = [[0.3703, 0.5559, 0.5], [0.266, 0.556, 0.5], [0.9176, 0.1531, 0.5], [0.8954, 0.0108, 0.5], [0.7356, 0.011, 0.5]]
+# pos = [[0.3703, 0.5559, 0.5], [0.266, 0.556, 0.5], [0.9176, 0.1531, 0.5], [0.8954, 0.0108, 0.5], [0.7356, 0.011, 0.5]]
+# normals = [[[0.0, -1.0, 0.0]], [[0.0, -1.0, 0.0]], [[-1.0, 0.0, 0.0]], [[0.0, 1.0, 0.0]], [[0.0, 1.0, 0.0]]]
+# pos = [[0.3401, 0.7068, 0.5], [0.2496, 0.7069, 0.5], [1.0337, 0.4133, 0.5], [0.7848, 0.0467, 0.5], [0.6461, 0.0469, 0.5]]
+# normals = [[[0.0, -1.0, 0.0]], [[0.0, -1.0, 0.0]], [[-1.0, 0.0, 0.0]], [[0.0, 1.0, 0.0]], [[0.0, 1.0, 0.0]]]
+pos = [[0.3481, 0.7069, 0.5], [0.2542, 0.707, 0.5], [1.0338, 0.4378, 0.5], [0.8403, 0.0468, 0.5], [0.7012, 0.0469, 0.5]]
 normals = [[[0.0, -1.0, 0.0]], [[0.0, -1.0, 0.0]], [[-1.0, 0.0, 0.0]], [[0.0, 1.0, 0.0]], [[0.0, 1.0, 0.0]]]
+
+# Chimney heuristic - initial point close together
+# pos = [[0.3742, 0.8429, 0.5], [0.3741, 0.7601, 0.5], [0.3202, 0.7067, 0.5], [1.034, 0.69, 0.5], [1.0339, 0.5697, 0.5], [1.0338, 0.4495, 0.5]]
+# normals = [[[1.0, 0.0, 0.0]], [[1.0, 0.0, 0.0]], [[0.0, -1.0, 0.0]], [[-1.0, 0.0, 0.0]], [[-1.0, 0.0, 0.0]], [[-1.0, 0.0, 0.0]]]
+
 
 axisZ = np.array([[0.0], [1.0], [0.0]])
 n4 = np.transpose(np.transpose(math.rpyToRot(1.0,0.0,0.0)).dot(axisZ))
 # normals[0] = n4.tolist()
 # normals[3] = n4.tolist()
 # friction coefficient
-mu = 1.0
+mu = 0.7
 contacts = [stabilipy.Contact(mu, np.array(p).T,
                               stabilipy.utils.normalize(np.array(n).T))
             for p, n in zip(pos, normals)]
@@ -73,15 +82,15 @@ poly.contacts = contacts
 
 # modes: best, iteration, precision
 now = time.time()
-# poly.compute(stabilipy.Mode.best, epsilon=1e-3, 
-# 									maxIter=15, 
-# 									solver='cdd',
-# 									plot_error=False,
-# 									plot_init=False,
-# 									plot_step=False,
-# 									record_anim=True,
-# 									plot_direction=False,
-# 									plot_final=False)
+poly.compute(stabilipy.Mode.best, epsilon=1e-3, 
+									maxIter=10, 
+									solver='cdd',
+									plot_error=False,
+									plot_init=False,
+									plot_step=False,
+									record_anim=True,
+									plot_direction=False,
+									plot_final=False)
 # end = time.time()
 # print 'td: ', end-now
 # # # convert to 2D array
@@ -110,8 +119,8 @@ mat = cdd.Matrix([  [1, 2.0, 0.],
 mat.rep_type = cdd.RepType.GENERATOR# INEQUALITY
 # ineq = np.array(cdd.Polyhedron(mat).get_inequalities())
 # poly = cdd.Polyhedron(mat)
-print mat
-print cdd.Polyhedron(mat).get_inequalities()
+# print mat
+# print cdd.Polyhedron(mat).get_inequalities()
 
 
 mat = cdd.Matrix([ [6.742269945E-02,  -7.385241116E-01,  6.742270661E-01],

@@ -276,42 +276,45 @@ class CDDBackend(object):
       except:
         raise SteppingException('Numerical inconsistency found')
     count = 0
-    
+    # print(poly.inner)
+    # print(cdd.Polyhedron(poly.inner).get_inequalities())
     # For each inequality
     for line in ineq:
       # print('line: ', line)
-      # print('Outer\n',poly.outer)
-      # print('Inner\n',poly.inner)
-      # represent each ineq as a hash key
-      key = hashlib.sha1(line).hexdigest()
-      # check if hash key already exist
-      if key in poly.volume_dic:
-        # hash key exist, append to volume
-        volumes.append(poly.volume_dic[key])
-        count += 1
-      else:
-        # hash key does not exist, generate new key to append
-        if key in poly.hrep_dic:
-          A_e = poly.hrep_dic[key]
+      if np.linalg.norm(line) > 0.001:
+      
+        # print('Outer\n',poly.outer)
+        # print('Inner\n',poly.inner)
+        # represent each ineq as a hash key
+        key = hashlib.sha1(line).hexdigest()
+        # check if hash key already exist
+        if key in poly.volume_dic:
+          # hash key exist, append to volume
+          volumes.append(poly.volume_dic[key])
+          count += 1
         else:
-          A_e = poly.outer.copy()
-          A_e.extend(cdd.Matrix(-line.reshape(1, line.size)))
-          A_e.canonicalize()
-          poly.hrep_dic[key] = A_e
+          # hash key does not exist, generate new key to append
+          if key in poly.hrep_dic:
+            A_e = poly.hrep_dic[key]
+          else:
+            A_e = poly.outer.copy()
+            A_e.extend(cdd.Matrix(-line.reshape(1, line.size)))
+            A_e.canonicalize()
+            poly.hrep_dic[key] = A_e
 
-        if plot:
-          poly.reset_fig()
-          poly.plot_polyhedrons()
-          poly.plot_polyhedron(A_e, 'm', 0.5)
-          poly.show()
-        # Compute volume of triangle
-        vol = self.volume_convex(A_e, poly)
-        if vol >= 0.:
-          poly.volume_dic[key] = vol
-          volumes.append(vol)
-          poly.vrep_dic[key] = np.array(cdd.Polyhedron(self.A_e).get_generators())
-        else:
-          raise SteppingException('ERROR: Backend - Invalid volume')
+          if plot:
+            poly.reset_fig()
+            poly.plot_polyhedrons()
+            poly.plot_polyhedron(A_e, 'm', 0.5)
+            poly.show()
+          # Compute volume of triangle
+          vol = self.volume_convex(A_e, poly)
+          if vol >= 0.:
+            poly.volume_dic[key] = vol
+            volumes.append(vol)
+            poly.vrep_dic[key] = np.array(cdd.Polyhedron(self.A_e).get_generators())
+          else:
+            raise SteppingException('ERROR: Backend - Invalid volume')
       
     ## Recompute volumes for all if inner polygon does not change
     if len(ineq) == count:

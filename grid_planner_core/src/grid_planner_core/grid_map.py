@@ -189,7 +189,7 @@ class GridMap:
 				
 			# Normal for holes
 			elif (self.Map.nodes[e]['height'] < 0.):
-				self.Map.nodes[e]['norm'] = np.array([0.,0.,1.])
+				self.Map.nodes[e]['norm'] = np.array([0.,0.,0.])
 
 	def __set_irregular_terrain__(self):
 		""" Sets the surface normal for cells """
@@ -232,7 +232,12 @@ class GridMap:
 			# Check if cell within bound
 			
 			if (self.get_index_exists(grid_p)):
-				return self.get_index(info, grid_p)
+				if info == 'norm':
+					sn = self.get_index(info, grid_p)
+					if np.linalg.norm(sn) == 0.:
+						sn = self.get_nearest_cell(info, grid_p)
+					return sn
+				# return self.get_index(info, grid_p)
 			else:
 				print 'Index error: ', info, p, j
 				return None
@@ -267,6 +272,23 @@ class GridMap:
 
 	def get_map_size(self):
 		return self.map_size_g
+
+	def get_nearest_cell(self, info, grid_p):
+		# pd = [	np.array([0.01, 0.0, 0.]),
+		# 		np.array([0.00, 0.01, 0.]),
+		# 		np.array([-0.01, 0.0, 0.]),
+		# 		np.array([0.00, -0.01, 0.])]
+		pd = [(1,0),(0,1),(-1,0),(0,-1)]
+		
+		# Perturb in each direction
+		for i in range(4):
+			# print grid_p, pd[i]
+			new_p = tuple(map(lambda x,y:x+y, grid_p, pd[i]))
+			sn = self.get_index(info, new_p)
+			# sn = self.get_cell(info, p + pd[i])
+			if np.linalg.norm(sn) != 0:
+				return sn
+		print 'Error: no valid surface for contact' 
 
 	def get_median_width(self, p):
 		""" get the width clearance ahead of p """
@@ -661,7 +683,8 @@ class GridMap:
 		# 	pass
 
 		## enable major and minor grid
-		plt.grid('on');		 plt.grid(which='major', linestyle=':', linewidth='0.5', color='black')
+		plt.grid(True);		 
+		#plt.grid(which='major', linestyle=':', linewidth='0.5', color='black') 	# THIS CAUSE ERROR
 		# plt.minorticks_on(); plt.grid(which='minor', linestyle=':', linewidth='0.25', color='black')
 
 		# minor_ticks = np.arange(0, 9+1, 0.5)
@@ -674,20 +697,21 @@ class GridMap:
 		# print plt.get_backend()
 		# mng = plt.get_current_fig_manager()
 		# mng.resize(*mng.window.maxsize())
-		plt.tight_layout()
+		# plt.tight_layout()
 		plt.show() 
 		# fig_manager.resize(*fig_manager.window.maxsize())
 
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
-map_offset = (0.33, 0.39)
-ps = np.array([map_offset[0], map_offset[1], 0.1, 0., 0., 0.]).reshape(6,1)
-p = [0.374, 0.745,      0.5       ]
-p = [0.915, 0.745,      0.5       ]
-p = [ 0.299,  0.555,  0.5  ]
-# gmap = GridMap('chimney_corner_053')
-# print gmap.get_cell('norm', p)
+
+# gmap = GridMap('chimney_corner_066')
+# p = np.array([0.2244, 0.705,  0.5   ])
+# sn = gmap.get_cell('norm', p)
+# if np.linalg.norm(sn) == 0:
+# 	sn = gmap.get_nearest_cell('norm', p)
+# print sn
+# gmap.graph_representation()
 # print gmap.getIndex(p, 0)
  
 # print (26.%7.)

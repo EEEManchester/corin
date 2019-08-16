@@ -658,9 +658,11 @@ class CorinManager:
 					if (self.main_controller(motion_plan)):
 						self.Robot.alternate_phase()
 					else:
-						print 'Planning Failed'	
+						print colored('Planning Failed'	, 'red')
+						sys.exit(1)
 				else:
-					print 'Error: No motion plan! Exiting....'
+					print colored('Error: No motion plan! Exiting....', 'red')
+					sys.exit(1)
 
 			elif (mode == 6):
 				# Execute motion plan from ros_grid_planner
@@ -669,6 +671,12 @@ class CorinManager:
 				if motion == 'chimney_nom':
 					filename = 'chimney_nom.csv'
 					mapname  = 'chimney_corner_053'
+				elif motion == 'chimney_heu':
+					filename = 'chimney_heu.csv'
+					mapname  = 'chimney_corner_066'
+				else:
+					print colored('Error: Motion plan <%s> does not exists, exiting!'%motion, 'red')
+					sys.exit(1)
 
 				rospy.wait_for_service(ROBOT_NS + '/import_motion_plan', 1.0)
 				try:
@@ -678,6 +686,7 @@ class CorinManager:
 					self.GridMap.set_map(mapname)
 				except:
 					print colored('Motion plan service call error!', 'red')
+					sys.exit(1)
 				# motion_plan = planpath_to_motionplan( path_planner(Pose(), Pose()) )
 				# motion_plan = planpath_to_motionplan(plan_generat)
 				# Plot.plot_2d(motion_plan.qb.X.t, motion_plan.qb.X.xp)
@@ -708,15 +717,6 @@ class CorinManager:
 				self.Robot._initialise(leg_stance)
 				self.Robot.qc.position = self.Robot.qd
 
-				## Generate gait sequence
-				gait_list = []
-				for i in range(len(motion_plan.qbp)):
-					gait_list.append(self.Robot.Gait.phases)
-				gait_list = [item for i in gait_list for item in i]
-				motion_plan.gait_phase = gait_list
-
-				# print 'moving to default'
-				# self.default_pose(0, leg_stance)
 				if motion_plan is not None:
 					if (self.main_controller(motion_plan)):
 						self.Robot.alternate_phase()

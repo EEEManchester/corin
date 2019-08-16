@@ -32,8 +32,8 @@ class StabilityMargin():
 	def compute_support_region(self, stack_world_X_foot, stack_normals):
 		""" Computes the stability region for a set of fixed contacts - Bretl2008 """
 
-		# print stack_world_X_foot
-		# print stack_normals
+		print stack_world_X_foot
+		print stack_normals
 		self.Poly.contacts = [stabilipy.Contact(SURFACE_FRICTION, np.array(p).T,
 								stabilipy.utils.normalize(np.array(n).T))
 								for p, n in zip(stack_world_X_foot, stack_normals)]
@@ -65,7 +65,8 @@ class StabilityMargin():
 			print 'Hull: \n', self.convex_hull
 
 		self.valid, self.min = self.Poly.point_in_hull(p)
-
+		# if abs(self.min) < 0.1:
+		# 	print p.flatten()
 		return self.valid, self.min #de_hull.find_simplex(p[0:2])>=0
 
 	def force_moment(self, p, forces, world_X_foot, normals):
@@ -138,7 +139,7 @@ class StabilityMargin():
 				p2 = self.convex_hull[i+1,:]
 			# print p1, p2
 			darr.append(shortest_distance(p[0:2], p1, p2))
-		print darr
+		
 		self.min = min(darr) if self.valid else -min(darr)
 		# print p, self.min
 		# plt.plot(vertices[:,0], vertices[:,1], 'o')
@@ -197,7 +198,7 @@ p = np.array([0.29682765, 0.28308646, 0.50082906])
 # p = np.array([0.0, 0.1, 0.])
 
 SP = StabilityMargin()
-SP.compute_support_polygon(Legs)
+# SP.compute_support_polygon(Legs)
 # print SP.point_in_polygon(p)
 
 # normals = [[[0.0, -1.0, 0.0]], 
@@ -211,31 +212,31 @@ normals = [[[0.0, 0.0, 1.0]],
 		   [[0.0, 0.0, 1.0]], 
 		   [[0.0, 0.0, 1.0]]]
 SR = StabilityMargin()
-SR.compute_support_region(Legs, normals)
+# SR.compute_support_region(Legs, normals)
 # print SR.point_in_convex(p)
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 
-points = SP.convex_hull
-hull = spatial.ConvexHull(points)
+# points = SP.convex_hull
+# hull = spatial.ConvexHull(points)
 
-plt.plot(points[:,0], points[:,1], 'o')
-plt.plot(p[0],p[1], '*')
-cent = np.mean(points, 0)
-pts = []
-for pt in points[hull.simplices]:
-    pts.append(pt[0].tolist())
-    pts.append(pt[1].tolist())
+# plt.plot(points[:,0], points[:,1], 'o')
+# plt.plot(p[0],p[1], '*')
+# cent = np.mean(points, 0)
+# pts = []
+# for pt in points[hull.simplices]:
+#     pts.append(pt[0].tolist())
+#     pts.append(pt[1].tolist())
 
-pts.sort(key=lambda p: np.arctan2(p[1] - cent[1],
-                                p[0] - cent[0]))
-pts = pts[0::2]  # Deleting duplicates
-pts.insert(len(pts), pts[0])
-k = 1.
-color = 'green'
-poly = Polygon(k*(np.array(pts)- cent) + cent,
-               facecolor=color, alpha=0.2)
-poly.set_capstyle('round')
-plt.gca().add_patch(poly)
+# pts.sort(key=lambda p: np.arctan2(p[1] - cent[1],
+#                                 p[0] - cent[0]))
+# pts = pts[0::2]  # Deleting duplicates
+# pts.insert(len(pts), pts[0])
+# k = 1.
+# color = 'green'
+# poly = Polygon(k*(np.array(pts)- cent) + cent,
+#                facecolor=color, alpha=0.2)
+# poly.set_capstyle('round')
+# plt.gca().add_patch(poly)
 # plt.show()

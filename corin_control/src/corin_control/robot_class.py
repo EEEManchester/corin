@@ -227,13 +227,34 @@ class RobotState:
 		""" updates the current stability margin """
 
 		valid, sm = self.SM.point_in_convex(self.XHc.world_X_COM[:3,3])
-		valid, sm = self.Sp.point_in_polygon(self.XHc.world_X_COM[:3,3])
+		pvalid, psm = self.Sp.point_in_polygon(self.XHc.world_X_COM[:3,3])
 
 		if not valid:
 			print colored("Convex hull violated %.3f %.3f " %(valid, sm), 'red')
 			# self.invalid = True
 			# self.SM.point_in_convex(self.XHc.world_X_COM[:3,3], True)
 			self.Sp.point_in_polygon(self.XHc.world_X_COM[:3,3])
+			s_norm = []
+			p_foot = [] 		
+			f_max  = []
+			q_contact = []
+			for j in range(6):
+				if (self.Gait.cs[j] == 0):
+					world_CoM_X_foot = mX( self.XHd.world_X_base[:3,:3],
+						  					(-self.Rbdl.com.flatten() + self.Leg[j].XHd.base_X_foot[:3,3]) )
+					p_foot.append(world_CoM_X_foot.copy())
+					# q_contact.append(qp[(j*3):(j*3)+3].tolist())
+					s_norm.append(self.Leg[j].snorm)
+			print self.XHc.world_X_COM[:3,3]
+			print s_norm
+			print p_foot
+			print '-------------------------------'
+			stack_world_X_foot = [np.round(self.Leg[j].XHc.world_X_foot[:3,3],4).tolist() for j in range(6) if self.Gait.cs[j] == 0]
+			stack_normals = [[self.Leg[j].snorm.tolist()] for j in range(6) if self.Gait.cs[j] == 0]
+			print stack_world_X_foot
+			print stack_normals
+			print '==============================='
+			raw_input('sm invalid')
 		else:
 			self.invalid = False
 			# pass

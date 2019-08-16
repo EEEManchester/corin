@@ -102,7 +102,7 @@ KPcom = np.array([1.0, 1.0, 1.0])*0.3	#1000. #
 KDcom = np.array([0.0, 0.0, 1.0])*0.015	#0.5
 KPang = np.array([1.0, 1.0, 1.0])*0.	#500.
 KDang = np.array([1.0, 1.0, 1.0])*0.	#0.5
-SURFACE_FRICTION = 1.0
+SURFACE_FRICTION = 0.7
 F_INC  = 0.1
 D_MOVE = 0.0001	# motion for leg to achieve contact
 

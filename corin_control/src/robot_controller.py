@@ -228,6 +228,7 @@ class RobotController(CorinManager):
 				## Update gait phase and force interpolation; reset force controllers
 				if s_cnt == 1:
 					print 'State Machine: Motion'
+					# print gait_list
 					try:
 						self.Robot.Gait.cs = list(gait_list[0])
 						gait_list.pop(0)
@@ -302,6 +303,17 @@ class RobotController(CorinManager):
 								
 							except IndexError:
 								# Get bodypose at end of gait phase, or end of trajectory - used in motion_import
+								
+								## TEMP: Chimney custom gait phase
+								if i==2751:
+									n_phases = 10
+									iahead = int(GAIT_TPHASE/CTR_INTV)*n_phases
+									gait_tphase = float(n_phases)*GAIT_TPHASE
+								else:
+									iahead = int(GAIT_TPHASE/CTR_INTV)
+									gait_tphase = GAIT_TPHASE
+								s_max = iahead
+
 								try:
 									x_ahead = base_path.X.xp[i+iahead].reshape(3,1) + wXbase_offset[0:3]
 									w_ahead = base_path.W.xp[i+iahead].reshape(3,1) + wXbase_offset[3:6]
@@ -312,6 +324,7 @@ class RobotController(CorinManager):
 								self.Robot.Leg[j].XH_world_X_base = vec6d_to_se3(np.array([x_ahead, w_ahead]).reshape((6,1)))
 								self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
 																		self.Robot.Leg[j].XHd.world_X_foot)
+
 								## TEMP!
 								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
 						## TEMP: stamping
@@ -321,9 +334,14 @@ class RobotController(CorinManager):
 						try:
 							sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
 							sn2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
-							## TEMP: RViZ normal
+							## TEMP: Chimney corner
 							if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
 								sn2 = np.array([1., 0., 0.])
+							# if j == 5:
+							# 	# print np.round(self.Robot.P6d.world_X_base.flatten(),4)
+							# 	print j, np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3].flatten(),4)
+							# 	print sn2
+							# 	print '==========================='
 						except:
 							sn1 = np.array([0., 0., 1.])
 							sn2 = np.array([0., 0., 1.])
@@ -335,7 +353,7 @@ class RobotController(CorinManager):
 						## Updates to actual foot position (without Q_COMPENSATION)
 						self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3:4] = self.Robot.Leg[j].KDL.leg_FK(self.Robot.Leg[j].Joint.qpc)
 						## Generate transfer spline
-						svalid = self.Robot.Leg[j].generate_spline('world', sn1, sn2, 1, False, GAIT_TPHASE, CTR_INTV)
+						svalid = self.Robot.Leg[j].generate_spline('world', sn1, sn2, 1, False, gait_tphase, CTR_INTV)
 
 						## Update NRP
 						self.Robot.Leg[j].XHd.base_X_NRP[:3,3] = mX(self.Robot.XHd.base_X_world[:3,:3],
@@ -358,6 +376,7 @@ class RobotController(CorinManager):
 				self.update_phase_support(P6e_world_X_base, V6e_world_X_base)
 				
 				## Gait phase TIMEOUT
+				# print s_cnt, s_max
 				if ( s_cnt == s_max  and not self.Robot.support_mode):
 					# Legs in contact, change phase
 					if all(self.Robot.cstate) or self.interface == "rviz" or self.control_loop=="open":
@@ -520,14 +539,7 @@ class RobotController(CorinManager):
 				# 	print slide_gain
 				# 	print 'S c wXb: ', np.round(self.Robot.XHc.world_X_base[:3,3],4)
 				# 	print 'S c wXb: ', np.round(comp_world_X_base[:3,3],4)
-				# 	temp1 = mX(self.Robot.XHc.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
-				# 	temp2 = mX(self.Robot.Leg[j].XHd.coxa_X_base, temp1)
-				# 	# print 'S c wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[:3,3],4)
-					# print 'S d cXf: ', np.round(self.Robot.Leg[4].XHd.coxa_X_foot[:3,3],4)
-					# print 'S c cXf: ', np.round(self.Robot.Leg[4].XHc.coxa_X_foot[:3,3],4)
-				# 	# print 'temp1: ', np.round(temp2,3)
-				# 	print 'temp2: ', np.round(temp2[:3,3],3)
-
+				
 	def update_phase_transfer(self,delta_d=None):
 
 		for j in range (0, self.Robot.active_legs):
