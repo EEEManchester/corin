@@ -93,12 +93,16 @@ class KDL():
 			print 'FK: ', e
 			pass
 
-	def leg_IK(self, p=None, leg_no=None):
+	def leg_IK(self, p=None, leg_no=None, switch_direction=False):
 
 		try:
 			x = p[0];	y = p[1];	z = p[2];
 
-			q1 = np.arctan2(y,x)
+			if not switch_direction:
+				q1 = np.arctan2(y,x)
+			else:
+				# q1 = np.arctan(y/x)
+				q1 = np.arctan2(y,x) - np.pi
 			
 			# Leg along direction of body - wall walking cornering
 			# if ( (abs(np.rad2deg(q1)) >= 50.)):
@@ -112,7 +116,8 @@ class KDL():
 				
 			# if leg_no == 0:
 			# 	print 'q1 ', np.round(q1,3), np.round(p,4)
-
+			# 	print np.arctan(y/x)
+			# q1 = np.arctan(y/x)
 			# Adding the square of element (1,4) & (2,4) in inv(H01)*Psym = T12*T23
 			c3  = ( (x*np.cos(q1) + y*np.sin(q1) - L1)**2 + z**2 -L3**2-L2**2 )/(2*L2*L3);
 			a3  = 1.0-c3**2
@@ -222,21 +227,15 @@ class KDL():
 ## ================================================================================================ ##
 CK = KDL()
 
-qsurface = np.array([0.,-np.pi/2,0.])
-base_X_surface = 0.29
-bodypose = np.array([0.,0.,BODY_HEIGHT, 0.,0.,0.])
-
-# CK.update_nominal_stance(bodypose, base_X_surface, qsurface)
-
-# print bodypose[3:7]
-# qs = [0., 1.238, -1.724] #[0., 1.195, -1.773] 	# left side
-
-# print CK.singularity_approach(qs)
-# cd = CK.leg_FK(qs)
-# print cd.flatten()
 cd = [0.2096,  0.0003, -0.0934]
-qp = CK.leg_IK(cd)
-# print np.round(qp,3)
+cd = [ 0.0063, 0., -0.2   ]
+cd =  [-0.0007,  0.0008 ,-0.1998]
+qp = CK.leg_IK(cd, 0)
+# print np.round(qp,4)
+
+
+# cp = CK.leg_FK(qp)
+# print np.round(cp,4)
 # print np.rad2deg(qp[1])
 # print qp
 # CK.check_singularity(qp)

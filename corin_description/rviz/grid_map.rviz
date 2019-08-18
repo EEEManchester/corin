@@ -9,6 +9,7 @@ Panels:
         - /Grid1/Offset1
         - /CentreOfMass1
         - /Contact Forces1
+        - /Contact Forces1/RR_foot_wrench1
       Splitter Ratio: 0.5
     Tree Height: 775
   - Class: rviz/Selection
@@ -271,7 +272,7 @@ Visualization Manager:
       Marker Topic: /corin/footholds
       Name: Footholds
       Namespaces:
-        "": true
+        {}
       Queue Size: 1
       Value: true
     - Class: rviz/Marker
@@ -279,7 +280,7 @@ Visualization Manager:
       Marker Topic: /corin/centre_of_mass
       Name: CentreOfMass
       Namespaces:
-        "": true
+        {}
       Queue Size: 10
       Value: true
     - Class: rviz/Group
@@ -353,7 +354,7 @@ Visualization Manager:
           Arrow Width: 0.0500000007
           Class: rviz/WrenchStamped
           Enabled: true
-          Force Arrow Scale: 0.00999999978
+          Force Arrow Scale: 0.0199999996
           Force Color: 0; 255; 0
           History Length: 1
           Name: RR_foot_wrench
@@ -369,7 +370,7 @@ Visualization Manager:
       Marker Topic: /cone_visual/viz_cone_arrays
       Name: Friction Cones
       Namespaces:
-        "": true
+        {}
       Queue Size: 1
       Value: true
     - Class: poly_rviz_plugin/Polygon

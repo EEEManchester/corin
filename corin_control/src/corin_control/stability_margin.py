@@ -39,14 +39,14 @@ class StabilityMargin():
 								for p, n in zip(stack_world_X_foot, stack_normals)]
 		try:
 			self.Poly.compute(stabilipy.Mode.best, epsilon=1e-3, 
-													maxIter=10, 
+													maxIter=20, 
 													solver='cdd',
 													plot_error=False,
 													plot_init=False,
 													plot_step=False,
 													record_anim=False,
 													plot_direction=False,
-													plot_final=False)
+													plot_final=True)
 			# Construct convex hull from inner_polygon
 			self.convex_hull = self.Poly.inner_polyhedron()
 			
@@ -58,7 +58,7 @@ class StabilityMargin():
 			print stack_normals
 			print colored('ERROR: Support region - %s'%e,'red')
 
-	def point_in_convex(self, p, disp=False):
+	def point_in_region(self, p, disp=False):
 		""" Checks if a point is in convex hull and distance to the edge """
 		if disp:
 			print 'CoM: ', p.flatten()
@@ -211,13 +211,16 @@ normals = [[[0.0, 0.0, 1.0]],
 		   [[0.0, 0.0, 1.0]], 
 		   [[0.0, 0.0, 1.0]], 
 		   [[0.0, 0.0, 1.0]]]
-SR = StabilityMargin()
+Legs = [[0.25, 0.2509, 0.0], [0.0, 0.3, 0.0], [-0.25, 0.2509, 0.0], [0.25, -0.2509, 0.0], [0.0, -0.3, 0.0], [-0.25, -0.2509, 0.0]]
+normals = [[[0.0, 0.0, 1.0]], [[0.0, 0.0, 1.0]], [[0.0, 0.0, 1.0]], [[0.0, 0.0, 1.0]], [[0.0, 0.0, 1.0]], [[0.0, 0.0, 1.0]]]
+# SR = StabilityMargin()
 # SR.compute_support_region(Legs, normals)
-# print SR.point_in_convex(p)
+# print SR.point_in_region(p)
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
-
+# a = [[1,1],[2,2]]
+# print np.array(a)
 # points = SP.convex_hull
 # hull = spatial.ConvexHull(points)
 

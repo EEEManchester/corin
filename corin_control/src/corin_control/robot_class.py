@@ -171,7 +171,7 @@ class RobotState:
 
 			bstate = self.Leg[j].update_joint_state(wXb, qpc[offset+j*3:offset+(j*3)+3], reset, self.Gait.step_stroke)
 			self.cstate[j] = self.Leg[j].update_force_state(self.cforce[j*3:(j*3)+3])
-
+			self.Leg[j].XH_world_X_base = self.XHd.world_X_base.copy()
 			self.Leg[j].P6_world_X_base = self.P6c.world_X_base.copy()
 
 			if (bstate==True and self.Gait.cs[j]==0 and self.support_mode==False):
@@ -226,13 +226,13 @@ class RobotState:
 	def update_stability_margin(self):
 		""" updates the current stability margin """
 
-		valid, sm = self.SM.point_in_convex(self.XHc.world_X_COM[:3,3])
+		valid, sm = self.SM.point_in_region(self.XHc.world_X_COM[:3,3])
 		pvalid, psm = self.Sp.point_in_polygon(self.XHc.world_X_COM[:3,3])
 
 		if not valid:
 			print colored("Convex hull violated %.3f %.3f " %(valid, sm), 'red')
 			# self.invalid = True
-			# self.SM.point_in_convex(self.XHc.world_X_COM[:3,3], True)
+			# self.SM.point_in_region(self.XHc.world_X_COM[:3,3], True)
 			self.Sp.point_in_polygon(self.XHc.world_X_COM[:3,3])
 			s_norm = []
 			p_foot = [] 		
@@ -245,16 +245,16 @@ class RobotState:
 					p_foot.append(world_CoM_X_foot.copy())
 					# q_contact.append(qp[(j*3):(j*3)+3].tolist())
 					s_norm.append(self.Leg[j].snorm)
-			print self.XHc.world_X_COM[:3,3]
-			print s_norm
-			print p_foot
-			print '-------------------------------'
-			stack_world_X_foot = [np.round(self.Leg[j].XHc.world_X_foot[:3,3],4).tolist() for j in range(6) if self.Gait.cs[j] == 0]
-			stack_normals = [[self.Leg[j].snorm.tolist()] for j in range(6) if self.Gait.cs[j] == 0]
-			print stack_world_X_foot
-			print stack_normals
-			print '==============================='
-			raw_input('sm invalid')
+			# print self.XHc.world_X_COM[:3,3]
+			# print s_norm
+			# print p_foot
+			# print '-------------------------------'
+			# stack_world_X_foot = [np.round(self.Leg[j].XHc.world_X_foot[:3,3],4).tolist() for j in range(6) if self.Gait.cs[j] == 0]
+			# stack_normals = [[self.Leg[j].snorm.tolist()] for j in range(6) if self.Gait.cs[j] == 0]
+			# print stack_world_X_foot
+			# print stack_normals
+			# print '==============================='
+			# raw_input('sm invalid')
 		else:
 			self.invalid = False
 			# pass
@@ -269,7 +269,7 @@ class RobotState:
 		## Computes region if previous topology is different
 		if self.Gait.cs != self.SM.prev_topology:
 			## Define Variables ##
-			stack_world_X_foot = [np.round(self.Leg[j].XHc.world_X_foot[:3,3],4).tolist() for j in range(6) if self.Gait.cs[j] == 0]
+			stack_world_X_foot = [np.round(self.Leg[j].XHc.world_X_foot[:3,3],3).tolist() for j in range(6) if self.Gait.cs[j] == 0]
 			stack_normals = [[self.Leg[j].snorm.tolist()] for j in range(6) if self.Gait.cs[j] == 0]
 			
 			self.SM.compute_support_region(stack_world_X_foot, stack_normals)

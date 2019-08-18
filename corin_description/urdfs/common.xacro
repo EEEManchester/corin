@@ -22,7 +22,7 @@
 
 	<!-- Inertial values -->
 	<!-- Trunk  -->
-	<xacro:property name="xcom_trunk" value="0.0"/>
+	<xacro:property name="xcom_trunk" value="-0.0"/>
 	<xacro:property name="ycom_trunk" value="0.0"/>
 	<xacro:property name="zcom_trunk" value="0.0"/>
 	<xacro:property name="m_trunk" 	  value="1.58"/> <!-- initially 1.5 -->

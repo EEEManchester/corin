@@ -96,6 +96,10 @@ class CsvImport:
 			base_offset = np.array([-0.026,0.955,0.,0.,0.,0.]).reshape(6,1)
 		elif fname == 'chimney_heu.csv':
 			base_offset = np.array([-0.026,1.107,0.,0.,0.,0.]).reshape(6,1)
+		elif fname == 'wall_concave.csv':
+			base_offset = np.array([-0.02,0.65,0.,0.,0.,0.]).reshape(6,1)
+		elif fname == 'wall_convex.csv':
+			base_offset = np.array([-0.028,0.658,0.,0.,0.,0.]).reshape(6,1)
 		else:
 			base_offset = np.zeros((6,1))
 

@@ -17,7 +17,7 @@ ROBOT_NS = "corin"
 ##                       Robot parameters 	 						##
 ## ================================================================ ##
 # Link Length, Mass
-BODY_MASS = 1.48
+BODY_MASS = 1.58
 L1 = 0.060;	COXA_M = 0.040586;	#L1_MASS = 0.040
 L2 = 0.15;	FEMUR_M = 0.347529;	#L2_MASS = 0.350 # ORIGIINAL L2 = 0.15 m; chimney 0.2; wall 0.17
 L3 = 0.15;	TIBIA_M = 0.10313;	#L3_MASS = 0.116
@@ -26,7 +26,8 @@ LEG_MASS = COXA_M + FEMUR_M + TIBIA_M #L1_MASS + L2_MASS + L3_MASS
 ROBOT_MASS = BODY_MASS + LEG_MASS*6
 
 # Link Centre of Mass reference from parent frame
-BODY_COM = [-0.0065, 0.0, 0.0]
+# BODY_COM = [-0.0065, 0.0, 0.0]
+BODY_COM = [-0.0, 0.0, 0.0]
 L1_COM   = [0.024713, 0.0, 0.0]
 L2_COM   = [0.0750, -0.000231, 0.0]
 L3_COM   = [0.10585, 0.0, 0.0]
@@ -96,13 +97,13 @@ IMU_RATE = 192 			# IMU publishing rate, Hz
 ##                 Force Distribution parameters 	 				##
 ## ================================================================ ##
 LOAD_T = 0.5	# time for leg load & unloading
-F_MAX = 40.0	# maximum force for leg
+F_MAX = ROBOT_MASS*10.#40.0	# maximum force for leg
 F_MIN = 0.0		# minimum force for leg
 KPcom = np.array([1.0, 1.0, 1.0])*0.3	#1000. #
 KDcom = np.array([0.0, 0.0, 1.0])*0.015	#0.5
 KPang = np.array([1.0, 1.0, 1.0])*0.	#500.
 KDang = np.array([1.0, 1.0, 1.0])*0.	#0.5
-SURFACE_FRICTION = 0.7
+SURFACE_FRICTION = 0.8
 F_INC  = 0.1
 D_MOVE = 0.0001	# motion for leg to achieve contact
 
@@ -152,7 +153,7 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 BOUND_FACTOR = 1.1 	# boundary constraint for leg workplane space
 LEG_CLEAR 	 = 0.06 	# clearance between leg workplane boundaries
 STANCE_WIDTH = 0.21		# ori: 0.21, chimney: 0.23, 0.27, 0.31 for tripod
-BODY_HEIGHT  = 0.10		# ori: 0.10, chimney: 0.0
+BODY_HEIGHT  = 0.1		# ori: 0.10, chimney: 0.0
 # Offset for front and rear legs
 TETA_F = 0.;
 TETA_R = -TETA_F;

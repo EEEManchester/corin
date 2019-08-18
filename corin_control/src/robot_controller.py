@@ -19,10 +19,10 @@ class RobotController(CorinManager):
 		CorinManager.__init__(self, initialise)
 		
 		# Enable/disable controllers
-		self.ctrl_base_tracking  = False 	# base tracking controller
 		self.ctrl_base_admittance = False 	# base impedance controller - fault
-		self.ctrl_leg_admittance = False 	# leg impedance controller
-		self.ctrl_contact_detect = False 		# switch gait for early contact detection
+		self.ctrl_base_tracking   = False 	# base tracking controller
+		self.ctrl_leg_admittance  = False 	# leg impedance controller
+		self.ctrl_contact_detect  = False 		# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
 
@@ -234,6 +234,7 @@ class RobotController(CorinManager):
 						gait_list.pop(0)
 					except:
 						print colored('ERROR: no gait to unstack','red')
+						# self.Robot.Gait.cs = [0,0,0,2,0,0]
 						pass
 					# raw_input('motion')
 					## Force and gait phase array for Force Distribution
@@ -304,14 +305,13 @@ class RobotController(CorinManager):
 							except IndexError:
 								# Get bodypose at end of gait phase, or end of trajectory - used in motion_import
 								
-								## TEMP: Chimney custom gait phase
-								if i==2751:
-									n_phases = 10
-									iahead = int(GAIT_TPHASE/CTR_INTV)*n_phases
-									gait_tphase = float(n_phases)*GAIT_TPHASE
-								else:
-									iahead = int(GAIT_TPHASE/CTR_INTV)
-									gait_tphase = GAIT_TPHASE
+								iahead = int(GAIT_TPHASE/CTR_INTV)
+								gait_tphase = GAIT_TPHASE
+								## TEMP: Chimney heuristic custom gait phase
+								# if i==2751:
+								# 	n_phases = 10
+								# 	iahead = int(GAIT_TPHASE/CTR_INTV)*n_phases
+								# 	gait_tphase = float(n_phases)*GAIT_TPHASE
 								s_max = iahead
 
 								try:
@@ -335,21 +335,16 @@ class RobotController(CorinManager):
 							sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
 							sn2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
 							## TEMP: Chimney corner
-							if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
-								sn2 = np.array([1., 0., 0.])
-							# if j == 5:
-							# 	# print np.round(self.Robot.P6d.world_X_base.flatten(),4)
-							# 	print j, np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3].flatten(),4)
-							# 	print sn2
-							# 	print '==========================='
+							# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
+							# 	sn2 = np.array([1., 0., 0.])
+							## TEMP: Wall convex corner
+							# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
+							# 	sn2 = np.array([1., 0., 0.])	
 						except:
 							sn1 = np.array([0., 0., 1.])
 							sn2 = np.array([0., 0., 1.])
 							print 'norm error'
-						# if j < 3:
-						# 	print j, '\t', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
-						# 	print j, '\t', np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],3)
-						# 	print j, '\t', sn1, sn2
+						
 						## Updates to actual foot position (without Q_COMPENSATION)
 						self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3:4] = self.Robot.Leg[j].KDL.leg_FK(self.Robot.Leg[j].Joint.qpc)
 						## Generate transfer spline
@@ -374,7 +369,7 @@ class RobotController(CorinManager):
 				## Compute task space foot position for all legs
 				self.update_phase_transfer()
 				self.update_phase_support(P6e_world_X_base, V6e_world_X_base)
-				
+				# print 'wXf: ', np.round(self.Robot.Leg[1].XHd.world_X_foot[:3,3],4)
 				## Gait phase TIMEOUT
 				# print s_cnt, s_max
 				if ( s_cnt == s_max  and not self.Robot.support_mode):
@@ -385,9 +380,12 @@ class RobotController(CorinManager):
 							if (self.Robot.Gait.cs[j] == 1):
 								self.Robot.Leg[j].change_phase('support', self.Robot.XHc.world_X_base)
 								self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
-								## TEMP: RViZ normal
-								if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
-									self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
+								## TEMP: Chimney corner
+								# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
+								# 	self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
+								## TEMP: Wall Convex corner
+								# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
+								# 	self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
 						state_machine = 'load'
 						print i, ' Phase Timeout, going to load ...'
 						gphase = list(self.Robot.Gait.cs)
@@ -453,14 +451,14 @@ class RobotController(CorinManager):
 			xa_d = v3ca#np.array([0.,0.,.0])
 			wa_d = v3wa#np.array([0.,0.,.0])
 
-			temp_gphase = list(self.Robot.Gait.cs) if state_machine=='motion' else gphase
+			i_gphase = list(self.Robot.Gait.cs) if state_machine=='motion' else gphase
 			# Fault tolerance: discontinuous phase
 			if (all( map(lambda x: x == self.Robot.Gait.cs[0], self.Robot.Gait.cs ) ) and 
 				state_machine == 'motion' and
 				self.Robot.Fault.status):
-				temp_gphase = map(lambda x: 0 if x is False else 1, self.Robot.Fault.fault_index )
+				i_gphase = map(lambda x: 0 if x is False else 1, self.Robot.Fault.fault_index )
 			
-			force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, temp_gphase, fmax_lim)
+			force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, i_gphase, fmax_lim)
 			# force_dist = np.zeros((18,1))
 			joint_torq = self.Robot.force_to_torque(force_dist)
 			# print np.round(force_dist[12:15],3)
@@ -485,6 +483,10 @@ class RobotController(CorinManager):
 			# print 'qn: ', np.round(self.Robot.qc.position[12:15],4)
 			# cout3(self.Robot.Leg[4].Joint.qpc)
 			# print '======================================='
+			# qd.xp[9 ] = -0.68	# 9  15
+			# qd.xp[10] = 1.5		# 10 16
+			# qd.xp[11] = -2.		# 11 17
+			# print 'CoM: ', np.round(self.Robot.Rbdl.com.flatten(),4)
 			## Data logging & publishing
 			qlog = self.set_log_setpoint(v3cp, v3cv, xa_d, v3wp, v3wv, wa_d, qd, joint_torq, force_dist)
 			self.publish_topics(qd, qlog)
@@ -606,7 +608,7 @@ class RobotController(CorinManager):
 		foot_force, tau = self.ForceDist.resolve_force(v3ca, v3wa, p_foot,
 														self.Robot.Rbdl.com,
 														self.Robot.Rbdl.crbi, gphase, 
-														f_max, s_norm, qb[3:6], q_contact)
+														f_max, s_norm)#, qb[3:6], q_contact)
 		# print 'fout: ', np.round(foot_force.flatten(),3)
 		# print '======================'
 		# end = rospy.get_time()

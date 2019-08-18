@@ -36,3 +36,4 @@ for i in a:
 		data.append(i)
 		
 print data#[item for i in data for item in i]
+

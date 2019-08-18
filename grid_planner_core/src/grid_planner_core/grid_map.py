@@ -683,7 +683,7 @@ class GridMap:
 		# 	pass
 
 		## enable major and minor grid
-		plt.grid(True);		 
+		plt.grid(True);
 		#plt.grid(which='major', linestyle=':', linewidth='0.5', color='black') 	# THIS CAUSE ERROR
 		# plt.minorticks_on(); plt.grid(which='minor', linestyle=':', linewidth='0.25', color='black')
 
@@ -705,13 +705,11 @@ class GridMap:
 ## 												TESTING 											##
 ## ================================================================================================ ##
 
-# gmap = GridMap('chimney_corner_066')
-# p = np.array([0.2244, 0.705,  0.5   ])
+# gmap = GridMap('wall_convex_corner')
+# p = np.array([ 0.372 ,  0.3594 , 0.51  ])
 # sn = gmap.get_cell('norm', p)
-# if np.linalg.norm(sn) == 0:
-# 	sn = gmap.get_nearest_cell('norm', p)
+# print gmap.getIndex(p, 0)
 # print sn
 # gmap.graph_representation()
-# print gmap.getIndex(p, 0)
  
 # print (26.%7.)

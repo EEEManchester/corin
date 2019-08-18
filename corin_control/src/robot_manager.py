@@ -61,14 +61,14 @@ class CorinManager:
 		self.on_start  = False 		# variable for resetting to leg suspended in air
 		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
-		self.control_loop = "close" 	# run controller in open or closed loop
+		self.control_loop = "open" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
 		self.MotionPlan = MotionPlan()
 		self.Visualizer = RvizVisualise(self.interface) 	# visualisation for rviz
 
 		self.Planner = None#PathPlanner(self.GridMap)
-
+		self.force_log = 0
 		self.__initialise__()
 
 	def joint_state_callback(self, msg):
@@ -340,8 +340,8 @@ class CorinManager:
 				self.joint_pub_.publish(dqp)
 
 		## Visualization topics
-		self.Visualizer.publish_support_polygon(self.Robot.Sp.convex_hull)
-		self.Visualizer.publish_support_region(self.Robot.SM.convex_hull)
+		self.Visualizer.publish_support_polygon(self.Robot.Sp.convex_hull, [0.,0.,0.005])
+		self.Visualizer.publish_support_region(self.Robot.SM.convex_hull,  [0.,0.,0.005])
 		self.Visualizer.publish_com(self.Robot.Rbdl.com + self.Robot.P6c.world_X_base[:3])
 		self.Visualizer.publish_foot_force(self.Robot, self.interface)
 		self.Visualizer.publish_friction_cones(self.Robot, SURFACE_FRICTION)
@@ -350,7 +350,7 @@ class CorinManager:
 		# self.stability_pub_.publish(self.Robot.SM.min)
 		self.log_misc_pub_.publish(
 			Float64MultiArray(data = self.set_log_misc([self.Robot.SM.min, 
-				self.Robot.Sp.min, self.Robot.Rbdl.com])))
+				self.Robot.Sp.min, self.Robot.Rbdl.com, self.force_log])))
 
 		## Publish setpoints to logging topic
 		if qlog is not None:
@@ -507,7 +507,7 @@ class CorinManager:
 		# Set all legs to support mode for bodyposing, prevent AEP from being set
 		if (self.Robot.support_mode == True):
 			self.Robot.Gait.support_mode()
-			PathGenerator.V_MAX = PathGenerator.W_MAX = 0.05
+			PathGenerator.V_MAX = PathGenerator.W_MAX = 0.01
 		else:
 			self.Robot.Gait.walk_mode()
 
@@ -669,11 +669,19 @@ class CorinManager:
 				print colored("INFO: Importing motion plan", 'green')
 				# filename = 'wall_transition.yaml'
 				if motion == 'chimney_nom':
+					print colored("REMEMBER to enable surface normal in robot_controller", 'yellow')
 					filename = 'chimney_nom.csv'
 					mapname  = 'chimney_corner_053'
 				elif motion == 'chimney_heu':
+					print colored("REMEMBER to enable surface normal and gait phase in robot_controller", 'yellow')
 					filename = 'chimney_heu.csv'
 					mapname  = 'chimney_corner_066'
+				elif motion == 'wall_convex':
+					filename = 'wall_convex.csv'
+					mapname  = 'wall_convex_corner'
+				elif motion == 'wall_concave':
+					filename = 'wall_concave.csv'
+					mapname  = 'wall_concave_corner'
 				else:
 					print colored('Error: Motion plan <%s> does not exists, exiting!'%motion, 'red')
 					sys.exit(1)
@@ -747,8 +755,18 @@ class CorinManager:
 		error_forces = self.ForceDist.desired_forces - self.ForceDist.sum_forces
 		error_moment = self.ForceDist.desired_moments - self.ForceDist.sum_moments
 		
-		self.qlog_setpoint = qlog
-
+		# self.qlog_setpoint = qlog
+		## Rearrange contact forces in normal and tangential direction
+		self.force_log = []
+		for j in range(6):
+			t1, t2 = tangent_vector(self.Robot.Leg[j].snorm)
+			fn = np.dot(self.Robot.Leg[j].F6d.world_X_foot[:3].flatten(), self.Robot.Leg[j].snorm)
+			f1 = np.dot(self.Robot.Leg[j].F6d.world_X_foot[:3].flatten(), t1)
+			f2 = np.dot(self.Robot.Leg[j].F6d.world_X_foot[:3].flatten(), t2)
+			self.force_log.append([fn, f1, f2])
+		# 	print np.round(np.array([fn, f1, f2]),3)
+		# print '================================'
+		self.force_log = [item for i in self.force_log for item in i]
 		return qlog
 
 	def set_log_actual(self):

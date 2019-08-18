@@ -33,6 +33,25 @@ def unit_vector(data, axis=None, out=None):
     if out is None:
         return data
 
+def tangent_vector(v):
+    """ Returns the two vector tangent to given vector """
+    
+    if (v[0] == 0):
+        t1 = np.array([1,0,0])
+    elif (v[1] == 0):
+        t1 = np.array([0,1,0])
+    elif (v[2] == 0):
+        t1 = np.array([0,0,1])
+    else:
+        # set x,y to 1
+        t1 = np.array([1, 1, -1.0 * (v[0] + v[1])/v[2]])
+        t1 = t1/linalg.norm(t1)
+
+    # Find second tangential vector
+    t2 = np.cross(v,t1)
+
+    return t1, t2
+
 ######################################################################
 ## 							Matrix Operations 						##
 ######################################################################
@@ -419,10 +438,13 @@ def vec_X_vec_rotation(v1, v2):
     dot = np.dot(v1, v2);
     if (dot < -0.999999):
         tmp = np.cross(np.array([1.,0.,0.]), v1);
+        # Vector parallel to x-axis, get vector perpendicular to y-axis
         if (np.linalg.norm(tmp) < 0.000001):
-            tmp = np.cross(np.array([0.,1.,0.]), v1)
-        tmp = tmp/np.linalg.norm(tmp)
-        return quaternion_from_matrix(axisAngle_to_SO3(tmp, math.pi))
+            return quaternion_from_matrix(axisAngle_to_SO3(v1, math.pi))
+        else:
+            # tmp = np.cross(np.array([0.,1.,0.]), v1)
+            # tmp = tmp/np.linalg.norm(tmp)
+            return quaternion_from_matrix(axisAngle_to_SO3(v2, math.pi))
     elif (dot > 0.999999):
         out[0] = 0;
         out[1] = 0;
@@ -462,5 +484,4 @@ _AXES2TUPLE = {
     'rzxz': (2, 0, 1, 1), 'rxyz': (2, 1, 0, 1), 'rzyz': (2, 1, 1, 1)}
 
 _TUPLE2AXES = dict((v, k) for k, v in _AXES2TUPLE.items())
-
 

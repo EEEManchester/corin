@@ -212,13 +212,14 @@ class QPForceDistribution():
 
 		S = np.diag(s_weight)
 		if qj is None:
-			## Method A: Using system equation with weightage
+			## Method A: Linear equation min. (Ax-b)^2
 			H = 2*mX(A.T, A)
 			q = (-2*mX(b.T, A)).T
+			## Method B: Using system equation with weightage
 			# H = 2*mX(A.T, S, A)
 			# q = (-2*mX(b.T, S, A)).T
 		else:
-			## Method B: System equation with weightage AND regularization on joint torque
+			## Method C: System equation with weightage AND regularization on joint torque
 			alpha = 0.01
 			H = 2*mX(A.T, S, A) + alpha*mX(J, W, J.T)
 			q = (-2*mX(b.T, S, A)).T
@@ -268,13 +269,13 @@ class QPForceDistribution():
 
 		self.desired_forces  = b[0:3] # ROBOT_MASS*(v3ca+gv)
 		self.desired_moments = b[3:6] # Ig_com*w3ca
-		error_forces = self.desired_forces - self.sum_forces
-		error_moment = self.desired_moments - self.sum_moments
+		self.error_forces = self.desired_forces - self.sum_forces
+		self.error_moment = self.desired_moments - self.sum_moments
 		# print np.round(force_vector.flatten(),3)
-		print np.transpose(np.round(self.sum_forces,5))
-		print np.transpose(np.round(self.sum_moments,5))
-		print np.transpose(np.round(self.desired_forces,5))
-		print 'Md :', np.transpose(np.round(self.desired_moments,5))
+		# print 'SF: ', np.transpose(np.round(self.sum_forces,5))
+		# print 'SM: ', np.transpose(np.round(self.sum_moments,5))
+		# print 'Fd: ', np.transpose(np.round(self.desired_forces,5))
+		# print 'Md :', np.transpose(np.round(self.desired_moments,5))
 		# print 'Fe :', np.transpose(np.round(error_forces,4))
 		# print 'Mc :', np.transpose(np.round(self.sum_moments,4))
 		# print 'Me :', np.transpose(np.round(error_moment,4))
@@ -324,7 +325,12 @@ p6 = np.array([ [-0.125],[-0.285],[-0.1] ])
 # p5 = np.array([ [0.00]  ,[-0.31],[ -0.05] ])
 # p6 = np.array([ [-0.115],[-0.31],[ -0.05] ])
 
-p_foot = [p1, p2, p3, p4, p5, p6] 			# leg position wrt CoM expressed in world frame
+p_foot = [np.array([ 0.25 ,  0.251, -0.1  ]), np.array([ 0. ,  0.3, -0.1]), np.array([-0.25 ,  0.251, -0.1  ]), np.array([ 0.25 , -0.251, -0.1  ]), np.array([ 0. , -0.3, -0.1]), np.array([-0.25 , -0.251, -0.1  ])]
+
+# [1.982541115402065e-16, 0.33813559646530333, -1.8522764000257415, 1.467375195723608e-32, 0.3381355964653032, -1.8522764000257412, -1.982541115402065e-16, 0.33813559646530333, -1.8522764000257415, -1.982541115402065e-16, 0.33813559646530333, -1.8522764000257415, -1.467375195723608e-32, 0.3381355964653032, -1.8522764000257412, 1.982541115402065e-16, 0.33813559646530333, -1.8522764000257415]
+# [ 0.  0.  0.] [ 0.  0.  0.]
+
+# p_foot = [p1, p2, p3, p4, p5, p6] 			# leg position wrt CoM expressed in world frame
 contacts = [0,0,0,0,0,0]
 
 # p_foot = [p1, p3, p5] 			# leg position wrt CoM expressed in world frame
@@ -338,7 +344,7 @@ snorm = [np.array([0.,0.,1.])]*6
 # 	snorm.append(np.array([0., -1., 0.]))
 # for i in range(3,6):
 # 	snorm.append(np.array([0., 1., 0.]))
-farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
+farr = [45.2747, 45.2747, 45.2747, 45.2747, 45.2747, 45.2747]#[F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
 
 ## Test set - Inconsistent solution 
 # xb_com = np.array( [[ 0.06581812], [ 0.        ], [ 0.]]) 
@@ -354,17 +360,17 @@ farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
 
 
 ## Ground nominal stance
-p_foot = [p1, p2, p3, p4, p5, p6] 			# leg position wrt CoM expressed in world frame
-contacts = [0,0,0,0,0,0]
-snorm = [np.array([0.,0.,1.])]*6
-farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
-qb = np.zeros(3)
-q = [0., 0.4783, -1.936, 
-	 0., 0.4783, -1.936, 
-	 0., 0.4783, -1.936,
-	 0., 0.4783, -1.936,
-	 0., 0.4783, -1.936,
-	 0., 0.4783, -1.936]
+# p_foot = [p1, p2, p3, p4, p5, p6] 			# leg position wrt CoM expressed in world frame
+# contacts = [0,0,0,0,0,0]
+# snorm = [np.array([0.,0.,1.])]*6
+# farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
+# qb = np.zeros(3)
+# q = [0., 0.4783, -1.936, 
+# 	 0., 0.4783, -1.936, 
+# 	 0., 0.4783, -1.936,
+# 	 0., 0.4783, -1.936,
+# 	 0., 0.4783, -1.936,
+# 	 0., 0.4783, -1.936]
 
 ## Simple two leg
 # p_foot = [p2, p5]
@@ -376,42 +382,43 @@ q = [0., 0.4783, -1.936,
 # 	 0., 0.4783, -1.936]
 
 ## Three legs
-p_foot = [p1, p3, p5]
-contacts = [0,1,0,1,0,1]
-snorm = [np.array([0.,0.,1.])]*3
-farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
-qb = np.zeros(3)
-q = [0., 0.4783, -1.936,
-	 0., 0.4783, -1.936, 
-	 0., 0.4783, -1.936]
+# p_foot = [p1, p3, p5]
+# contacts = [0,1,0,1,0,1]
+# snorm = [np.array([0.,0.,1.])]*3
+# farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
+# qb = np.zeros(3)
+# q = [0., 0.4783, -1.936,
+# 	 0., 0.4783, -1.936, 
+# 	 0., 0.4783, -1.936]
 
-## Four legs
-p_foot = [p1, p3, p4, p6]
-contacts = [0,1,0,0,1,0]
-snorm = [np.array([0.,0.,1.])]*4
-farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
-qb = np.zeros(3)
-q = [0., 0.4783, -1.936,
-	 0., 0.4783, -1.936,
-	 0., 0.4783, -1.936, 
-	 0., 0.4783, -1.936]
+# ## Four legs
+# p_foot = [p1, p3, p4, p6]
+# contacts = [0,1,0,0,1,0]
+# snorm = [np.array([0.,0.,1.])]*4
+# farr = [F_MAX,F_MAX,F_MAX,F_MAX,F_MAX,F_MAX]
+# qb = np.zeros(3)
+# q = [0., 0.4783, -1.936,
+# 	 0., 0.4783, -1.936,
+# 	 0., 0.4783, -1.936, 
+# 	 0., 0.4783, -1.936]
 
-## Sr fail
-xb_com = np.zeros(3) #
-world_X_base = np.array([0.57364318, 0.39744551, 0.50034068])
-snorm = [np.array([ 0., -1.,  0.]), np.array([ 0., -1.,  0.]), np.array([-1.,  0.,  0.]), np.array([0., 1., 0.]), np.array([0., 1., 0.])]
-p_foot = [	np.array([-0.22561972,  0.30945383, -0.00034246]), 
-			np.array([-0.31952697,  0.3094684 , -0.00034287]), 
-			np.array([ 4.60182659e-01,  4.04583972e-02, -3.42660774e-04]), 
-			np.array([ 2.66755852e-01, -3.50555585e-01, -3.42615948e-04]), 
-			np.array([ 1.27600822e-01, -3.50571928e-01, -3.42023479e-04])]
-contacts = [1,0,0,0,0,0]
+# ## Sr fail
+# xb_com = np.zeros(3) #
+# world_X_base = np.array([0.57364318, 0.39744551, 0.50034068])
+# snorm = [np.array([ 0., -1.,  0.]), np.array([ 0., -1.,  0.]), np.array([-1.,  0.,  0.]), np.array([0., 1., 0.]), np.array([0., 1., 0.])]
+# p_foot = [	np.array([-0.22561972,  0.30945383, -0.00034246]), 
+# 			np.array([-0.31952697,  0.3094684 , -0.00034287]), 
+# 			np.array([ 4.60182659e-01,  4.04583972e-02, -3.42660774e-04]), 
+# 			np.array([ 2.66755852e-01, -3.50555585e-01, -3.42615948e-04]), 
+# 			np.array([ 1.27600822e-01, -3.50571928e-01, -3.42023479e-04])]
+# contacts = [1,0,0,0,0,0]
 # for i in range(len(p_foot)):
 # 	print np.round(world_X_base + p_foot[i],3)
+
 ## Compare regularization
-force_vector, torque_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm)
+# force_vector, torque_vector = qprog.resolve_force(xa_com, wa_com, p_foot, xb_com, Ig_com, contacts, farr, snorm)
 # torque_vector = qprog.get_torque(force_vector, p_foot, contacts, qb, q)
-print np.round(force_vector.flatten(),3)
+# print np.round(force_vector.flatten(),3)
 # print np.round(torque_vector.flatten(),3)
 # print 'Without reg:', sum(abs(torque_vector**2))
 

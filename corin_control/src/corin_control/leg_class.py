@@ -8,13 +8,13 @@ from traits import *
 
 import math
 import numpy as np
+from termcolor import colored
 
 from constant import * 								# constants used
 import robot_transforms
 from matrix_transforms import *						# SE(3) transformation library
 import kdl 											# kinematic & dynamics library
 import path_generator
-# import gait_class as Gaitgen						# class for gait coordinator
 from impedance_controller import ImpedanceController
 from pid_controller import PIDController
 from sliding_gain import *
@@ -251,6 +251,37 @@ class LegClass:
 		prev_qpd = self.Joint.qpd.copy()
 		self.Joint.qpd = self.KDL.leg_IK(xp, self.number)
 
+		# Check vector direction
+		wXf = mX(self.XH_world_X_base[:3,:3], robot_transforms.update_base_X_foot(self.number, self.Joint.qpd)[:3,:3])
+		vt = np.dot(wXf[:3,:3], np.array([1.,0.,0.]))
+		d1 = np.dot(self.snorm, vt)
+		if d1 > 0.2:
+			self.Joint.qpd = self.KDL.leg_IK(xp, self.number, True)
+
+		## Limit sudden change based on singularity		
+		dsing = self.KDL.singularity_approach(self.Joint.qpd)
+		qerror = self.Joint.qpd - prev_qpd
+		epsilon = 8e-6
+		UL = 0.001
+		if dsing < epsilon:# or np.linalg.norm(qerror) > 0.1:
+			# print colored('near singular: ', 'red'), self.Joint.qpd
+			sgn = [np.sign(i) for i in self.Joint.qpd]
+			# self.Joint.qpd = prev_qpd.copy() + 
+			for i in range(3):
+				if abs(qerror[i]) > UL:
+					self.Joint.qpd[i] = prev_qpd[i] - sgn[i]*UL
+				else:
+					self.Joint.qpd[i] = prev_qpd[i] + qerror[i]
+
+		# if self.number == 2:
+		# 	print 'd: ', d1
+		# 	# print 'error', qerror, np.linalg.norm(qerror)
+		# 	print 'new: ', np.round(self.Joint.qpd,4)
+		# 	print 'cp:  ', xp
+		# 	print '----------------------------------------'
+			# print 'norm: ', self.snorm
+			# print '==================================='
+
 		# delta_qpd = self.Joint.qpd - prev_qpd
 		# if abs(delta_qpd[0]) > 1.:
 		# 	delta_qpd[0] = prev_qpd[0]
@@ -258,6 +289,7 @@ class LegClass:
 		# 	print np.round(delta_qpd,3)
 
 		if (self.Joint.qpd is not None):
+			# print 'here 1'
 			self.XHd.update_foot_X_coxa(self.Joint.qpd) 	# updates coxa_X_foot as well
 			# checks if joint limit exceeded and singularity occurs
 			if (self.check_joint_limit(self.Joint.qpd) is True):
@@ -271,9 +303,10 @@ class LegClass:
 					self.Joint.qad = np.zeros(3)
 				else:
 					error = 2
+			# print 'here 2'
 		else:
 			error = 3
-
+		# print 'Error: ', error
 		return error, self.Joint.qpd, self.Joint.qvd, self.Joint.qad 	# TEMP: change to normal (huh?)
 
 	def check_boundary_limit(self, world_base_X_foot, world_base_X_NRP, step_stroke, radius=None):
@@ -422,12 +455,10 @@ class LegClass:
 ## ================================================================================================ ##
 
 ## Force transformation
-q = [ 0.0,  0.39504276, -1.90163425]
-F_tibia_X_foot = np.array([[-7.745, -2.501,  0.109]])
-hip_X_foot = mX(rot_Z(q[0]),
-				rot_X(np.pi/2),
-				rot_Z(q[1]),
-				rot_Z(q[2]))
-F_coxa_X_foot = mX(hip_X_foot, F_tibia_X_foot.flatten()).reshape((3,1))
-
-# print F_coxa_X_foot.flatten()
+# q = [ 0.0,  0.39504276, -1.90163425]
+# F_tibia_X_foot = np.array([[-7.745, -2.501,  0.109]])
+# hip_X_foot = mX(rot_Z(q[0]),
+# 				rot_X(np.pi/2),
+# 				rot_Z(q[1]),
+# 				rot_Z(q[2]))
+# F_coxa_X_foot = mX(hip_X_foot, F_tibia_X_foot.flatten()).reshape((3,1))
