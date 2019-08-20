@@ -103,7 +103,7 @@ KPcom = np.array([1.0, 1.0, 1.0])*0.3	#1000. #
 KDcom = np.array([0.0, 0.0, 1.0])*0.015	#0.5
 KPang = np.array([1.0, 1.0, 1.0])*0.	#500.
 KDang = np.array([1.0, 1.0, 1.0])*0.	#0.5
-SURFACE_FRICTION = 0.8
+SURFACE_FRICTION = 1.0
 F_INC  = 0.1
 D_MOVE = 0.0001	# motion for leg to achieve contact
 
@@ -223,6 +223,7 @@ JOINT_NAME[17] = 'rr_q3_joint'
 
 ROBOT_STATE = ['x','y','z','r','p','y']
 
+## Leg force frame for RViZ visualization
 LEG_FORCE_FRAME = {}
 LEG_FORCE_FRAME[0] = 'lf_foot'
 LEG_FORCE_FRAME[1] = 'lm_foot'

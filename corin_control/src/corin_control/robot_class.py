@@ -226,8 +226,8 @@ class RobotState:
 	def update_stability_margin(self):
 		""" updates the current stability margin """
 
-		# valid, sm = self.SM.point_in_region(self.XHc.world_X_COM[:3,3])
-		valid, sm = self.Sp.point_in_polygon(self.XHc.world_X_COM[:3,3])
+		valid, sm = self.SM.point_in_region(self.XHc.world_X_COM[:3,3])
+		pvalid, psm = self.Sp.point_in_polygon(self.XHc.world_X_COM[:3,3])
 
 		if not valid:
 			print colored("Convex hull violated %.3f %.3f " %(valid, sm), 'red')
@@ -272,7 +272,7 @@ class RobotState:
 			stack_world_X_foot = [np.round(self.Leg[j].XHc.world_X_foot[:3,3],3).tolist() for j in range(6) if self.Gait.cs[j] == 0]
 			stack_normals = [[self.Leg[j].snorm.tolist()] for j in range(6) if self.Gait.cs[j] == 0]
 			
-			# self.SM.compute_support_region(stack_world_X_foot, stack_normals)
+			self.SM.compute_support_region(stack_world_X_foot, stack_normals)
 			self.Sp.compute_support_polygon(stack_world_X_foot)
 			self.SM.prev_topology = list(self.Gait.cs)
 		else:

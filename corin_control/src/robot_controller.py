@@ -20,9 +20,9 @@ class RobotController(CorinManager):
 		
 		# Enable/disable controllers
 		self.ctrl_base_admittance = False 	# base impedance controller - fault
-		self.ctrl_base_tracking   = True 	# base tracking controller
-		self.ctrl_leg_admittance  = True 	# leg impedance controller
-		self.ctrl_contact_detect  = True 	# switch gait for early contact detection
+		self.ctrl_base_tracking   = False 	# base tracking controller
+		self.ctrl_leg_admittance  = False 	# leg impedance controller
+		self.ctrl_contact_detect  = False 	# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
 
@@ -234,7 +234,7 @@ class RobotController(CorinManager):
 						gait_list.pop(0)
 					except:
 						print colored('ERROR: no gait to unstack','red')
-						# self.Robot.Gait.cs = [0,0,0,2,0,0]
+						self.Robot.Gait.cs = [0,0,0,2,0,0]
 						pass
 					# raw_input('motion')
 					## Force and gait phase array for Force Distribution
@@ -481,9 +481,9 @@ class RobotController(CorinManager):
 			# print 'qn: ', np.round(self.Robot.qc.position[12:15],4)
 			# cout3(self.Robot.Leg[4].Joint.qpc)
 			# print '======================================='
-			# qd.xp[9 ] = -0.68	# 9  15
-			# qd.xp[10] = 1.5		# 10 16
-			# qd.xp[11] = -2.		# 11 17
+			qd.xp[9 ] = -0.68	# 9  15
+			qd.xp[10] = 2.5		# 10 16
+			qd.xp[11] = -2.		# 11 17
 			# print 'CoM: ', np.round(self.Robot.Rbdl.com.flatten(),4)
 			## Data logging & publishing
 			qlog = self.set_log_setpoint(v3cp, v3cv, xa_d, v3wp, v3wv, wa_d, qd, joint_torq, force_dist)

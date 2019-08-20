@@ -559,7 +559,7 @@ class CorinManager:
 				
 				# Set robot pose according to stance type
 				if STANCE_TYPE == "wall":
-					self.Robot.P6d.world_X_base = np.array([0.,0.,0.38,1.42,0.,0.]).reshape((6,1))
+					self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy() #np.array([0.,0.226,0.38,1.42,0.,0.]).reshape((6,1))
 					for j in range(3):
 						self.Robot.Leg[j].snorm = np.array([0., -1., 0.])
 				elif STANCE_TYPE == "ground":
