@@ -621,7 +621,7 @@ class CorinManager:
 																0.,0.,0.,0.]).reshape(6,1)
 					self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
 					self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
-					self.Robot.init_robot_stance()
+					self.Robot.init_robot_stance(STANCE_TYPE)
 
 				if self.interface != "robotis":
 					qd, tXj_error = self.Robot.task_X_joint()

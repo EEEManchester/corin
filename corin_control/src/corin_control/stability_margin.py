@@ -32,8 +32,8 @@ class StabilityMargin():
 	def compute_support_region(self, stack_world_X_foot, stack_normals):
 		""" Computes the stability region for a set of fixed contacts - Bretl2008 """
 
-		# print stack_world_X_foot
-		# print stack_normals
+		print stack_world_X_foot
+		print stack_normals
 		self.Poly.contacts = [stabilipy.Contact(SURFACE_FRICTION, np.array(p).T,
 								stabilipy.utils.normalize(np.array(n).T))
 								for p, n in zip(stack_world_X_foot, stack_normals)]

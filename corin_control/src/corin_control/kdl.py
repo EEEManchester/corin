@@ -149,10 +149,10 @@ class KDL():
 			
 			return np.array([q1, q2, q3])
 		except ValueError, e:
-			print 'KDL-IK(): ', e
+			print 'KDL-IK(',leg_no,'): ', e
 			return None
 		except Exception, e:
-			print 'KDL-IK(): ', e
+			print 'KDL-IK(',leg_no,'): ', e
 			return None
 
 	def check_singularity(self, q=None):

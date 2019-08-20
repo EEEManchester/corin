@@ -20,9 +20,9 @@ class RobotController(CorinManager):
 		
 		# Enable/disable controllers
 		self.ctrl_base_admittance = False 	# base impedance controller - fault
-		self.ctrl_base_tracking   = False 	# base tracking controller
-		self.ctrl_leg_admittance  = False 	# leg impedance controller
-		self.ctrl_contact_detect  = False 	# switch gait for early contact detection
+		self.ctrl_base_tracking   = True 	# base tracking controller
+		self.ctrl_leg_admittance  = True 	# leg impedance controller
+		self.ctrl_contact_detect  = True 	# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
 
@@ -87,7 +87,7 @@ class RobotController(CorinManager):
 		# State machine loading/unloading timing parameters
 		tload = 1						# loading counter
 		iload = int(LOAD_T/CTR_INTV) 	# no. of intervals for loading
-		hload = int(1./CTR_INTV)		# no. of intervals for initial holding
+		hload = int(4./CTR_INTV)		# no. of intervals for initial holding
 		# Force Distribution variables
 		fmax_lim  = [F_MAX]*6			# maximum force array
 		init_flim = [F_MAX]*6			# current force for linear decrease in unloading
@@ -100,7 +100,10 @@ class RobotController(CorinManager):
 		s_cnt = 1
 		# Counts per gait phase interval
 		iahead = int(GAIT_TPHASE/CTR_INTV)
-		
+		## TEMP: initial leg position
+		qstart = self.Robot.Leg[3].Joint.qpc
+		qdiff = (np.array([-0.6981317,  2.5, -1.22860141]) - qstart)/float(hload)
+
 		## Cycle through trajectory points until complete
 		i = 1 		# skip first point since spline has zero initial differential conditions
 		while (i != path_length and not rospy.is_shutdown()):
@@ -419,7 +422,7 @@ class RobotController(CorinManager):
 					self.Robot.Gait.support_mode()
 				
 				tload += 1
-
+				print 'hload ', hload
 				if tload == hload+1 and motion_plan:
 					s_cnt = 0
 					if self.Robot.support_mode:
@@ -481,9 +484,15 @@ class RobotController(CorinManager):
 			# print 'qn: ', np.round(self.Robot.qc.position[12:15],4)
 			# cout3(self.Robot.Leg[4].Joint.qpc)
 			# print '======================================='
-			qd.xp[9 ] = -0.68	# 9  15
-			qd.xp[10] = 2.5		# 10 16
-			qd.xp[11] = -2.		# 11 17
+			## TEMP: stability check
+			# if state_machine == 'hold':
+			# 	qtemp = qstart + qdiff*tload
+			# qd.xp[9 ] = qtemp[0]
+			# qd.xp[10] = qtemp[1]
+			# qd.xp[11] = qtemp[2]
+			# qd.xp[9 ] = -0.68	# 9  15
+			# qd.xp[10] = 2.5		# 10 16
+			# qd.xp[11] = -2.		# 11 17
 			# print 'CoM: ', np.round(self.Robot.Rbdl.com.flatten(),4)
 			## Data logging & publishing
 			qlog = self.set_log_setpoint(v3cp, v3cv, xa_d, v3wp, v3wv, wa_d, qd, joint_torq, force_dist)

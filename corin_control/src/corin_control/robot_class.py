@@ -339,7 +339,11 @@ class RobotState:
 			if foot_pos is None:
 				err_list[j], qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
 			else:
-				err_list[j], qpd, qvd, qad = self.Leg[j].tf_task_X_joint(foot_pos[j*3:j*3+3])
+				## TEMP
+				if j == 3:
+					pass
+				else:
+					err_list[j], qpd, qvd, qad = self.Leg[j].tf_task_X_joint(foot_pos[j*3:j*3+3])
 			# if j == 4:
 			# 	qpd = np.array([0.,  6.12682006e-01,  -2.61484057e+00])
 

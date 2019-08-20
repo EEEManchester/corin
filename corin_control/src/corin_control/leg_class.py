@@ -210,7 +210,7 @@ class LegClass:
 		try:
 			for i in range(0,self.spline_length):
 				error, qpd, qvd, qad = self.tf_task_X_joint(self.xspline.xp[i],self.xspline.xv[i],self.xspline.xa[i])
-
+				
 				if (error == 0):
 					qt.append(i*CTR_INTV)
 					qp.append(qpd.tolist())

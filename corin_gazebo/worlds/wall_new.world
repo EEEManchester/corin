@@ -12,7 +12,7 @@
         <linear>0.01</linear>
         <quadratic>0.001</quadratic>
       </attenuation>
-      <direction>-0.5 0.1 -0.9</direction>
+      <direction>-0.75 0.1 -0.9</direction>
     </light>
 
     <!-- ============================================================== -->
@@ -32,8 +32,8 @@
           <surface>
             <friction>
               <ode>
-                <mu>1</mu>
-                <mu2>1</mu2>
+                <mu>0.75</mu>
+                <mu2>0.75</mu2>
               </ode>
             </friction>
             <bounce/>
@@ -94,8 +94,8 @@
           <surface>
             <friction>
               <ode>
-                <mu>1</mu>
-                <mu2>1</mu2>
+                <mu>0.75</mu>
+                <mu2>0.75</mu2>
               </ode>
             </friction>
             <bounce/>
