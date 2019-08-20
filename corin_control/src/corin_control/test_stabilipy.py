@@ -53,6 +53,8 @@ normals = [[[0.0, 0.0, 1.0]], [[0.0, 0.0, 1.0]], [[0.0, 0.0, 1.0]], [[0.0, 0.0, 
 # 			[[0.0, 0.0, 1.0]], 
 # 			[[0.0, 0.0, 1.0]]]#, 
 # 			# [[0.0, 0.0, 1.0]]]
+pos = [[0.333, 0.234, -0.0], [0.219, 0.219, 0.0], [0.105, 0.203, -0.0], [0.362, 0.012, 0.707], [0.246, 0.012, 0.722], [0.13, 0.012, 0.737]]
+normals = [[[0.0, 0.0, 1.0]], [[0.0, 0.0, 1.0]], [[0.0, 0.0, 1.0]], [[0.0, 1.0, 0.0]], [[0.0, 1.0, 0.0]], [[0.0, 1.0, 0.0]]]
 
 ## No solution - primal infeasible
 # pos = [[0.3738, 0.5781, 0.5], [0.2813, 0.5562, 0.5], [0.9174, 0.2989, 0.5], [0.9173, 0.153, 0.5], [0.9123, 0.011, 0.5]]
@@ -81,7 +83,7 @@ normals = [[[0.0, 0.0, 1.0]], [[0.0, 0.0, 1.0]], [[0.0, 0.0, 1.0]], [[0.0, 0.0, 
 # normals[0] = n4.tolist()
 # normals[3] = n4.tolist()
 # friction coefficient
-mu = 0.5
+mu = 0.8
 contacts = [stabilipy.Contact(mu, np.array(p).T,
                               stabilipy.utils.normalize(np.array(n).T))
             for p, n in zip(pos, normals)]
@@ -90,7 +92,7 @@ poly.contacts = contacts
 # modes: best, iteration, precision
 now = time.time()
 poly.compute(stabilipy.Mode.best, epsilon=1e-3, 
-									maxIter=10, 
+									maxIter=20, 
 									solver='cdd',
 									plot_error=False,
 									plot_init=False,

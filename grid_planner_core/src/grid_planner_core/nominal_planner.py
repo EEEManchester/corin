@@ -2,7 +2,7 @@
 """ 
 
 import sys; sys.dont_write_bytecode = True
-sys.path.insert(0, '/home/wilson/catkin_ws/src/corin/corin_control/src')
+sys.path.insert(0, '/home/wei/catkin_ws/src/corin/corin_control/src')
 from corin_control import *			# library modules to include 
 from grid_map import *
 
@@ -359,8 +359,8 @@ class PathPlanner:
 # planner = PathPlanner(grid_map)
 # Robot = robot_class.RobotState()
 
-# ps = np.array([0.30, 0.39, 0.1, 0., 0., 0.]) 
-# pf = np.array([0.5, 0.39, 0.1, 0., 0., 0.]) 
+# ps = np.array([0.33, 0.39, 0.1, 0., 0., 0.]) 
+# pf = np.array([0.53, 0.39, 0.1, 0., 0., 0.]) 
 
 # Robot.P6c.world_X_base = ps
 # Robot.P6d.world_X_base = Robot.P6c.world_X_base.copy()
@@ -369,8 +369,8 @@ class PathPlanner:
 
 # Robot.Gait.walk_mode()
 # motion_plan = planner.motion_planning(ps, pf, Robot)
-
-
+# print Robot.P6c.world_X_base_offset
+# print motion_plan.f_world_X_foot[5].xp
 # tintv = math.ceil(t[-1]/CTR_INTV)
 # t_intv = []
 # for i in range(int(tintv)+1):

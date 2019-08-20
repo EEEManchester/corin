@@ -85,7 +85,7 @@ WALL_WIDTH_NARROW = 0.3
 ## ================================================================ ##
 ##                      	Controller Rate 	 					##
 ## ================================================================ ##
-CTR_RATE = 100 			# controller rate for robot, Hz
+CTR_RATE = 200 			# controller rate for robot, Hz
 CTR_INTV = 1./CTR_RATE 	# controller interval for robot, s
 
 ## ================================================================ ##
@@ -155,10 +155,10 @@ LEG_CLEAR 	 = 0.06 	# clearance between leg workplane boundaries
 STANCE_WIDTH = 0.21		# ori: 0.21, chimney: 0.23, 0.27, 0.31 for tripod
 BODY_HEIGHT  = 0.1		# ori: 0.10, chimney: 0.0
 # Offset for front and rear legs
-TETA_F = 0.;
+TETA_F = 40.;
 TETA_R = -TETA_F;
 LEG_OFFSET = [TETA_F, 0., TETA_R, -TETA_F, 0., -TETA_R]
-STANCE_TYPE = "ground" 	# "ground", "chimney", "wall"
+STANCE_TYPE = "wall" 	# "ground", "chimney", "wall"
 
 ## ================================================================ ##
 ##                       Gait parameters 	 						##
@@ -166,7 +166,7 @@ STANCE_TYPE = "ground" 	# "ground", "chimney", "wall"
 
 ## these gait parameters can be changed during runtime
 GAIT_TYPE 	 = 1 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
-GAIT_TPHASE	 = 0.5 	# default period per gait phase
+GAIT_TPHASE	 = 1.5 	# default period per gait phase
 STEP_HEIGHT  = 0.06	# default step height, z
 STEP_STROKE  = 0.1 	# default step stroke
 

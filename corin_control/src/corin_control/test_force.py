@@ -44,7 +44,7 @@ s_norm = [np.array(i).flatten() for i in normals]
 ## Stability ==================================================================
 # mass, dimension, gravity, radius, force limit, robust sphere (not enforced)
 if True:
-	poly = stabilipy.StabilityPolygon(ROBOT_MASS, 2, -G, 10., 2.1, -1, 0.)
+	poly = stabilipy.StabilityPolygon(ROBOT_MASS, 2, -G, 10., 1.0, -1, 0.)
 	# poly = stabilipy.StabilityPolygon(ROBOT_MASS, 2, -9.81)
 	poly.display_final = True
 	contacts = [stabilipy.Contact(SURFACE_FRICTION, np.array(p).T,
@@ -129,6 +129,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 import cdd
 from scipy import spatial
+plt.rcParams.update({'font.size': 14})
 
 points = np.array(cdd.Polyhedron(poly.inner).get_generators())[:, 1:]
 hull = spatial.ConvexHull(points)
@@ -138,7 +139,7 @@ pfalse = np.array(pfalse)
 if len(ptrue) > 0:
 	plt.plot(ptrue[:,0], ptrue[:,1], 'o')
 if len(pfalse) > 0:
-	plt.plot(pfalse[:,0], pfalse[:,1], 'x')
+	plt.plot(pfalse[:,0], pfalse[:,1], 'rx')
 cent = np.mean(points, 0)
 pts = []
 for pt in points[hull.simplices]:
@@ -150,7 +151,7 @@ pts.sort(key=lambda p: np.arctan2(p[1] - cent[1],
 pts = pts[0::2]  # Deleting duplicates
 pts.insert(len(pts), pts[0])
 k = 1.
-color = 'green'
+color = 'magenta'
 poly = Polygon(k*(np.array(pts)- cent) + cent,
                facecolor=color, alpha=0.1)
 poly.set_capstyle('round')
@@ -162,8 +163,8 @@ axes = plt.gca()
 axes.set_xlim([1e-2*x[0],1e-2*x[1]])
 axes.set_ylim([1e-2*y[0],1e-2*y[1]])
 
-plt.xlabel('x, ,m')
-plt.ylabel('y, ,m')
+plt.xlabel('x, m')
+plt.ylabel('y, m')
 
 plt.grid(True);
 plt.show()

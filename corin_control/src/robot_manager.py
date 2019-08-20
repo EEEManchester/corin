@@ -59,9 +59,9 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
-		self.control_loop = "open" 	# run controller in open or closed loop
+		self.control_loop = "close" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
 		self.MotionPlan = MotionPlan()
@@ -652,6 +652,7 @@ class CorinManager:
 						print "Start or End goal out of bounds!"
 				# Use reactive planning
 				else:
+					print colored('Remember to enable AEP foothold in generate trajectory', 'yellow')
 					motion_plan = self.Planner.motion_planning(ps, pf, self.Robot)
 
 				if motion_plan is not None:

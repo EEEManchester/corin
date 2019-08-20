@@ -20,9 +20,9 @@ class RobotController(CorinManager):
 		
 		# Enable/disable controllers
 		self.ctrl_base_admittance = False 	# base impedance controller - fault
-		self.ctrl_base_tracking   = False 	# base tracking controller
-		self.ctrl_leg_admittance  = False 	# leg impedance controller
-		self.ctrl_contact_detect  = False 		# switch gait for early contact detection
+		self.ctrl_base_tracking   = True 	# base tracking controller
+		self.ctrl_leg_admittance  = True 	# leg impedance controller
+		self.ctrl_contact_detect  = True 	# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
 
@@ -73,7 +73,7 @@ class RobotController(CorinManager):
 			world_X_footholds = []
 			base_X_footholds = []
 			w_base_X_NRP = []
-		
+		print world_X_footholds[5].xp
 		## User input
 		print '==============================================='
 		print 'Execute Path in', self.interface, '?',
@@ -289,6 +289,8 @@ class RobotController(CorinManager):
 						self.Robot.Leg[j].feedback_state = 1 	
 						# Use planned foothold if motion plan exists
 						if motion_plan is not None:
+							iahead = int(GAIT_TPHASE/CTR_INTV)
+							gait_tphase = GAIT_TPHASE
 							try:
 								self.Robot.Leg[j].XHd.world_X_foot = v3_X_m(world_X_footholds[j].xp.pop(0))
 							except:
@@ -305,15 +307,12 @@ class RobotController(CorinManager):
 							except IndexError:
 								# Get bodypose at end of gait phase, or end of trajectory - used in motion_import
 								
-								iahead = int(GAIT_TPHASE/CTR_INTV)
-								gait_tphase = GAIT_TPHASE
 								## TEMP: Chimney heuristic custom gait phase
 								# if i==2751:
 								# 	n_phases = 10
 								# 	iahead = int(GAIT_TPHASE/CTR_INTV)*n_phases
 								# 	gait_tphase = float(n_phases)*GAIT_TPHASE
-								s_max = iahead
-
+								# 	s_max = iahead
 								try:
 									x_ahead = base_path.X.xp[i+iahead].reshape(3,1) + wXbase_offset[0:3]
 									w_ahead = base_path.W.xp[i+iahead].reshape(3,1) + wXbase_offset[3:6]
@@ -324,9 +323,8 @@ class RobotController(CorinManager):
 								self.Robot.Leg[j].XH_world_X_base = vec6d_to_se3(np.array([x_ahead, w_ahead]).reshape((6,1)))
 								self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
 																		self.Robot.Leg[j].XHd.world_X_foot)
-
-								## TEMP!
-								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
+								## TEMP - Reactive planning using nominal_planning.py
+								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
 						## TEMP: stamping
 						# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
 
@@ -608,7 +606,7 @@ class RobotController(CorinManager):
 		foot_force, tau = self.ForceDist.resolve_force(v3ca, v3wa, p_foot,
 														self.Robot.Rbdl.com,
 														self.Robot.Rbdl.crbi, gphase, 
-														f_max, s_norm)#, qb[3:6], q_contact)
+														f_max, s_norm, qb[3:6], q_contact)
 		# print 'fout: ', np.round(foot_force.flatten(),3)
 		# print '======================'
 		# end = rospy.get_time()

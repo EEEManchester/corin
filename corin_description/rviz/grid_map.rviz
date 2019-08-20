@@ -272,7 +272,7 @@ Visualization Manager:
       Marker Topic: /corin/footholds
       Name: Footholds
       Namespaces:
-        {}
+        "": true
       Queue Size: 1
       Value: true
     - Class: rviz/Marker
@@ -280,7 +280,7 @@ Visualization Manager:
       Marker Topic: /corin/centre_of_mass
       Name: CentreOfMass
       Namespaces:
-        {}
+        "": true
       Queue Size: 10
       Value: true
     - Class: rviz/Group
@@ -370,7 +370,7 @@ Visualization Manager:
       Marker Topic: /cone_visual/viz_cone_arrays
       Name: Friction Cones
       Namespaces:
-        {}
+        "": true
       Queue Size: 1
       Value: true
     - Class: poly_rviz_plugin/Polygon
@@ -425,25 +425,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.09935343
+      Distance: 0.912899196
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.494444668
-        Y: 0.219567046
-        Z: 0.194996178
+        X: 0.456784815
+        Y: 0.15011017
+        Z: 0.197932169
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.364803076
+      Pitch: 0.334803164
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.46838522
+      Yaw: 5.1933732
     Saved: ~
 Window Geometry:
   Control Interface:
