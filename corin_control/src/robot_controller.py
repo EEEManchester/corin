@@ -73,7 +73,14 @@ class RobotController(CorinManager):
 			world_X_footholds = []
 			base_X_footholds = []
 			w_base_X_NRP = []
-		print world_X_footholds[5].xp
+		
+		## Update surface normals
+		print self.Robot.P6c.world_X_base.flatten()
+		for j in range(6):
+			self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+			print self.Robot.Leg[j].XHc.world_X_foot[0:3,3]
+			print j, self.Robot.Leg[j].snorm
+
 		## User input
 		print '==============================================='
 		print 'Execute Path in', self.interface, '?',
@@ -101,9 +108,11 @@ class RobotController(CorinManager):
 		# Counts per gait phase interval
 		iahead = int(GAIT_TPHASE/CTR_INTV)
 		## TEMP: initial leg position
+		hload_offset = 100
 		qstart = self.Robot.Leg[3].Joint.qpc
-		qdiff = (np.array([-0.6981317,  2.5, -1.22860141]) - qstart)/float(hload)
-
+		# qdiff = (np.array([-0.6981317,  2.5, -1.22860141]) - qstart)/float(hload) # Wall bodypose
+		qdiff = (np.array([-0.6981317,  0.96834169, -2.5]) - qstart)/float(hload-hload_offset) # Chimney bodypose
+		
 		## Cycle through trajectory points until complete
 		i = 1 		# skip first point since spline has zero initial differential conditions
 		while (i != path_length and not rospy.is_shutdown()):
@@ -186,7 +195,7 @@ class RobotController(CorinManager):
 					self.Robot.Gait.support_mode()
 					gphase = [0]*6 		# all legs in support phase at start of unloading
 					fmax_lim = [F_MAX]*6	# max. force array
-					
+					# print 'Unload gait: ', gait_list[0]
 					for j in range(0,6):
 						init_flim[j] = self.Robot.Leg[j].get_normal_force('setpoint') if (gait_list[0][j] == 1) else F_MAX
 					# print 'init f: ', init_flim
@@ -238,7 +247,7 @@ class RobotController(CorinManager):
 					except:
 						print colored('ERROR: no gait to unstack','red')
 						## TEMP: Stability
-						self.Robot.Gait.cs = [0,0,0,2,0,0]
+						# self.Robot.Gait.cs = [0,0,0,2,0,0]
 						
 					# raw_input('motion')
 					## Force and gait phase array for Force Distribution
@@ -329,6 +338,7 @@ class RobotController(CorinManager):
 																		self.Robot.Leg[j].XHd.world_X_foot)
 								## TEMP - Reactive planning using nominal_planning.py
 								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
+
 						## TEMP: stamping
 						# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
 
@@ -421,14 +431,18 @@ class RobotController(CorinManager):
 				if tload == 1:
 					print 'State Machine: Holding'
 					self.Robot.Gait.support_mode()
-					self.Robot.Gait.cs = [0,0,0,2,0,0]
+					## TEMP
+					# self.Robot.Gait.cs = [0,0,0,2,0,0]
 				tload += 1
-				print 'hload ', hload
+				
 				if tload == hload+1 and motion_plan:
 					s_cnt = 0
 					if self.Robot.support_mode:
 						state_machine = 'motion'
 						print 'Support mode: Motion'
+						## TEMP
+						# state_machine = 'unload'
+						# tload = 1
 					else:
 						state_machine = 'unload'
 						tload = 1
@@ -463,7 +477,7 @@ class RobotController(CorinManager):
 			force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, i_gphase, fmax_lim)
 			# force_dist = np.zeros((18,1))
 			joint_torq = self.Robot.force_to_torque(force_dist)
-			# print np.round(force_dist[12:15],3)
+			# print np.round(force_dist[15:18].flatten(),3)
 			if self.interface != 'rviz' and self.control_loop != "open":
 
 				## Leg admittance - force tracking
@@ -486,11 +500,14 @@ class RobotController(CorinManager):
 			# cout3(self.Robot.Leg[4].Joint.qpc)
 			# print '======================================='
 			## TEMP: stability check
-			if state_machine == 'hold':
-				qtemp = qstart + qdiff*tload
-			qd.xp[9 ] = qtemp[0]
-			qd.xp[10] = qtemp[1]
-			qd.xp[11] = qtemp[2]
+			# if state_machine == 'motion':
+			# 	if tload > hload_offset:
+			# 		qtemp = qstart + qdiff*tload
+			# 	else:
+			# 		qtemp = qstart
+			# qd.xp[9 ] = qtemp[0]
+			# qd.xp[10] = qtemp[1]
+			# qd.xp[11] = qtemp[2]
 			# qd.xp[9 ] = -0.68	# 9  15
 			# qd.xp[10] = 2.5		# 10 16
 			# qd.xp[11] = -2.		# 11 17
@@ -545,10 +562,11 @@ class RobotController(CorinManager):
 
 				self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
 				# if j==5:
-				# 	print 'u: ', np.round(u.flatten(),4)
-				# 	print slide_gain
-				# 	print 'S c wXb: ', np.round(self.Robot.XHc.world_X_base[:3,3],4)
-				# 	print 'S c wXb: ', np.round(comp_world_X_base[:3,3],4)
+					# print 'u: ', np.round(u.flatten(),4)
+					# print slide_gain
+					# print 'S c wXb: ', np.round(self.Robot.XHc.world_X_base[:3,3],4)
+					# print 'S c wXb: ', np.round(comp_world_X_base[:3,3],4)
+					# print 'S d cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3],4)
 				
 	def update_phase_transfer(self,delta_d=None):
 

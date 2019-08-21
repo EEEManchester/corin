@@ -33,22 +33,27 @@ class ControlInterface:
 
 		## Chimney Demo
 		if (STANCE_TYPE == "chimney"):
+
+			## Validate stability
+			x_cob = np.vstack((x_cob,np.array([0.1,  0.0, 0.])))
+			w_cob = np.vstack((w_cob,np.array([0.0,  0.0, 0.])))
+
 			# up/down
-			x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.05])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.05])))
 			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0, BODY_HEIGHT])))
 			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.06])))
 			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0, BODY_HEIGHT])))
 
 			# front/back
-			x_cob = np.vstack((x_cob,np.array([0.025, 0.0, 0.05])))
-			x_cob = np.vstack((x_cob,np.array([-0.025, 0.0, 0.05])))
-			x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.05])))
+			# x_cob = np.vstack((x_cob,np.array([0.025, 0.0, 0.05])))
+			# x_cob = np.vstack((x_cob,np.array([-0.025, 0.0, 0.05])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.05])))
 
-			# left/right
-			x_cob = np.vstack((x_cob,np.array([0.0, 0.025, 0.05])))
-			x_cob = np.vstack((x_cob,np.array([0.0, -0.025, 0.05])))
-			x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.05])))
-			x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.0])))
+			# # left/right
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.025, 0.05])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, -0.025, 0.05])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.05])))
+			# x_cob = np.vstack((x_cob,np.array([0.0, 0.0, 0.0])))
 
 		## Sideways Demo
 		elif (STANCE_TYPE == "wall"):

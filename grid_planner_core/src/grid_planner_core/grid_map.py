@@ -705,10 +705,10 @@ class GridMap:
 ## 												TESTING 											##
 ## ================================================================================================ ##
 
-# gmap = GridMap('wall_convex_corner')
-# p = np.array([ 0.372 ,  0.3594 , 0.51  ])
+# gmap = GridMap('chimney_straight')
+# p = np.array([0.445, 0.71,  0.033])
 # sn = gmap.get_cell('norm', p)
-# print gmap.getIndex(p, 0)
+# print gmap.getIndex([0.33,0.39], 0)
 # print sn
 # gmap.graph_representation()
  

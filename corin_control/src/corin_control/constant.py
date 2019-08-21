@@ -96,7 +96,7 @@ IMU_RATE = 192 			# IMU publishing rate, Hz
 ## ================================================================ ##
 ##                 Force Distribution parameters 	 				##
 ## ================================================================ ##
-LOAD_T = 0.5	# time for leg load & unloading
+LOAD_T = 1.0	# time for leg load & unloading
 F_MAX = ROBOT_MASS*10.#40.0	# maximum force for leg
 F_MIN = 0.0		# minimum force for leg
 KPcom = np.array([1.0, 1.0, 1.0])*0.3	#1000. #
@@ -152,13 +152,13 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 
 BOUND_FACTOR = 1.1 	# boundary constraint for leg workplane space
 LEG_CLEAR 	 = 0.06 	# clearance between leg workplane boundaries
-STANCE_WIDTH = 0.21		# ori: 0.21, chimney: 0.23, 0.27, 0.31 for tripod
-BODY_HEIGHT  = 0.1		# ori: 0.10, chimney: 0.0
+STANCE_WIDTH = 0.23		# ori: 0.21, chimney: 0.23, 0.27, 0.31 for tripod
+BODY_HEIGHT  = 0.147		# ori: 0.10, chimney: 0.0
 # Offset for front and rear legs
 TETA_F = 40.;
 TETA_R = -TETA_F;
 LEG_OFFSET = [TETA_F, 0., TETA_R, -TETA_F, 0., -TETA_R]
-STANCE_TYPE = "wall" 	# "ground", "chimney", "wall"
+STANCE_TYPE = "chimney" 	# "ground", "chimney", "wall"
 
 ## ================================================================ ##
 ##                       Gait parameters 	 						##

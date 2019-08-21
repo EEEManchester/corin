@@ -128,7 +128,7 @@
 
 		    <collision>
 		      	<geometry>
-					<mesh filename="package://corin_description/meshes/Tibia_collision.STL" scale="1 1 1"/>
+					<mesh filename="package://corin_description/meshes/Tibia_collision.STL" scale="0.1 0.1 0.1"/>
 		      	</geometry>
 		      	<origin xyz="0.0 0 0" rpy="${pi/2} 0 0"/>
 		      	<material name="colli"/>

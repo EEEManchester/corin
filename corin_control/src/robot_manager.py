@@ -122,7 +122,7 @@ class CorinManager:
 	def contact_force_callback(self, msg):
 		""" Gazebo foot contact force """
 		self.Robot.cforce = msg.data
-
+		
 	def ui_callback(self, msg):
 		""" user interface control state """
 		self.ui_state = msg.data.lower()
@@ -190,7 +190,8 @@ class CorinManager:
 		try:
 			mapname = rospy.get_param('/GridMap/map_name')
 		except Exception, e:
-			mapname = 'flat'
+			# mapname = 'flat'
+			mapname = 'chimney_straight'
 		# print 'Grid Map set to : ', mapname
 		self.GridMap  = GridMap(mapname)
 		self.Planner = PathPlanner(self.GridMap)
@@ -562,6 +563,10 @@ class CorinManager:
 					self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy() #np.array([0.,0.226,0.38,1.42,0.,0.]).reshape((6,1))
 					for j in range(3):
 						self.Robot.Leg[j].snorm = np.array([0., -1., 0.])
+				elif STANCE_TYPE == "chimney":
+					self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
+					for j in range(6):
+						self.Robot.Leg[j].snorm = np.array([0., -1., 0.]) if j < 3 else np.array([0., 1., 0.])
 				elif STANCE_TYPE == "ground":
 					self.Robot.P6d.world_X_base = np.array([0.,0.,BODY_HEIGHT,0.,0.,0.]).reshape((6,1))
 
@@ -617,8 +622,12 @@ class CorinManager:
 				else:
 					self.Robot.P6c.world_X_base = np.array([map_offset[0], map_offset[1], 
 															BODY_HEIGHT, 0., 0., 0.]).reshape(6,1)
+					# temp_pos = self.Robot.P6c.world_X_base.copy()
+					# self.Robot.P6c.world_X_base = np.array([map_offset[0], map_offset[1], 
+					# 										temp_pos.item(2), 0., 0., 0.]).reshape(6,1)
 					self.Robot.P6c.world_X_base_offset = np.array([map_offset[0], map_offset[1],
 																0.,0.,0.,0.]).reshape(6,1)
+					# print self.Robot.P6c.world_X_base.flatten()
 					self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
 					self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 					self.Robot.init_robot_stance(STANCE_TYPE)

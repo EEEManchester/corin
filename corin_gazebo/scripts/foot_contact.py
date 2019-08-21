@@ -90,7 +90,7 @@ class ContactForce:
 				self.append_to_list(5, msg.states[0].total_wrench.force)
 
 	def publish(self):
-		
+		print 'len: ', len(self.contact_force)
 		self.contact_force_pub_.publish(Float32MultiArray(data = self.contact_force))
 
 if __name__ == "__main__":
