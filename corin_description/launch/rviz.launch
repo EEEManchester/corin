@@ -9,6 +9,7 @@
 	<arg name="offset_x" default="0.33"/>
 	<arg name="offset_y" default="0.39"/>
 	<arg name="offset_z" default="0"/>
+	<arg name="offset" default="true"/>
 
 	<!-- load robot -->
 	<!-- Load the URDF into the ROS Parameter Server -->
@@ -37,8 +38,14 @@
 	</node>
 
 	<!-- Robot base pose publisher -->
-	<node name="robot_pose_publisher" pkg="corin_description" type="robot_publisher.py" output="screen" 
-		args="$(arg offset_x) $(arg offset_y) $(arg offset_z)"/>
+	<group if="$(arg offset)">
+		<node name="robot_pose_publisher" pkg="corin_description" type="robot_publisher.py" output="screen" 
+			args="$(arg offset_x) $(arg offset_y) $(arg offset_z)"/>
+	</group>
+	<group unless="$(arg offset)">
+		<node name="robot_pose_publisher" pkg="corin_description" type="robot_publisher.py" output="screen" 
+			args="0 0 0"/>
+	</group>
 
 	<!-- load displays -->
 	<param name="use_gui" value="true"/>

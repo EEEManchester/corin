@@ -90,7 +90,7 @@ normals = [[[0.0, -1.0, 0.0]], [[0.0, -1.0, 0.0]], [[0.0, -1.0, 0.0]], [[0.0, 0.
 # normals[0] = n4.tolist()
 # normals[3] = n4.tolist()
 # friction coefficient
-mu = 0.5
+mu = 0.3
 contacts = [stabilipy.Contact(mu, np.array(p).T,
                               stabilipy.utils.normalize(np.array(n).T))
             for p, n in zip(pos, normals)]
@@ -104,9 +104,11 @@ poly.compute(stabilipy.Mode.best, epsilon=1e-3,
 									plot_error=False,
 									plot_init=False,
 									plot_step=False,
-									record_anim=True,
+									record_anim=False,
 									plot_direction=False,
 									plot_final=False)
+pcom = np.array([0.001, 0.167, 0.341])
+print poly.point_in_hull(pcom)
 # end = time.time()
 # print 'td: ', end-now
 # # # convert to 2D array

@@ -162,13 +162,10 @@ if __name__ == "__main__":
 					0.6981272563163854, 0.350433456487087, -1.8613747680378978]
 
 		elif sys.argv[1] == 'wall':
-			pose_x		= 0.0
-			pose_y		= 0.16
-			pose_z		= 0.38
-			pose_roll 	= 1.22
-			pose_pitch 	= 0.
-			pose_yaw 	= 0.
-			qb = [pose_x, pose_y, pose_z, pose_roll, pose_pitch, pose_yaw]
+			## Result: roll = 1.2 rad, height = 0.34 m 
+			qb = [0., 0.16, 0.38, 1.22, 0., 0.]
+			## Result: roll = 0.7 rad, height = 0.20 m 
+			# qb = [0., 0.065, 0.3, 0.75, 0., 0.]
 			qd = [	0.6981317,  0.6939246 , -2.03135032, 
 					0.       ,  0.6939246 , -2.03135032,
 				  	-0.6981317, 0.6939246 , -2.03135032, 

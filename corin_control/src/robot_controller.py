@@ -87,7 +87,7 @@ class RobotController(CorinManager):
 		# State machine loading/unloading timing parameters
 		tload = 1						# loading counter
 		iload = int(LOAD_T/CTR_INTV) 	# no. of intervals for loading
-		hload = int(4./CTR_INTV)		# no. of intervals for initial holding
+		hload = int(1./CTR_INTV)		# no. of intervals for initial holding
 		# Force Distribution variables
 		fmax_lim  = [F_MAX]*6			# maximum force array
 		init_flim = [F_MAX]*6			# current force for linear decrease in unloading
@@ -237,8 +237,9 @@ class RobotController(CorinManager):
 						gait_list.pop(0)
 					except:
 						print colored('ERROR: no gait to unstack','red')
+						## TEMP: Stability
 						self.Robot.Gait.cs = [0,0,0,2,0,0]
-						pass
+						
 					# raw_input('motion')
 					## Force and gait phase array for Force Distribution
 					fmax_lim = [0]*6	# max. force array
@@ -420,7 +421,7 @@ class RobotController(CorinManager):
 				if tload == 1:
 					print 'State Machine: Holding'
 					self.Robot.Gait.support_mode()
-				
+					self.Robot.Gait.cs = [0,0,0,2,0,0]
 				tload += 1
 				print 'hload ', hload
 				if tload == hload+1 and motion_plan:
@@ -485,11 +486,11 @@ class RobotController(CorinManager):
 			# cout3(self.Robot.Leg[4].Joint.qpc)
 			# print '======================================='
 			## TEMP: stability check
-			# if state_machine == 'hold':
-			# 	qtemp = qstart + qdiff*tload
-			# qd.xp[9 ] = qtemp[0]
-			# qd.xp[10] = qtemp[1]
-			# qd.xp[11] = qtemp[2]
+			if state_machine == 'hold':
+				qtemp = qstart + qdiff*tload
+			qd.xp[9 ] = qtemp[0]
+			qd.xp[10] = qtemp[1]
+			qd.xp[11] = qtemp[2]
 			# qd.xp[9 ] = -0.68	# 9  15
 			# qd.xp[10] = 2.5		# 10 16
 			# qd.xp[11] = -2.		# 11 17

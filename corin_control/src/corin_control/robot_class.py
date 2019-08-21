@@ -228,7 +228,7 @@ class RobotState:
 
 		valid, sm = self.SM.point_in_region(self.XHc.world_X_COM[:3,3])
 		pvalid, psm = self.Sp.point_in_polygon(self.XHc.world_X_COM[:3,3])
-
+		print np.round(self.XHc.world_X_COM[:3,3].flatten(),3)
 		if not valid:
 			print colored("Convex hull violated %.3f %.3f " %(valid, sm), 'red')
 			# self.invalid = True
@@ -415,9 +415,8 @@ class RobotState:
 			new_pos = self.Leg[j].XHd.coxa_X_foot[:3,3] + offset
 			feet_pos.append(new_pos)
 			# if j==4:
-			# 	print 'r: ', np.round(self.Leg[4].XHd.coxa_X_foot[:3,3],4)
-			# 	print 'r: ', np.round(offset,4)
-			# 	print 'r: ', np.round(new_pos,4)
+			# 	print 'cXf: ', np.round(self.Leg[4].XHd.coxa_X_foot[:3,3],4)
+			# 	print 'new: ', np.round(new_pos,4)
 			# 	print '======================================='
 		feet_pos = [item for sublist in feet_pos for item in sublist]
 		return self.task_X_joint(feet_pos)
