@@ -2,7 +2,7 @@
 """ 
 
 import sys; sys.dont_write_bytecode = True
-sys.path.insert(0, '/home/wei/catkin_ws/src/corin/corin_control/src')
+sys.path.insert(0, '/home/wilson/catkin_ws/src/corin/corin_control/src')
 from corin_control import *			# library modules to include 
 from grid_map import *
 
@@ -183,10 +183,6 @@ class PathPlanner:
 			world_X_footholds[j].xp.insert(0, Robot.Leg[j].XHc.world_X_foot[:3,3].flatten().copy())
 			base_X_footholds[j].xp.insert(0, Robot.Leg[j].XHc.base_X_foot[:3,3].flatten().copy())
 			world_base_X_NRP[j].xp.insert(0, Robot.Leg[j].XHc.world_base_X_NRP[:3,3].flatten().copy())
-			
-		# Flattens list
-		# gait_phase = [val for sublist in gait_phase for val in sublist]
-		# print gait_phase
 		
 		return set_motion_plan()
 
@@ -349,7 +345,64 @@ class PathPlanner:
 		# Plot.plot_2d(path.X.t, path.X.xp)
 		return path
 
+	def chimney_motion_planning(self, start, end, Robot=None):
+		""" Motion plan for chimney bodypose leg suspended evaluation """
 
+		def set_motion_plan():
+			## Set MotionPlan class
+			motion_plan = MotionPlan()
+			motion_plan.set_base_path(start, path, world_X_base, gait_phase)
+			motion_plan.set_footholds(world_X_footholds, base_X_footholds, world_base_X_NRP)
+			# print 'planner: ', (motion_plan.f_world_X_foot[0].xp)
+			return motion_plan
+
+		ps = start.flatten()	# world frame
+		pf = end.flatten()		# world frame
+		print 'Planning Path:-'
+		print 'Start:\t', np.round(ps.flatten(),4)
+		print 'End:\t', np.round(pf.flatten(),4)
+
+		Gait = gait_class.GaitClass(GAIT_TYPE)	# gait class
+
+		world_X_base = [start.flatten()]
+		world_X_footholds = [None]*6
+		base_X_footholds  = [None]*6
+		world_base_X_NRP  = [None]*6
+		gphase_intv = []
+		gait_phase = []
+
+		## Instantiate leg transformation class & append initial footholds
+		for j in range (0, 6):
+			world_X_footholds[j] = MarkerList()
+			base_X_footholds[j] = MarkerList()
+			world_base_X_NRP[j] = MarkerList()
+
+		## Foothold for leg to be suspended
+		suspend_leg = 3
+		gphase = [0]*6
+		foot_offset = np.array([0., 0.05, 0.])
+		for j in range(6):
+			if j == suspend_leg:	
+				if j < 3:
+					new_foothold = Robot.Leg[j].XHc.world_X_foot[:3,3] - foot_offset
+				else:
+					new_foothold = Robot.Leg[j].XHc.world_X_foot[:3,3] + foot_offset
+				world_X_footholds[j].t.append(1)
+				world_X_footholds[j].xp.append(new_foothold.copy())
+				# Put leg in transfer
+				gphase[j] = 1
+				gait_phase.append(gphase)
+
+		## Trajectory for robot's base
+		PathGenerator = Pathgenerator.PathGenerator() 	# path generator for robot's base
+		PathGenerator.V_MAX = PathGenerator.W_MAX = 0.01
+		x_cob = np.array([.0,.0,.0])
+		w_cob = np.array([.0,.0,.0])
+		x_cob = np.vstack((x_cob,np.array([0.2,  0.0, 0.])))
+		w_cob = np.vstack((w_cob,np.array([0.0,  0.0, 0.])))
+		path = PathGenerator.generate_base_path(x_cob, w_cob, CTR_INTV)
+
+		return set_motion_plan()
 ## ================================================================================================ ##
 ## 												TESTING 											##
 ## ================================================================================================ ##
@@ -366,9 +419,9 @@ class PathPlanner:
 # Robot.P6d.world_X_base = Robot.P6c.world_X_base.copy()
 # Robot.XHc.update_world_X_base(Robot.P6c.world_X_base)
 # Robot.init_robot_stance()
-
 # Robot.Gait.walk_mode()
 # motion_plan = planner.motion_planning(ps, pf, Robot)
+# motion_plan = planner.chimney_motion_planning(ps, pf, Robot)
 # print Robot.P6c.world_X_base_offset
 # print motion_plan.f_world_X_foot[5].xp
 # tintv = math.ceil(t[-1]/CTR_INTV)

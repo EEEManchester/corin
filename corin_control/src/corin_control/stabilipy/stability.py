@@ -663,6 +663,27 @@ class StabilityPolygon(RecursiveProjectionProblem):
     self.plot_solution_2D(d)
     self.plot_polyhedrons()
 
+    x1,x2,y1,y2 = plt.axis()
+    # plt.axis((0.,0.6,0.,0.7))
+    fsize = 40
+    self.ax.set_xlabel("x-axis, m", fontname="cmr10", fontsize=fsize)
+    self.ax.set_ylabel("y-axis, m", fontname="cmr10", fontsize=fsize)
+    
+    # Set the font name for axis tick labels to be Comic Sans
+    plt.rcParams['axes.unicode_minus']=False
+    plt.xticks(np.arange(0., 0.8, step=0.2))
+    plt.yticks(np.arange(0.1, 0.9, step=0.2))
+    for tick in self.ax.get_xticklabels():
+        tick.set_fontname("cmr10")
+        tick.set_fontsize(fsize)
+    for tick in self.ax.get_yticklabels():
+        tick.set_fontname("cmr10")
+        tick.set_fontsize(fsize)
+    fig = plt.matplotlib.pyplot.gcf()
+    # print fig.get_size_inches()
+    fig.set_size_inches(6.3, 6.7)
+    fig.set_tight_layout(True)
+
   def plot_solution_2D(self,d):
     com_pos = self.com[0:2]
     forces = self.forces
@@ -672,7 +693,7 @@ class StabilityPolygon(RecursiveProjectionProblem):
                  markersize=10, markerfacecolor='black')
 
     if d is not None:
-      self.ax.quiver(com_pos[0], com_pos[1], d[0], d[1], color='r', scale_units='xy', scale=2.)
+      self.ax.quiver(com_pos[0], com_pos[1], d[0], d[1], color='r', scale_units='xy', scale=0.01)
     
   def plot_contacts_2D(self):
     num_points = 50

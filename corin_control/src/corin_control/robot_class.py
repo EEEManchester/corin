@@ -111,6 +111,7 @@ class RobotState:
 			self.Leg[j].XHc.update_world_base_X_NRP(self.P6c.world_X_base)
 			self.Leg[j].XHd.update_world_base_X_NRP(self.P6c.world_X_base)
 		self.task_X_joint()
+		self.Gait.cs = [0]*6
 		self.update_stability_region()
 		self.Gait.set_step_stroke(leg_stance, LEG_CLEAR, STEP_STROKE)
 		
@@ -226,8 +227,8 @@ class RobotState:
 	def update_stability_margin(self):
 		""" updates the current stability margin """
 
-		valid, sm = self.SM.point_in_region(self.XHc.world_X_COM[:3,3])
-		pvalid, psm = self.Sp.point_in_polygon(self.XHc.world_X_COM[:3,3])
+		# valid, sm = self.SM.point_in_region(self.XHc.world_X_COM[:3,3])
+		valid, sm = self.Sp.point_in_polygon(self.XHc.world_X_COM[:3,3])
 		# print np.round(self.XHc.world_X_COM[:3,3].flatten(),3)
 		if not valid:
 			print colored("Convex hull violated %.3f %.3f " %(valid, sm), 'red')
@@ -263,16 +264,16 @@ class RobotState:
 		# stack_leg_normal = [self.Leg[j].snorm for j in range(6) if self.Gait.cs[j] == 0]
 		# self.SM.force_moment(self.XHc.world_X_COM[:3,3], stack_leg_forces, stack_world_X_foot, stack_leg_normal)
 	
-	def update_stability_region(self):
+	def update_stability_region(self, gphase=None):
 		""" Updates the stability region for a set of fixed contacts - Bretl2008 """
 
 		## Computes region if previous topology is different
-		if self.Gait.cs != self.SM.prev_topology:
+		if self.Gait.cs != self.SM.prev_topology or gphase is not None:
 			## Define Variables ##
-			stack_world_X_foot = [np.round(self.Leg[j].XHc.world_X_foot[:3,3],3).tolist() for j in range(6) if self.Gait.cs[j] == 0]
+			stack_world_X_foot = [np.round(self.Leg[j].XHc.world_X_foot[:3,3],2).tolist() for j in range(6) if self.Gait.cs[j] == 0]
 			stack_normals = [[self.Leg[j].snorm.tolist()] for j in range(6) if self.Gait.cs[j] == 0]
 			
-			self.SM.compute_support_region(stack_world_X_foot, stack_normals)
+			# self.SM.compute_support_region(stack_world_X_foot, stack_normals)
 			self.Sp.compute_support_polygon(stack_world_X_foot)
 			self.SM.prev_topology = list(self.Gait.cs)
 		else:
@@ -339,11 +340,7 @@ class RobotState:
 			if foot_pos is None:
 				err_list[j], qpd, qvd, qad = self.Leg[j].tf_task_X_joint()
 			else:
-				## TEMP
-				if j == 3:
-					pass
-				else:
-					err_list[j], qpd, qvd, qad = self.Leg[j].tf_task_X_joint(foot_pos[j*3:j*3+3])
+				err_list[j], qpd, qvd, qad = self.Leg[j].tf_task_X_joint(foot_pos[j*3:j*3+3])
 			# if j == 4:
 			# 	qpd = np.array([0.,  6.12682006e-01,  -2.61484057e+00])
 

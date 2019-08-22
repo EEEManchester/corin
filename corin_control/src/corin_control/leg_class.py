@@ -195,7 +195,7 @@ class LegClass:
 			wcp, td = self.Path.interpolate_leg_path(self.XHc.coxa_X_foot[0:3,3],
 														self.XHd.coxa_X_foot[0:3,3],
 														sn1, sn2, phase, reflex, ctime)
-		# if self.number == 4:
+		# if self.number == 3:
 		# 	print np.round(wcp,3)
 		# 	print np.round(start,4)
 		# 	print np.round(end,4)
@@ -418,15 +418,15 @@ class LegClass:
 		offset_y = self.impedance_controller_y.evaluate(lf_error[1])
 		offset_z = self.impedance_controller_z.evaluate(lf_error[2])
 
-		if self.number == 5:
-			print 'Fd:', np.round(self.F6d.world_X_foot[0:3].flatten(),4)
-			print 'Fc:', np.round(self.F6c.world_X_foot[0:3].flatten(),4)
-			print 'Fe:', np.round(wf_error.flatten(),4)
-			print 'do:', np.round(np.array([offset_x, offset_y, offset_z]),4)
+		# if self.number == 5:
+		# 	print 'Fd:', np.round(self.F6d.world_X_foot[0:3].flatten(),4)
+		# 	print 'Fc:', np.round(self.F6c.world_X_foot[0:3].flatten(),4)
+		# 	print 'Fe:', np.round(wf_error.flatten(),4)
+		# 	print 'do:', np.round(np.array([offset_x, offset_y, offset_z]),4)
 		# 	print 'W err: ', np.round(wf_error.flatten(),6)
 			# print 'L err: ', np.round(lf_error.flatten(),3)
 			# print 'L off: ', np.round(np.array([offset_x, offset_y, offset_z]),4)
-			print '===================================='
+			# print '===================================='
 		return np.array([offset_x, offset_y, offset_z])
 
 	def reset_impedance_controller(self):

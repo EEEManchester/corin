@@ -8,7 +8,6 @@ Panels:
         - /Status1
         - /Grid1/Offset1
         - /CentreOfMass1
-        - /Contact Forces1
         - /Contact Forces1/RF_foot_wrench1
         - /Contact Forces1/RR_foot_wrench1
       Splitter Ratio: 0.5
@@ -364,16 +363,16 @@ Visualization Manager:
           Torque Color: 204; 204; 51
           Unreliable: false
           Value: true
-      Enabled: true
+      Enabled: false
       Name: Contact Forces
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /cone_visual/viz_cone_arrays
       Name: Friction Cones
       Namespaces:
-        "": true
+        {}
       Queue Size: 1
-      Value: true
+      Value: false
     - Class: poly_rviz_plugin/Polygon
       Enabled: true
       History Length: 1
@@ -426,25 +425,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.07766891
+      Distance: 0.834546804
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.245518804
-        Y: 0.119229965
-        Z: 0.328241378
+        X: 0.201173991
+        Y: 0.0736004859
+        Z: 0.357092738
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.399803102
+      Pitch: 0.304803193
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.1183691
+      Yaw: 5.76337528
     Saved: ~
 Window Geometry:
   Control Interface:

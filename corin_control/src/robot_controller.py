@@ -75,11 +75,10 @@ class RobotController(CorinManager):
 			w_base_X_NRP = []
 		
 		## Update surface normals
-		print self.Robot.P6c.world_X_base.flatten()
-		for j in range(6):
-			self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
-			print self.Robot.Leg[j].XHc.world_X_foot[0:3,3]
-			print j, self.Robot.Leg[j].snorm
+		# for j in range(6):
+		# 	self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+		# 	print self.Robot.Leg[j].XHc.world_X_foot[0:3,3]
+		# 	print j, self.Robot.Leg[j].snorm
 
 		## User input
 		print '==============================================='
@@ -108,11 +107,11 @@ class RobotController(CorinManager):
 		# Counts per gait phase interval
 		iahead = int(GAIT_TPHASE/CTR_INTV)
 		## TEMP: initial leg position
-		hload_offset = 100
+		hload_offset = 0
 		qstart = self.Robot.Leg[3].Joint.qpc
-		# qdiff = (np.array([-0.6981317,  2.5, -1.22860141]) - qstart)/float(hload) # Wall bodypose
-		qdiff = (np.array([-0.6981317,  0.96834169, -2.5]) - qstart)/float(hload-hload_offset) # Chimney bodypose
-		
+		qdiff = (np.array([-0.6981317,  2.5, -1.22860141]) - qstart)/float(hload-hload_offset) # Wall bodypose
+		# qdiff = (np.array([-0.6981317,  0.96834169, -2.5]) - qstart)/float(hload-hload_offset) # Chimney bodypose
+
 		## Cycle through trajectory points until complete
 		i = 1 		# skip first point since spline has zero initial differential conditions
 		while (i != path_length and not rospy.is_shutdown()):
@@ -120,7 +119,7 @@ class RobotController(CorinManager):
 			# print 'wXb: ', np.round(self.Robot.P6c.world_X_base.flatten(),3)
 			# Check if controller should be suspended
 			self.suspend_controller()
-			
+			# print s_cnt
 			# Suppress trajectory counter as body support suspended
 			# self.Robot.suspend = False # manual overwrite for selected motions
 			if (self.Robot.suspend == True or state_machine == 'hold'):
@@ -249,7 +248,6 @@ class RobotController(CorinManager):
 						## TEMP: Stability
 						# self.Robot.Gait.cs = [0,0,0,2,0,0]
 						
-					# raw_input('motion')
 					## Force and gait phase array for Force Distribution
 					fmax_lim = [0]*6	# max. force array
 					gphase = list(self.Robot.Gait.cs)
@@ -258,7 +256,7 @@ class RobotController(CorinManager):
 						fmax_lim[j] = self.Robot.Leg[j].Fmax
 						if self.Robot.Gait.cs[j] == 1:
 							self.Robot.Leg[j].reset_impedance_controller()
-
+					print gphase
 				## Halfway through TIMEOUT - check swing leg contact state 
 				elif (s_cnt > s_max/2 and self.ctrl_contact_detect):
 					# Check if transfer has made contact
@@ -337,7 +335,10 @@ class RobotController(CorinManager):
 								self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
 																		self.Robot.Leg[j].XHd.world_X_foot)
 								## TEMP - Reactive planning using nominal_planning.py
-								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
+								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
+								## TEMP - Stability
+								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
+								# self.Robot.Leg[j].XHd.base_X_foot[1,3] += 0.05
 
 						## TEMP: stamping
 						# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
@@ -347,8 +348,8 @@ class RobotController(CorinManager):
 							sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
 							sn2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
 							## TEMP: Chimney corner
-							# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
-							# 	sn2 = np.array([1., 0., 0.])
+							if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
+								sn2 = np.array([1., 0., 0.])
 							## TEMP: Wall convex corner
 							# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
 							# 	sn2 = np.array([1., 0., 0.])	
@@ -379,6 +380,7 @@ class RobotController(CorinManager):
 							self.Robot.Leg[j].transfer_phase_change = True
 
 				## Compute task space foot position for all legs
+				# if s_cnt < 100:
 				self.update_phase_transfer()
 				self.update_phase_support(P6e_world_X_base, V6e_world_X_base)
 				# print 'wXf: ', np.round(self.Robot.Leg[1].XHd.world_X_foot[:3,3],4)
@@ -393,8 +395,8 @@ class RobotController(CorinManager):
 								self.Robot.Leg[j].change_phase('support', self.Robot.XHc.world_X_base)
 								self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
 								## TEMP: Chimney corner
-								# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
-								# 	self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
+								if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
+									self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
 								## TEMP: Wall Convex corner
 								# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
 								# 	self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
@@ -500,7 +502,7 @@ class RobotController(CorinManager):
 			# cout3(self.Robot.Leg[4].Joint.qpc)
 			# print '======================================='
 			## TEMP: stability check
-			# if state_machine == 'motion':
+			# if state_machine == 'hold':
 			# 	if tload > hload_offset:
 			# 		qtemp = qstart + qdiff*tload
 			# 	else:
@@ -508,10 +510,7 @@ class RobotController(CorinManager):
 			# qd.xp[9 ] = qtemp[0]
 			# qd.xp[10] = qtemp[1]
 			# qd.xp[11] = qtemp[2]
-			# qd.xp[9 ] = -0.68	# 9  15
-			# qd.xp[10] = 2.5		# 10 16
-			# qd.xp[11] = -2.		# 11 17
-			# print 'CoM: ', np.round(self.Robot.Rbdl.com.flatten(),4)
+			
 			## Data logging & publishing
 			qlog = self.set_log_setpoint(v3cp, v3cv, xa_d, v3wp, v3wv, wa_d, qd, joint_torq, force_dist)
 			self.publish_topics(qd, qlog)
@@ -612,17 +611,6 @@ class RobotController(CorinManager):
 				s_norm.append(self.Robot.Leg[j].snorm)
 				f_max.append(fmax[j])
 
-				# snorm_left  = np.array([0., 0., 1.]) # np.array([0., -1., 0.])
-				# snorm_right = np.array([0., 0., 1.]) # np.array([0.,  1., 0.])
-				# if j <3:
-				# 	s_norm.append(snorm_left)
-				# 	self.Robot.Leg[j].snorm = snorm_left
-				# else:
-				# 	s_norm.append(snorm_right)
-				# 	self.Robot.Leg[j].snorm = snorm_right
-				# if j == 1:
-				# 	print np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3].flatten(),4)
-				# 	print self.Robot.Leg[j].snorm
 		q_contact = [item for i in q_contact for item in i]
 		# print gphase, fmax
 		# print p_foot

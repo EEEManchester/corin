@@ -59,7 +59,7 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
 		self.control_loop = "close" 	# run controller in open or closed loop
 
@@ -190,8 +190,8 @@ class CorinManager:
 		try:
 			mapname = rospy.get_param('/GridMap/map_name')
 		except Exception, e:
-			# mapname = 'flat'
-			mapname = 'chimney_straight'
+			mapname = 'flat'
+			# mapname = 'chimney_straight'
 		# print 'Grid Map set to : ', mapname
 		self.GridMap  = GridMap(mapname)
 		self.Planner = PathPlanner(self.GridMap)
@@ -364,7 +364,8 @@ class CorinManager:
 
 		## Runs controller at desired rate for normal control mode
 		if (self.control_rate is "normal" or self.interface is 'robotis'):
-			self.rate.sleep()
+			# self.rate.sleep()
+			pass
 
 	def default_pose(self, stand_state=0, leg_stance=None):
 		""" Moves robot to nominal stance (default pose) 		 """
@@ -600,6 +601,9 @@ class CorinManager:
 					map_offset = (0.45, 0.36)
 					d_travel = np.array([0.15,0.,0.,0.,0.,0.]).reshape(6,1)
 					base_height = 0.3
+				elif motion == 'wall':
+					map_offset = (0.45, 0.36)
+					d_travel = np.array([0.15,0.,0.,0.,0.,0.]).reshape(6,1)
 				elif motion == 'taros':
 					map_offset = (0.33, 0.39)
 					d_travel = np.array([1.95,0.,0.,0.,0.,0.]).reshape(6,1)
@@ -662,7 +666,8 @@ class CorinManager:
 				# Use reactive planning
 				else:
 					print colored('Remember to enable AEP foothold in generate trajectory', 'yellow')
-					motion_plan = self.Planner.motion_planning(ps, pf, self.Robot)
+					# motion_plan = self.Planner.motion_planning(ps, pf, self.Robot)
+					motion_plan = self.Planner.chimney_motion_planning(ps, pf, self.Robot)
 
 				if motion_plan is not None:
 					if (self.main_controller(motion_plan)):
