@@ -85,7 +85,7 @@
 	<xacro:property name="foot_r" value="0.016"   />
 	<xacro:property name="foot_m" value="0.040"   />
 	<xacro:property name="foot_I" value="0.000004" />
-	<xacro:property name="foot_friction" value="0.5" />
+	<xacro:property name="foot_friction" value="1.0" />
 	<!-- Rectangular box: m*(a^2 + b^2)/12 -->
 
 	<xacro:property name="light_grey" value="0.8" />

@@ -376,16 +376,18 @@ class PathPlanner:
 			world_X_footholds[j] = MarkerList()
 			base_X_footholds[j] = MarkerList()
 			world_base_X_NRP[j] = MarkerList()
-
+			world_X_footholds[j].xp.append(Robot.Leg[j].XHc.world_X_foot[:3,3])
 		## Foothold for leg to be suspended
 		suspend_leg = 3
 		gphase = [0]*6
-		foot_offset = np.array([0., 0.05, 0.])
+		# foot_offset = np.array([0., 0.05, 0.])
+		foot_offset = np.array([0., 0., 0.1])
 		for j in range(6):
 			if j == suspend_leg:	
 				if j < 3:
 					new_foothold = Robot.Leg[j].XHc.world_X_foot[:3,3] - foot_offset
 				else:
+					print 'here'
 					new_foothold = Robot.Leg[j].XHc.world_X_foot[:3,3] + foot_offset
 				world_X_footholds[j].t.append(1)
 				world_X_footholds[j].xp.append(new_foothold.copy())
@@ -408,22 +410,22 @@ class PathPlanner:
 ## ================================================================================================ ##
 
 ## Create map and plan path
-# grid_map = GridMap('flat')
-# planner = PathPlanner(grid_map)
-# Robot = robot_class.RobotState()
+grid_map = GridMap('flat')
+planner = PathPlanner(grid_map)
+Robot = robot_class.RobotState()
 
-# ps = np.array([0.33, 0.39, 0.1, 0., 0., 0.]) 
-# pf = np.array([0.53, 0.39, 0.1, 0., 0., 0.]) 
+ps = np.array([0.33, 0.39, 0.1, 0., 0., 0.]) 
+pf = np.array([0.53, 0.39, 0.1, 0., 0., 0.]) 
 
-# Robot.P6c.world_X_base = ps
-# Robot.P6d.world_X_base = Robot.P6c.world_X_base.copy()
-# Robot.XHc.update_world_X_base(Robot.P6c.world_X_base)
-# Robot.init_robot_stance()
-# Robot.Gait.walk_mode()
-# motion_plan = planner.motion_planning(ps, pf, Robot)
+Robot.P6c.world_X_base = ps
+Robot.P6d.world_X_base = Robot.P6c.world_X_base.copy()
+Robot.XHc.update_world_X_base(Robot.P6c.world_X_base)
+Robot.init_robot_stance()
+Robot.Gait.walk_mode()
 # motion_plan = planner.chimney_motion_planning(ps, pf, Robot)
+# motion_plan = planner.motion_planning(ps, pf, Robot)
 # print Robot.P6c.world_X_base_offset
-# print motion_plan.f_world_X_foot[5].xp
+# print motion_plan.f_world_X_foot[3].xp
 # tintv = math.ceil(t[-1]/CTR_INTV)
 # t_intv = []
 # for i in range(int(tintv)+1):

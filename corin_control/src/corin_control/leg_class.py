@@ -196,9 +196,6 @@ class LegClass:
 														self.XHd.coxa_X_foot[0:3,3],
 														sn1, sn2, phase, reflex, ctime)
 		# if self.number == 3:
-		# 	print np.round(wcp,3)
-		# 	print np.round(start,4)
-		# 	print np.round(end,4)
 			# Plot.plot_2d(self.xspline.t, self.xspline.xp)
 		self.xspline = TrajectoryPoints(self.Path.generate_leg_path(wcp, td, tn))
 		self.spline_counter = 1
@@ -233,21 +230,20 @@ class LegClass:
 			return True
 
 		except ValueError:
-			print err_str, self.number
+			print colored(err_str + str(self.number), 'red')
 			return False
 
 	def tf_task_X_joint(self, xp=None, xv=None, xa=None):
 		""" Converts task space position wrt hip frame to joint space 	  """
 		""" Input: 	1) xp -> task space position
 			Output: joint position, velocity and acceleration in 1D array """
-
+		
 		## Define variables ##
 		error = 0 					# Error indicator
 
 		if (xp is None):
 			# Use previous known state
 			xp = self.XHd.coxa_X_foot[:3,3]
-		# print self.number, ' xp: ', np.round(xp,3)
 		prev_qpd = self.Joint.qpd.copy()
 		self.Joint.qpd = self.KDL.leg_IK(xp, self.number)
 
@@ -263,33 +259,15 @@ class LegClass:
 		qerror = self.Joint.qpd - prev_qpd
 		epsilon = 8e-6
 		UL = 0.001
-		if dsing < epsilon:# or np.linalg.norm(qerror) > 0.1:
-			# print colored('near singular: ', 'red'), self.Joint.qpd
+		if dsing < epsilon:
 			sgn = [np.sign(i) for i in self.Joint.qpd]
-			# self.Joint.qpd = prev_qpd.copy() + 
 			for i in range(3):
 				if abs(qerror[i]) > UL:
 					self.Joint.qpd[i] = prev_qpd[i] - sgn[i]*UL
 				else:
 					self.Joint.qpd[i] = prev_qpd[i] + qerror[i]
 
-		# if self.number == 2:
-		# 	print 'd: ', d1
-		# 	# print 'error', qerror, np.linalg.norm(qerror)
-		# 	print 'new: ', np.round(self.Joint.qpd,4)
-		# 	print 'cp:  ', xp
-		# 	print '----------------------------------------'
-			# print 'norm: ', self.snorm
-			# print '==================================='
-
-		# delta_qpd = self.Joint.qpd - prev_qpd
-		# if abs(delta_qpd[0]) > 1.:
-		# 	delta_qpd[0] = prev_qpd[0]
-		# 	print 'reset here'
-		# 	print np.round(delta_qpd,3)
-
 		if (self.Joint.qpd is not None):
-			# print 'here 1'
 			self.XHd.update_foot_X_coxa(self.Joint.qpd) 	# updates coxa_X_foot as well
 			# checks if joint limit exceeded and singularity occurs
 			if (self.check_joint_limit(self.Joint.qpd) is True):
@@ -303,10 +281,8 @@ class LegClass:
 					self.Joint.qad = np.zeros(3)
 				else:
 					error = 2
-			# print 'here 2'
 		else:
 			error = 3
-		# print 'Error: ', error
 		return error, self.Joint.qpd, self.Joint.qvd, self.Joint.qad 	# TEMP: change to normal (huh?)
 
 	def check_boundary_limit(self, world_base_X_foot, world_base_X_NRP, step_stroke, radius=None):
@@ -395,10 +371,6 @@ class LegClass:
 		self.spline_counter += 1
 		if (self.spline_counter == self.spline_length):
 			self.feedback_state = 2
-		# print 'ori: ', np.round(self.XHd.coxa_X_foot[:3,3].flatten(),4)
-		# self.XHd.coxa_X_foot[:3,3] += self.tdp_offset
-		# print 'new: ', np.round(self.XHd.coxa_X_foot[:3,3].flatten(),4)
-		# print '=================================='
 		return True
 
 	def apply_admittance_controller(self, desired_force, pi_control):
@@ -406,8 +378,6 @@ class LegClass:
 		# Error in world frame
 		self.F6d.world_X_foot[0:3] = desired_force.copy()
 		wf_error = (self.F6c.world_X_foot[0:3].flatten() - desired_force.flatten()).flatten()
-		# if self.number == 5:
-		# 	print 'W ori: ', np.round(wf_error.flatten(),6)
 		if pi_control:
 			wf_error = self.ForcePI.update(wf_error.reshape((3,1))).flatten()
 			
@@ -418,15 +388,6 @@ class LegClass:
 		offset_y = self.impedance_controller_y.evaluate(lf_error[1])
 		offset_z = self.impedance_controller_z.evaluate(lf_error[2])
 
-		# if self.number == 5:
-		# 	print 'Fd:', np.round(self.F6d.world_X_foot[0:3].flatten(),4)
-		# 	print 'Fc:', np.round(self.F6c.world_X_foot[0:3].flatten(),4)
-		# 	print 'Fe:', np.round(wf_error.flatten(),4)
-		# 	print 'do:', np.round(np.array([offset_x, offset_y, offset_z]),4)
-		# 	print 'W err: ', np.round(wf_error.flatten(),6)
-			# print 'L err: ', np.round(lf_error.flatten(),3)
-			# print 'L off: ', np.round(np.array([offset_x, offset_y, offset_z]),4)
-			# print '===================================='
 		return np.array([offset_x, offset_y, offset_z])
 
 	def reset_impedance_controller(self):

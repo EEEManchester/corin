@@ -103,7 +103,7 @@ KPcom = np.array([1.0, 1.0, 1.0])*0.3	#1000. #
 KDcom = np.array([0.0, 0.0, 1.0])*0.015	#0.5
 KPang = np.array([1.0, 1.0, 1.0])*0.	#500.
 KDang = np.array([1.0, 1.0, 1.0])*0.	#0.5
-SURFACE_FRICTION = 0.8
+SURFACE_FRICTION = 1.0
 F_INC  = 0.1
 D_MOVE = 0.0001	# motion for leg to achieve contact
 
@@ -158,7 +158,7 @@ BODY_HEIGHT  = 0.1#0.147		# ori: 0.10, chimney: 0.0
 TETA_F = 40.;
 TETA_R = -TETA_F;
 LEG_OFFSET = [TETA_F, 0., TETA_R, -TETA_F, 0., -TETA_R]
-STANCE_TYPE = "chimney" 	# "ground", "chimney", "wall"
+STANCE_TYPE = "wall" 	# "ground", "chimney", "wall"
 
 ## ================================================================ ##
 ##                       Gait parameters 	 						##

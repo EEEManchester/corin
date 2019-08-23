@@ -21,7 +21,7 @@ class RobotController(CorinManager):
 		# Enable/disable controllers
 		self.ctrl_base_admittance = False 	# base impedance controller - fault
 		self.ctrl_base_tracking   = True 	# base tracking controller
-		self.ctrl_leg_admittance  = True 	# leg impedance controller
+		self.ctrl_leg_admittance  = False 	# leg impedance controller
 		self.ctrl_contact_detect  = True 	# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
@@ -102,7 +102,7 @@ class RobotController(CorinManager):
 		offset_z = 0.0
 		offset_base = np.zeros(3) 		# offset for base impedance
 		# Support phase counter
-		s_max = int(GAIT_TPHASE/CTR_INTV)
+		s_max = 10000#int(GAIT_TPHASE/CTR_INTV)
 		s_cnt = 1
 		# Counts per gait phase interval
 		iahead = int(GAIT_TPHASE/CTR_INTV)
@@ -159,7 +159,7 @@ class RobotController(CorinManager):
 				v3wp = wXbase_offset[3:6]
 				v3wv = np.zeros((3,1))
 				v3wa = np.zeros((3,1))
-			
+			print np.round(v3cp.flatten(),4)
 			# Update robot's desired position, velocity & acceleration to next point on spline
 			self.Robot.P6d.world_X_base = np.vstack((v3cp,v3wp))
 			self.Robot.V6d.world_X_base = np.vstack((v3cv,v3wv)) 	# not used atm
@@ -256,7 +256,7 @@ class RobotController(CorinManager):
 						fmax_lim[j] = self.Robot.Leg[j].Fmax
 						if self.Robot.Gait.cs[j] == 1:
 							self.Robot.Leg[j].reset_impedance_controller()
-					print gphase
+					
 				## Halfway through TIMEOUT - check swing leg contact state 
 				elif (s_cnt > s_max/2 and self.ctrl_contact_detect):
 					# Check if transfer has made contact
@@ -342,14 +342,14 @@ class RobotController(CorinManager):
 
 						## TEMP: stamping
 						# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
-
+						print self.Robot.Leg[j].XHc.world_X_foot[0:3,3]
 						## Get surface normal at current and desired footholds
 						try:
 							sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
 							sn2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
 							## TEMP: Chimney corner
-							if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
-								sn2 = np.array([1., 0., 0.])
+							# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
+							# 	sn2 = np.array([1., 0., 0.])
 							## TEMP: Wall convex corner
 							# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
 							# 	sn2 = np.array([1., 0., 0.])	
@@ -395,8 +395,8 @@ class RobotController(CorinManager):
 								self.Robot.Leg[j].change_phase('support', self.Robot.XHc.world_X_base)
 								self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
 								## TEMP: Chimney corner
-								if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
-									self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
+								# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
+								# 	self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
 								## TEMP: Wall Convex corner
 								# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
 								# 	self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
@@ -541,7 +541,6 @@ class RobotController(CorinManager):
 		
 		## PI controller
 		u = self.Robot.Base_Ctrl.update(P6e_world_X_base)
-		
 
 		for j in range (0, 6):
 			# Determine foot position wrt base & coxa. 
@@ -560,10 +559,13 @@ class RobotController(CorinManager):
 					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 
 				self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
-				# if j==5:
+				# if j==4:
 					# print 'u: ', np.round(u.flatten(),4)
 					# print slide_gain
 					# print 'S c wXb: ', np.round(self.Robot.XHc.world_X_base[:3,3],4)
+					# print 'S d wXb: ', np.round(self.Robot.XHd.world_X_base,3)
+					# print 'S c wXf: ', np.round(self.Robot.Leg[j].XHc.world_X_foot,4)
+					# print 'S c bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3],4)
 					# print 'S c wXb: ', np.round(comp_world_X_base[:3,3],4)
 					# print 'S d cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3],4)
 				

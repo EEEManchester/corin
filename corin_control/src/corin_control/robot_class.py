@@ -110,13 +110,12 @@ class RobotState:
 			self.Leg[j].XHc.world_base_X_PEP = self.Leg[j].XHc.base_X_PEP.copy()
 			self.Leg[j].XHc.update_world_base_X_NRP(self.P6c.world_X_base)
 			self.Leg[j].XHd.update_world_base_X_NRP(self.P6c.world_X_base)
+
 		self.task_X_joint()
 		self.Gait.cs = [0]*6
 		self.update_stability_region()
 		self.Gait.set_step_stroke(leg_stance, LEG_CLEAR, STEP_STROKE)
 		
-		# print ">> INITIALISED ROBOT CLASS"
-
 	def update_state(self,**options):
 		""" update robot state using readings from topics """
 
@@ -179,7 +178,7 @@ class RobotState:
 				# print 'Bound exceed ',j
 				# self.suspend = True
 				pass
-		# self.cstate = [1 if i==True else 0 for i in self.cstate ]
+		
 		self.XHc.base_X_COM[:3,3:4] = self.Rbdl.update_CoM(qpc)
 		self.XHc.update_world_X_COM()
 
@@ -203,11 +202,11 @@ class RobotState:
 
 			# self.P6c.world_X_base = np.vstack((pos, angles))
 			# self.V6c.world_X_base = np.vstack((vel, angular))
-			# print np.round(self.P6c.world_X_base.flatten(),4)
+		
 			# self.P6c.world_X_base[0:3] = pos
 			# self.P6c.world_X_base[3:6] = angles
 			# err = self.P6c.world_X_base - np.vstack((pos, angles))
-			# print np.round(err.flatten(),3)
+	
 			# TODO Sort the logic here
 			if (False and self.imu is not None):
 				## quaternion to euler transformation
@@ -227,9 +226,8 @@ class RobotState:
 	def update_stability_margin(self):
 		""" updates the current stability margin """
 
-		# valid, sm = self.SM.point_in_region(self.XHc.world_X_COM[:3,3])
+		valid, sm = self.SM.point_in_region(self.XHc.world_X_COM[:3,3])
 		valid, sm = self.Sp.point_in_polygon(self.XHc.world_X_COM[:3,3])
-		# print np.round(self.XHc.world_X_COM[:3,3].flatten(),3)
 		if not valid:
 			print colored("Convex hull violated %.3f %.3f " %(valid, sm), 'red')
 			# self.invalid = True
@@ -258,7 +256,7 @@ class RobotState:
 			# raw_input('sm invalid')
 		else:
 			self.invalid = False
-			# pass
+			
 		## Force/Moment balance
 		# stack_leg_forces = [self.Leg[j].F6c.world_X_foot[:3] for j in range(6) if self.Gait.cs[j] == 0]
 		# stack_leg_normal = [self.Leg[j].snorm for j in range(6) if self.Gait.cs[j] == 0]
@@ -273,7 +271,7 @@ class RobotState:
 			stack_world_X_foot = [np.round(self.Leg[j].XHc.world_X_foot[:3,3],2).tolist() for j in range(6) if self.Gait.cs[j] == 0]
 			stack_normals = [[self.Leg[j].snorm.tolist()] for j in range(6) if self.Gait.cs[j] == 0]
 			
-			# self.SM.compute_support_region(stack_world_X_foot, stack_normals)
+			self.SM.compute_support_region(stack_world_X_foot, stack_normals)
 			self.Sp.compute_support_polygon(stack_world_X_foot)
 			self.SM.prev_topology = list(self.Gait.cs)
 		else:
@@ -307,7 +305,7 @@ class RobotState:
 		else:
 			self.Gait.ps = self.Gait.cs
 			self.Gait.cs = new_phase
-		# print self.Gait.cs, self.Gait.ps
+
 		# update robot leg phase_change
 		for j in range(0,6):
 			if (self.Gait.cs[j] == 1):
@@ -388,10 +386,6 @@ class RobotState:
 			for z in range(0,3):
 				tau.append(tau_leg.item(z))
 
-			# if (j==1):
-			# 	print j, ' Fwor ', np.round(self.Leg[j].F6d.world_X_foot[:3].flatten(),3)
-			# 	print j, ' Fhip ', np.round(self.Leg[j].F6d.coxa_X_foot[:3].flatten(),3)
-			# 	print j, ' tau  ', np.round(tau_leg.flatten(),3)
 		if (len(tau)==18):
 			return tau
 		else:
@@ -411,10 +405,7 @@ class RobotState:
 				offset = np.zeros(3)
 			new_pos = self.Leg[j].XHd.coxa_X_foot[:3,3] + offset
 			feet_pos.append(new_pos)
-			# if j==4:
-			# 	print 'cXf: ', np.round(self.Leg[4].XHd.coxa_X_foot[:3,3],4)
-			# 	print 'new: ', np.round(new_pos,4)
-			# 	print '======================================='
+			
 		feet_pos = [item for sublist in feet_pos for item in sublist]
 		return self.task_X_joint(feet_pos)
 		# return self.task_X_joint()
@@ -458,7 +449,6 @@ class RobotState:
 					contact_index[j] = 0
 
 		if transfer_total == transfer_index.count(-1):
-			# print 'All swing in contact!'
 			return True, transfer_index
 		else:
 			return False, transfer_index
@@ -501,7 +491,6 @@ class RobotState:
 
 		## Select stance according to motion primitive 
 		if (stance_type == "ground"):
-			# print 'Flat selected'
 			leg_stance[0] = np.array([ stance_width*np.cos(teta_f*np.pi/180), stance_width*np.sin(teta_f*np.pi/180), -base_height ])
 			leg_stance[1] = np.array([ stance_width, 0, -base_height])
 			leg_stance[2] = np.array([ stance_width*np.cos(teta_r*np.pi/180), stance_width*np.sin(teta_r*np.pi/180), -base_height ])
@@ -529,7 +518,7 @@ class RobotState:
 			leg_stance[5] = np.array([ wg_stance*np.cos(teta_r*np.pi/180), wg_stance*np.sin(-teta_r*np.pi/180), wg_height ])
 
 		else:
-			print 'Invalid stance selected!'
+			print colored('Invalid stance selected!','red')
 			leg_stance = None
 			
 		return leg_stance

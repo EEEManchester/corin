@@ -59,7 +59,7 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
 		self.control_loop = "close" 	# run controller in open or closed loop
 
@@ -602,7 +602,7 @@ class CorinManager:
 					d_travel = np.array([0.15,0.,0.,0.,0.,0.]).reshape(6,1)
 					base_height = 0.3
 				elif motion == 'wall':
-					map_offset = (0.45, 0.36)
+					map_offset = (0.33, 0.36)
 					d_travel = np.array([0.15,0.,0.,0.,0.,0.]).reshape(6,1)
 				elif motion == 'taros':
 					map_offset = (0.33, 0.39)
@@ -624,12 +624,14 @@ class CorinManager:
 					self.Robot.init_fault_stance()
 					
 				else:
-					self.Robot.P6c.world_X_base = np.array([map_offset[0], map_offset[1], 
-															BODY_HEIGHT, 0., 0., 0.]).reshape(6,1)
-					# temp_pos = self.Robot.P6c.world_X_base.copy()
 					# self.Robot.P6c.world_X_base = np.array([map_offset[0], map_offset[1], 
-					# 										temp_pos.item(2), 0., 0., 0.]).reshape(6,1)
-					self.Robot.P6c.world_X_base_offset = np.array([map_offset[0], map_offset[1],
+					# 										BODY_HEIGHT, 0., 0., 0.]).reshape(6,1)
+					# self.Robot.P6c.world_X_base_offset = np.array([map_offset[0], map_offset[1],
+					# 											0.,0.,0.,0.]).reshape(6,1)
+					temp_pos = self.Robot.P6c.world_X_base.copy()
+					self.Robot.P6c.world_X_base = np.array([map_offset[0], map_offset[1], 
+															temp_pos.item(2), temp_pos.item(3), 0., 0.]).reshape(6,1)
+					self.Robot.P6c.world_X_base_offset = np.array([map_offset[0], map_offset[1]-temp_pos.item(1),
 																0.,0.,0.,0.]).reshape(6,1)
 					# print self.Robot.P6c.world_X_base.flatten()
 					self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()

@@ -230,14 +230,15 @@ CK = KDL()
 cd = [0.2096,  0.0003, -0.0934]
 cd = [ 0.0063, 0., -0.2   ]
 cd =  [-0.0007,  0.0008 ,-0.1998]
-cd = np.array([ 0.353 , -0.0079,  0.0643])
+# cd = np.array([ 0.353 , -0.0079,  0.0643])
 # print np.linalg.norm(cd)
-# qp = CK.leg_IK(cd, 0)
+qp = CK.leg_IK(cd, 0)
 # print np.round(qp,4)
 
-
-# cp = CK.leg_FK(qp)
+qp = [ 0.69766284,  0.70510494, -2.03054161]
+cp = CK.leg_FK(qp)
 # print np.round(cp,4)
+# print np.linalg.norm(cp)
 # print np.rad2deg(qp[1])
 # print qp
 # CK.check_singularity(qp)
