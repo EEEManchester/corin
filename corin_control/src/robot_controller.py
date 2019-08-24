@@ -46,7 +46,9 @@ class RobotController(CorinManager):
 			self.Visualizer.show_motion_plan(self.Robot.P6c.world_X_base, motion_plan.qbp, motion_plan.f_world_X_foot)
 			if (self.interface == 'rviz'):
 				self.publish_topics(JointTrajectoryPoints(18,([],self.Robot.qc.position,[],[])))
-
+			print np.round(self.Robot.qc.position,4)
+			print np.round(self.Robot.P6c.world_X_base.flatten(),4)
+			
 			# Plot.plot_2d(base_path.X.t, base_path.X.xv)
 			# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 			# print world_X_footholds[0].xp

@@ -56,16 +56,41 @@ if __name__ == "__main__":
 		pose_x = float(sys.argv[3])
 		pose_y = float(sys.argv[4])
 		pose_z = float(sys.argv[5])
+	pose_roll 	= 0.
+	pose_pitch 	= 0.
+	pose_yaw 	= 0.
 
 	## Select default joints
 	if motion == 'chimney_nom':
-		# path width 0.63 m
-		pose_x = 0.1
-		pose_y = 0.1
+		pose_x = 0.299
+		pose_y = 0.283
 		pose_z = 0.5
-		qd = [ 0.6981317, 1.00826008, -2.01652016,  0.,          1.00826008, -2.01652016,
-			 -0.6981317, 1.00826008, -2.01652016, -0.6981317,   1.00826008, -2.01652016,
-			  0.       , 1.00826008, -2.01652016,  0.6981317,   1.00826008, -2.01652016]
+		qd = [ 	 0.9133,  1.1325, -2.265,   0.,      1.1483, -2.2967, -0.9133,  1.1325, -2.265,
+ 				-0.6981,  1.152 , -2.304,   0.,      1.152 , -2.304 ,  0.6981,  1.152 , -2.304 ]
+ 	elif motion == 'chimney_heu':
+		pose_x = 0.299
+		pose_y = 0.377
+		pose_z = 0.5
+		qd = [ 	 0.8633,  0.9134, -1.8269,  0.,      0.9273, -1.8546, -0.8633,  0.9134, -1.8269,
+ 				-0.6981,  0.9273, -1.8546, -0.,      0.9273, -1.8546,  0.6981,  0.9273, -1.8546]
+ 	elif motion == 'wall_concave':
+		pose_x = 0.2307
+		pose_y = 0.1293
+		pose_z = 0.42
+		pose_roll 	= -1.5708
+		pose_pitch 	= 0.
+		pose_yaw 	= 0.1319 
+		qd = [ 	 0.6981,  0.6435, -0.6435, -0.,      0.6435, -0.6435, -0.6981,  0.6435, -0.6435,
+ 				-0.6981,  0.109 , -1.7618,  0.,      0.2149, -1.7488,  0.6981,  0.3072, -1.7148]
+ 	elif motion == 'wall_convex':
+		pose_x = 0.2227
+		pose_y = 0.1373
+		pose_z = 0.42
+		pose_roll 	= 1.5708
+		pose_pitch 	= 0.
+		pose_yaw 	= 0.1319
+		qd = [ 	 0.69813, 0.29430, -1.8653, 0.00000, 0.18101, -1.8808, -0.6981, 0.05612, -1.8745, 
+				-0.69813, 0.64350, -0.6435, 0.00000, 0.64350, -0.6435, 0.69813, 0.64350, -0.6435]
 	else:
 		qd = [0, 0.34, -1.85]*6
 
@@ -97,9 +122,9 @@ if __name__ == "__main__":
 	pose.position.x		= pose_x
 	pose.position.y		= pose_y
 	pose.position.z		= pose_z
-	roll 				= 0.0
-	pitch 				= 0.0
-	yaw 				= 0.0
+	roll 				= pose_roll
+	pitch 				= pose_pitch
+	yaw 				= pose_yaw
 	quaternion 			= tf.transformations.quaternion_from_euler(np.deg2rad(roll), np.deg2rad(pitch), np.deg2rad(yaw))
 	pose.orientation.x	= quaternion[0]
 	pose.orientation.y	= quaternion[1]
