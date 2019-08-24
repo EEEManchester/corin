@@ -15,6 +15,7 @@
   <arg name="x" default="0"/>                 <!-- robot spawn position in world x-axis -->
   <arg name="y" default="0"/>                 <!-- robot spawn position in world y-axis -->
   <arg name="z" default="0.11"/>              <!-- robot spawn position in world z-axis -->
+  <arg name="tdelay" default="5.0"/>          <!-- delay before setting robot pose -->
 
   <!--Set world to be launched -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -40,6 +41,6 @@
   <node name="contact_node" pkg="corin_gazebo" type="foot_contact.py"/>
   
   <!-- Get robot to 0 position -->
-  <node name="goto0" pkg="corin_gazebo" type="joint_default" output="screen" args="5.0 $(arg x) $(arg y) $(arg z)" />
+  <node name="goto0" pkg="corin_gazebo" type="robot_default" output="screen" args="$(arg tdelay) $(arg world) $(arg x) $(arg y) $(arg z)" />
 
 </launch>

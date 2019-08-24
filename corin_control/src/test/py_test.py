@@ -3,6 +3,8 @@
 import numpy as np
 import copy
 import math
+print np.__path__
+print np.__version__
 a = np.array([1,2,3])
 b = np.array([4,5,6])
 c = np.array([a,b]).reshape(6,1)
@@ -35,5 +37,7 @@ for i in a:
 	except:
 		data.append(i)
 		
-print data#[item for i in data for item in i]
+		
+print [0, 0.34, -1.85]*6
+
 
