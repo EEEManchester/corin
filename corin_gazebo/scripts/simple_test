@@ -1,0 +1,18 @@
+#!/usr/bin/env python
+
+""" Script to move robot joints into a pre-defined position
+	the position is not held unless physics engine is paused
+"""
+
+import rospy, sys
+from gazebo_msgs.srv import *
+from std_srvs.srv import Empty
+
+if __name__ == "__main__":
+	rospy.wait_for_service("/gazebo/get_physics_properties", 0.5)
+	try:
+		check_serv_ = rospy.ServiceProxy("/gazebo/get_physics_properties", Empty)
+		resp = check_serv_()
+	except rospy.ServiceException, e:
+		print "Service call failed: %s"%e
+	print resp.pause

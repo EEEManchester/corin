@@ -3,11 +3,9 @@
 import numpy as np
 import copy
 import math
-print np.__path__
-print np.__version__
-a = np.array([1,2,3])
-b = np.array([4,5,6])
-c = np.array([a,b]).reshape(6,1)
+import sys
+from termcolor import colored
+import argparse
 
 def seq(start, stop, step=1):
 	n = int(round((stop - start)/float(step)))
@@ -18,26 +16,23 @@ def seq(start, stop, step=1):
 	else:
 		return([])
 
-tphase = 1.8
-lenp = seq(0, tphase*5, tphase)
-# print len(lenp), lenp
+if __name__ == "__main__":
 
-a = [np.array([1,2,3]), 0.5, [11,12], np.array([100,200]).reshape((2,1))]
+	# print colored("Moving robot to default pose ...", 'green')
 
-data = []
-for i in a:
-	try:
-		temp = iter(i)
-		try:
-			for item in i.flatten():
-				data.append(item) 
-		except:
-			for item in i:
-				data.append(item)
-	except:
-		data.append(i)
-		
-		
-print [0, 0.34, -1.85]*6
+	# Set up argument parser
+	parser = argparse.ArgumentParser(description='Python test script.')
+	# Base pose
+	parser.add_argument("-x", "--base_x", type=float, default=0., help="base pose x")
+	parser.add_argument("-y", "--base_y", type=float, default=0., help="base pose y")
+	parser.add_argument("-z", "--base_z", type=float, default=0., help="base pose z")
+	parser.add_argument("-qr", "--base_roll", type=float, default=0., help="base roll")
+	parser.add_argument("-qp", "--base_pitch", type=float, default=0., help="base pitch")
+	parser.add_argument("-qy", "--base_yaw", type=float, default=0., help="base yaw")
+	# Motion
+	parser.add_argument("-m", "--motion", type=str, default="normal", help="type of motion")
 
-
+	args = vars(parser.parse_args())
+	print args
+	# print("Hi there {}, it's nice to meet you!".format(args["name"]))
+	print args["base_x"]

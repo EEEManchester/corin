@@ -2,8 +2,8 @@
 <sdf version='1.4'>
   <world name='default'>
     <light name='sun' type='directional'>
-      <cast_shadows>0</cast_shadows>
-      <pose>-100 -100 5 0 -0 0</pose>
+      <cast_shadows>1</cast_shadows>
+      <pose>0 0 10 0 -0 0</pose>
       <diffuse>0.8 0.8 0.8 1</diffuse>
       <specular>0.2 0.2 0.2 1</specular>
       <attenuation>
@@ -16,43 +16,47 @@
     </light>
 
     <!-- ============================================================== -->
-    <!--                        Ground Plane                            -->
+    <!--                        Ground Plane                            -->  
     <!-- ============================================================== -->
     <model name='ground_plane'>
       <static>1</static>
       <link name='link'>
+
         <collision name='collision'>
           <geometry>
             <plane>
               <normal>0 0 1</normal>
-              <size>10 10</size>
+              <size>100 100</size>
             </plane>
           </geometry>
           <surface>
             <friction>
               <ode>
-                <mu>10000</mu>
-                <mu2>10000</mu2>
+                <mu>1</mu>
+                <mu2>1</mu2>
               </ode>
-              <bullet>
-                <mu>10000</mu>
-                <mu2>10000</mu2>
-              </bullet>
             </friction>
             <bounce/>
             <contact>
-              <ode/>
-              <bullet/>
+              <ode>
+                <kp>1e5</kp>
+                <kd>10.0</kd>
+                <soft_cfm>0.0</soft_cfm>
+                <soft_erp>0.2</soft_erp>
+                <maxVel>0.0001</maxVel>     <!-- contact correction velocity truncation -->
+                <minDepth>0.001</minDepth>  <!-- penetration between objects -->
+              </ode>
             </contact>
           </surface>
           <max_contacts>10</max_contacts>
         </collision>
+
         <visual name='visual'>
           <cast_shadows>0</cast_shadows>
           <geometry>
             <plane>
               <normal>0 0 1</normal>
-              <size>10 10</size>
+              <size>1000 1000</size>
             </plane>
           </geometry>
           <material>
@@ -62,6 +66,7 @@
             </script>
           </material>
         </visual>
+
         <velocity_decay>
           <linear>0</linear>
           <angular>0</angular>
@@ -73,50 +78,53 @@
     </model>
 
     <!-- ============================================================== -->
-    <!--                            X - Wall                            -->
+    <!--                        Inner X - Wall                          -->
     <!-- ============================================================== -->
-    <model name='x_wall'>
-      <!-- centred at origin -->
-      <!-- <pose frame=''>0 -0.37 0 0 -0 0</pose>    -->
-      <pose frame=''>0.2 -0.38 0 0 -0 0</pose>   <!-- follow RViZ -->
-      <link name='xwall'>
+    <model name='outer_x_wall'>
+      <pose frame=''>0.15 0.285 0 0 -0 0</pose> 
+      <link name='outer_wall_x'>
 
-        <collision name='xwall_Collision'>
+        <collision name='outer_x_wall_Collision'>
           <pose frame=''>0 0 0.45 0 -0 0</pose>
           <geometry>
             <box>
-              <size>0.39 0.03 0.9</size>
+              <size>0.33 0.06 0.9</size>
             </box>
           </geometry>
           <surface>
-              <friction>
-                <ode>
-                  <mu>10000</mu>
-                  <mu2>10000</mu2>
-                </ode>
-              </friction>
-              <bounce/>
-              <contact>
-                <ode/>
-                <bullet/>
-              </contact>
-            </surface>
+            <friction>
+              <ode>
+                <mu>0.7</mu>
+                <mu2>0.7</mu2>
+              </ode>
+            </friction>
+            <bounce/>
+            <contact>
+              <ode>
+                <kp>1e5</kp>
+                <kd>10.0</kd>
+                <soft_cfm>0.0</soft_cfm>
+                <soft_erp>0.2</soft_erp>
+                <maxVel>0.0001</maxVel>     <!-- contact correction velocity truncation -->
+                <minDepth>0.001</minDepth>  <!-- penetration between objects -->
+              </ode>
+            </contact>
+          </surface>
+          <max_contacts>10</max_contacts>
           </collision>
 
-          <visual name='xwall_Visual'>
+          <visual name='outer_x_wall_Visual'>
             <cast_shadows>0</cast_shadows>
             <pose frame=''>0 0 0.45 0 -0 0</pose>
             <geometry>
               <box>
-                <size>0.39 0.03 0.9</size>
+                <size>0.33 0.06 0.9</size>
               </box>
             </geometry>
             <material>
               <script>
-                <!-- <uri>file://media/materials/scripts/gazebo.material</uri> -->
                 <name>Gazebo/SkyBlue</name>
               </script>
-              <!-- <ambient>0.435294 0.796078 0.67451 1</ambient> -->
             </material>
           </visual>
       </link>
@@ -124,60 +132,66 @@
     </model>
 
     <!-- ============================================================== -->
-    <!--                            Y - Wall                            -->
+    <!--                        Inner Y - Wall                          -->
     <!-- ============================================================== -->
-    <model name='y_wall'>
+    <model name='outer_y_wall'>
       <!-- centred at origin -->
-      <!-- <pose frame=''>0.315 0.035 0 0 -0 0</pose> -->
-      <pose frame=''>0.38 -0.11 0 0 -0 0</pose>
-      <link name='ywall'>
+      <pose frame=''>0.345 0.495 0 0 -0 0</pose>
+      <link name='outer_wall_y'>
 
-        <collision name='ywall_Collision'>
+        <collision name='outer_y_wall_Collision'>
           <pose frame=''>0 0 0.45 0 -0 0</pose>
           <geometry>
             <box>
-              <size>0.03 0.51 0.9</size>
+              <size>0.06 0.48 0.9</size>
             </box>
           </geometry>
           <surface>
-              <friction>
-                <ode>
-                  <mu>10000</mu>
-                  <mu2>10000</mu2>
-                </ode>
-              </friction>
-              <bounce/>
-              <contact>
-                <ode/>
-                <bullet/>
-              </contact>
-            </surface>
+            <friction>
+              <ode>
+                <mu>0.7</mu>
+                <mu2>0.7</mu2>
+              </ode>
+            </friction>
+            <bounce/>
+            <contact>
+              <ode>
+                <kp>1e5</kp>
+                <kd>10.0</kd>
+                <soft_cfm>0.0</soft_cfm>
+                <soft_erp>0.2</soft_erp>
+                <maxVel>0.0001</maxVel>
+                <minDepth>0.001</minDepth>
+              </ode>
+            </contact>
+          </surface>
+          <max_contacts>10</max_contacts>
           </collision>
 
-          <visual name='ywall_Visual'>
+          <visual name='outer_y_wall_Visual'>
             <cast_shadows>0</cast_shadows>
             <pose frame=''>0 0 0.45 0 -0 0</pose>
             <geometry>
               <box>
-                <size>0.03 0.51 0.9</size>
+                <size>0.06 0.48 0.9</size>
               </box>
             </geometry>
             <material>
               <script>
-                <!-- <uri>file://media/materials/scripts/gazebo.material</uri> -->
                 <name>Gazebo/Orange</name>
               </script>
             </material>
           </visual>
-
       </link>
       <static>1</static>
     </model>
 
     <!-- ============================================================== -->
-    <!--                        Physics Engine                          -->
+    <!--                        Physics Engine                          -->  
     <!-- ============================================================== -->
+    <!-- Default: 'quick' -->
     <physics type='ode'>
+
       <simbody>
         <accuracy>0.005</accuracy>
         <max_transient_velocity>0.005</max_transient_velocity>
@@ -186,11 +200,22 @@
           <dissipation>20.0</dissipation>
         </contact>
       </simbody>
+
       <ode>
         <solver>
-          <iters>250</iters>
+          <type>quick</type>
+          <iters>400</iters>
+          <sor>1.25</sor>
+          <friction_model>cone_model</friction_model>
         </solver>
+        <constraints>
+          <cfm>0.0</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>0.01</contact_max_correcting_vel>
+          <contact_surface_layer>0.0001</contact_surface_layer>
+        </constraints>
       </ode>
+
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1</real_time_factor>
       <real_time_update_rate>1000</real_time_update_rate>
@@ -198,17 +223,12 @@
     </physics>
 
     <!-- ============================================================== -->
-    <!--                          Display                               -->
+    <!--                            Visual                              -->  
     <!-- ============================================================== -->
     <scene>
       <ambient>0.4 0.4 0.4 1</ambient>
       <background>0.7 0.7 0.7 1</background>
-      <shadows>0</shadows>
-      <sky>
-        <clouds>
-          <speed>1</speed>
-        </clouds>
-      </sky>
+      <shadows>1</shadows>
     </scene>
 
     <spherical_coordinates>
@@ -236,10 +256,9 @@
 
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>2.14 -2.16 1.15 0 0.3 2.26</pose>  
+        <pose>1.5 -1.7 0.7 0 0.275643 2.35619</pose>
         <view_controller>orbit</view_controller>
       </camera>
     </gui>
-
   </world>
 </sdf>

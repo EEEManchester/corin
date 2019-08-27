@@ -4,13 +4,13 @@
 	the position is not held unless physics engine is paused
 """
 
-import rospy, sys, os, time
+import rospy, sys
 import string
 import warnings
-import tf
 from math import pi
 from termcolor import colored
 import numpy as np
+import argparse
 
 from gazebo_msgs.srv import *
 from gazebo_ros import gazebo_interface
@@ -19,6 +19,7 @@ from gazebo_msgs.msg import ModelState
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
+import tf
 
 JOINT_NAME 	  = [None]*18
 JOINT_NAME[0] = 'lf_q1_joint'
@@ -40,124 +41,178 @@ JOINT_NAME[15] = 'rr_q1_joint'
 JOINT_NAME[16] = 'rr_q2_joint'
 JOINT_NAME[17] = 'rr_q3_joint'
 
-if __name__ == "__main__":
-
-	print colored("Moving robot to default pose ...", 'green')
-
-	if len(sys.argv) < 2:
-		sleep_time = 0.0
-		motion = 'flat'
-		pose_x = 0.
-		pose_y = 0.
-		pose_z = 0.
-	else:
-		sleep_time = float(sys.argv[1])
-		motion = sys.argv[2]
-		pose_x = float(sys.argv[3])
-		pose_y = float(sys.argv[4])
-		pose_z = float(sys.argv[5])
-	pose_roll 	= 0.
-	pose_pitch 	= 0.
-	pose_yaw 	= 0.
-
-	## Select default joints
-	if motion == 'chimney_nom':
-		pose_x = 0.299
-		pose_y = 0.283
-		pose_z = 0.5
-		qd = [ 	 0.9133,  1.1325, -2.265,   0.,      1.1483, -2.2967, -0.9133,  1.1325, -2.265,
- 				-0.6981,  1.152 , -2.304,   0.,      1.152 , -2.304 ,  0.6981,  1.152 , -2.304 ]
- 	elif motion == 'chimney_heu':
-		pose_x = 0.299
-		pose_y = 0.377
-		pose_z = 0.5
-		qd = [ 	 0.8633,  0.9134, -1.8269,  0.,      0.9273, -1.8546, -0.8633,  0.9134, -1.8269,
- 				-0.6981,  0.9273, -1.8546, -0.,      0.9273, -1.8546,  0.6981,  0.9273, -1.8546]
- 	elif motion == 'wall_concave':
-		pose_x = 0.2307
-		pose_y = 0.1293
-		pose_z = 0.42
-		pose_roll 	= -1.5708
-		pose_pitch 	= 0.
-		pose_yaw 	= 0.1319 
-		qd = [ 	 0.6981,  0.6435, -0.6435, -0.,      0.6435, -0.6435, -0.6981,  0.6435, -0.6435,
- 				-0.6981,  0.109 , -1.7618,  0.,      0.2149, -1.7488,  0.6981,  0.3072, -1.7148]
- 	elif motion == 'wall_convex':
-		pose_x = 0.2227
-		pose_y = 0.1373
-		pose_z = 0.42
-		pose_roll 	= 1.5708
-		pose_pitch 	= 0.
-		pose_yaw 	= 0.1319
-		qd = [ 	 0.69813, 0.29430, -1.8653, 0.00000, 0.18101, -1.8808, -0.6981, 0.05612, -1.8745, 
-				-0.69813, 0.64350, -0.6435, 0.00000, 0.64350, -0.6435, 0.69813, 0.64350, -0.6435]
-	else:
-		qd = [0, 0.34, -1.85]*6
-
-	## Define the variables
-	# For joint position
-	param_name              = ""
-	model_name              = ""
-	robot_namespace         = ""
-	gazebo_namespace        = "/gazebo"
-	joint_names             = []
-	joint_positions         = []
-
-	# For robot pose
-	model_state = ModelState()
-	pose  		= Pose()
-	twist 		= Twist()
-
-	# Setting the parameters
-	model_name = 'corin'
-	param_name = 'robot_description'
-	reference_frame	= 'world'
-	rospy.set_param('standup', False)
-
-	for i in range(18):
-		joint_names.append(JOINT_NAME[i])
-		joint_positions.append(qd[i])
-
-	## Set robot position
-	pose.position.x		= pose_x
-	pose.position.y		= pose_y
-	pose.position.z		= pose_z
-	roll 				= pose_roll
-	pitch 				= pose_pitch
-	yaw 				= pose_yaw
-	quaternion 			= tf.transformations.quaternion_from_euler(np.deg2rad(roll), np.deg2rad(pitch), np.deg2rad(yaw))
-	pose.orientation.x	= quaternion[0]
-	pose.orientation.y	= quaternion[1]
-	pose.orientation.z	= quaternion[2]
-	pose.orientation.w	= quaternion[3]
-
-	model_state.model_name 		= model_name
-	model_state.pose 			= pose
-	model_state.reference_frame = reference_frame
-
-	gazebo_namespace = '/gazebo'
-
-
-	## Move robot pose
-	rospy.wait_for_service('%s/set_model_state'%(gazebo_namespace))
-	rospy.sleep(sleep_time)
+def check_physics_running():
+	rospy.wait_for_service("/gazebo/get_physics_properties", 0.5)
 	try:
-		set_model_state = rospy.ServiceProxy('%s/set_model_state'%(gazebo_namespace), SetModelState)
-		rospy.loginfo("Calling service %s/set_model_state"%gazebo_namespace)
-		resp = set_model_state(model_state)
-		rospy.loginfo("Set model state status: %s"%resp.status_message)
-		print resp.status_message
-
-	except rospy.ServiceException as e:
-		print("Service call failed: %s" % e)
-
-
-	## Move joints
-	rospy.wait_for_service('%s/set_model_configuration'%(gazebo_namespace))
-	try:
-		success = gazebo_interface.set_model_configuration_client(model_name, param_name, 
-                                                                  joint_names, joint_positions, gazebo_namespace)
-		print 'SetJointState:', success
-		rospy.set_param(model_name + '/standing', True)
+		check_serv_ = rospy.ServiceProxy("/gazebo/get_physics_properties", Empty)
+		resp = check_serv_()
 	except rospy.ServiceException, e:
-		print "set model configuration service call failed: %s"%e
+		print "Service call failed: %s"%e
+	return resp.pause
+
+class RobotPose:
+	def __init__(self):
+		rospy.init_node('PoseModifier') 		# Initialises node
+
+		self.model_name = 'corin'
+		self.reference_frame = 'world'
+		self.joint_pub_ = {}
+
+		self.initialise_topics()
+
+	def initialise_topics(self):
+
+		self.joint_pub_[0]  = rospy.Publisher(self.model_name + '/lf_q1_joint/command', Float64, queue_size=1)
+		self.joint_pub_[1]  = rospy.Publisher(self.model_name + '/lf_q2_joint/command', Float64, queue_size=1)
+		self.joint_pub_[2]  = rospy.Publisher(self.model_name + '/lf_q3_joint/command', Float64, queue_size=1)
+		self.joint_pub_[3]  = rospy.Publisher(self.model_name + '/lm_q1_joint/command', Float64, queue_size=1)
+		self.joint_pub_[4]  = rospy.Publisher(self.model_name + '/lm_q2_joint/command', Float64, queue_size=1)
+		self.joint_pub_[5]  = rospy.Publisher(self.model_name + '/lm_q3_joint/command', Float64, queue_size=1)
+		self.joint_pub_[6]  = rospy.Publisher(self.model_name + '/lr_q1_joint/command', Float64, queue_size=1)
+		self.joint_pub_[7]  = rospy.Publisher(self.model_name + '/lr_q2_joint/command', Float64, queue_size=1)
+		self.joint_pub_[8]  = rospy.Publisher(self.model_name + '/lr_q3_joint/command', Float64, queue_size=1)
+		self.joint_pub_[9]  = rospy.Publisher(self.model_name + '/rf_q1_joint/command', Float64, queue_size=1)
+		self.joint_pub_[10] = rospy.Publisher(self.model_name + '/rf_q2_joint/command', Float64, queue_size=1)
+		self.joint_pub_[11] = rospy.Publisher(self.model_name + '/rf_q3_joint/command', Float64, queue_size=1)
+		self.joint_pub_[12] = rospy.Publisher(self.model_name + '/rm_q1_joint/command', Float64, queue_size=1)
+		self.joint_pub_[13] = rospy.Publisher(self.model_name + '/rm_q2_joint/command', Float64, queue_size=1)
+		self.joint_pub_[14] = rospy.Publisher(self.model_name + '/rm_q3_joint/command', Float64, queue_size=1)
+		self.joint_pub_[15] = rospy.Publisher(self.model_name + '/rr_q1_joint/command', Float64, queue_size=1)
+		self.joint_pub_[16] = rospy.Publisher(self.model_name + '/rr_q2_joint/command', Float64, queue_size=1)
+		self.joint_pub_[17] = rospy.Publisher(self.model_name + '/rr_q3_joint/command', Float64, queue_size=1)
+
+	def set_full_pose(self, qb, q):
+		
+		self.set_leg_pose(q)
+		self.set_body_pose(qb)
+		self.set_leg_pose(q)
+
+		print 'Robot Pose Set!'
+
+	def set_leg_pose(self, q):
+		""" Set leg joint position - method depends whether simulator active """
+		# Publish joint states
+		if check_physics_running():
+			for c in range(0,3):
+				for j in range(0,18):
+					self.joint_pub_[j].publish(q[j])
+				rospy.sleep(0.4) 	
+		else:
+			## Move joints
+			rospy.wait_for_service('%s/set_model_configuration'%(gazebo_namespace))
+			for i in range(0,3):
+				try:
+					success = gazebo_interface.set_model_configuration_client(model_name, param_name, 
+			                                                                  joint_names, joint_positions, gazebo_namespace)
+					print 'SetJointState:', success
+					rospy.set_param(model_name + '/standing', True)
+				except rospy.ServiceException, e:
+					print "set model configuration service call failed: %s"%e
+				rospy.sleep(0.5)
+
+	def set_body_pose(self, qb):
+		# Define variables
+		model_state = ModelState()
+		pose  		= Pose()
+		twist 		= Twist()
+
+		pose.position.x		= qb[0]#pose_x
+		pose.position.y		= qb[1]#pose_y
+		pose.position.z		= qb[2]#pose_z
+		roll 				= qb[3]#pose_roll
+		pitch 				= qb[4]#pose_pitch
+		yaw 				= qb[5]#pose_yaw
+		quaternion 			= tf.transformations.quaternion_from_euler(roll, pitch, yaw)
+		pose.orientation.x	= quaternion[0]
+		pose.orientation.y	= quaternion[1]
+		pose.orientation.z	= quaternion[2]
+		pose.orientation.w	= quaternion[3]
+
+		model_state.model_name 		= self.model_name
+		model_state.reference_frame = self.reference_frame
+		model_state.pose 			= pose
+
+		gazebo_namespace = '/gazebo'
+
+		try:
+			rospy.wait_for_service('%s/set_model_state'%(gazebo_namespace), 2)
+			set_model_state = rospy.ServiceProxy('%s/set_model_state'%(gazebo_namespace), SetModelState)
+			# rospy.loginfo("Calling service %s/set_model_state"%gazebo_namespace)
+			resp = set_model_state(model_state)
+			# rospy.loginfo("Set model state status: %s"%resp.status_message)
+			print resp.status_message
+
+		except rospy.ServiceException as e:
+			print("Service call failed: %s" % e)
+		except rospy.ROSException as e:
+			# Gazebo inactive
+			print("Service call failed: %s" % e)
+
+def parse_arguments():
+	# Set up argument parser
+	parser = argparse.ArgumentParser(description='Python test script.')
+	# Base pose
+	parser.add_argument("-x", "--base_x", type=float, default=0., help="base pose x")
+	parser.add_argument("-y", "--base_y", type=float, default=0., help="base pose y")
+	parser.add_argument("-z", "--base_z", type=float, default=0., help="base pose z")
+	parser.add_argument("-qr", "--base_roll", type=float, default=0., help="base roll")
+	parser.add_argument("-qp", "--base_pitch", type=float, default=0., help="base pitch")
+	parser.add_argument("-qy", "--base_yaw", type=float, default=0., help="base yaw")
+	# Motion
+	parser.add_argument("-m", "--motion", type=str, default="normal", help="type of motion")
+	# Delay
+	parser.add_argument("-t", "--delay", type=float, default=0., help="time delay")
+	# Parse arguments
+	return vars(parser.parse_args())
+
+if __name__ == "__main__":
+	check_physics_running()
+	# print colored("Moving robot to default pose ...", 'green')
+	# r_ = RobotPose()
+	# arg = parse_arguments()
+	
+	# pose_x = arg["base_x"]
+	# pose_y = arg["base_y"]
+	# pose_z = arg["base_z"]
+	# pose_roll 	= arg["base_roll"]
+	# pose_pitch 	= arg["base_pitch"]
+	# pose_yaw 	= arg["base_yaw"]
+	# motion = arg["motion"]
+	# sleep_time = arg["delay"]
+
+	# ## Select default joints
+	# if motion == 'chimney_nom':
+	# 	pose_x = 0.299
+	# 	pose_y = 0.283
+	# 	pose_z = 0.5
+	# 	qd = [ 	 0.9133,  1.1325, -2.265,   0.,      1.1483, -2.2967, -0.9133,  1.1325, -2.265,
+ # 				-0.6981,  1.152 , -2.304,   0.,      1.152 , -2.304 ,  0.6981,  1.152 , -2.304 ]
+ # 	elif motion == 'chimney_heu':
+	# 	pose_x = 0.299
+	# 	pose_y = 0.377
+	# 	pose_z = 0.5
+	# 	qd = [ 	 0.8633,  0.9134, -1.8269,  0.,      0.9273, -1.8546, -0.8633,  0.9134, -1.8269,
+ # 				-0.6981,  0.9273, -1.8546, -0.,      0.9273, -1.8546,  0.6981,  0.9273, -1.8546]
+ # 	elif motion == 'wall_concave':
+	# 	pose_x = 0.2307
+	# 	pose_y = 0.1293
+	# 	pose_z = 0.42
+	# 	pose_roll 	= -1.565
+	# 	pose_pitch 	= 0.
+	# 	pose_yaw 	= 0.1319 
+	# 	qd = [ 	 0.6981,  0.6435, -0.6435, -0.,      0.6435, -0.6435, -0.6981,  0.6435, -0.6435,
+ # 				-0.6981,  0.109 , -1.7618,  0.,      0.2149, -1.7488,  0.6981,  0.3072, -1.7148]
+ # 	elif motion == 'wall_convex':
+	# 	pose_x = 0.2227
+	# 	pose_y = 0.1373
+	# 	pose_z = 0.42
+	# 	pose_roll 	= 1.565
+	# 	pose_pitch 	= 0.
+	# 	pose_yaw 	= 0.1319
+	# 	qd = [ 	 0.69813, 0.29430, -1.8653, 0.00000, 0.18101, -1.8808, -0.6981, 0.05612, -1.8745, 
+	# 			-0.69813, 0.64350, -0.6435, 0.00000, 0.64350, -0.6435, 0.69813, 0.64350, -0.6435]
+	# else:
+	# 	qd = [0, 0.34, -1.85]*6
+
+	# qb = [pose_x, pose_y, pose_z, pose_roll, pose_pitch, pose_yaw]
+	# r_.set_full_pose(qb, qd)
