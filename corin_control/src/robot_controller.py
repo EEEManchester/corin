@@ -343,7 +343,7 @@ class RobotController(CorinManager):
 
 						## TEMP: stamping
 						# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
-						print self.Robot.Leg[j].XHc.world_X_foot[0:3,3]
+						
 						## Get surface normal at current and desired footholds
 						try:
 							sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
@@ -353,7 +353,11 @@ class RobotController(CorinManager):
 							# 	sn2 = np.array([1., 0., 0.])
 							## TEMP: Wall convex corner
 							# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
-							# 	sn2 = np.array([1., 0., 0.])	
+							# 	sn2 = np.array([1., 0., 0.])
+							## TEMP: validation
+							if j >= 3:
+								sn2 = np.array([0., 0.707, 0.707])	
+								sn1 = sn2.copy()
 						except:
 							sn1 = np.array([0., 0., 1.])
 							sn2 = np.array([0., 0., 1.])
