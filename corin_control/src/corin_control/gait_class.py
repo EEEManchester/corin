@@ -46,18 +46,18 @@ class GaitClass:
 		# Wave Gait
 		if self.type == 1:
 			# wall walking
-			# self.phases.append([0,0,0,0,0,1])
-			# self.phases.append([0,0,0,0,1,0])
-			# self.phases.append([0,0,1,0,0,0])
-			# self.phases.append([0,1,0,0,0,0])
-			# self.phases.append([1,0,0,0,0,0])
-			# self.phases.append([0,0,0,1,0,0])
-			self.phases.append([0,0,0,0,0,1])
-			self.phases.append([0,0,0,0,1,0])
-			self.phases.append([0,0,0,1,0,0])
 			self.phases.append([0,0,1,0,0,0])
 			self.phases.append([0,1,0,0,0,0])
 			self.phases.append([1,0,0,0,0,0])
+			self.phases.append([0,0,0,0,0,1])
+			self.phases.append([0,0,0,0,1,0])
+			self.phases.append([0,0,0,1,0,0])
+			# self.phases.append([0,0,0,0,0,1])
+			# self.phases.append([0,0,0,0,1,0])
+			# self.phases.append([0,0,0,1,0,0])
+			# self.phases.append([0,0,1,0,0,0])
+			# self.phases.append([0,1,0,0,0,0])
+			# self.phases.append([1,0,0,0,0,0])
 			self.duty_factor = Fraction(5,6)
 		# Ripple Gait
 		elif (self.type == 2):

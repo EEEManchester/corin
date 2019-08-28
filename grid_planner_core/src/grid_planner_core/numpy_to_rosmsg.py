@@ -350,28 +350,27 @@ pftype_to_nptype = dict(type_mappings)
 nptype_to_pftype = dict((nptype, pftype) for pftype, nptype in type_mappings)
 
 def point_cloud_array_mapping(data, offset=None):
-    """ remaps from 3D array to required output form """
+	""" remaps from 3D array to required output form """
 
-    if (offset is None):
-    	offset = np.zeros(3)
+	if (offset is None):
+		offset = np.zeros(3)
 
-    npoints = len(data[0])
-    points_arr = np.zeros((npoints,), dtype=[
-                        ('x', np.float32),
-                        ('y', np.float32),
-                        ('z', np.float32),
-                        ('r', np.uint8),
-                        ('g', np.uint8),
-                        ('b', np.uint8)])
+	npoints = len(data[0])
+	points_arr = np.zeros((npoints,), dtype=[
+                    ('x', np.float32),
+                    ('y', np.float32),
+                    ('z', np.float32),
+                    ('r', np.uint8),
+                    ('g', np.uint8),
+                    ('b', np.uint8)])
     
-    points_arr['x'] = data[0] + offset[0]
-    points_arr['y'] = data[1] + offset[1]
-    points_arr['z'] = data[2] - 0.015 + offset[2]
-    points_arr['r'] = 0
-    points_arr['g'] = 0
-    points_arr['b'] = 255
-    
-    return points_arr
+	points_arr['x'] = data[0] + offset[0]
+	points_arr['y'] = data[1] + offset[1]
+	points_arr['z'] = data[2] - 0.015 + offset[2]
+	points_arr['r'] = 0
+	points_arr['g'] = 0
+	points_arr['b'] = 255
+	return points_arr
 
 def dtype_to_fields(dtype):
     '''Convert a numpy record datatype into a list of PointFields.

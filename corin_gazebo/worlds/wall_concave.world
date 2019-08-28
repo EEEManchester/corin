@@ -4,6 +4,7 @@
     <light name='sun' type='directional'>
       <cast_shadows>1</cast_shadows>
       <pose>0 0 10 0 -0 0</pose>
+      <pose>-0.55 1.2 1.1 0. 0.48 -0.75</pose>
       <diffuse>0.8 0.8 0.8 1</diffuse>
       <specular>0.2 0.2 0.2 1</specular>
       <attenuation>
@@ -12,7 +13,7 @@
         <linear>0.01</linear>
         <quadratic>0.001</quadratic>
       </attenuation>
-      <direction>-0.5 0.1 -0.9</direction>
+      <direction>0.5 -0.5 -0.9</direction>
     </light>
 
     <!-- ============================================================== -->
@@ -32,8 +33,8 @@
           <surface>
             <friction>
               <ode>
-                <mu>1</mu>
-                <mu2>1</mu2>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
               </ode>
             </friction>
             <bounce/>
@@ -94,8 +95,8 @@
           <surface>
             <friction>
               <ode>
-                <mu>0.7</mu>
-                <mu2>0.7</mu2>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
               </ode>
             </friction>
             <bounce/>
@@ -123,7 +124,9 @@
             </geometry>
             <material>
               <script>
-                <name>Gazebo/SkyBlue</name>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/Bricks</name>
+                <!-- <name>Gazebo/SkyBlue</name> -->
               </script>
             </material>
           </visual>
@@ -149,8 +152,8 @@
           <surface>
             <friction>
               <ode>
-                <mu>0.7</mu>
-                <mu2>0.7</mu2>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
               </ode>
             </friction>
             <bounce/>
@@ -178,7 +181,9 @@
             </geometry>
             <material>
               <script>
-                <name>Gazebo/Orange</name>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/Bricks</name>
+                <!-- <name>Gazebo/Orange</name> -->
               </script>
             </material>
           </visual>
@@ -256,7 +261,7 @@
 
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>1.5 -1.7 0.7 0 0.275643 2.35619</pose>
+        <pose>-0.55 1.2 1.1 0. 0.48 -0.75</pose>
         <view_controller>orbit</view_controller>
       </camera>
     </gui>

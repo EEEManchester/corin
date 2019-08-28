@@ -45,7 +45,7 @@ class Node_class:
 				ry = robot_state.pose[i].orientation.y
 				rz = robot_state.pose[i].orientation.z
 				rw = robot_state.pose[i].orientation.w
-
+				
 				self.robot_broadcaster.sendTransform( (px,py,pz), (rx,ry,rz,rw), rospy.Time.now(), "base_link", "world") ;
 				# self.lidar_broadcaster.sendTransform( (px,py,pz), (rx,ry,rz,rw), rospy.Time.now(), "trunk_lidar", "trunk") ;
 

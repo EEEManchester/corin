@@ -6,12 +6,8 @@
     <arg name="position" default="true"/>
     <arg name="effort" default="false"/>
 
-    <!-- <param name="gazebo"                   value="false"    type="bool"/> -->
-    <param name="gazebo_robot_name"        value="corin"/>
-
-    <param name="offset_file_path"         value="$(find corin_joint_manager)/config/offset.yaml"/>
-    <param name="robot_file_path"          value="$(find corin_joint_manager)/config/corin.robot"/>
-    <param name="init_file_path"           value="$(find corin_joint_manager)/config/dxl_init.yaml"/>
+    <!-- <param name="gazebo_robot_name"        value="corin"/> -->
+    <param name="/corin/controller_available" value="true"/>
 
     <!-- Load joint controller configurations from YAML file to parameter server -->
     <rosparam file="$(find corin_joint_manager)/config/gazebo_controllers/leg_position_controller.yaml" command="load" if="$(arg position)"/>
@@ -34,6 +30,10 @@
 
     <!-- Dynamixels -->
     <group unless="$(arg gazebo)">
+        <param name="offset_file_path" value="$(find corin_joint_manager)/config/offset.yaml"/>
+        <param name="robot_file_path"  value="$(find corin_joint_manager)/config/corin.robot"/>
+        <param name="init_file_path"   value="$(find corin_joint_manager)/config/dxl_init.yaml"/>
+
         <!-- Dynamixels -->
         <node name="corin_manager_node" pkg="corin_joint_manager" type="corin_manager" output="screen" unless="$(arg gazebo)"/>
         <!-- Torque server - enable/disable torque -->

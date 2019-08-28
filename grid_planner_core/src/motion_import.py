@@ -12,6 +12,8 @@ from std_msgs.msg import *
 
 from corin_msgs.msg import LoggingState
 from grid_planner_msgs.srv import *
+from grid_planner_core.grid_map import GridMap 			# grid map class
+from grid_planner_core.numpy_to_rosmsg import *
 
 import csv
 import numpy as np
@@ -26,6 +28,21 @@ def seq(start, stop, step=1):
 		return([start])
 	else:
 		return([])
+
+class VisGridMap:
+	def __init__(self, mapname):
+		self.point_cloud = PointCloud2()
+		self.GridMap = GridMap(mapname)
+		arr_mapped_data  = point_cloud_array_mapping(self.GridMap.graph_to_nparray(), self.GridMap.viz_offset)
+		self.point_cloud = array_to_pointcloud2(arr_mapped_data, rospy.Time.now(), "world")
+
+		self.map_pub_  = rospy.Publisher('GridMap/point_cloud', PointCloud2, queue_size=1)
+
+	def publish_map(self):
+		""" keeps the node looping """
+		for i in range(0,3):
+			self.map_pub_.publish(self.point_cloud)
+			rospy.sleep(1)
 
 class YamlImport:
 	def __init__(self):
@@ -226,7 +243,20 @@ class MotionImport:
 			mplan = self.csv_reader.get_MotionPlan(filename)
 
 		qoff, qbp, qbi, gphase, wXf, bXf, bXN = motionplan_to_planpath(mplan, "world")
-		
+
+		# Update grid map
+		filename = req.filename.data
+		if filename == 'chimney_nom.csv':
+			mapname = 'chimney_corner_053'
+		elif filename == 'chimney_heu.csv':
+			mapname = 'chimney_corner_066'
+		elif filename == 'wall_concave.csv':
+			mapname = 'wall_concave_corner'
+		elif filename == 'wall_convex.csv':
+			mapname = 'wall_convex_corner'
+		vismap = VisGridMap(mapname)
+		vismap.publish_map()
+
 		return PlanPathResponse(base_offset = qoff,
 								base_path = qbp, 
 								CoB = qbi, 

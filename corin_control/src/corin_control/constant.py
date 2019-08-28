@@ -107,7 +107,7 @@ SURFACE_FRICTION = 1.0
 F_INC  = 0.1
 D_MOVE = 0.0001	# motion for leg to achieve contact
 
-FORCE_THRES = 0.5 	# threshold limit for contact detection
+FORCE_THRES = 0.1 	# threshold limit for contact detection
 CONTACT_COUNT = 2 	# no. of contacts above threshold limit required
 
 ## ================================================================ ##

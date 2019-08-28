@@ -138,7 +138,7 @@ class GridMapRos:
 		""" keeps the node looping """
 
 		self.map_pub_.publish(self.point_cloud)
-		rospy.sleep(2)
+		rospy.sleep(10)
 
 	def save_to_yaml(self):
 		""" Saves the motion plan in a yaml file """

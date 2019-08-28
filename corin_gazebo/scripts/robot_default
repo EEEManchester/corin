@@ -42,6 +42,9 @@ JOINT_NAME[16] = 'rr_q2_joint'
 JOINT_NAME[17] = 'rr_q3_joint'
 
 def check_physics_running():
+	""" Select type of controllers depending on whether joint controller running """
+	""" NOTE: DOES NOT WORK, SERVICE MD5SUM ERROR """
+
 	rospy.wait_for_service("/gazebo/get_physics_properties", 0.5)
 	try:
 		check_serv_ = rospy.ServiceProxy("/gazebo/get_physics_properties", Empty)
@@ -49,6 +52,17 @@ def check_physics_running():
 	except rospy.ServiceException, e:
 		print "Service call failed: %s"%e
 	return resp.pause
+
+def check_controllers_exists():
+	""" Check if controllers has been loaded """
+	
+	rospy.wait_for_service("/corin/controller_manager/list_controllers", 0.5)
+	try:
+		check_serv_ = rospy.ServiceProxy("/corin/controller_manager/list_controllers", Empty)
+		resp = check_serv_()
+	except rospy.ServiceException, e:
+		print "Service call failed: %s"%e
+	print resp.pause
 
 class RobotPose:
 	def __init__(self):
@@ -92,24 +106,25 @@ class RobotPose:
 	def set_leg_pose(self, q):
 		""" Set leg joint position - method depends whether simulator active """
 		# Publish joint states
-		if check_physics_running():
+		# if check_physics_running():
+		if rospy.has_param('/corin/controller_available'):
 			for c in range(0,3):
 				for j in range(0,18):
 					self.joint_pub_[j].publish(q[j])
-				rospy.sleep(0.4) 	
+				rospy.sleep(0.4)
 		else:
-			## Move joints
-			rospy.wait_for_service('%s/set_model_configuration'%(gazebo_namespace))
+			rospy.wait_for_service('%s/set_model_configuration'%('/gazebo'))
 			for i in range(0,3):
 				try:
-					success = gazebo_interface.set_model_configuration_client(model_name, param_name, 
-			                                                                  joint_names, joint_positions, gazebo_namespace)
+					param_name = 'robot_description'
+					success = gazebo_interface.set_model_configuration_client(self.model_name, param_name, 
+			                                                                  JOINT_NAME, q, '/gazebo')
 					print 'SetJointState:', success
-					rospy.set_param(model_name + '/standing', True)
+					rospy.set_param(self.model_name + '/standing', True)
 				except rospy.ServiceException, e:
 					print "set model configuration service call failed: %s"%e
 				rospy.sleep(0.5)
-
+		
 	def set_body_pose(self, qb):
 		# Define variables
 		model_state = ModelState()
@@ -163,56 +178,61 @@ def parse_arguments():
 	# Delay
 	parser.add_argument("-t", "--delay", type=float, default=0., help="time delay")
 	# Parse arguments
-	return vars(parser.parse_args())
+	arg, unknown = parser.parse_known_args()
+	return vars(arg)
 
 if __name__ == "__main__":
-	check_physics_running()
-	# print colored("Moving robot to default pose ...", 'green')
-	# r_ = RobotPose()
-	# arg = parse_arguments()
+	# check_physics_running()
+	# check_controllers_exists()
+	print colored("Moving robot to default pose ...", 'green')
+	r_ = RobotPose()
+	arg = parse_arguments()
 	
-	# pose_x = arg["base_x"]
-	# pose_y = arg["base_y"]
-	# pose_z = arg["base_z"]
-	# pose_roll 	= arg["base_roll"]
-	# pose_pitch 	= arg["base_pitch"]
-	# pose_yaw 	= arg["base_yaw"]
-	# motion = arg["motion"]
-	# sleep_time = arg["delay"]
+	pose_x = arg["base_x"]
+	pose_y = arg["base_y"]
+	pose_z = arg["base_z"]
+	pose_roll 	= arg["base_roll"]
+	pose_pitch 	= arg["base_pitch"]
+	pose_yaw 	= arg["base_yaw"]
+	motion = arg["motion"]
+	sleep_time = arg["delay"]
+	# niter = 2
 
-	# ## Select default joints
-	# if motion == 'chimney_nom':
-	# 	pose_x = 0.299
-	# 	pose_y = 0.283
-	# 	pose_z = 0.5
-	# 	qd = [ 	 0.9133,  1.1325, -2.265,   0.,      1.1483, -2.2967, -0.9133,  1.1325, -2.265,
- # 				-0.6981,  1.152 , -2.304,   0.,      1.152 , -2.304 ,  0.6981,  1.152 , -2.304 ]
- # 	elif motion == 'chimney_heu':
-	# 	pose_x = 0.299
-	# 	pose_y = 0.377
-	# 	pose_z = 0.5
-	# 	qd = [ 	 0.8633,  0.9134, -1.8269,  0.,      0.9273, -1.8546, -0.8633,  0.9134, -1.8269,
- # 				-0.6981,  0.9273, -1.8546, -0.,      0.9273, -1.8546,  0.6981,  0.9273, -1.8546]
- # 	elif motion == 'wall_concave':
-	# 	pose_x = 0.2307
-	# 	pose_y = 0.1293
-	# 	pose_z = 0.42
-	# 	pose_roll 	= -1.565
-	# 	pose_pitch 	= 0.
-	# 	pose_yaw 	= 0.1319 
-	# 	qd = [ 	 0.6981,  0.6435, -0.6435, -0.,      0.6435, -0.6435, -0.6981,  0.6435, -0.6435,
- # 				-0.6981,  0.109 , -1.7618,  0.,      0.2149, -1.7488,  0.6981,  0.3072, -1.7148]
- # 	elif motion == 'wall_convex':
-	# 	pose_x = 0.2227
-	# 	pose_y = 0.1373
-	# 	pose_z = 0.42
-	# 	pose_roll 	= 1.565
-	# 	pose_pitch 	= 0.
-	# 	pose_yaw 	= 0.1319
-	# 	qd = [ 	 0.69813, 0.29430, -1.8653, 0.00000, 0.18101, -1.8808, -0.6981, 0.05612, -1.8745, 
-	# 			-0.69813, 0.64350, -0.6435, 0.00000, 0.64350, -0.6435, 0.69813, 0.64350, -0.6435]
-	# else:
-	# 	qd = [0, 0.34, -1.85]*6
+	## Select default joints
+	if motion == 'chimney_nom':
+		pose_x = 0.299
+		pose_y = 0.283
+		pose_z = 0.5
+		qd = [ 	 0.9133,  1.1325, -2.265,   0.,      1.1483, -2.2967, -0.9133,  1.1325, -2.265,
+ 				-0.6981,  1.152 , -2.304,   0.,      1.152 , -2.304 ,  0.6981,  1.152 , -2.304 ]
+ 	elif motion == 'chimney_heu':
+		pose_x = 0.299
+		pose_y = 0.377
+		pose_z = 0.5
+		qd = [ 	 0.8633,  0.9134, -1.8269,  0.,      0.9273, -1.8546, -0.8633,  0.9134, -1.8269,
+ 				-0.6981,  0.9273, -1.8546, -0.,      0.9273, -1.8546,  0.6981,  0.9273, -1.8546]
+ 	elif motion == 'wall_concave':
+		pose_x = 0.2307
+		pose_y = 0.1293
+		pose_z = 0.42
+		pose_roll 	= -1.565
+		pose_pitch 	= 0.
+		pose_yaw 	= 0.1319 
+		qd = [ 	 0.6981,  0.6435, -0.6435, -0.,      0.6435, -0.6435, -0.6981,  0.6435, -0.6435,
+ 				-0.6981,  0.109 , -1.7618,  0.,      0.2149, -1.7488,  0.6981,  0.3072, -1.7148]
+ 	elif motion == 'wall_convex':
+		pose_x = 0.2227
+		pose_y = 0.1373
+		pose_z = 0.42
+		pose_roll 	= 1.565
+		pose_pitch 	= 0.
+		pose_yaw 	= 0.1319
+		qd = [ 	 0.69813, 0.29430, -1.8653, 0.00000, 0.18101, -1.8808, -0.6981, 0.05612, -1.8745, 
+				-0.69813, 0.64350, -0.6435, 0.00000, 0.64350, -0.6435, 0.69813, 0.64350, -0.6435]
+	else:
+		qd = [0, 0.34, -1.85]*6
 
-	# qb = [pose_x, pose_y, pose_z, pose_roll, pose_pitch, pose_yaw]
-	# r_.set_full_pose(qb, qd)
+	qb = [pose_x, pose_y, pose_z, pose_roll, pose_pitch, pose_yaw]
+	
+	r_.set_full_pose([-0.5,0,0,0,0,0], qd)
+	r_.set_full_pose(qb, qd)

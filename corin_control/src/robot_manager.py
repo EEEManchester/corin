@@ -59,7 +59,7 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
 		self.control_loop = "close" 	# run controller in open or closed loop
 
@@ -328,16 +328,15 @@ class CorinManager:
 					dqp.position.append(q.xp[n])			# joint angle
 				self.joint_pub_.publish(dqp)
 				self.Visualizer.publish_robot_pose(self.Robot.P6d.world_X_base)
-				print dqp
+				
 			elif (self.interface == 'robotis'):
 				dqp = SyncWriteMultiFloat()
 				dqp.item_name 	= str("goal_position") 	# register to start first write
 				dqp.data_length = 4 					# size of register
-
+				# Append into list and publish once altogether
 				for n in range(0,self.Robot.active_legs*3): 	# loop for each joint
 					dqp.joint_name.append(str(JOINT_NAME[n])) 	# joint name
 					dqp.value.append(q.xp[n])					# joint angle
-
 				self.joint_pub_.publish(dqp)
 
 		## Visualization topics
@@ -364,8 +363,7 @@ class CorinManager:
 
 		## Runs controller at desired rate for normal control mode
 		if (self.control_rate is "normal" or self.interface is 'robotis'):
-			# self.rate.sleep()
-			pass
+			self.rate.sleep()
 
 	def default_pose(self, stand_state=0, leg_stance=None):
 		""" Moves robot to nominal stance (default pose) 		 """
@@ -668,8 +666,8 @@ class CorinManager:
 				# Use reactive planning
 				else:
 					print colored('Remember to enable AEP foothold in generate trajectory', 'yellow')
-					# motion_plan = self.Planner.motion_planning(ps, pf, self.Robot)
-					motion_plan = self.Planner.chimney_motion_planning(ps, pf, self.Robot)
+					motion_plan = self.Planner.motion_planning(ps, pf, self.Robot)
+					# motion_plan = self.Planner.chimney_motion_planning(ps, pf, self.Robot)
 
 				if motion_plan is not None:
 					if (self.main_controller(motion_plan)):
@@ -703,8 +701,8 @@ class CorinManager:
 					print colored('Error: Motion plan <%s> does not exists, exiting!'%motion, 'red')
 					sys.exit(1)
 
-				rospy.wait_for_service(ROBOT_NS + '/import_motion_plan', 1.0)
 				try:
+					rospy.wait_for_service(ROBOT_NS + '/import_motion_plan', 1.0)
 					path_planner = rospy.ServiceProxy(ROBOT_NS + '/import_motion_plan', PlanPath)
 					motion_plan  = planpath_to_motionplan( path_planner(Pose(), Pose(), String(filename)) )
 					print colored('Motion plan imported!', 'green')

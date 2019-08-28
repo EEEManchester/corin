@@ -17,30 +17,8 @@
   <arg name="z" default="0.11"/>              <!-- robot spawn position in world z-axis -->
   <arg name="tdelay" default="5.0"/>          <!-- delay before setting robot pose -->
 
-  <!--Set world to be launched -->
-  <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find corin_gazebo)/worlds/$(arg world).world"/>
-    <arg name="debug" value="$(arg debug)" />
-    <arg name="gui" value="$(arg gui)" />
-    <arg name="paused" value="$(arg paused)"/>
-    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
-  </include>
-
-  <!-- Load the URDF into the ROS Parameter Server -->
-  <param name="robot_description"
-   command="$(find xacro)/xacro --inorder '$(find corin_description)/robots/Corin_fixed.urdf.xacro'" if="$(arg fixed)"/>
-
-  <param name="robot_description"
-	 command="$(find xacro)/xacro --inorder '$(find corin_description)/robots/Corin_model.urdf.xacro'" unless="$(arg fixed)"/>
-
-  <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
-  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
-	args="-urdf -model corin -param robot_description -z $(arg z) -x $(arg x) -y $(arg y)"/> <!-- 0.32 --> 
-
-  <!-- Contact force publisher -->
-  <node name="contact_node" pkg="corin_gazebo" type="foot_contact.py"/>
   
   <!-- Get robot to 0 position -->
   <node name="goto0" pkg="corin_gazebo" type="robot_default" output="screen" args="-t $(arg tdelay) -m $(arg world) -x $(arg x) -y $(arg y) -z $(arg z)" />
-
+  <!-- <node name="goto0" pkg="corin_gazebo" type="robot_default" output="screen" args="-t $(arg tdelay)" /> -->
 </launch>
