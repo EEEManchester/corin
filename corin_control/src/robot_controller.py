@@ -20,9 +20,9 @@ class RobotController(CorinManager):
 		
 		# Enable/disable controllers
 		self.ctrl_base_admittance = False 	# base impedance controller - fault
-		self.ctrl_base_tracking   = True 	# base tracking controller
-		self.ctrl_leg_admittance  = True 	# leg impedance controller
-		self.ctrl_contact_detect  = True 	# switch gait for early contact detection
+		self.ctrl_base_tracking   = False 	# base tracking controller
+		self.ctrl_leg_admittance  = False 	# leg impedance controller
+		self.ctrl_contact_detect  = False 	# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
 
@@ -130,7 +130,7 @@ class RobotController(CorinManager):
 				s_cnt -= 1	# gait phase trajectory counter
 
 			# Update state for RViZ and open loop control prior to setpoint update
-			if (self.interface == 'rviz'):
+			if (self.interface == 'rviz' or self.control_loop == 'open'):
 				self.Robot.P6c.world_X_base = self.Robot.P6d.world_X_base.copy()
 
 			## ====================================================================== ##
@@ -336,7 +336,7 @@ class RobotController(CorinManager):
 								self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
 																		self.Robot.Leg[j].XHd.world_X_foot)
 								## TEMP - Reactive planning using nominal_planning.py
-								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
+								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
 								## TEMP - Stability
 								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
 								# self.Robot.Leg[j].XHd.base_X_foot[1,3] += 0.05
@@ -478,8 +478,8 @@ class RobotController(CorinManager):
 				self.Robot.Fault.status):
 				i_gphase = map(lambda x: 0 if x is False else 1, self.Robot.Fault.fault_index )
 			
-			force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, i_gphase, fmax_lim)
-			# force_dist = np.zeros((18,1))
+			# force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, i_gphase, fmax_lim)
+			force_dist = np.zeros((18,1))
 			joint_torq = self.Robot.force_to_torque(force_dist)
 			# print np.round(force_dist[15:18].flatten(),3)
 			if self.interface != 'rviz' and self.control_loop != "open":

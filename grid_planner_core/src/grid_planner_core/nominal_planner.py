@@ -2,7 +2,7 @@
 """ 
 
 import sys; sys.dont_write_bytecode = True
-sys.path.insert(0, '/home/wilson/catkin_ws/src/corin/corin_control/src')
+sys.path.insert(0, '/home/hassan/catkin_ws/src/corin/corin_control/src')
 from corin_control import *			# library modules to include 
 from grid_map import *
 
@@ -59,7 +59,7 @@ class PathPlanner:
 			world_base_X_NRP[j] = MarkerList()
 		
 		w_base_X_foot = self.max_stride_foothold(Robot, d_nom)
-
+		
 		# Compute magnitude
 		d_dif = (pf - ps)
 		d_mag = np.linalg.norm(d_dif[0:2]) 			# magnitude of distance to travel
@@ -92,13 +92,15 @@ class PathPlanner:
 		# nintv = math.ceil((d_mag)/lamb)+2
 		
 		if not Robot.Fault.status:
-
+			
 			for i in range(1,int(nintv)):
-				p_intv = ptemp + d_dif/(i*d_mag/lamb)
+				p_intv = ptemp + i*d_dif/(d_mag/lamb)
+				# print ptemp, d_dif, d_mag/lamb, i
+				# print p_intv
 
 				world_X_base.append(p_intv.flatten())
 				gait_phase.append(Gait.phases)
-
+								
 			world_X_base.append(pf.flatten())
 			gait_phase.append(Gait.phases)
 			# print world_X_base
@@ -108,6 +110,7 @@ class PathPlanner:
 
 			# Spline base path
 			path = self.spline_path(Robot.Gait.tcycle, world_X_base, None, world_X_base[0])
+
 			# self.generate_linear_path(world_X_base)
 			# for j in range(0,6):
 			# 	# world_X_foot = p_intv[0:3] + Robot.Leg[j].XHd.world_base_X_AEP[:3,3]
@@ -193,12 +196,13 @@ class PathPlanner:
 		
 		sint = STEP_STROKE/Robot.Gait.duty_factor.numerator
 		soff = d_nom/Robot.Gait.duty_factor.denominator
-		
+		# print Robot.Gait.np
+		Robot.Gait.cs = Robot.Gait.phases[Robot.Gait.np]
 		for i in range(Robot.Gait.duty_factor.denominator):
 			step = (Robot.Gait.duty_factor.denominator - i - 1)*(sint -  soff)
 			
 			for j in range(5,-1,-1):
-				
+				# print Robot.Gait.cs
 				if Robot.Gait.cs[j] == 1:
 					
 					foothold = Robot.Leg[j].XHc.world_base_X_AEP[:3,3] - np.array([step, 0., 0.])
@@ -415,7 +419,7 @@ planner = PathPlanner(grid_map)
 Robot = robot_class.RobotState()
 
 ps = np.array([0.33, 0.39, 0.1, 0., 0., 0.]) 
-pf = np.array([0.53, 0.39, 0.1, 0., 0., 0.]) 
+pf = np.array([0.63, 0.39, 0.1, 0., 0., 0.]) 
 
 Robot.P6c.world_X_base = ps
 Robot.P6d.world_X_base = Robot.P6c.world_X_base.copy()
@@ -423,7 +427,8 @@ Robot.XHc.update_world_X_base(Robot.P6c.world_X_base)
 Robot.init_robot_stance()
 Robot.Gait.walk_mode()
 # motion_plan = planner.chimney_motion_planning(ps, pf, Robot)
-# motion_plan = planner.motion_planning(ps, pf, Robot)
+motion_plan = planner.motion_planning(ps, pf, Robot)
+
 # print Robot.P6c.world_X_base_offset
 # print motion_plan.f_world_X_foot[3].xp
 # tintv = math.ceil(t[-1]/CTR_INTV)

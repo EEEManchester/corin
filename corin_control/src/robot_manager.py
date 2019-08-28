@@ -59,9 +59,9 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "robotis"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
-		self.control_loop = "close" 	# run controller in open or closed loop
+		self.control_loop = "open" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
 		self.MotionPlan = MotionPlan()
@@ -591,7 +591,7 @@ class CorinManager:
 			
 				if motion == 'forward':
 					map_offset = (0.33, 0.39)
-					d_travel = np.array([0.2,0.,0.,0.,0.,0.]).reshape(6,1)
+					d_travel = np.array([0.6,0.,0.,0.,0.,0.]).reshape(6,1)
 				elif motion == 'transition':
 					map_offset = (0.33, 0.39)
 					d_travel = np.array([0.,0.21,0.,0.,0.,0.]).reshape(6,1)

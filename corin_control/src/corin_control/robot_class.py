@@ -165,7 +165,9 @@ class RobotState:
 			## Updates robot state based on measured states
 			wXb = self.P6c.world_X_base
 			qpc = self.qc.position
-
+			## TEMP: Open LOOP
+			qpc = self.qd
+			
 		# update leg states and check if boundary exceeded
 		for j in range(0,self.active_legs):
 

@@ -1,6 +1,6 @@
 Map:
   flat:
-    size: { sx: 1.03, sy: 0.8}
+    size: { sx: 2.03, sy: 0.8}
   
   wall_transition:
     size: { sx: 1.6, sy: 0.8}
