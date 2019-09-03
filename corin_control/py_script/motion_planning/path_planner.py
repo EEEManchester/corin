@@ -4,7 +4,7 @@
 """ 
 
 import sys; sys.dont_write_bytecode = True
-sys.path.insert(0, '/home/wei/catkin_ws/src/corin/corin_control/py_script')
+sys.path.insert(0, '/home/wilson/catkin_ws/src/corin/corin_control/py_script')
 from library import *			# library modules to include 
 from grid_map import *
 
@@ -1797,7 +1797,7 @@ class PathPlanner:
 		self.mod_path += [(73, 13), (74, 13), (75, 13)]
 		opath = nx.path_graph(self.ori_path)
 		mpath = nx.path_graph(self.mod_path)
-		self.GridMap.graph_representation(opath, mpath)
+		# self.GridMap.graph_representation(opath, mpath)
 		# self.GridMap.graph_representation()
 
 		motion_plan.qb = path
@@ -1864,7 +1864,7 @@ class PathPlanner:
 		self.process_map_on_primitive() # finds path then use motion primitives to fit in
 		self.remove_motion_edges(self.base_map) 	# remove edges linked to invalid cells
 		self.GridMap.set_edge_cost(self.base_map)	# assign cost to edge
-		self.GridMap.graph_primitive(self.GM_walk, self.GM_wall, self.GM_chim)
+		# self.GridMap.graph_primitive(self.GM_walk, self.GM_wall, self.GM_chim)
 
 ## ================================================================================================ ##
 ## 												TESTING 											##

@@ -6,7 +6,7 @@ __author__  = 'Wei Cheah'
 
 import sys; sys.dont_write_bytecode = True
 from itertools import cycle
-
+import yaml
 ## Personal libraries
 from library import *			# library modules to include
 from motion_planning import *	# library modules on motion planning
@@ -689,7 +689,7 @@ class CorinManager:
 				
 				# motion_plan = self.Map.generate_motion_plan(self.Robot, start=ps, end=pf)
 				motion_plan = self.PathPlan.generate_motion_plan(self.Robot, start=ps, end=pf)
-				
+				self.save_to_yaml(motion_plan)
 				if (motion_plan is not None):
 					if (self.main_controller(motion_plan)):
 						self.Robot.alternate_phase()
@@ -724,3 +724,67 @@ class CorinManager:
 		world_X_base[2,3] =  tz
 		
 		return world_X_base
+
+	def save_to_yaml(self, motion_plan):
+		""" Saves the motion plan in a yaml file """
+		
+		def path_to_list(path):
+			tlist = []; plist = []; vlist = []; alist = [];
+			for i in range(len(path.xp)):
+				tlist.append(path.t[i].tolist())
+				plist.append(path.xp[i].tolist())
+				vlist.append(path.xv[i].tolist())
+				alist.append(path.xa[i].tolist())
+
+			return tlist, plist, vlist, alist
+
+		def footholds_to_list(footholds):
+
+			footlist = [None]*6
+			for j in range(6):
+				footlist[j] = [footholds[j].xp[0].tolist()]
+				for i in range(1, len(footholds[j].xp)):
+					footlist[j].append(footholds[j].xp[i].tolist()) 
+			return footlist
+
+		def array_list_to_list(array):
+			newlist = [];
+			for i in range(len(array)):
+				newlist.append(array[i].tolist())
+			return newlist
+
+		mapname = self.GridMap.map_name
+		print 'Saving to yaml....'
+
+		xt, xp, xv, xa = path_to_list(motion_plan.qb.X)
+		wt, wp, wv, wa = path_to_list(motion_plan.qb.W)
+		wXf = footholds_to_list(motion_plan.f_world_X_foot)
+		bXf = footholds_to_list(motion_plan.f_base_X_foot)
+		bXn = footholds_to_list(motion_plan.f_world_base_X_NRP)
+		cob = array_list_to_list(motion_plan.qbp)
+
+		data = dict(map=mapname,
+					cell_resolution=self.GridMap.resolution,
+					# start = dict(x = self.PathPlan.start[0]*RosGridMap.GridMap.resolution,
+					# 			 y = self.PathPlan.start[1]*RosGridMap.GridMap.resolution,
+					# 			 z = self.PathPlan.base_map.nodes[self.PathPlan.start]['pose'][0]),
+					# goal = dict(x = self.PathPlan.goal[0]*RosGridMap.GridMap.resolution,
+					# 			y = self.PathPlan.goal[1]*RosGridMap.GridMap.resolution),
+					path_x_t = xt,
+					path_x_xp = xp,
+					path_x_xv = xv,
+					path_x_xa = xa,
+					path_w_xp = wp,
+					path_w_xv = wv,
+					path_w_xa = wa,
+					cob = cob,
+					wXf = wXf,
+					bXf = bXf,
+					bXn = bXn,
+					gphase = motion_plan.gait_phase
+					)
+		
+		filename = 'data.yaml'
+		with open(filename, 'w') as outfile:
+			yaml.dump(data, outfile, default_flow_style=None)
+		print 'Motion plan saved!'

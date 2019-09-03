@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+""" Visualize the grip map in rviz """
 
 import os.path
 import sys

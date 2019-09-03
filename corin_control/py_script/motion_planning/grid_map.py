@@ -17,6 +17,7 @@ from collections import OrderedDict 	# remove duplicates
 
 class GridMap:
 	def __init__(self,map_name):
+		self.map_name = map_name
 		self.resolution	= 0.03	# size of cell, (m) - TARGET: 0.03
 		self.map_size_m = (0,0) # set map size
 		self.map_size_g = (0,0) # set map size
@@ -632,16 +633,16 @@ class GridMap:
 		# 	pass
 
 		## enable major and minor grid
-		plt.grid('on');		 plt.grid(which='major', linestyle=':', linewidth='0.5', color='black')
+		plt.grid(True);		 plt.grid(which='major', linestyle=':', linewidth='0.5', color='black')
 		# plt.minorticks_on(); plt.grid(which='minor', linestyle=':', linewidth='0.25', color='black')
 
 		# minor_ticks = np.arange(0, 9+1, 0.5)
 		# plt.xticks(minor_ticks)
 
 		xaxis_label = range(0,90,10)
-		plt.xticks(xaxis_label, [x*0.03 for x in xaxis_label])
+		# plt.xticks(xaxis_label, [x*0.03 for x in xaxis_label])
 		yaxis_label = range(0,30,5)
-		plt.yticks(yaxis_label, [x*0.03 for x in yaxis_label])
+		# plt.yticks(yaxis_label, [x*0.03 for x in yaxis_label])
 
 		plt.xlabel('x, m')
 		plt.ylabel('y, m')
@@ -655,7 +656,7 @@ class GridMap:
 		# mng = plt.get_current_fig_manager()
 		# mng.resize(*mng.window.maxsize())
 
-		plt.tight_layout()
+		# plt.tight_layout()
 		plt.show() 
 		
 		# fig_manager.resize(*fig_manager.window.maxsize())
