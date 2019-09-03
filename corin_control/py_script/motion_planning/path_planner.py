@@ -1461,6 +1461,25 @@ class PathPlanner:
 		motion_plan = MotionPlan()
 		m = np.zeros(3) 	# motion primitive for next 3 steps
 
+		# Stack initial foothold
+		world_X_footholds = [None]*6
+		base_X_footholds  = [None]*6
+		world_base_X_NRP  = [None]*6
+		for j in range(6):
+			world_X_footholds[j] = MarkerList()
+			base_X_footholds[j] = MarkerList()
+			world_base_X_NRP[j] = MarkerList()
+			## Stack to array
+			world_X_footholds[j].t.append(0)
+			world_X_footholds[j].xp.append(self.Robot.Leg[j].XHd.world_X_foot[:3,3:4].copy())
+			
+			world_base_X_NRP[j].t.append(0)
+			world_base_X_NRP[j].xp.append(self.Robot.Leg[j].XHd.world_base_X_NRP[:3,3:4].copy())
+
+			base_X_footholds[j].t.append(0)
+			base_X_footholds[j].xp.append(self.Robot.Leg[j].XHd.base_X_foot[:3,3:4].copy())
+		motion_plan.set_footholds(world_X_footholds, base_X_footholds, world_base_X_NRP)
+		
 		## cycle through path
 		for i in range(0,len(path)):
 			print 'now: ', path[i], self.base_map.nodes[path[i]]['motion']

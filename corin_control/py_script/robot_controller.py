@@ -398,6 +398,15 @@ class CorinManager:
 			if (self.interface == 'rviz'):
 				self.joint_pub_.publish(array_to_joint_states(self.Robot.qc.position, rospy.Time.now(), ""))
 			rospy.sleep(0.2)
+
+		for j in range(0,6):
+			try:
+				world_X_footholds[j].xp.pop(0)
+				base_X_footholds[j].xp.pop(0)
+				w_base_X_NRP[j].xp.pop(0)
+			except:
+				pass
+
 		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
 		## User input
