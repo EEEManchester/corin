@@ -114,7 +114,7 @@ class RobotState:
 		self.task_X_joint()
 		self.Gait.cs = [0]*6
 		self.update_stability_region()
-		self.Gait.set_step_stroke(leg_stance, LEG_CLEAR, STEP_STROKE)
+		self.Gait.set_step_stroke(leg_stance, STEP_HEIGHT, STEP_STROKE)
 		
 	def update_state(self,**options):
 		""" update robot state using readings from topics """
@@ -166,7 +166,7 @@ class RobotState:
 			wXb = self.P6c.world_X_base
 			qpc = self.qc.position
 			## TEMP: Open LOOP
-			qpc = self.qd
+			# qpc = self.qd
 			
 		# update leg states and check if boundary exceeded
 		for j in range(0,self.active_legs):

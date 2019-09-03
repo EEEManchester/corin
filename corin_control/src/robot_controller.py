@@ -20,9 +20,9 @@ class RobotController(CorinManager):
 		
 		# Enable/disable controllers
 		self.ctrl_base_admittance = False 	# base impedance controller - fault
-		self.ctrl_base_tracking   = False 	# base tracking controller
-		self.ctrl_leg_admittance  = False 	# leg impedance controller
-		self.ctrl_contact_detect  = False 	# switch gait for early contact detection
+		self.ctrl_base_tracking   = True 	# base tracking controller
+		self.ctrl_leg_admittance  = True 	# leg impedance controller
+		self.ctrl_contact_detect  = True 	# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
 
@@ -247,7 +247,7 @@ class RobotController(CorinManager):
 						print colored('ERROR: no gait to unstack','red')
 						## TEMP: Stability
 						# self.Robot.Gait.cs = [0,0,0,2,0,0]
-					print self.Robot.Gait.cs
+					
 					## Force and gait phase array for Force Distribution
 					fmax_lim = [0]*6	# max. force array
 					gphase = list(self.Robot.Gait.cs)
@@ -335,7 +335,7 @@ class RobotController(CorinManager):
 								self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
 																		self.Robot.Leg[j].XHd.world_X_foot)
 								## TEMP - Reactive planning using nominal_planning.py
-								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
+								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
 								## TEMP - Stability
 								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
 								# self.Robot.Leg[j].XHd.base_X_foot[1,3] += 0.05
@@ -354,17 +354,16 @@ class RobotController(CorinManager):
 							# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
 							# 	sn2 = np.array([1., 0., 0.])
 							## TEMP: validation
-							# if j >= 3:
-							# 	sn2 = np.array([0., 0.707, 0.707])	
+							# if j < 3:
+							# 	sn2 = np.array([0., -1., 0.])	
 							# 	sn1 = sn2.copy()
 							## TEMP: TAROS
-							print j, np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],4), abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1)
-							if j < 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
-								sn2 = np.array([0., -1., 0.])	
-								sn1 = sn2.copy()
-							elif j >= 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
-								sn2 = np.array([0., 1., 0.])	
-								sn1 = sn2.copy()
+							# if j < 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
+							# 	sn2 = np.array([0., -1., 0.])	
+							# 	sn1 = sn2.copy()
+							# elif j >= 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
+							# 	sn2 = np.array([0., 1., 0.])	
+							# 	sn1 = sn2.copy()
 						except:
 							sn1 = np.array([0., 0., 1.])
 							sn2 = np.array([0., 0., 1.])
@@ -414,11 +413,11 @@ class RobotController(CorinManager):
 								# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
 								# 	self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
 								## TEMP: TAROS
-								if j < 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
-									self.Robot.Leg[j].snorm = np.array([0., -1., 0.])	
-									print self.Robot.Leg[j].snorm
-								elif j >= 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
-									self.Robot.Leg[j].snorm = np.array([0., 1., 0.])	
+								# if j < 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
+								# 	self.Robot.Leg[j].snorm = np.array([0., -1., 0.])	
+								# 	print self.Robot.Leg[j].snorm
+								# elif j >= 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
+								# 	self.Robot.Leg[j].snorm = np.array([0., 1., 0.])	
 									
 						state_machine = 'load'
 						self.Robot.suspend = False

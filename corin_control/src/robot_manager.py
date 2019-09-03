@@ -59,16 +59,17 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
-		self.control_loop = "open" 	# run controller in open or closed loop
+		self.control_loop = "close" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
 		self.MotionPlan = MotionPlan()
 		self.Visualizer = RvizVisualise(self.interface) 	# visualisation for rviz
 
 		self.Planner = None#PathPlanner(self.GridMap)
-		self.force_log = 0
+		self.sp_force_log = [0]*18
+		self.ac_force_log = [0]*18
 		self.__initialise__()
 
 	def joint_state_callback(self, msg):
@@ -350,7 +351,7 @@ class CorinManager:
 		# self.stability_pub_.publish(self.Robot.SM.min)
 		self.log_misc_pub_.publish(
 			Float64MultiArray(data = self.set_log_misc([self.Robot.SM.min, 
-				self.Robot.Sp.min, self.Robot.Rbdl.com, self.force_log])))
+				self.Robot.Sp.min, self.Robot.Rbdl.com, self.sp_force_log, self.ac_force_log])))
 
 		## Publish setpoints to logging topic
 		if qlog is not None:
@@ -779,16 +780,16 @@ class CorinManager:
 		
 		# self.qlog_setpoint = qlog
 		## Rearrange contact forces in normal and tangential direction
-		self.force_log = []
+		self.sp_force_log = []
 		for j in range(6):
 			t1, t2 = tangent_vector(self.Robot.Leg[j].snorm)
 			fn = np.dot(self.Robot.Leg[j].F6d.world_X_foot[:3].flatten(), self.Robot.Leg[j].snorm)
 			f1 = np.dot(self.Robot.Leg[j].F6d.world_X_foot[:3].flatten(), t1)
 			f2 = np.dot(self.Robot.Leg[j].F6d.world_X_foot[:3].flatten(), t2)
-			self.force_log.append([fn, f1, f2])
+			self.sp_force_log.append([fn, f1, f2])
 		# 	print np.round(np.array([fn, f1, f2]),3)
 		# print '================================'
-		self.force_log = [item for i in self.force_log for item in i]
+		self.sp_force_log = [item for i in self.sp_force_log for item in i]
 		return qlog
 
 	def set_log_actual(self):
@@ -808,6 +809,18 @@ class CorinManager:
 
 		qlog_er = LoggingState()
 		qlog_er.forces = cforce_error
+
+		## Rearrange contact forces in normal and tangential direction
+		self.ac_force_log = []
+		for j in range(6):
+			t1, t2 = tangent_vector(self.Robot.Leg[j].snorm)
+			fn = np.dot(self.Robot.Leg[j].F6c.world_X_foot[:3].flatten(), self.Robot.Leg[j].snorm)
+			f1 = np.dot(self.Robot.Leg[j].F6c.world_X_foot[:3].flatten(), t1)
+			f2 = np.dot(self.Robot.Leg[j].F6c.world_X_foot[:3].flatten(), t2)
+			self.ac_force_log.append([fn, f1, f2])
+		# 	print np.round(np.array([fn, f1, f2]),3)
+		# print '================================'
+		self.ac_force_log = [item for i in self.ac_force_log for item in i]
 
 		return qlog_ac, qlog_er
 

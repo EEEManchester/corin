@@ -96,14 +96,14 @@ IMU_RATE = 192 			# IMU publishing rate, Hz
 ## ================================================================ ##
 ##                 Force Distribution parameters 	 				##
 ## ================================================================ ##
-LOAD_T = 0.1	# time for leg load & unloading
+LOAD_T = 2.	# time for leg load & unloading
 F_MAX = ROBOT_MASS*10.#40.0	# maximum force for leg
 F_MIN = 0.0		# minimum force for leg
 KPcom = np.array([1.0, 1.0, 1.0])*0.3	#1000. #
 KDcom = np.array([0.0, 0.0, 1.0])*0.015	#0.5
 KPang = np.array([1.0, 1.0, 1.0])*0.	#500.
 KDang = np.array([1.0, 1.0, 1.0])*0.	#0.5
-SURFACE_FRICTION = 0.4
+SURFACE_FRICTION = 1.0
 F_INC  = 0.1
 D_MOVE = 0.0001	# motion for leg to achieve contact
 
@@ -151,7 +151,7 @@ QDEADZONE = 0.087 		# surface deadzone - ignore surface inclination below 5 degr
 ## ================================================================ ##
 
 BOUND_FACTOR = 1.1 	# boundary constraint for leg workplane space
-LEG_CLEAR 	 = 0.06 	# clearance between leg workplane boundaries
+# LEG_CLEAR 	 = 0.06 	# clearance between leg workplane boundaries
 STANCE_WIDTH = 0.21#0.235		# ori: 0.21, chimney: 0.23, 0.27, 0.31 for tripod
 BODY_HEIGHT  = 0.1#0.147		# ori: 0.10, chimney: 0.0
 # Offset for front and rear legs
@@ -168,7 +168,7 @@ STANCE_TYPE = "ground" 	# "ground", "chimney", "wall"
 GAIT_TYPE 	 = 1 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 GAIT_TPHASE	 = 2.0 	# default period per gait phase
 STEP_HEIGHT  = 0.06	# default step height, z
-STEP_STROKE  = 0.05 	# default step stroke
+STEP_STROKE  = 0.1 	# default step stroke
 
 BASE_MAX_LINEAR_VELOCITY  = 0.05	# maximum base velocity, m/s - walking: 0.025
 BASE_MAX_ANGULAR_VELOCITY = 0.05	# maximum base velocity, rad/s
