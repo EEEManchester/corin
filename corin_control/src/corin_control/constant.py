@@ -103,7 +103,7 @@ KPcom = np.array([1.0, 1.0, 1.0])*0.3	#1000. #
 KDcom = np.array([0.0, 0.0, 1.0])*0.015	#0.5
 KPang = np.array([1.0, 1.0, 1.0])*0.	#500.
 KDang = np.array([1.0, 1.0, 1.0])*0.	#0.5
-SURFACE_FRICTION = 1.0
+SURFACE_FRICTION = 0.4
 F_INC  = 0.1
 D_MOVE = 0.0001	# motion for leg to achieve contact
 
@@ -155,10 +155,10 @@ LEG_CLEAR 	 = 0.06 	# clearance between leg workplane boundaries
 STANCE_WIDTH = 0.21#0.235		# ori: 0.21, chimney: 0.23, 0.27, 0.31 for tripod
 BODY_HEIGHT  = 0.1#0.147		# ori: 0.10, chimney: 0.0
 # Offset for front and rear legs
-TETA_F = 30.;
+TETA_F = 0.;
 TETA_R = -TETA_F;
 LEG_OFFSET = [TETA_F, 0., TETA_R, -TETA_F, 0., -TETA_R]
-STANCE_TYPE = "wall" 	# "ground", "chimney", "wall"
+STANCE_TYPE = "ground" 	# "ground", "chimney", "wall"
 
 ## ================================================================ ##
 ##                       Gait parameters 	 						##
@@ -166,7 +166,7 @@ STANCE_TYPE = "wall" 	# "ground", "chimney", "wall"
 
 ## these gait parameters can be changed during runtime
 GAIT_TYPE 	 = 1 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
-GAIT_TPHASE	 = 1.5 	# default period per gait phase
+GAIT_TPHASE	 = 2.0 	# default period per gait phase
 STEP_HEIGHT  = 0.06	# default step height, z
 STEP_STROKE  = 0.05 	# default step stroke
 

@@ -59,7 +59,7 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "robotis"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
 		self.control_loop = "open" 	# run controller in open or closed loop
 
@@ -697,6 +697,13 @@ class CorinManager:
 				elif motion == 'wall_concave':
 					filename = 'wall_concave.csv'
 					mapname  = 'wall_concave_corner'
+				elif motion == 'taros':
+					print colored("REMEMBER to enable surface normal in robot_controller", 'yellow')
+					filename = 'taros.yaml'
+					mapname = 'wall_hole_demo'
+				elif motion == 'transition':
+					filename = 'wall_transition.yaml'
+					mapname = 'wall_hole_demo'
 				else:
 					print colored('Error: Motion plan <%s> does not exists, exiting!'%motion, 'red')
 					sys.exit(1)
@@ -714,19 +721,17 @@ class CorinManager:
 				# motion_plan = planpath_to_motionplan(plan_generat)
 				# Plot.plot_2d(motion_plan.qb.X.t, motion_plan.qb.X.xp)
 				# print 'bias by ', motion_plan.qb_offset
-				# self.Robot.P6c.world_X_base = np.array([motion_plan.qb.X.xp[0],
-				# 										motion_plan.qb.W.xp[0]]).reshape(6,1)
+				
 				self.Robot.P6c.world_X_base = motion_plan.qb_offset.copy()
 				self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
 				self.Robot.P6c.world_X_base_offset = np.zeros((6,1))#self.Robot.P6c.world_X_base.copy()
 
 				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 				self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
-				# print np.round(self.Robot.XHd.world_X_base,3)
+				# print self.Robot.P6c.world_X_base
 				# Update to new current foot position
 				leg_stance = [None]*6
 				for j in range(0,6):
-					# print np.round(motion_plan.f_world_X_foot[j].xp[0],3)
 					self.Robot.Leg[j].XHd.world_X_foot = v3_X_m(motion_plan.f_world_X_foot[j].xp[0])
 					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHd.world_X_foot)
 					self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
@@ -735,8 +740,10 @@ class CorinManager:
 					self.Robot.Leg[j].XHc.coxa_X_foot = self.Robot.Leg[j].XHd.coxa_X_foot.copy()
 					self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
 					leg_stance[j] = self.Robot.Leg[j].XHd.coxa_X_foot[0:3,3]
-					# print j, ' bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3],3)
-				self.Robot.stance_offset = (40, -40)
+					# print j, np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
+					# print j, np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3],3)
+					# print j, np.round(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3],3)
+				# self.Robot.stance_offset = (40, -40)
 				self.Robot._initialise(leg_stance)
 				self.Robot.qc.position = self.Robot.qd
 

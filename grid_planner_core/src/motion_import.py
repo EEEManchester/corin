@@ -66,7 +66,7 @@ class YamlImport:
 		## Start & End
 		start = data['start']
 		goal  = data['goal']
-
+		
 		## Place data in MotionPlan() msg
 		self.motion_plan = MotionPlan()
 		self.motion_plan.qb.X.t = data['path_x_t']
@@ -92,10 +92,11 @@ class YamlImport:
 			for i in range(len(data['bXn'][j])):
 				self.motion_plan.f_world_base_X_NRP[j].xp.append(np.array(data['bXn'][j][i]))
 
-		self.motion_plan.qb.X.xp[0][0] = start['x']
-		self.motion_plan.qb.X.xp[0][1] = start['y']
-		self.motion_plan.qb.X.xp[0][2] = start['z']
-
+		# self.motion_plan.qb.X.xp[0][0] = start['x']
+		# self.motion_plan.qb.X.xp[0][1] = start['y']
+		# self.motion_plan.qb.X.xp[0][2] = start['z']
+		self.motion_plan.qb_offset = np.array([start['x'], start['y'], start['z'],0.,0.,0.]).reshape((6,1))
+		
 		return self.motion_plan
 
 class CsvImport:
@@ -254,6 +255,8 @@ class MotionImport:
 			mapname = 'wall_concave_corner'
 		elif filename == 'wall_convex.csv':
 			mapname = 'wall_convex_corner'
+		elif filename == 'taros.yaml' or filename == 'wall_transition.yaml':
+			mapname = 'wall_hole_demo'
 		vismap = VisGridMap(mapname)
 		vismap.publish_map()
 
@@ -328,6 +331,8 @@ if __name__ == "__main__":
 			filename = 'wall_convex.csv'
 		elif sys.argv[1] == 'wall_concave':
 			filename = 'wall_concave.csv'
+		elif sys.argv[1] == 'taros':
+			filename = 'taros.yaml'
 
 	if filename is not None:
 		call_motion_import(filename)

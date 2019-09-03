@@ -46,12 +46,9 @@ class RobotController(CorinManager):
 			self.Visualizer.show_motion_plan(self.Robot.P6c.world_X_base, motion_plan.qbp, motion_plan.f_world_X_foot)
 			if (self.interface == 'rviz'):
 				self.publish_topics(JointTrajectoryPoints(18,([],self.Robot.qc.position,[],[])))
-			# print np.round(self.Robot.qc.position,3)
-			# print np.round(self.Robot.P6c.world_X_base.flatten(),3)
-			# print np.round(self.Robot.P6c.world_X_base_offset.flatten(),3)
 			# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 			# Plot.plot_2d(base_path.W.t, base_path.W.xp)
-			# print world_X_footholds[0].xp
+			
 			## Remove initial set of footholds (visualization purpose)
 			for j in range(0,6):
 				try:
@@ -67,7 +64,7 @@ class RobotController(CorinManager):
 				self.Robot.Gait.cs = gait_list[0]
 			except:
 				print 'No defined gait phases, using periodic'
-
+			# print gait_list
 			path_length = len(base_path.X.t)
 		else:
 			state_machine = 'hold' 			# Motion state machine: unload, motion, load
@@ -126,7 +123,8 @@ class RobotController(CorinManager):
 			# self.Robot.suspend = False # manual overwrite for selected motions
 			# print 'suspend: ', self.Robot.suspend
 			if (self.Robot.suspend == True or state_machine == 'hold'):
-				i -= 1 		# base trajectory counter
+				i = 1 if i-1 < 1 else i-1
+				# i -= 1 		# base trajectory counter
 				s_cnt -= 1	# gait phase trajectory counter
 
 			# Update state for RViZ and open loop control prior to setpoint update
@@ -139,6 +137,7 @@ class RobotController(CorinManager):
 			# Variable mapping to R^(3x1) for base linear and angular position, velocity, acceleration
 
 			if motion_plan is not None:
+				# print 'i: ', i
 				# GRID PLAN: base trajectory in world frame
 				v3cp = wXbase_offset[0:3] + base_path.X.xp[i].reshape(3,1) 		\
 								+ offset_base.reshape((3,1))
@@ -248,7 +247,7 @@ class RobotController(CorinManager):
 						print colored('ERROR: no gait to unstack','red')
 						## TEMP: Stability
 						# self.Robot.Gait.cs = [0,0,0,2,0,0]
-						
+					print self.Robot.Gait.cs
 					## Force and gait phase array for Force Distribution
 					fmax_lim = [0]*6	# max. force array
 					gphase = list(self.Robot.Gait.cs)
@@ -336,7 +335,7 @@ class RobotController(CorinManager):
 								self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
 																		self.Robot.Leg[j].XHd.world_X_foot)
 								## TEMP - Reactive planning using nominal_planning.py
-								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
+								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
 								## TEMP - Stability
 								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
 								# self.Robot.Leg[j].XHd.base_X_foot[1,3] += 0.05
@@ -355,8 +354,16 @@ class RobotController(CorinManager):
 							# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
 							# 	sn2 = np.array([1., 0., 0.])
 							## TEMP: validation
-							if j >= 3:
-								sn2 = np.array([0., 0.707, 0.707])	
+							# if j >= 3:
+							# 	sn2 = np.array([0., 0.707, 0.707])	
+							# 	sn1 = sn2.copy()
+							## TEMP: TAROS
+							print j, np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],4), abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1)
+							if j < 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
+								sn2 = np.array([0., -1., 0.])	
+								sn1 = sn2.copy()
+							elif j >= 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
+								sn2 = np.array([0., 1., 0.])	
 								sn1 = sn2.copy()
 						except:
 							sn1 = np.array([0., 0., 1.])
@@ -406,6 +413,13 @@ class RobotController(CorinManager):
 								## TEMP: Wall Convex corner
 								# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
 								# 	self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
+								## TEMP: TAROS
+								if j < 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
+									self.Robot.Leg[j].snorm = np.array([0., -1., 0.])	
+									print self.Robot.Leg[j].snorm
+								elif j >= 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
+									self.Robot.Leg[j].snorm = np.array([0., 1., 0.])	
+									
 						state_machine = 'load'
 						self.Robot.suspend = False
 						gphase = list(self.Robot.Gait.cs)
@@ -482,8 +496,8 @@ class RobotController(CorinManager):
 				self.Robot.Fault.status):
 				i_gphase = map(lambda x: 0 if x is False else 1, self.Robot.Fault.fault_index )
 			
-			# force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, i_gphase, fmax_lim)
-			force_dist = np.zeros((18,1))
+			force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, i_gphase, fmax_lim)
+			# force_dist = np.zeros((18,1))
 			joint_torq = self.Robot.force_to_torque(force_dist)
 			# print np.round(force_dist[15:18].flatten(),3)
 			if self.interface != 'rviz' and self.control_loop != "open":
@@ -544,7 +558,8 @@ class RobotController(CorinManager):
 		# comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + KI_P_BASE*self.P6e_integral)
 		# 					# mX(np.diag([KI_P_BASE,KI_P_BASE,KI_P_BASE,KI_W_BASE,KI_W_BASE,KI_W_BASE]),self.P6e_integral))
 		# comp_base_X_world = np.linalg.inv(comp_world_X_base)
-		
+		# print np.round(self.Robot.P6d.world_X_base.flatten(),3)
+		# print np.round(self.Robot.XHd.base_X_world,3)
 		## PI controller
 		u = self.Robot.Base_Ctrl.update(P6e_world_X_base)
 
@@ -565,6 +580,10 @@ class RobotController(CorinManager):
 					self.Robot.Leg[j].XHd.base_X_foot = mX(self.Robot.XHd.base_X_world, self.Robot.Leg[j].XHc.world_X_foot)
 
 				self.Robot.Leg[j].XHd.coxa_X_foot = mX(self.Robot.Leg[j].XHd.coxa_X_base, self.Robot.Leg[j].XHd.base_X_foot)
+				# print j, np.round(self.Robot.Leg[j].XHd.world_X_foot[:3,3],3)
+				# print j, np.round(self.Robot.Leg[j].XHc.world_X_foot[:3,3],3)
+				# print j, np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3],3)
+				# print j, np.round(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3],3)
 				# if j==0:
 					# print 'u: ', np.round(u.flatten(),4)
 					# print slide_gain
