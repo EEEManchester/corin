@@ -201,6 +201,9 @@ class PathPlanner:
 		self.ori_path = None
 		self.mod_path = []
 
+		self.start = (0,0)
+		self.goal = (0,0)
+
 		self.__initialise_graph__()
 
 	def __initialise_graph__(self):
@@ -1813,7 +1816,8 @@ class PathPlanner:
 		if (options.get("start")):
 			start = options.get("start")
 			end   = options.get("end")
-
+			self.start = start
+			self.goal = end
 			list_gpath = self.find_base_path(start, end)
 			self.ori_path = list_gpath
 			if (list_gpath is not None):
