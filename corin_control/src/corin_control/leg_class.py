@@ -68,7 +68,9 @@ class LegClass:
 
 		self.SlidingGain = SlidingGain()
 		self.ForcePI = PIDController('PI', 3, KP_F_LEG, KI_F_LEG)
-
+		# self.Ad_SG = SlidingGain()
+		# self.Ad_SG.step_num = 80
+		# self.Ad_SG.reset()
 	## Update functions
 	def update_joint_state(self, P6_world_X_base, jointState, resetState, step_stroke):
 		""" Update current joint state of legs and forward transformations 			"""
@@ -177,7 +179,8 @@ class LegClass:
 			start = self.XHc.world_base_X_foot[:3,3].copy()
 			end   = mX(self.XH_world_X_base[:3,:3], self.XHd.base_X_foot[:3,3])
 			wpx, td = self.Path.interpolate_leg_path(start, end, sn1, sn2, phase, reflex, ctime)
-
+			# if self.number == 5:
+			# 	print wpx
 			# Transform each via point from world to leg frame
 			wcp = np.zeros((len(wpx),3))
 			wcp[0] = self.XHc.coxa_X_foot[0:3,3].copy()
@@ -225,7 +228,7 @@ class LegClass:
 						raise ValueError
 
 			self.qspline = JointTrajectoryPoints(18,(qt,qp,qv,qa))
-			# if self.number == 0:
+			# if self.number == 5:
 			# 	Plot.plot_2d(qt, qp)
 			return True
 
@@ -248,24 +251,24 @@ class LegClass:
 		self.Joint.qpd = self.KDL.leg_IK(xp, self.number)
 
 		# Check vector direction
-		wXf = mX(self.XH_world_X_base[:3,:3], robot_transforms.update_base_X_foot(self.number, self.Joint.qpd)[:3,:3])
-		vt = np.dot(wXf[:3,:3], np.array([1.,0.,0.]))
-		d1 = np.dot(self.snorm, vt)
-		if d1 > 0.2:
-			self.Joint.qpd = self.KDL.leg_IK(xp, self.number, True)
+		# wXf = mX(self.XH_world_X_base[:3,:3], robot_transforms.update_base_X_foot(self.number, self.Joint.qpd)[:3,:3])
+		# vt = np.dot(wXf[:3,:3], np.array([1.,0.,0.]))
+		# d1 = np.dot(self.snorm, vt)
+		# if d1 > 0.2:
+		# 	self.Joint.qpd = self.KDL.leg_IK(xp, self.number, True)
 
-		## Limit sudden change based on singularity		
-		dsing = self.KDL.singularity_approach(self.Joint.qpd)
-		qerror = self.Joint.qpd - prev_qpd
-		epsilon = 8e-6
-		UL = 0.001
-		if dsing < epsilon:
-			sgn = [np.sign(i) for i in self.Joint.qpd]
-			for i in range(3):
-				if abs(qerror[i]) > UL:
-					self.Joint.qpd[i] = prev_qpd[i] - sgn[i]*UL
-				else:
-					self.Joint.qpd[i] = prev_qpd[i] + qerror[i]
+		# ## Limit sudden change based on singularity		
+		# dsing = self.KDL.singularity_approach(self.Joint.qpd)
+		# qerror = self.Joint.qpd - prev_qpd
+		# epsilon = 8e-6
+		# UL = 0.001
+		# if dsing < epsilon:
+		# 	sgn = [np.sign(i) for i in self.Joint.qpd]
+		# 	for i in range(3):
+		# 		if abs(qerror[i]) > UL:
+		# 			self.Joint.qpd[i] = prev_qpd[i] - sgn[i]*UL
+		# 		else:
+		# 			self.Joint.qpd[i] = prev_qpd[i] + qerror[i]
 
 		if (self.Joint.qpd is not None):
 			self.XHd.update_foot_X_coxa(self.Joint.qpd) 	# updates coxa_X_foot as well
@@ -384,9 +387,9 @@ class LegClass:
 		# Transform error to leg frame
 		lf_error = mX(self.XHd.coxa_X_world[:3,:3], wf_error)
 		
-		offset_x = self.impedance_controller_x.evaluate(lf_error[0])
-		offset_y = self.impedance_controller_y.evaluate(lf_error[1])
-		offset_z = self.impedance_controller_z.evaluate(lf_error[2])
+		offset_x = self.impedance_controller_x.evaluate(lf_error[0]) if self.number<3 else 0.
+		offset_y = self.impedance_controller_y.evaluate(lf_error[1]) if self.number<3 else 0.
+		offset_z = self.impedance_controller_z.evaluate(lf_error[2]) #if self.number>2 else 0.
 
 		return np.array([offset_x, offset_y, offset_z])
 

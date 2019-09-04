@@ -96,7 +96,7 @@ class PathPlanner:
 			for i in range(1,int(nintv)):
 				p_intv = ptemp + i*d_dif/(d_mag/lamb)
 				# print ptemp, d_dif, d_mag/lamb, i
-				# print p_intv
+				# print p_intv[3:6]
 
 				world_X_base.append(p_intv.flatten())
 				gait_phase.append(Gait.phases)
@@ -186,7 +186,7 @@ class PathPlanner:
 			world_X_footholds[j].xp.insert(0, Robot.Leg[j].XHc.world_X_foot[:3,3].flatten().copy())
 			base_X_footholds[j].xp.insert(0, Robot.Leg[j].XHc.base_X_foot[:3,3].flatten().copy())
 			world_base_X_NRP[j].xp.insert(0, Robot.Leg[j].XHc.world_base_X_NRP[:3,3].flatten().copy())
-		
+		print base_X_footholds[5].xp
 		return set_motion_plan()
 
 	def max_stride_foothold(self, Robot, d_nom):
@@ -219,7 +219,7 @@ class PathPlanner:
 		
 		for i in range(0,len(world_X_base)):
 			x_cob[i,:] = world_X_base[i][0:3] - base_offset[0:3]
-			w_cob[i,:] = world_X_base[i][3:6] - base_offset[3:6]
+			w_cob[i,:] = world_X_base[i][3:6] #- base_offset[3:6]
 
 		if t_cob is None:
 			t_cob = np.zeros(len(world_X_base))
@@ -418,7 +418,7 @@ grid_map = GridMap('flat')
 planner = PathPlanner(grid_map)
 Robot = robot_class.RobotState()
 
-ps = np.array([0.33, 0.39, 0.1, 0., 0., 0.]) 
+ps = np.array([0.33, 0.39, 0.1, 1.58563223e-04, -1.70823249e-04, 1.21318533e-03]) 
 pf = np.array([0.63, 0.39, 0.1, 0., 0., 0.]) 
 
 Robot.P6c.world_X_base = ps
@@ -428,9 +428,11 @@ Robot.init_robot_stance()
 Robot.Gait.walk_mode()
 # motion_plan = planner.chimney_motion_planning(ps, pf, Robot)
 motion_plan = planner.motion_planning(ps, pf, Robot)
+base_path = motion_plan.qb
 
-# print Robot.P6c.world_X_base_offset
-# print motion_plan.f_world_X_foot[3].xp
+# Plot.plot_2d(base_path.X.t, base_path.X.xp)
+# Plot.plot_2d(base_path.W.t, base_path.W.xp)
+
 # tintv = math.ceil(t[-1]/CTR_INTV)
 # t_intv = []
 # for i in range(int(tintv)+1):

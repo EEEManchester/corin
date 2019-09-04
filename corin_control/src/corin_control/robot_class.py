@@ -510,8 +510,12 @@ class RobotState:
 			leg_stance[5] = np.array([ stance_width*np.cos(teta_r*np.pi/180), stance_width*np.sin(-teta_r*np.pi/180), -base_height ])
 
 		elif stance_type == "wall":
+			# 65 deg
 			wg_stance = 0.30;	wg_height = 0.05
 			ww_stance = 0.21;	ww_height = -0.05
+			# 90 deg
+			wg_stance = 0.33;	wg_height = 0.1
+			ww_stance = 0.21;	ww_height = -0.1
 			leg_stance[0] = np.array([ ww_stance*np.cos(teta_f*np.pi/180), ww_stance*np.sin(teta_f*np.pi/180), ww_height ])
 			leg_stance[1] = np.array([ ww_stance, 0, ww_height])
 			leg_stance[2] = np.array([ ww_stance*np.cos(teta_r*np.pi/180), ww_stance*np.sin(teta_r*np.pi/180), ww_height ])

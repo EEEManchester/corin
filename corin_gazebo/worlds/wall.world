@@ -3,7 +3,7 @@
   <world name='default'>
     <light name='sun' type='directional'>
       <cast_shadows>1</cast_shadows>
-      <pose>0 0 10 0 -0 0</pose>
+      <pose>0 -10 10 0 -0 0</pose>
       <diffuse>0.8 0.8 0.8 1</diffuse>
       <specular>0.2 0.2 0.2 1</specular>
       <attenuation>
@@ -12,7 +12,7 @@
         <linear>0.01</linear>
         <quadratic>0.001</quadratic>
       </attenuation>
-      <direction>-0.5 0.1 -0.9</direction>
+      <direction>0. 0.1 -0.9</direction>
     </light>
 
     <!-- ============================================================== -->
@@ -125,7 +125,6 @@
               <uri>file://media/materials/scripts/gazebo.material</uri>
               <name>Gazebo/Bricks</name>
             </script>
-            <ambient>0.435294 0.796078 0.67451 1</ambient>
           </material>
         </visual>
 

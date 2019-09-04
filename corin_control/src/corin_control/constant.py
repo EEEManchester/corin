@@ -18,9 +18,9 @@ ROBOT_NS = "corin"
 ## ================================================================ ##
 # Link Length, Mass
 BODY_MASS = 1.58
-L1 = 0.060;	COXA_M = 0.040586;	#L1_MASS = 0.040
-L2 = 0.15;	FEMUR_M = 0.347529;	#L2_MASS = 0.350 # ORIGIINAL L2 = 0.15 m; chimney 0.2; wall 0.17
-L3 = 0.15;	TIBIA_M = 0.10313;	#L3_MASS = 0.116
+L1 = 0.060;	COXA_M = 0.04#0586;	#L1_MASS = 0.040
+L2 = 0.15;	FEMUR_M = 0.35#47529;	#L2_MASS = 0.350 # ORIGIINAL L2 = 0.15 m; chimney 0.2; wall 0.17
+L3 = 0.15;	TIBIA_M = 0.116#0313;	#L3_MASS = 0.116
 
 LEG_MASS = COXA_M + FEMUR_M + TIBIA_M #L1_MASS + L2_MASS + L3_MASS
 ROBOT_MASS = BODY_MASS + LEG_MASS*6
@@ -96,7 +96,7 @@ IMU_RATE = 192 			# IMU publishing rate, Hz
 ## ================================================================ ##
 ##                 Force Distribution parameters 	 				##
 ## ================================================================ ##
-LOAD_T = 2.	# time for leg load & unloading
+LOAD_T = 2.0	# time for leg load & unloading
 F_MAX = ROBOT_MASS*10.#40.0	# maximum force for leg
 F_MIN = 0.0		# minimum force for leg
 KPcom = np.array([1.0, 1.0, 1.0])*0.3	#1000. #
@@ -115,7 +115,8 @@ CONTACT_COUNT = 2 	# no. of contacts above threshold limit required
 ## ================================================================ ##
 IMPEDANCE_FN = 1.5 			# natural frequency
 IMPEDANCE_DAMPING = 3. 	# damping ratio
-IMPEDANCE_GAIN = 0.004		# m/N (delta distance per delta force)
+IMPEDANCE_GAIN = 0.001		# m/N (delta distance per delta force)
+#  50 Hz: 1.5, 3., 0.004
 #  60 Hz: 2, 1.5, 0.001
 # 200 Hz: 2, 2.2, 0.003
 # 100 Hz: 0.5, 3.5, 0.003
@@ -155,10 +156,10 @@ BOUND_FACTOR = 1.1 	# boundary constraint for leg workplane space
 STANCE_WIDTH = 0.21#0.235		# ori: 0.21, chimney: 0.23, 0.27, 0.31 for tripod
 BODY_HEIGHT  = 0.1#0.147		# ori: 0.10, chimney: 0.0
 # Offset for front and rear legs
-TETA_F = 0.;
+TETA_F = 40.;
 TETA_R = -TETA_F;
 LEG_OFFSET = [TETA_F, 0., TETA_R, -TETA_F, 0., -TETA_R]
-STANCE_TYPE = "ground" 	# "ground", "chimney", "wall"
+STANCE_TYPE = "wall" 	# "ground", "chimney", "wall"
 
 ## ================================================================ ##
 ##                       Gait parameters 	 						##
@@ -168,7 +169,7 @@ STANCE_TYPE = "ground" 	# "ground", "chimney", "wall"
 GAIT_TYPE 	 = 1 	# default type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 GAIT_TPHASE	 = 2.0 	# default period per gait phase
 STEP_HEIGHT  = 0.06	# default step height, z
-STEP_STROKE  = 0.1 	# default step stroke
+STEP_STROKE  = 0.05 	# default step stroke
 
 BASE_MAX_LINEAR_VELOCITY  = 0.05	# maximum base velocity, m/s - walking: 0.025
 BASE_MAX_ANGULAR_VELOCITY = 0.05	# maximum base velocity, rad/s

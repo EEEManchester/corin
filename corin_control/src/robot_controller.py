@@ -74,6 +74,9 @@ class RobotController(CorinManager):
 			w_base_X_NRP = []
 		
 		## Update surface normals
+		## TEMP: VALIDATION
+		for j in range(3):
+			self.Robot.Leg[j].snorm = np.array([0.,-1.,0.])
 		# for j in range(6):
 		# 	self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
 		# 	print self.Robot.Leg[j].XHc.world_X_foot[0:3,3]
@@ -92,7 +95,7 @@ class RobotController(CorinManager):
 		# State machine loading/unloading timing parameters
 		tload = 1						# loading counter
 		iload = int(LOAD_T/CTR_INTV) 	# no. of intervals for loading
-		hload = int(1./CTR_INTV)		# no. of intervals for initial holding
+		hload = int(3./CTR_INTV)		# no. of intervals for initial holding
 		# Force Distribution variables
 		fmax_lim  = [F_MAX]*6			# maximum force array
 		init_flim = [F_MAX]*6			# current force for linear decrease in unloading
@@ -148,7 +151,7 @@ class RobotController(CorinManager):
 				v3cv = base_path.X.xv[i].reshape(3,1);
 				v3ca = base_path.X.xa[i].reshape(3,1);
 
-				v3wp = wXbase_offset[3:6] + base_path.W.xp[i].reshape(3,1)
+				v3wp = base_path.W.xp[i].reshape(3,1)
 				# v3wp = base_path.W.xp[i].reshape(3,1);	# CORNERING: base trajectory relative to world frame
 				v3wv = base_path.W.xv[i].reshape(3,1);
 				v3wa = base_path.W.xa[i].reshape(3,1);
@@ -326,15 +329,16 @@ class RobotController(CorinManager):
 								# 	s_max = iahead
 								try:
 									x_ahead = base_path.X.xp[i+iahead].reshape(3,1) + wXbase_offset[0:3]
-									w_ahead = base_path.W.xp[i+iahead].reshape(3,1) + wXbase_offset[3:6]
+									w_ahead = base_path.W.xp[i+iahead].reshape(3,1) #+ wXbase_offset[3:6]
 								except IndexError:
 									x_ahead = base_path.X.xp[-1].reshape(3,1) + wXbase_offset[0:3]
-									w_ahead = base_path.W.xp[-1].reshape(3,1) + wXbase_offset[3:6]
-								
+									w_ahead = base_path.W.xp[-1].reshape(3,1) #+ wXbase_offset[3:6]
+								# print x_ahead.flatten(), w_ahead.flatten()
 								self.Robot.Leg[j].XH_world_X_base = vec6d_to_se3(np.array([x_ahead, w_ahead]).reshape((6,1)))
 								self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
 																		self.Robot.Leg[j].XHd.world_X_foot)
 								## TEMP - Reactive planning using nominal_planning.py
+								# print 'using AEP'
 								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
 								## TEMP - Stability
 								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
@@ -354,9 +358,9 @@ class RobotController(CorinManager):
 							# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
 							# 	sn2 = np.array([1., 0., 0.])
 							## TEMP: validation
-							# if j < 3:
-							# 	sn2 = np.array([0., -1., 0.])	
-							# 	sn1 = sn2.copy()
+							if j < 3:
+								sn2 = np.array([0.,-1.,0.])	
+								sn1 = sn2.copy()
 							## TEMP: TAROS
 							# if j < 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
 							# 	sn2 = np.array([0., -1., 0.])	
@@ -371,6 +375,25 @@ class RobotController(CorinManager):
 						
 						## Updates to actual foot position (without Q_COMPENSATION)
 						self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3:4] = self.Robot.Leg[j].KDL.leg_FK(self.Robot.Leg[j].Joint.qpc)
+
+						# print j, np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],4)
+						# print j, np.round(self.Robot.Leg[j].XHc.base_X_foot[0:3,3],4)
+						# start = self.Robot.Leg[j].XHc.world_X_foot[:3,3].copy()
+						# end   = mX(self.Robot.XHd.world_X_base, self.Robot.Leg[j].XHd.base_X_foot)
+						# wpw, td = self.Robot.Leg[j].Path.interpolate_leg_path(start, end[:3,3], sn1, sn2, 1, False, gait_tphase)
+						# if j == 5:
+						# 	print wpw
+						# start = self.Robot.Leg[j].XHc.world_base_X_foot[:3,3].copy()
+						# end   = mX(self.Robot.Leg[j].XH_world_X_base[:3,:3], self.Robot.Leg[j].XHd.base_X_foot[:3,3])
+						# wpx, td = self.Robot.Leg[j].Path.interpolate_leg_path(start, end, sn1, sn2, 1, False, gait_tphase)
+						# if j == 5:
+						# 	print wpx
+						# 	print 'wxb: ', np.round(self.Robot.XHd.world_X_base[:3,3],3)
+						# 	print 'wxs: ', np.round(self.Robot.XHd.world_X_base[:3,3]+start,3)
+						# 	print 'wxe: ', np.round(self.Robot.XHd.world_X_base[:3,3]+end,3)
+						# 	print self.Robot.Leg[j].XH_world_X_base
+						# 	for i in range(len(wpx)):
+						# 		print np.round(self.Robot.XHd.world_X_base[:3,3] + np.array(wpx[i]),3)
 						## Generate transfer spline
 						svalid = self.Robot.Leg[j].generate_spline('world', sn1, sn2, 1, False, gait_tphase, CTR_INTV)
 
@@ -379,8 +402,6 @@ class RobotController(CorinManager):
 																	self.Robot.Leg[j].XHc.world_base_X_NRP[:3,3])
 						self.Robot.Leg[j].XHd.world_base_X_AEP[:3,3] = mX(self.Robot.XHd.world_X_base[:3,:3],
 																			self.Robot.Leg[j].XHd.base_X_foot[:3,3])
-
-						## CORNERING hack: insert here <<
 
 						if (svalid is False):
 							# set invalid if trajectory unfeasible for leg's kinematic
@@ -391,7 +412,6 @@ class RobotController(CorinManager):
 							self.Robot.Leg[j].transfer_phase_change = True
 
 				## Compute task space foot position for all legs
-				# if s_cnt < 100:
 				self.update_phase_transfer()
 				self.update_phase_support(P6e_world_X_base, V6e_world_X_base)
 				# print 'wXf: ', np.round(self.Robot.Leg[1].XHd.world_X_foot[:3,3],4)
@@ -418,7 +438,9 @@ class RobotController(CorinManager):
 								# 	print self.Robot.Leg[j].snorm
 								# elif j >= 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
 								# 	self.Robot.Leg[j].snorm = np.array([0., 1., 0.])	
-									
+								## TEMP: VALIDATION
+								if j < 3:
+									self.Robot.Leg[j].snorm = np.array([0., -1., 0.])	
 						state_machine = 'load'
 						self.Robot.suspend = False
 						gphase = list(self.Robot.Gait.cs)

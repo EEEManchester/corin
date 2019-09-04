@@ -627,6 +627,7 @@ class CorinManager:
 					# 										BODY_HEIGHT, 0., 0., 0.]).reshape(6,1)
 					# self.Robot.P6c.world_X_base_offset = np.array([map_offset[0], map_offset[1],
 					# 											0.,0.,0.,0.]).reshape(6,1)
+					# temp_pos = np.array([0.,0.15,0.322,1.13,0.,0.]).reshape((6,1))
 					temp_pos = self.Robot.P6c.world_X_base.copy()
 					self.Robot.P6c.world_X_base = np.array([map_offset[0], map_offset[1], 
 															temp_pos.item(2), temp_pos.item(3), 0., 0.]).reshape(6,1)
@@ -643,7 +644,7 @@ class CorinManager:
 						self.publish_topics(qd)
 				
 				ps = self.Robot.P6c.world_X_base
-				pf = np.vstack((self.Robot.P6c.world_X_base[0:3]+d_travel[0:3], np.array([0.,0.,0.]).reshape((3,1))))
+				pf = np.vstack((self.Robot.P6c.world_X_base[0:3]+d_travel[0:3], np.array([temp_pos.item(3),0.,0.]).reshape((3,1))))
 				
 				# Use Cheah2019 grid planning service if available 
 				if (self.grid_serv_.available):
@@ -769,7 +770,7 @@ class CorinManager:
 		qlog.accelerations = v3ca.flatten().tolist() + v3wa.flatten().tolist() + qd.xa.tolist()
 		qlog.effort = effort
 		qlog.forces = forces
-		
+		# print np.round(forces,3)
 		qlog.qp_sum_forces = self.ForceDist.sum_forces.flatten().tolist()
 		qlog.qp_sum_moments = self.ForceDist.sum_moments.flatten().tolist()
 		qlog.qp_desired_forces = self.ForceDist.desired_forces.flatten().tolist()

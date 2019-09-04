@@ -6,6 +6,8 @@ import math
 import sys
 from termcolor import colored
 import argparse
+import os
+import time
 
 def seq(start, stop, step=1):
 	n = int(round((stop - start)/float(step)))
@@ -36,3 +38,9 @@ if __name__ == "__main__":
 	print args
 	# print("Hi there {}, it's nice to meet you!".format(args["name"]))
 	print args["base_x"]
+	
+	duration = 0.05  # seconds
+	freq = 440  # Hz
+	for i in range(3):
+		os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq))
+		time.sleep(0.1)
