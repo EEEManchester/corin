@@ -20,9 +20,9 @@ class RobotController(CorinManager):
 		
 		# Enable/disable controllers
 		self.ctrl_base_admittance = False 	# base impedance controller - fault
-		self.ctrl_base_tracking   = True 	# base tracking controller
-		self.ctrl_leg_admittance  = True 	# leg impedance controller
-		self.ctrl_contact_detect  = True 	# switch gait for early contact detection
+		self.ctrl_base_tracking   = False 	# base tracking controller
+		self.ctrl_leg_admittance  = False 	# leg impedance controller
+		self.ctrl_contact_detect  = False 	# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
 
@@ -75,12 +75,12 @@ class RobotController(CorinManager):
 		
 		## Update surface normals
 		## TEMP: VALIDATION
-		for j in range(3):
-			self.Robot.Leg[j].snorm = np.array([0.,-1.,0.])
-		# for j in range(6):
-		# 	self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
-		# 	print self.Robot.Leg[j].XHc.world_X_foot[0:3,3]
-		# 	print j, self.Robot.Leg[j].snorm
+		# for j in range(3):
+		# 	self.Robot.Leg[j].snorm = np.array([0.,-1.,0.])
+		for j in range(6):
+			self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+			# print self.Robot.Leg[j].XHc.world_X_foot[0:3,3]
+			# print j, self.Robot.Leg[j].snorm
 
 		## User input
 		print '==============================================='
@@ -151,7 +151,7 @@ class RobotController(CorinManager):
 				v3cv = base_path.X.xv[i].reshape(3,1);
 				v3ca = base_path.X.xa[i].reshape(3,1);
 
-				v3wp = base_path.W.xp[i].reshape(3,1)
+				v3wp = base_path.W.xp[i].reshape(3,1) + wXbase_offset[3:6]
 				# v3wp = base_path.W.xp[i].reshape(3,1);	# CORNERING: base trajectory relative to world frame
 				v3wv = base_path.W.xv[i].reshape(3,1);
 				v3wa = base_path.W.xa[i].reshape(3,1);
@@ -164,7 +164,7 @@ class RobotController(CorinManager):
 				v3wp = wXbase_offset[3:6]
 				v3wv = np.zeros((3,1))
 				v3wa = np.zeros((3,1))
-			# print 'xd: ', i, np.round(base_path.X.xp[i].flatten(),4)
+			# print 'xd: ', i, np.round(base_path.W.xp[i].flatten(),4)
 			# Update robot's desired position, velocity & acceleration to next point on spline
 			self.Robot.P6d.world_X_base = np.vstack((v3cp,v3wp))
 			self.Robot.V6d.world_X_base = np.vstack((v3cv,v3wv)) 	# not used atm
@@ -329,17 +329,16 @@ class RobotController(CorinManager):
 								# 	s_max = iahead
 								try:
 									x_ahead = base_path.X.xp[i+iahead].reshape(3,1) + wXbase_offset[0:3]
-									w_ahead = base_path.W.xp[i+iahead].reshape(3,1) #+ wXbase_offset[3:6]
+									w_ahead = base_path.W.xp[i+iahead].reshape(3,1) + wXbase_offset[3:6]
 								except IndexError:
 									x_ahead = base_path.X.xp[-1].reshape(3,1) + wXbase_offset[0:3]
-									w_ahead = base_path.W.xp[-1].reshape(3,1) #+ wXbase_offset[3:6]
+									w_ahead = base_path.W.xp[-1].reshape(3,1) + wXbase_offset[3:6]
 								# print x_ahead.flatten(), w_ahead.flatten()
 								self.Robot.Leg[j].XH_world_X_base = vec6d_to_se3(np.array([x_ahead, w_ahead]).reshape((6,1)))
 								self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
 																		self.Robot.Leg[j].XHd.world_X_foot)
 								## TEMP - Reactive planning using nominal_planning.py
-								# print 'using AEP'
-								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
+								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
 								## TEMP - Stability
 								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
 								# self.Robot.Leg[j].XHd.base_X_foot[1,3] += 0.05
@@ -355,12 +354,12 @@ class RobotController(CorinManager):
 							# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
 							# 	sn2 = np.array([1., 0., 0.])
 							## TEMP: Wall convex corner
-							# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
-							# 	sn2 = np.array([1., 0., 0.])
+							if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
+								sn2 = np.array([1., 0., 0.])
 							## TEMP: validation
-							if j < 3:
-								sn2 = np.array([0.,-1.,0.])	
-								sn1 = sn2.copy()
+							# if j < 3:
+							# 	sn2 = np.array([0.,-1.,0.])	
+							# 	sn1 = sn2.copy()
 							## TEMP: TAROS
 							# if j < 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
 							# 	sn2 = np.array([0., -1., 0.])	
@@ -376,8 +375,10 @@ class RobotController(CorinManager):
 						## Updates to actual foot position (without Q_COMPENSATION)
 						self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3:4] = self.Robot.Leg[j].KDL.leg_FK(self.Robot.Leg[j].Joint.qpc)
 
-						# print j, np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],4)
-						# print j, np.round(self.Robot.Leg[j].XHc.base_X_foot[0:3,3],4)
+						# print 'wXf', np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],4)
+						# print 'wXf', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],4)
+						# print 'bXf', np.round(self.Robot.Leg[j].XHd.base_X_foot[0:3,3],4)
+						# print 'bXf', np.round(self.Robot.Leg[j].XHc.base_X_foot[0:3,3],4)
 						# start = self.Robot.Leg[j].XHc.world_X_foot[:3,3].copy()
 						# end   = mX(self.Robot.XHd.world_X_base, self.Robot.Leg[j].XHd.base_X_foot)
 						# wpw, td = self.Robot.Leg[j].Path.interpolate_leg_path(start, end[:3,3], sn1, sn2, 1, False, gait_tphase)
@@ -430,8 +431,8 @@ class RobotController(CorinManager):
 								# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
 								# 	self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
 								## TEMP: Wall Convex corner
-								# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
-								# 	self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
+								if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
+									self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
 								## TEMP: TAROS
 								# if j < 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
 								# 	self.Robot.Leg[j].snorm = np.array([0., -1., 0.])	
@@ -439,8 +440,8 @@ class RobotController(CorinManager):
 								# elif j >= 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
 								# 	self.Robot.Leg[j].snorm = np.array([0., 1., 0.])	
 								## TEMP: VALIDATION
-								if j < 3:
-									self.Robot.Leg[j].snorm = np.array([0., -1., 0.])	
+								# if j < 3:
+								# 	self.Robot.Leg[j].snorm = np.array([0., -1., 0.])	
 						state_machine = 'load'
 						self.Robot.suspend = False
 						gphase = list(self.Robot.Gait.cs)
@@ -474,8 +475,6 @@ class RobotController(CorinManager):
 				if tload == 1:
 					print 'State Machine: Holding'
 					self.Robot.Gait.support_mode()
-					## TEMP
-					# self.Robot.Gait.cs = [0,0,0,2,0,0]
 				tload += 1
 				
 				if tload == hload+1 and motion_plan:
@@ -483,13 +482,9 @@ class RobotController(CorinManager):
 					if self.Robot.support_mode:
 						state_machine = 'motion'
 						print 'Support mode: Motion'
-						## TEMP
-						# state_machine = 'unload'
-						# tload = 1
 					else:
 						state_machine = 'unload'
 						tload = 1
-						# self.Robot.Gait.walk_mode()
 					raw_input('Start motion!')
 				self.update_phase_support(P6e_world_X_base, V6e_world_X_base)
 				i += 1
