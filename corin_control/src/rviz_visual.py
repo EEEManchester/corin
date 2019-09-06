@@ -206,7 +206,8 @@ class RvizVisualise:
 				data.wrench.force.y = robot.Leg[j].F6d.tibia_X_foot[1]
 				data.wrench.force.z = robot.Leg[j].F6d.tibia_X_foot[2]
 			self.wrench_pub_[j].publish(data)
-
+			# if j==2:
+			# 	print np.round(robot.Leg[j].F6c.tibia_X_foot[0:3].flatten(),3)
 	def publish_friction_cones(self, robot, mu):
 		""" Publishes friction cones for each leg in contact """
 		

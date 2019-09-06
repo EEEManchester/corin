@@ -21,7 +21,7 @@ class RobotController(CorinManager):
 		# Enable/disable controllers
 		self.ctrl_base_admittance = False 	# base impedance controller - fault
 		self.ctrl_base_tracking   = True 	# base tracking controller
-		self.ctrl_leg_admittance  = True 	# leg impedance controller
+		self.ctrl_leg_admittance  = False 	# leg impedance controller
 		self.ctrl_contact_detect  = True 	# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
@@ -271,7 +271,9 @@ class RobotController(CorinManager):
 						for j in cindex:
 							self.Robot.Gait.cs[j] = 0
 							self.Robot.Leg[j].change_phase('support', self.Robot.XHc.world_X_base)
-							self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+							# self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+							## TEMP: Chimney straight
+							self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j<3 else np.array([0.,1.,0.])
 							## TODO: CHECK IF INITIAL OR ZERO BETTER
 							self.Robot.Leg[j].Fmax = self.Robot.Leg[j].get_normal_force('current')
 							# self.Robot.Leg[j].Fmax = 0.
@@ -458,7 +460,7 @@ class RobotController(CorinManager):
 						self.Robot.suspend = True
 						## Foot displacement in surface normal direction
 						for j in [z for z, y in enumerate(self.Robot.cstate) if y == False]:
-							sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+							# sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
 							## TEMP: Chimney straight
 							sn1 = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
 							# Incremental displacement in world frame - support legs 
@@ -524,7 +526,7 @@ class RobotController(CorinManager):
 			force_dist = self.compute_foot_force_distribution(self.Robot.P6d.world_X_base, qd.xp, xa_d, wa_d, i_gphase, fmax_lim)
 			# force_dist = np.zeros((18,1))
 			joint_torq = self.Robot.force_to_torque(force_dist)
-			# print np.round(force_dist[15:18].flatten(),3)
+			# print 'fd: ', np.round(force_dist[6:9].flatten(),3), fmax_lim
 			if self.interface != 'rviz' and self.control_loop != "open":
 
 				## Leg admittance - force tracking
@@ -578,7 +580,7 @@ class RobotController(CorinManager):
 			return False
 
 	def update_phase_support(self, P6e_world_X_base, V6e_world_X_base):
-
+		
 		## I controller
 		# comp_world_X_base = vec6d_to_se3(self.Robot.P6d.world_X_base + KI_P_BASE*self.P6e_integral)
 		# 					# mX(np.diag([KI_P_BASE,KI_P_BASE,KI_P_BASE,KI_W_BASE,KI_W_BASE,KI_W_BASE]),self.P6e_integral))
@@ -609,11 +611,11 @@ class RobotController(CorinManager):
 				# print j, np.round(self.Robot.Leg[j].XHc.world_X_foot[:3,3],3)
 				# print j, np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3],3)
 				# print j, np.round(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3],3)
-				if j==2:
+				# if j==2:
+				# 	print 'wXf d: ', np.round(self.Robot.Leg[j].XHd.world_X_foot[0:3,3],3)
+				# 	print 'wXf c: ', np.round(self.Robot.Leg[j].XHc.world_X_foot[0:3,3],3)
 					# print 'u: ', np.round(u.flatten(),4)
 					# print slide_gain
-					# print 'S c wXb: ', np.round(self.Robot.XHc.world_X_base[:3,3],4)
-					# print 'S d wXb: ', np.round(self.Robot.XHd.world_X_base,3)
 					# print np.round(self.Robot.P6d.world_X_base.flatten(),4)
 					# print np.round(self.Robot.P6c.world_X_base.flatten(),4)
 					# print np.round(P6e_world_X_base.flatten(),4)
@@ -621,7 +623,7 @@ class RobotController(CorinManager):
 					# print 'S c bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3],4)
 					# print 'S c wXb: ', np.round(comp_world_X_base[:3,3],4)
 					# print np.round(self.Robot.P6c.world_X_base + slide_gain*u,3)
-					print 'S d cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3],4)
+					# print 'S d cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3],4)
 					# print '==========================================='
 				
 	def update_phase_transfer(self,delta_d=None):

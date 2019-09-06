@@ -86,7 +86,7 @@ class CorinManager:
 			msg.orientation = Quaternion(q[1], q[2], q[3], q[0])
 
 		self.Robot.imu = msg
-		self.Robot.estimate_state()
+		# self.Robot.estimate_state()
 
 		# Hassan - debugging
 		# if(self.Robot.state_estimator.calibrated):

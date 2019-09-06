@@ -140,6 +140,9 @@ class LegClass:
 			self.cstate = True
 		else:
 			self.cstate = False
+		# if self.number==2:
+		# 	print 'fc: ', np.round(self.F6c.world_X_foot[:3].flatten(),4)
+		# 	print self.c_threshold, force
 
 	def change_phase(self, phase, world_X_base):
 		""" Updates leg state when gait phase changes """

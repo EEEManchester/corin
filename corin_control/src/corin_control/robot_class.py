@@ -135,7 +135,7 @@ class RobotState:
 					break
 			else:
 				print colored("State Estimator calibrated", 'green') 
-
+		
 		self.update_bodypose_state(cmode)
 		self.update_leg_state(reset, cmode)
 		if no_stability != True:
@@ -152,7 +152,7 @@ class RobotState:
 		## TODO: INTEGRATE HW FORCE SENSOR READINGS
 
 		# self.XHc.update_legs(self.qc.position) 	# NOT USED
-
+		
 		## Offset to deal with base joints - suspended control of base for
 		## fixed_robot evaluation in Gazebo
 		offset = 0 if (len(self.qc.name)==18) else 1
@@ -167,7 +167,7 @@ class RobotState:
 			qpc = self.qc.position
 			## TEMP: Open LOOP
 			# qpc = self.qd
-			
+		
 		# update leg states and check if boundary exceeded
 		for j in range(0,self.active_legs):
 
