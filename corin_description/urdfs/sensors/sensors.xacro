@@ -20,7 +20,7 @@
             <visual>
                 <origin xyz="0.0 0 0.0" rpy="0 0 0"/>
                 <geometry>
-                    <box size="0.05 0.05 0.01" />
+                    <box size="0.001 0.001 0.001" />
                 </geometry>
                 <material name="black">
                     <color rgba="0 0 0 0.9"/>
@@ -29,7 +29,7 @@
         </link>
 
         <gazebo>
-            <material>Gazebo/Red</material>  
+            <material>Gazebo/DarkGrey</material>  
             <plugin name="imu_plugin" filename="libgazebo_ros_imu.so">
                 <robotNamespace>/corin/imu/</robotNamespace>
                 <alwaysOn>true</alwaysOn>   

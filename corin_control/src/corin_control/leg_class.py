@@ -387,8 +387,8 @@ class LegClass:
 		# Transform error to leg frame
 		lf_error = mX(self.XHd.coxa_X_world[:3,:3], wf_error)
 		
-		offset_x = self.impedance_controller_x.evaluate(lf_error[0]) if self.number<3 else 0.
-		offset_y = self.impedance_controller_y.evaluate(lf_error[1]) if self.number<3 else 0.
+		offset_x = self.impedance_controller_x.evaluate(lf_error[0]) #if self.number<3 else 0.
+		offset_y = self.impedance_controller_y.evaluate(lf_error[1]) #if self.number<3 else 0.
 		offset_z = self.impedance_controller_z.evaluate(lf_error[2]) #if self.number>2 else 0.
 
 		return np.array([offset_x, offset_y, offset_z])

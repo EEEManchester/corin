@@ -21,7 +21,7 @@
 		<link name="${name}_link">
 			<visual>
 				<geometry>
-					<cylinder length="0.01" radius="0.01"/>
+					<cylinder length="0.001" radius="0.001"/>
 				</geometry>
 			</visual>
 		</link>

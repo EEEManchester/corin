@@ -20,9 +20,9 @@ class RobotController(CorinManager):
 		
 		# Enable/disable controllers
 		self.ctrl_base_admittance = False 	# base impedance controller - fault
-		self.ctrl_base_tracking   = False 	# base tracking controller
-		self.ctrl_leg_admittance  = False 	# leg impedance controller
-		self.ctrl_contact_detect  = False 	# switch gait for early contact detection
+		self.ctrl_base_tracking   = True 	# base tracking controller
+		self.ctrl_leg_admittance  = True 	# leg impedance controller
+		self.ctrl_contact_detect  = True 	# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
 
@@ -75,10 +75,10 @@ class RobotController(CorinManager):
 		
 		## Update surface normals
 		## TEMP: VALIDATION
-		# for j in range(3):
-		# 	self.Robot.Leg[j].snorm = np.array([0.,-1.,0.])
 		for j in range(6):
-			self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+			self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
+		# for j in range(6):
+		# 	self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
 			# print self.Robot.Leg[j].XHc.world_X_foot[0:3,3]
 			# print j, self.Robot.Leg[j].snorm
 
@@ -95,7 +95,7 @@ class RobotController(CorinManager):
 		# State machine loading/unloading timing parameters
 		tload = 1						# loading counter
 		iload = int(LOAD_T/CTR_INTV) 	# no. of intervals for loading
-		hload = int(3./CTR_INTV)		# no. of intervals for initial holding
+		hload = int(1.5/CTR_INTV)		# no. of intervals for initial holding
 		# Force Distribution variables
 		fmax_lim  = [F_MAX]*6			# maximum force array
 		init_flim = [F_MAX]*6			# current force for linear decrease in unloading
@@ -338,7 +338,7 @@ class RobotController(CorinManager):
 								self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
 																		self.Robot.Leg[j].XHd.world_X_foot)
 								## TEMP - Reactive planning using nominal_planning.py
-								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
+								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
 								## TEMP - Stability
 								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
 								# self.Robot.Leg[j].XHd.base_X_foot[1,3] += 0.05
@@ -348,14 +348,15 @@ class RobotController(CorinManager):
 						
 						## Get surface normal at current and desired footholds
 						try:
-							sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+							# sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+							sn1 = self.Robot.Leg[j].snorm
 							sn2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
 							## TEMP: Chimney corner
 							# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
 							# 	sn2 = np.array([1., 0., 0.])
 							## TEMP: Wall convex corner
-							if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
-								sn2 = np.array([1., 0., 0.])
+							# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
+							# 	sn2 = np.array([1., 0., 0.])
 							## TEMP: validation
 							# if j < 3:
 							# 	sn2 = np.array([0.,-1.,0.])	
@@ -367,6 +368,9 @@ class RobotController(CorinManager):
 							# elif j >= 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
 							# 	sn2 = np.array([0., 1., 0.])	
 							# 	sn1 = sn2.copy()
+							## TEMP: Chimney straight
+							sn2 = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
+							sn1 = sn2.copy()
 						except:
 							sn1 = np.array([0., 0., 1.])
 							sn2 = np.array([0., 0., 1.])
@@ -431,8 +435,8 @@ class RobotController(CorinManager):
 								# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
 								# 	self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
 								## TEMP: Wall Convex corner
-								if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
-									self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
+								# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[1,3] > 0.259:
+								# 	self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
 								## TEMP: TAROS
 								# if j < 3 and abs(self.Robot.Leg[j].XHd.world_X_foot[2,3]-0.1) < 0.005:
 								# 	self.Robot.Leg[j].snorm = np.array([0., -1., 0.])	
@@ -442,6 +446,9 @@ class RobotController(CorinManager):
 								## TEMP: VALIDATION
 								# if j < 3:
 								# 	self.Robot.Leg[j].snorm = np.array([0., -1., 0.])	
+								## TEMP: Chimney straight
+								self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
+
 						state_machine = 'load'
 						self.Robot.suspend = False
 						gphase = list(self.Robot.Gait.cs)
@@ -452,9 +459,11 @@ class RobotController(CorinManager):
 						## Foot displacement in surface normal direction
 						for j in [z for z, y in enumerate(self.Robot.cstate) if y == False]:
 							sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
-							print 'sn1: ', sn1
+							## TEMP: Chimney straight
+							sn1 = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
 							# Incremental displacement in world frame - support legs 
 							self.Robot.Leg[j].XHc.world_X_foot[:3,3] -= sn1*np.array([D_MOVE,D_MOVE,D_MOVE])
+							print sn1, np.round(self.Robot.Leg[j].XHc.world_X_foot[:3,3],4)
 							# Transform displacement to leg frame - transfer legs
 							self.Robot.Leg[j].XHc.update_world_X_coxa(self.Robot.Leg[j].XH_world_X_base)
 							delta_d = mX(self.Robot.Leg[j].XHc.coxa_X_world[:3,:3], sn1*np.array([D_MOVE,D_MOVE,D_MOVE]))
@@ -600,7 +609,7 @@ class RobotController(CorinManager):
 				# print j, np.round(self.Robot.Leg[j].XHc.world_X_foot[:3,3],3)
 				# print j, np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3],3)
 				# print j, np.round(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3],3)
-				# if j==0:
+				if j==2:
 					# print 'u: ', np.round(u.flatten(),4)
 					# print slide_gain
 					# print 'S c wXb: ', np.round(self.Robot.XHc.world_X_base[:3,3],4)
@@ -612,7 +621,7 @@ class RobotController(CorinManager):
 					# print 'S c bXf: ', np.round(self.Robot.Leg[j].XHd.base_X_foot[:3,3],4)
 					# print 'S c wXb: ', np.round(comp_world_X_base[:3,3],4)
 					# print np.round(self.Robot.P6c.world_X_base + slide_gain*u,3)
-					# print 'S d cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3],4)
+					print 'S d cXf: ', np.round(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3],4)
 					# print '==========================================='
 				
 	def update_phase_transfer(self,delta_d=None):
@@ -629,7 +638,7 @@ class RobotController(CorinManager):
 				# 	print 'T d cXf: ', np.round(self.Robot.Leg[4].XHd.coxa_X_foot[:3,3],4)
 			elif (self.Robot.Gait.cs[j] == 1 and self.Robot.Leg[j].feedback_state == 2 and delta_d is not None):
 				self.Robot.Leg[j].XHd.coxa_X_foot[:3,3] -= delta_d
-				# print delta_d
+				# print j, np.round(self.Robot.Leg[j].XHd.coxa_X_foot[:3,3],3)
 
 	def compute_foot_force_distribution(self, qb, qp, v3ca, v3wa, gphase, fmax=None):
 		""" Computes foot force distribution. First gets the Composite Rigid Body Inertia Matrix
