@@ -465,7 +465,8 @@ def motionplan_to_planpath(motion_plan, frame_id=None):
 	wXf = Float64MultiArray()
 	bXf = Float64MultiArray()
 	bXN = Float64MultiArray()
-	
+	snorms = Float64MultiArray()
+
 	qoffset.position.x = motion_plan.qb_offset[0]
 	qoffset.position.y = motion_plan.qb_offset[1]
 	qoffset.position.z = motion_plan.qb_offset[2]
@@ -533,7 +534,7 @@ def motionplan_to_planpath(motion_plan, frame_id=None):
 		dheader, ddata = list_to_multiarray(motion_plan.f_world_X_foot[j].xp)
 		wXf.layout.dim.append(dheader)
 		wXf.data += ddata
-		
+		# print ddata
 		if (len(motion_plan.f_base_X_foot[j].xp) != 0):
 			dheader, ddata = list_to_multiarray(motion_plan.f_base_X_foot[j].xp)
 			bXf.layout.dim.append(dheader)
@@ -544,7 +545,12 @@ def motionplan_to_planpath(motion_plan, frame_id=None):
 			bXN.layout.dim.append(dheader)
 			bXN.data += ddata
 
-	return qoffset, qbp, qbi, gphase, wXf, bXf, bXN
+		if motion_plan.surface_normals[j]:
+			dheader, ddata = list_to_multiarray(motion_plan.surface_normals[j])
+			snorms.layout.dim.append(dheader)
+			snorms.data += ddata
+
+	return qoffset, qbp, qbi, gphase, wXf, bXf, bXN, snorms
 
 def list_to_multiarray(idata):
 
@@ -620,7 +626,7 @@ def planpath_to_motionplan(plan_path):
 		motion_plan.gait_phase.append(list(plan_path.gait_phase.data[i*6:i*6+6]))
 	
 	## Remap Foot Contact List
-	nc_wXf = nc_bXf = nc_wbXN = 0
+	nc_wXf = nc_bXf = nc_wbXN = nc_snorm = 0
 	for j in range(0,6):
 		
 		for i in range(0, plan_path.f_world_X_foot.layout.dim[j].stride):
@@ -639,5 +645,10 @@ def planpath_to_motionplan(plan_path):
 				motion_plan.f_world_base_X_NRP[j].xp.append(np.array(plan_path.f_world_base_X_NRP.data[nc_wbXN*3+i*3:nc_wbXN*3+i*3+3]).reshape((3,1)))
 				motion_plan.f_world_base_X_NRP[j].t.append(i)
 			nc_wbXN += plan_path.f_world_base_X_NRP.layout.dim[j].stride
+
+		if plan_path.surface_normals.layout.dim:
+			for i in range(0, plan_path.surface_normals.layout.dim[j].stride):
+				motion_plan.surface_normals[j].append(np.array(plan_path.surface_normals.data[nc_snorm*3+i*3:nc_snorm*3+i*3+3]))
+			nc_snorm += plan_path.surface_normals.layout.dim[j].stride
 
 	return motion_plan

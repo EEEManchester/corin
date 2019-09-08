@@ -126,18 +126,15 @@ class CsvImport:
 		world_X_footholds = [None]*6
 		base_X_footholds  = [None]*6
 		world_base_X_NRP  = [None]*6
-		surface_normals = [None]*6
 		for j in range (0, 6):
 			world_X_footholds[j] = MarkerList()
 			base_X_footholds[j] = MarkerList()
 			world_base_X_NRP[j] = MarkerList()
-			surface_normals[j] = []
 
 		with open(filename, 'rb') as csvfile:
 			motion_data = csv.reader(csvfile, delimiter=',')
 			counter = 0
 			for row in motion_data:
-				
 				# Append for CoB
 				self.CoB.append( np.asarray(map(lambda x: float(x), row[0:6])) )
 				world_X_base.append( np.asarray(map(lambda x: float(x), row[0:6])) )
@@ -155,7 +152,7 @@ class CsvImport:
 					x_cob = np.vstack((x_cob, xpoint - qb_bias[0:3].flatten()))
 					w_cob = np.vstack((w_cob, wpoint - qb_bias[3:6].flatten()))
 					
-				# Append for footholds & surface normal
+				# Append for footholds
 				for j in range(0,6):
 					self.footholds[j].t.append(counter)
 					mod_foothold = np.asarray(map(lambda x: float(x), row[6+j*3:6+(j*3)+3])) + base_offset[0:3].flatten()
@@ -164,10 +161,6 @@ class CsvImport:
 					world_X_footholds[j].t.append(counter*CTR_INTV)
 					world_X_footholds[j].xp.append(mod_foothold.copy())
 					
-					if len(row) > 24:
-						surface_normals[j].append( map(lambda x: float(x), row[24+j*3:24+(j*3)+3]) )
-						# if j==0:
-						# 	print map(lambda x: float(x), row[24+j*3:24+(j*3)+3])
 				self.joint_states.append( np.asarray(map(lambda x: float(x), row[24:42])) )
 				
 				counter += 1
@@ -182,14 +175,13 @@ class CsvImport:
 		# print len(x_cob), len(t_cob), t_cob
 		# Plot.plot_2d(base_path.X.t, base_path.X.xp)
 		# Plot.plot_2d(base_path.W.t, base_path.W.xp)
-		# print surface_normals
+		
 		# Generate gait sequence
 		gait_list = self.set_gait_phase(fname, x_cob)
 
 		self.motion_plan.set_base_path(qb_bias, base_path, world_X_base, gait_list)
 		self.motion_plan.set_footholds(world_X_footholds, base_X_footholds, world_base_X_NRP)
-		self.motion_plan.set_surface_normals(surface_normals)
-		
+
 		return self.motion_plan
 
 	def set_gait_phase(self, fname, x_cob):
@@ -251,9 +243,8 @@ class MotionImport:
 		elif filename.endswith('.csv'):
 			mplan = self.csv_reader.get_MotionPlan(filename)
 
-		qoff, qbp, qbi, gphase, wXf, bXf, bXN, snorm = motionplan_to_planpath(mplan, "world")
-		# print wXf
-		# print snorm
+		qoff, qbp, qbi, gphase, wXf, bXf, bXN = motionplan_to_planpath(mplan, "world")
+
 		# Update grid map
 		filename = req.filename.data
 		if filename == 'chimney_nom.csv':
@@ -275,8 +266,7 @@ class MotionImport:
 								gait_phase = gphase, 
 								f_world_X_foot = wXf,
 								f_base_X_foot = bXf,
-								f_world_base_X_NRP = bXN,
-								surface_normals = snorm)
+								f_world_base_X_NRP = bXN)
 
 	# def publish(self, CoB, qp):
 	# 	self.Visualizer.publish_robot(CoB)
@@ -320,11 +310,8 @@ def call_motion_import(filename):
 		path_planner = rospy.ServiceProxy(ROBOT_NS + '/import_motion_plan', PlanPath)
 		path_planned = path_planner(Pose(), Pose(), String(filename))
 		print 'Service Completed: Motion plan imported!'
-		# print path_planned.surface_normals
-		mplan = planpath_to_motionplan(path_planned)
-		# for j in range(2):
-		# 	print mplan.surface_normals[j]
-		# 	print '=============================='
+	# 	mplan = planpath_to_motionplan(path_planned)
+		
 	except rospy.ServiceException, e:
 		print "Service call failed: %s"%e
 
@@ -348,7 +335,6 @@ if __name__ == "__main__":
 			filename = 'taros.yaml'
 
 	if filename is not None:
-		print 'Calling motion plan'
 		call_motion_import(filename)
 	# else:
 	# 	print 'No file selected, exiting!'

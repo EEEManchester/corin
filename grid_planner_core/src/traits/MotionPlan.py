@@ -18,6 +18,7 @@ class MotionPlan():
 		self.f_world_X_foot = [None]*6 		# foothold wrt world frame
 		self.f_base_X_foot  = [None]*6 		# foothold wrt base frame
 		self.f_world_base_X_NRP = [None]*6 	# NRP from base frame wrt world frame
+		self.surface_normals = [None]*6
 
 		self.gait_in = 0
 		self.gait_fn = 0
@@ -30,7 +31,8 @@ class MotionPlan():
 			self.f_world_X_foot[j] = MarkerList()
 			self.f_base_X_foot[j]  = MarkerList()
 			self.f_world_base_X_NRP[j] = MarkerList()
-
+			self.surface_normals[j] = []
+			
 	def set_base_path(self, qoffset, qb, qbp, gphase):
 		""" Set base path parameters """
 
@@ -58,6 +60,9 @@ class MotionPlan():
 	def set_gait(self, gait_initial, gait_final):
 		self.gait_in = gait_initial
 		self.gait_fn = gait_final
+
+	def set_surface_normals(self, snorms):
+		self.surface_normals = snorms
 
 	def append(self, plan):
 		""" Appends similar object to existing plan """

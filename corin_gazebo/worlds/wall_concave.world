@@ -79,17 +79,17 @@
     </model>
 
     <!-- ============================================================== -->
-    <!--                        outer X - Wall                          -->
-    <!-- ============================================================== -->
-    <model name='outer_x_wall'>
-      <pose frame=''>0.3 -0. 0 0 -0 0</pose> 
-      <link name='outer_wall_x'>
+    <!--                           Wall                                 -->
+    <!-- ============================================================== 
+    <model name='left_wall'>
+      <pose frame=''>0.3 0.1 0 0 -0 0</pose>
+      <link name='Wall_1'>
 
-        <collision name='outer_x_wall_Collision'>
-          <pose frame=''>0 0 0.45 0 -0 0</pose>
+        <collision name='Wall_1_Collision'>
+          <pose frame=''>0 0 0.37 0 -0 0</pose>
           <geometry>
             <box>
-              <size>0.63 0.03 0.9</size>
+              <size>0.63 0.10 0.9</size>
             </box>
           </geometry>
           <surface>
@@ -106,8 +106,64 @@
                 <kd>10.0</kd>
                 <soft_cfm>0.0</soft_cfm>
                 <soft_erp>0.2</soft_erp>
-                <maxVel>0.0001</maxVel>     <!-- contact correction velocity truncation -->
-                <minDepth>0.001</minDepth>  <!-- penetration between objects -->
+                <maxVel>0.0001</maxVel> 
+                <minDepth>0.001</minDepth>
+              </ode>
+            </contact>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+
+        <visual name='Wall_1_Visual'>
+          <pose frame=''>0 0 0.37 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>0.63 0.10 0.9</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Bricks</name>
+            </script>
+          </material>
+        </visual>
+
+        <pose frame=''>0 0 0 0 -0 0</pose>
+      </link>
+    <static>1</static>
+    </model>-->
+
+    <!-- ============================================================== -->
+    <!--                        outer X - Wall                          -->
+    <!-- ============================================================== -->
+    <model name='outer_x_wall'>
+      <pose frame=''>0.3 0. 0 0 -0 0</pose> 
+      <link name='outer_wall_x'>
+
+        <collision name='outer_x_wall_Collision'>
+          <pose frame=''>0 0 0.45 0 -0 0</pose>
+          <geometry>
+            <box>
+              <size>2.63 0.03 0.9</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+            <bounce/>
+            <contact>
+              <ode>
+                <kp>1e5</kp>
+                <kd>10.0</kd>
+                <soft_cfm>0.0</soft_cfm>
+                <soft_erp>0.2</soft_erp>
+                <maxVel>0.0001</maxVel>
+                <minDepth>0.001</minDepth>
               </ode>
             </contact>
           </surface>
@@ -119,14 +175,13 @@
             <pose frame=''>0 0 0.45 0 -0 0</pose>
             <geometry>
               <box>
-                <size>0.63 0.03 0.9</size>
+                <size>2.63 0.03 0.9</size>
               </box>
             </geometry>
             <material>
               <script>
                 <uri>file://media/materials/scripts/gazebo.material</uri>
                 <name>Gazebo/Bricks</name>
-                <!-- <name>Gazebo/SkyBlue</name> -->
               </script>
             </material>
           </visual>
@@ -136,9 +191,8 @@
 
     <!-- ============================================================== -->
     <!--                        outer Y - Wall                          -->
-    <!-- ============================================================== -->
+    <!-- ============================================================== 
     <model name='outer_y_wall'>
-      <!-- centred at origin -->
       <pose frame=''>0.63 0.36 0 0 -0 0</pose>
       <link name='outer_wall_y'>
 
@@ -183,13 +237,12 @@
               <script>
                 <uri>file://media/materials/scripts/gazebo.material</uri>
                 <name>Gazebo/Bricks</name>
-                <!-- <name>Gazebo/Orange</name> -->
               </script>
             </material>
           </visual>
       </link>
       <static>1</static>
-    </model>
+    </model> -->
 
     <!-- ============================================================== -->
     <!--                        Physics Engine                          -->  
