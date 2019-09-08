@@ -20,9 +20,9 @@ class RobotController(CorinManager):
 		
 		# Enable/disable controllers
 		self.ctrl_base_admittance = False 	# base impedance controller - fault
-		self.ctrl_base_tracking   = False 	# base tracking controller
-		self.ctrl_leg_admittance  = False 	# leg impedance controller
-		self.ctrl_contact_detect  = False 	# switch gait for early contact detection
+		self.ctrl_base_tracking   = True 	# base tracking controller
+		self.ctrl_leg_admittance  = True 	# leg impedance controller
+		self.ctrl_contact_detect  = True 	# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
 
@@ -40,8 +40,9 @@ class RobotController(CorinManager):
 			gait_phase 	 = motion_plan.gait_phase
 			w_base_X_NRP = motion_plan.f_world_base_X_NRP
 			world_X_footholds = motion_plan.f_world_X_foot
-			base_X_footholds  = motion_plan.f_base_X_foot
-			
+			base_X_footholds = motion_plan.f_base_X_foot
+			surface_normals	= motion_plan.surface_normals
+
 			## Publish motion plan
 			self.Visualizer.show_motion_plan(self.Robot.P6c.world_X_base, motion_plan.qbp, motion_plan.f_world_X_foot)
 			if (self.interface == 'rviz'):
@@ -75,12 +76,16 @@ class RobotController(CorinManager):
 		
 		## Update surface normals
 		## TEMP: VALIDATION
-		for j in range(6):
-			self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
 		# for j in range(6):
-		# 	self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+		# 	self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
+		for j in range(6):
+			# self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+			try:
+				self.Robot.Leg[j].snorm = surface_normals[j].pop(0)
+			except:
+				self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
 			# print self.Robot.Leg[j].XHc.world_X_foot[0:3,3]
-			# print j, self.Robot.Leg[j].snorm
+			print j, self.Robot.Leg[j].snorm
 
 		## User input
 		print '==============================================='
@@ -273,7 +278,7 @@ class RobotController(CorinManager):
 							self.Robot.Leg[j].change_phase('support', self.Robot.XHc.world_X_base)
 							# self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
 							## TEMP: Chimney straight
-							self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j<3 else np.array([0.,1.,0.])
+							# self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j<3 else np.array([0.,1.,0.])
 							## TODO: CHECK IF INITIAL OR ZERO BETTER
 							self.Robot.Leg[j].Fmax = self.Robot.Leg[j].get_normal_force('current')
 							# self.Robot.Leg[j].Fmax = 0.
@@ -340,7 +345,7 @@ class RobotController(CorinManager):
 								self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
 																		self.Robot.Leg[j].XHd.world_X_foot)
 								## TEMP - Reactive planning using nominal_planning.py
-								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
+								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
 								## TEMP - Stability
 								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
 								# self.Robot.Leg[j].XHd.base_X_foot[1,3] += 0.05
@@ -351,8 +356,10 @@ class RobotController(CorinManager):
 						## Get surface normal at current and desired footholds
 						try:
 							# sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+							# sn2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
 							sn1 = self.Robot.Leg[j].snorm
-							sn2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
+							# sn2 = surface_normals[j][0]
+							sn2 = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
 							## TEMP: Chimney corner
 							# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
 							# 	sn2 = np.array([1., 0., 0.])
@@ -371,8 +378,8 @@ class RobotController(CorinManager):
 							# 	sn2 = np.array([0., 1., 0.])	
 							# 	sn1 = sn2.copy()
 							## TEMP: Chimney straight
-							sn2 = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
-							sn1 = sn2.copy()
+							# sn2 = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
+							# sn1 = sn2.copy()
 						except:
 							sn1 = np.array([0., 0., 1.])
 							sn2 = np.array([0., 0., 1.])
@@ -432,7 +439,11 @@ class RobotController(CorinManager):
 						for j in range(0,6):
 							if (self.Robot.Gait.cs[j] == 1):
 								self.Robot.Leg[j].change_phase('support', self.Robot.XHc.world_X_base)
-								self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+								# self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+								try:
+									self.Robot.Leg[j].snorm = surface_normals[j].pop(0)
+								except:
+									self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
 								## TEMP: Chimney corner
 								# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
 								# 	self.Robot.Leg[j].snorm = np.array([1., 0., 0.])
@@ -449,7 +460,7 @@ class RobotController(CorinManager):
 								# if j < 3:
 								# 	self.Robot.Leg[j].snorm = np.array([0., -1., 0.])	
 								## TEMP: Chimney straight
-								self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
+								# self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
 
 						state_machine = 'load'
 						self.Robot.suspend = False
@@ -461,8 +472,9 @@ class RobotController(CorinManager):
 						## Foot displacement in surface normal direction
 						for j in [z for z, y in enumerate(self.Robot.cstate) if y == False]:
 							# sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+							sn1 = self.Robot.Leg[j].snorm
 							## TEMP: Chimney straight
-							sn1 = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
+							# sn1 = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
 							# Incremental displacement in world frame - support legs 
 							self.Robot.Leg[j].XHc.world_X_foot[:3,3] -= sn1*np.array([D_MOVE,D_MOVE,D_MOVE])
 							print sn1, np.round(self.Robot.Leg[j].XHc.world_X_foot[:3,3],4)

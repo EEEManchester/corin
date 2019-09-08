@@ -116,7 +116,16 @@ class LegClass:
 		self.F6c.world_X_foot[:3] = mX(self.XH_world_X_base[:3,:3], self.F6c.base_X_foot[:3].flatten()).reshape((3,1))
 		
 		self.check_contact_state()
-		
+		# if self.number>=3:
+		# 	self.F6c.world_X_foot[1] = -1.*self.F6c.world_X_foot[1]
+		# 	self.F6c.base_X_foot[:3] = mX(np.linalg.inv(self.XH_world_X_base[:3,:3]), self.F6c.world_X_foot[:3].flatten()).reshape((3,1))
+		# 	self.F6c.coxa_X_foot[:3] = mX(np.linalg.inv(self.XHd.base_X_coxa[:3,:3]), self.F6c.base_X_foot[:3].flatten()).reshape((3,1))
+		# 	self.F6c.tibia_X_foot[:3] = mX(np.linalg.inv(coxa_X_foot[:3,:3]), self.F6c.coxa_X_foot[:3]).reshape((3,1))
+
+		# if self.number==4:
+		# 	print self.number, np.round(self.F6c.coxa_X_foot[:3].flatten(),3)
+		# 	print self.number, np.round(self.F6c.world_X_foot[:3].flatten(),3)
+		# 	print '-----------------------------'
 		return self.cstate
 
 	def check_contact_state(self):

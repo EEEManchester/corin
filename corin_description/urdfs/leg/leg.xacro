@@ -54,6 +54,7 @@
 		<!-- Foot joint -->
 		<joint name="${name}_foot_joint" type="fixed">
 			<origin xyz="${tibia_l*link_scale-foot_r} 0 0" rpy="0 0 0"/>
+			<!-- <origin xyz="${tibia_l*link_scale} 0 0" rpy="0 0 0"/> -->
 			<parent link="${name}_lowerleg"/>
 			<child  link="${name}_foot"/>
 		</joint>

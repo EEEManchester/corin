@@ -12,7 +12,7 @@
   <arg name="debug" default="false"/>         <!-- debug mode -->
   <arg name="gui" default="true"/>            <!-- enable gazebo gui -->
   <arg name="world" default="empty" />        <!-- world to use -->
-  <arg name="x" default="0"/>                 <!-- robot spawn position in world x-axis -->
+  <arg name="x" default="-0.5"/>                 <!-- robot spawn position in world x-axis -->
   <arg name="y" default="0"/>                 <!-- robot spawn position in world y-axis -->
   <arg name="z" default="0.11"/>              <!-- robot spawn position in world z-axis -->
   <arg name="tdelay" default="5.0"/>          <!-- delay before setting robot pose -->
@@ -41,6 +41,6 @@
   <node name="contact_node" pkg="corin_gazebo" type="foot_contact.py"/>
   
   <!-- Get robot to 0 position -->
-  <node name="goto0" pkg="corin_gazebo" type="robot_default" output="screen" args="-t $(arg tdelay) -m $(arg world) -x $(arg x) -y $(arg y) -z $(arg z)" />
+  <!-- <node name="goto0" pkg="corin_gazebo" type="robot_default" output="screen" args="-t $(arg tdelay) -m $(arg world) -x $(arg x) -y $(arg y) -z $(arg z)" /> -->
 
 </launch>
