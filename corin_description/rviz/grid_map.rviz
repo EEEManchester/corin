@@ -30,7 +30,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: GridMap
   - Class: corin_rviz_plugin/Control Interface
     Name: Control Interface
 Toolbars:
@@ -440,10 +440,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.269803137
+      Pitch: 0.304803103
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.20019507
+      Yaw: 5.47520638
     Saved: ~
 Window Geometry:
   Control Interface:
