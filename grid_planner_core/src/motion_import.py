@@ -199,6 +199,7 @@ class CsvImport:
 		Gait = gait_class.GaitClass(GAIT_TYPE)
 		
 		if fname == 'chimney_heu.csv':
+			print 'setting custom gait phase'
 			for i in range(9):
 				gait_list.append(Gait.phases)
 			# Start custom phase

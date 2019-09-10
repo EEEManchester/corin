@@ -20,9 +20,9 @@ class RobotController(CorinManager):
 		
 		# Enable/disable controllers
 		self.ctrl_base_admittance = False 	# base impedance controller - fault
-		self.ctrl_base_tracking   = True 	# base tracking controller
-		self.ctrl_leg_admittance  = True 	# leg impedance controller
-		self.ctrl_contact_detect  = True 	# switch gait for early contact detection
+		self.ctrl_base_tracking   = False 	# base tracking controller
+		self.ctrl_leg_admittance  = False 	# leg impedance controller
+		self.ctrl_contact_detect  = False 	# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
 
@@ -255,7 +255,7 @@ class RobotController(CorinManager):
 						print colored('ERROR: no gait to unstack','red')
 						## TEMP: Stability
 						# self.Robot.Gait.cs = [0,0,0,2,0,0]
-					
+					print self.Robot.Gait.cs
 					## Force and gait phase array for Force Distribution
 					fmax_lim = [0]*6	# max. force array
 					gphase = list(self.Robot.Gait.cs)
@@ -330,10 +330,18 @@ class RobotController(CorinManager):
 								
 								## TEMP: Chimney heuristic custom gait phase
 								# if i==2751:
-								# 	n_phases = 10
-								# 	iahead = int(GAIT_TPHASE/CTR_INTV)*n_phases
-								# 	gait_tphase = float(n_phases)*GAIT_TPHASE
-								# 	s_max = iahead
+								print i
+								if i==5502:
+									print 'being set to new'
+									n_phases = 10
+									iahead = int(GAIT_TPHASE/CTR_INTV)*n_phases
+									gait_tphase = float(n_phases)*GAIT_TPHASE
+									s_max = iahead
+								else:
+									iahead = int(GAIT_TPHASE/CTR_INTV)
+									gait_tphase = GAIT_TPHASE
+									s_max = int(GAIT_TPHASE/CTR_INTV)
+								
 								try:
 									x_ahead = base_path.X.xp[i+iahead].reshape(3,1) + wXbase_offset[0:3]
 									w_ahead = base_path.W.xp[i+iahead].reshape(3,1) + wXbase_offset[3:6]
@@ -358,8 +366,8 @@ class RobotController(CorinManager):
 							# sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
 							# sn2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
 							sn1 = self.Robot.Leg[j].snorm
-							# sn2 = surface_normals[j][0]
-							sn2 = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
+							sn2 = surface_normals[j][0]
+							# sn2 = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
 							## TEMP: Chimney corner
 							# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
 							# 	sn2 = np.array([1., 0., 0.])
@@ -384,7 +392,8 @@ class RobotController(CorinManager):
 							sn1 = np.array([0., 0., 1.])
 							sn2 = np.array([0., 0., 1.])
 							print 'norm error'
-						
+						print sn1
+						print sn2
 						## Updates to actual foot position (without Q_COMPENSATION)
 						self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3:4] = self.Robot.Leg[j].KDL.leg_FK(self.Robot.Leg[j].Joint.qpc)
 

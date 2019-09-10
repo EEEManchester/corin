@@ -146,7 +146,7 @@ Map:
       i3: { s1: [ 0,24], s2: [12,25], sh: 0.9}
       i4: { s1: [11,24], s2: [12,43], sh: 0.9}
       
-    # hole:
-    #   i1: { s1: [0,2], s2: [34,23], sh: -1}   # vertical hole
-    #   i2: { s1: [13,23], s2: [34,43], sh: -1} # horizontal hole
-    #   i3: { s1: [0,26], s2: [10,43], sh: -1}  # corner hole
+    hole:
+      i1: { s1: [0,2], s2: [34,23], sh: -1}   # vertical hole
+      i2: { s1: [13,23], s2: [34,43], sh: -1} # horizontal hole
+      i3: { s1: [0,26], s2: [10,43], sh: -1}  # corner hole
