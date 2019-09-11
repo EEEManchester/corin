@@ -150,7 +150,7 @@ class RobotController(CorinManager):
 			# Update state for RViZ and open loop control prior to setpoint update
 			if (self.interface == 'rviz' or self.control_loop == 'open'):
 				self.Robot.P6c.world_X_base = self.Robot.P6d.world_X_base.copy()
-
+				print self.Robot.P6c.world_X_base
 			## ====================================================================== ##
 			## 		Setpoint update 	##
 			## ======================== ##

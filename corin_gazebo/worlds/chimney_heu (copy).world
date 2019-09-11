@@ -1,4 +1,4 @@
-<!-- Extended chimney heuristic map to 'fix' surface normal issue -->
+<!-- Original chimney heuristic map -->
 <?xml version="1.0" ?>
 <sdf version='1.4'>
   <world name='default'>
@@ -82,14 +82,14 @@
     <!--                        Inner X - Wall                          -->
     <!-- ============================================================== -->
     <model name='inner_x_wall'>
-      <pose frame=''>-0.35 0.735 0 0 -0 0</pose>
+      <pose frame=''>0.15 0.735 0 0 -0 0</pose>
       <link name='inner_wall_x'>
 
         <collision name='inner_x_wall_Collision'>
           <pose frame=''>0 0 0.45 0 -0 0</pose>
           <geometry>
             <box>
-              <size>1.33 0.06 0.9</size>
+              <size>0.33 0.06 0.9</size>
             </box>
           </geometry>
           <surface>
@@ -106,8 +106,8 @@
                 <kd>10.0</kd>
                 <soft_cfm>0.0</soft_cfm>
                 <soft_erp>0.2</soft_erp>
-                <maxVel>0.0001</maxVel>   
-                <minDepth>0.001</minDepth>
+                <maxVel>0.0001</maxVel>     <!-- contact correction velocity truncation -->
+                <minDepth>0.001</minDepth>  <!-- penetration between objects -->
               </ode>
             </contact>
           </surface>
@@ -119,14 +119,15 @@
             <pose frame=''>0 0 0.45 0 -0 0</pose>
             <geometry>
               <box>
-                <size>1.33 0.06 0.9</size>
+                <size>0.33 0.06 0.9</size>
               </box>
             </geometry>
             <material>
               <script>
-                <uri>file://media/materials/scripts/gazebo.material</uri>
-                <name>Gazebo/Bricks</name>
+                <!-- <uri>file://media/materials/scripts/gazebo.material</uri> -->
+                <name>Gazebo/SkyBlue</name>
               </script>
+              <!-- <ambient>0.435294 0.796078 0.67451 1</ambient> -->
             </material>
           </visual>
       </link>
@@ -138,14 +139,14 @@
     <!-- ============================================================== -->
     <model name='inner_y_wall'>
       <!-- centred at origin -->
-      <pose frame=''>0.345 1.505 0 0 -0 0</pose>
+      <pose frame=''>0.345 1.005 0 0 -0 0</pose>
       <link name='inner_wall_y'>
 
         <collision name='inner_y_wall_Collision'>
           <pose frame=''>0 0 0.45 0 -0 0</pose>
           <geometry>
             <box>
-              <size>0.06 1.60 0.9</size>
+              <size>0.06 0.60 0.9</size>
             </box>
           </geometry>
           <surface>
@@ -162,8 +163,8 @@
                 <kd>10.0</kd>
                 <soft_cfm>0.0</soft_cfm>
                 <soft_erp>0.2</soft_erp>
-                <maxVel>0.0001</maxVel>
-                <minDepth>0.001</minDepth>
+                <maxVel>0.0001</maxVel>     <!-- contact correction velocity truncation -->
+                <minDepth>0.001</minDepth>  <!-- penetration between objects -->
               </ode>
             </contact>
           </surface>
@@ -175,14 +176,15 @@
             <pose frame=''>0 0 0.45 0 -0 0</pose>
             <geometry>
               <box>
-                <size>0.06 1.60 0.9</size>
+                <size>0.06 0.60 0.9</size>
               </box>
             </geometry>
             <material>
               <script>
-                <uri>file://media/materials/scripts/gazebo.material</uri>
-                <name>Gazebo/Bricks</name>
+                <!-- <uri>file://media/materials/scripts/gazebo.material</uri> -->
+                <name>Gazebo/Orange</name>
               </script>
+              <!-- <ambient>0.435294 0.796078 0.67451 1</ambient> -->
             </material>
           </visual>
       </link>
@@ -193,14 +195,14 @@
     <!--                        outer X - Wall                          -->
     <!-- ============================================================== -->
     <model name='outer_x_wall'>
-      <pose frame=''>0.01 0.015 0 0 -0 0</pose> 
+      <pose frame=''>0.51 0.015 0 0 -0 0</pose> 
       <link name='outer_wall_x'>
 
         <collision name='outer_x_wall_Collision'>
           <pose frame=''>0 0 0.45 0 -0 0</pose>
           <geometry>
             <box>
-              <size>2.05 0.06 0.9</size>
+              <size>1.05 0.06 0.9</size>
             </box>
           </geometry>
           <surface>
@@ -217,8 +219,8 @@
                 <kd>10.0</kd>
                 <soft_cfm>0.0</soft_cfm>
                 <soft_erp>0.2</soft_erp>
-                <maxVel>0.0001</maxVel>   
-                <minDepth>0.001</minDepth>
+                <maxVel>0.0001</maxVel>     <!-- contact correction velocity truncation -->
+                <minDepth>0.001</minDepth>  <!-- penetration between objects -->
               </ode>
             </contact>
           </surface>
@@ -230,13 +232,12 @@
             <pose frame=''>0 0 0.45 0 -0 0</pose>
             <geometry>
               <box>
-                <size>2.05 0.06 0.9</size>
+                <size>1.05 0.06 0.9</size>
               </box>
             </geometry>
             <material>
               <script>
-                <uri>file://media/materials/scripts/gazebo.material</uri>
-                <name>Gazebo/Bricks</name>
+                <name>Gazebo/SkyBlue</name>
               </script>
             </material>
           </visual>
@@ -249,14 +250,14 @@
     <!-- ============================================================== -->
     <model name='outer_y_wall'>
       <!-- centred at origin -->
-      <pose frame=''>1.065 1.145 0 0 -0 0</pose>
+      <pose frame=''>1.065 0.645 0 0 -0 0</pose>
       <link name='outer_wall_y'>
 
         <collision name='outer_y_wall_Collision'>
           <pose frame=''>0 0 0.45 0 -0 0</pose>
           <geometry>
             <box>
-              <size>0.06 2.32 0.9</size>
+              <size>0.06 1.32 0.9</size>
             </box>
           </geometry>
           <surface>
@@ -286,13 +287,12 @@
             <pose frame=''>0 0 0.45 0 -0 0</pose>
             <geometry>
               <box>
-                <size>0.06 2.32 0.9</size>
+                <size>0.06 1.32 0.9</size>
               </box>
             </geometry>
             <material>
               <script>
-                <uri>file://media/materials/scripts/gazebo.material</uri>
-                <name>Gazebo/Bricks</name>
+                <name>Gazebo/Orange</name>
               </script>
             </material>
           </visual>
