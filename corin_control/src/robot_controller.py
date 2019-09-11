@@ -26,6 +26,20 @@ class RobotController(CorinManager):
 
 	def main_controller(self, motion_plan=None):
 
+		def get_snorm(foot='current'):
+			try:
+				return surface_normals[j].pop(0)
+			except:
+				# return self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+				## TEMP: YAML import
+				h_foot = self.Robot.Leg[j].XHc.world_X_foot[2,3] if foot=='current' else self.Robot.Leg[j].XHd.world_X_foot[2,3]
+				if j < 3:
+					sn = np.array([0.,-1.,0.]) if h_foot > 0.05 else np.array([0.,0.,1.])
+				elif j > 2:
+					sn = np.array([0.,1.,0.]) if h_foot > 0.05 else np.array([0.,0.,1.])
+				print j, h_foot, sn
+				return sn
+
 		## Variables ##
 		cob_X_desired = np.zeros((3,1)) 	# track cob linear location
 		cob_W_desired = np.zeros((3,1)) 	# track cob angular location
@@ -75,15 +89,13 @@ class RobotController(CorinManager):
 			w_base_X_NRP = []
 		
 		## Update surface normals
-		## TEMP: VALIDATION
-		# for j in range(6):
-		# 	self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
 		for j in range(6):
-			# self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
-			try:
-				self.Robot.Leg[j].snorm = surface_normals[j].pop(0)
-			except:
-				self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
+			self.Robot.Leg[j].snorm = get_snorm('current')
+			# try:
+			# 	self.Robot.Leg[j].snorm = surface_normals[j].pop(0)
+			# except:
+			# 	self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
+				# self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
 			# print self.Robot.Leg[j].XHc.world_X_foot[0:3,3]
 			print j, self.Robot.Leg[j].snorm
 
@@ -276,9 +288,6 @@ class RobotController(CorinManager):
 						for j in cindex:
 							self.Robot.Gait.cs[j] = 0
 							self.Robot.Leg[j].change_phase('support', self.Robot.XHc.world_X_base)
-							# self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
-							## TEMP: Chimney straight
-							# self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j<3 else np.array([0.,1.,0.])
 							## TODO: CHECK IF INITIAL OR ZERO BETTER
 							self.Robot.Leg[j].Fmax = self.Robot.Leg[j].get_normal_force('current')
 							# self.Robot.Leg[j].Fmax = 0.
@@ -329,18 +338,16 @@ class RobotController(CorinManager):
 								# Get bodypose at end of gait phase, or end of trajectory - used in motion_import
 								
 								## TEMP: Chimney heuristic custom gait phase
-								# if i==2751:
-								print i
-								if i==5502:
-									print 'being set to new'
-									n_phases = 10
-									iahead = int(GAIT_TPHASE/CTR_INTV)*n_phases
-									gait_tphase = float(n_phases)*GAIT_TPHASE
-									s_max = iahead
-								else:
-									iahead = int(GAIT_TPHASE/CTR_INTV)
-									gait_tphase = GAIT_TPHASE
-									s_max = int(GAIT_TPHASE/CTR_INTV)
+								# if i==5502: 	# GAIT_TPHASE = 2.0
+								# 	print 'being set to new'
+								# 	n_phases = 10
+								# 	iahead = int(GAIT_TPHASE/CTR_INTV)*n_phases
+								# 	gait_tphase = float(n_phases)*GAIT_TPHASE
+								# 	s_max = iahead
+								# else:
+								# 	iahead = int(GAIT_TPHASE/CTR_INTV)
+								# 	gait_tphase = GAIT_TPHASE
+								# 	s_max = int(GAIT_TPHASE/CTR_INTV)
 								
 								try:
 									x_ahead = base_path.X.xp[i+iahead].reshape(3,1) + wXbase_offset[0:3]
@@ -365,8 +372,10 @@ class RobotController(CorinManager):
 						try:
 							# sn1 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
 							# sn2 = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHd.world_X_foot[0:3,3])
-							sn1 = self.Robot.Leg[j].snorm
-							sn2 = surface_normals[j][0]
+							sn1 = self.Robot.Leg[j].snorm.copy()
+							# sn2 = surface_normals[j][0]
+							sn2 = get_snorm('setpoint')
+							self.Robot.Leg[j].snorm = sn2.copy()
 							# sn2 = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
 							## TEMP: Chimney corner
 							# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
@@ -449,10 +458,10 @@ class RobotController(CorinManager):
 							if (self.Robot.Gait.cs[j] == 1):
 								self.Robot.Leg[j].change_phase('support', self.Robot.XHc.world_X_base)
 								# self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
-								try:
-									self.Robot.Leg[j].snorm = surface_normals[j].pop(0)
-								except:
-									self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
+								# try:
+								# 	self.Robot.Leg[j].snorm = surface_normals[j].pop(0)
+								# except:
+								# 	self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
 								## TEMP: Chimney corner
 								# if j < 3 and self.Robot.Leg[j].XHd.world_X_foot[0,3] > 0.371:
 								# 	self.Robot.Leg[j].snorm = np.array([1., 0., 0.])

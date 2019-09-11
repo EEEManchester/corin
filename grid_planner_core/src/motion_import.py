@@ -127,6 +127,7 @@ class CsvImport:
 		base_X_footholds  = [None]*6
 		world_base_X_NRP  = [None]*6
 		surface_normals = [None]*6
+
 		for j in range (0, 6):
 			world_X_footholds[j] = MarkerList()
 			base_X_footholds[j] = MarkerList()
@@ -347,6 +348,8 @@ if __name__ == "__main__":
 			filename = 'wall_concave.csv'
 		elif sys.argv[1] == 'taros':
 			filename = 'taros.yaml'
+		elif sys.argv[1] == 'wall_transition':
+			filename = 'wall_transition.yaml'
 
 	if filename is not None:
 		print 'Calling motion plan'

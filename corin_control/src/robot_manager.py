@@ -703,7 +703,7 @@ class CorinManager:
 					print colored("REMEMBER to enable surface normal in robot_controller", 'yellow')
 					filename = 'taros.yaml'
 					mapname = 'wall_hole_demo'
-				elif motion == 'transition':
+				elif motion == 'wall_transition':
 					filename = 'wall_transition.yaml'
 					mapname = 'wall_hole_demo'
 				else:

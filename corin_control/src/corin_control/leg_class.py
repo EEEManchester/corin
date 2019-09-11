@@ -192,7 +192,7 @@ class LegClass:
 			end   = mX(self.XH_world_X_base[:3,:3], self.XHd.base_X_foot[:3,3])
 			wpx, td = self.Path.interpolate_leg_path(start, end, sn1, sn2, phase, reflex, ctime)
 			# if self.number == 5:
-			print wpx
+			# print wpx
 			# Transform each via point from world to leg frame
 			wcp = np.zeros((len(wpx),3))
 			wcp[0] = self.XHc.coxa_X_foot[0:3,3].copy()
