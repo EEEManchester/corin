@@ -59,7 +59,7 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
 		self.control_loop = "close" 	# run controller in open or closed loop
 
@@ -364,7 +364,8 @@ class CorinManager:
 
 		## Runs controller at desired rate for normal control mode
 		if (self.control_rate is "normal" or self.interface is 'robotis'):
-			self.rate.sleep()
+			# self.rate.sleep()
+			pass
 
 	def default_pose(self, stand_state=0, leg_stance=None):
 		""" Moves robot to nominal stance (default pose) 		 """
