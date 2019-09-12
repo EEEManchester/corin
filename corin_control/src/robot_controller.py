@@ -37,7 +37,7 @@ class RobotController(CorinManager):
 					sn = np.array([0.,-1.,0.]) if h_foot > 0.05 else np.array([0.,0.,1.])
 				elif j > 2:
 					sn = np.array([0.,1.,0.]) if h_foot > 0.05 else np.array([0.,0.,1.])
-				print j, h_foot, sn
+				print 'except: ', j, h_foot, sn
 				return sn
 
 		## Variables ##
@@ -150,7 +150,7 @@ class RobotController(CorinManager):
 			# Update state for RViZ and open loop control prior to setpoint update
 			if (self.interface == 'rviz' or self.control_loop == 'open'):
 				self.Robot.P6c.world_X_base = self.Robot.P6d.world_X_base.copy()
-				print self.Robot.P6c.world_X_base
+				
 			## ====================================================================== ##
 			## 		Setpoint update 	##
 			## ======================== ##
@@ -338,16 +338,7 @@ class RobotController(CorinManager):
 								# Get bodypose at end of gait phase, or end of trajectory - used in motion_import
 								
 								## TEMP: Chimney heuristic custom gait phase
-								# if i==5502: 	# GAIT_TPHASE = 2.0
-								# 	print 'being set to new'
-								# 	n_phases = 10
-								# 	iahead = int(GAIT_TPHASE/CTR_INTV)*n_phases
-								# 	gait_tphase = float(n_phases)*GAIT_TPHASE
-								# 	s_max = iahead
-								# else:
-								# 	iahead = int(GAIT_TPHASE/CTR_INTV)
-								# 	gait_tphase = GAIT_TPHASE
-								# 	s_max = int(GAIT_TPHASE/CTR_INTV)
+								
 								
 								try:
 									x_ahead = base_path.X.xp[i+iahead].reshape(3,1) + wXbase_offset[0:3]

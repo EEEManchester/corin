@@ -329,7 +329,7 @@ class CorinManager:
 					dqp.position.append(q.xp[n])			# joint angle
 				self.joint_pub_.publish(dqp)
 				self.Visualizer.publish_robot_pose(self.Robot.P6d.world_X_base)
-				print q.xp
+				
 			elif (self.interface == 'robotis'):
 				dqp = SyncWriteMultiFloat()
 				dqp.item_name 	= str("goal_position") 	# register to start first write
@@ -364,7 +364,8 @@ class CorinManager:
 
 		## Runs controller at desired rate for normal control mode
 		if (self.control_rate is "normal" or self.interface is 'robotis'):
-			self.rate.sleep()
+			# self.rate.sleep()
+			pass
 
 	def default_pose(self, stand_state=0, leg_stance=None):
 		""" Moves robot to nominal stance (default pose) 		 """
