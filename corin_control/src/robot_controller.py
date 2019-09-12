@@ -20,9 +20,9 @@ class RobotController(CorinManager):
 		
 		# Enable/disable controllers
 		self.ctrl_base_admittance = False 	# base impedance controller - fault
-		self.ctrl_base_tracking   = False 	# base tracking controller
-		self.ctrl_leg_admittance  = False 	# leg impedance controller
-		self.ctrl_contact_detect  = False 	# switch gait for early contact detection
+		self.ctrl_base_tracking   = True 	# base tracking controller
+		self.ctrl_leg_admittance  = True 	# leg impedance controller
+		self.ctrl_contact_detect  = True 	# switch gait for early contact detection
 
 	def main_controller(self, motion_plan=None):
 
