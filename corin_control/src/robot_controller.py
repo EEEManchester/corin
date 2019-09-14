@@ -112,7 +112,7 @@ class RobotController(CorinManager):
 		# State machine loading/unloading timing parameters
 		tload = 1						# loading counter
 		iload = int(LOAD_T/CTR_INTV) 	# no. of intervals for loading
-		hload = int(1.5/CTR_INTV)		# no. of intervals for initial holding
+		hload = int(1.0/CTR_INTV)		# no. of intervals for initial holding
 		# Force Distribution variables
 		fmax_lim  = [F_MAX]*6			# maximum force array
 		init_flim = [F_MAX]*6			# current force for linear decrease in unloading
@@ -217,13 +217,19 @@ class RobotController(CorinManager):
 					gphase = [0]*6 		# all legs in support phase at start of unloading
 					fmax_lim = [F_MAX]*6	# max. force array
 					for j in range(0,6):
-						init_flim[j] = self.Robot.Leg[j].get_normal_force('setpoint') if (gait_list[0][j] == 1) else F_MAX
+						init_flim[j] = self.Robot.Leg[j].get_normal_force('setpoint')+1. if (gait_list[0][j] == 1) else F_MAX
 					# print 'init f: ', init_flim
 				
 				# reduce max force for legs that will be in transfer phase
 				for j in range(0,6):
 					# Small force offset - prevent shape change
-					fmax = init_flim[j]+1. - tload*(init_flim[j]+1.)/float(iload) + 0.001
+					# fmax = init_flim[j] - tload*(init_flim[j])/float(iload) + 0.001
+					fmax = init_flim[j] - tload*(init_flim[j])/float(iload-30) + 0.001
+					if fmax < 0.:
+						fmax = 0.001
+						# gphase[j] = 1
+					else:
+						pass
 					fmax_lim[j] = fmax if (gait_list[0][j] == 1) else F_MAX
 				tload += 1
 				self.update_phase_support(P6e_world_X_base, V6e_world_X_base)

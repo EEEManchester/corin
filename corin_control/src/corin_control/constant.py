@@ -115,7 +115,7 @@ CONTACT_COUNT = 2 	# no. of contacts above threshold limit required
 ## ================================================================ ##
 IMPEDANCE_FN = 1.5 			# natural frequency
 IMPEDANCE_DAMPING = 3. 	# damping ratio
-IMPEDANCE_GAIN = 0.001		# m/N (delta distance per delta force)
+IMPEDANCE_GAIN = 0.002		# m/N (delta distance per delta force)
 #  50 Hz: 1.5, 3., 0.004
 #  60 Hz: 2, 1.5, 0.001
 # 200 Hz: 2, 2.2, 0.003

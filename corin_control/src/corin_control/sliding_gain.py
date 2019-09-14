@@ -9,7 +9,12 @@ class SlidingGain:
 		self.step_num  = 40
 		self.step_size = 0.1
 
-		self.reset()
+		self.initial_reset()
+
+	def initial_reset(self):
+		""" Half the normal steps to allow quick convergence """
+		self.step_size = 1./self.step_num
+		self.buffer = [i*self.step_size for i in range(self.step_num/2, self.step_num)]
 
 	def reset(self):
 

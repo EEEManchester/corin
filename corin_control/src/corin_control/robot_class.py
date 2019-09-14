@@ -400,14 +400,14 @@ class RobotState:
 		feet_pos = []
 		for j in range(0,6):
 			if self.Gait.cs[j]==0:
-				offset = self.Leg[j].apply_admittance_controller(force_dist[j*3:j*3+3], False)
-				# fsetpoint = np.array([0.,0.,15.]).reshape((3,1))
-				# offset = self.Leg[j].apply_admittance_controller(fsetpoint, True)
+				offset = self.Leg[j].apply_admittance_controller(force_dist[j*3:j*3+3], True)
 			else:
 				offset = np.zeros(3)
 			new_pos = self.Leg[j].XHd.coxa_X_foot[:3,3] + offset
 			feet_pos.append(new_pos)
-			
+			# if j==3:
+			# 	print 'ori: ', np.round(self.Leg[j].XHd.coxa_X_foot[:3,3],4)
+			# 	print 'off: ', np.round(offset,4)
 		feet_pos = [item for sublist in feet_pos for item in sublist]
 		return self.task_X_joint(feet_pos)
 		# return self.task_X_joint()
