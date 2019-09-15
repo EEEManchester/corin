@@ -266,8 +266,17 @@ class MotionImport:
 			mapname = 'wall_concave_corner'
 		elif filename == 'wall_convex.csv':
 			mapname = 'wall_convex_corner'
-		elif filename == 'taros.yaml' or filename == 'wall_transition.yaml':
+		elif filename == 'taros.yaml':
 			mapname = 'wall_hole_demo'
+		elif (filename == 'ground_wall_ground_14.yaml' or 
+			filename == 'ground_wall_ground_17.yaml' or
+			filename == 'ground_wall_ground_18.yaml' or
+			filename == 'ground_wall_ground_19.yaml' or
+			filename == 'wall_transition.yaml'):
+			mapname = 'wall_demo_right'
+		elif filename == 'ground_chimney_ground.yaml':
+			mapname = 'hole_demo'
+
 		vismap = VisGridMap(mapname)
 		vismap.publish_map()
 
