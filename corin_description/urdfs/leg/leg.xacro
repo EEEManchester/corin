@@ -103,6 +103,7 @@
 		    <collision>
 		      	<geometry>
 		        	<box size= "${femur_cl} ${femur_w} ${femur_d}"/>
+		        	<!-- <box size= "0.01 0.01 0.01"/> -->
 		      	</geometry>
 		      	<origin xyz="0.075 0 0" rpy="0 0 0"/>
 		      	<material name="colli"/>
