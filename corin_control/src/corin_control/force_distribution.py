@@ -163,8 +163,8 @@ class QPForceDistribution():
 		W = np.zeros((3*n_contact, 3*n_contact))	# secondary hessian matrix
 		J = np.zeros((3*n_contact, 3*n_contact))	# contact jacobian matrix
 
-		s_weight = np.array([1, 1, 1, 1, 1, 1])
-		w_weight = np.array([50, 50, 50])*10e-3
+		s_weight = np.array([1,1,1,1,1,1])
+		w_weight = np.array([5, 50, 2])*10e-3
 		# print A
 		# print b
 		## =================== Bounded Force ============================ ##

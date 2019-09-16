@@ -20,9 +20,9 @@ class RobotController(CorinManager):
 		
 		# Enable/disable controllers
 		self.ctrl_base_admittance = False 	# base impedance controller - fault
-		self.ctrl_base_tracking   = False 	# base tracking controller
-		self.ctrl_leg_admittance  = False 	# leg impedance controller
-		self.ctrl_contact_detect  = False 	# switch gait for early contact detection
+		self.ctrl_base_tracking   = True 	# base tracking controller
+		self.ctrl_contact_detect  = True 	# switch gait for early contact detection
+		self.ctrl_leg_admittance  = True 	# leg impedance controller
 
 	def main_controller(self, motion_plan=None):
 
@@ -37,7 +37,7 @@ class RobotController(CorinManager):
 					sn = np.array([0.,-1.,0.]) if h_foot > 0.05 else np.array([0.,0.,1.])
 				elif j > 2:
 					sn = np.array([0.,1.,0.]) if h_foot > 0.05 else np.array([0.,0.,1.])
-				print j, h_foot, sn
+				# print j, h_foot, sn
 				return sn
 
 		## Variables ##
@@ -91,12 +91,6 @@ class RobotController(CorinManager):
 		## Update surface normals
 		for j in range(6):
 			self.Robot.Leg[j].snorm = get_snorm('current')
-			# try:
-			# 	self.Robot.Leg[j].snorm = surface_normals[j].pop(0)
-			# except:
-			# 	self.Robot.Leg[j].snorm = self.GridMap.get_cell('norm', self.Robot.Leg[j].XHc.world_X_foot[0:3,3])
-				# self.Robot.Leg[j].snorm = np.array([0.,-1.,0.]) if j < 3 else np.array([0.,1.,0.])
-			# print self.Robot.Leg[j].XHc.world_X_foot[0:3,3]
 			print j, self.Robot.Leg[j].snorm
 
 		## User input
@@ -202,7 +196,8 @@ class RobotController(CorinManager):
 			# Error 
 			P6e_world_X_base = self.Robot.P6d.world_X_base - self.Robot.P6c.world_X_base
 			V6e_world_X_base = self.Robot.V6d.world_X_base - self.Robot.V6c.world_X_base
-			
+			# print np.round(self.Robot.P6c.world_X_base.flatten(),3)
+			# print np.round(self.Robot.P6d.world_X_base.flatten(),3)
 			## ====================================================================== ##
 			## State Machine: Motion Execution ##
 			## =============================== ##

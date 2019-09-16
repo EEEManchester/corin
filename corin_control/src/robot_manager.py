@@ -59,9 +59,9 @@ class CorinManager:
 
 		self.resting   = False 		# Flag indicating robot standing or resting
 		self.on_start  = False 		# variable for resetting to leg suspended in air
-		self.interface = "rviz"		# interface to control: 'rviz', 'gazebo' or 'robotis'
+		self.interface = "gazebo"		# interface to control: 'rviz', 'gazebo' or 'robotis'
 		self.control_rate = "normal" 	# run controller in either: 1) normal, or 2) fast
-		self.control_loop = "open" 	# run controller in open or closed loop
+		self.control_loop = "close" 	# run controller in open or closed loop
 
 		self.ui_state = "hold" 		# user interface for commanding motions
 		self.MotionPlan = MotionPlan()
@@ -364,8 +364,8 @@ class CorinManager:
 
 		## Runs controller at desired rate for normal control mode
 		if (self.control_rate is "normal" or self.interface is 'robotis'):
-			# self.rate.sleep()
-			pass
+			self.rate.sleep()
+			# pass
 
 	def default_pose(self, stand_state=0, leg_stance=None):
 		""" Moves robot to nominal stance (default pose) 		 """
@@ -707,6 +707,12 @@ class CorinManager:
 				elif motion == 'wall_transition':
 					filename = 'wall_transition.yaml'
 					mapname = 'wall_hole_demo'
+				elif motion == 'gcg':
+					filename = 'ground_chimney_ground.yaml'
+					mapname = 'hole_demo'
+				elif motion == 'gwg':
+					filename = 'ground_wall_ground_14.yaml'
+					mapname = 'wall_demo_right'
 				else:
 					print colored('Error: Motion plan <%s> does not exists, exiting!'%motion, 'red')
 					sys.exit(1)
@@ -723,11 +729,13 @@ class CorinManager:
 				# motion_plan = planpath_to_motionplan( path_planner(Pose(), Pose()) )
 				# motion_plan = planpath_to_motionplan(plan_generat)
 				# Plot.plot_2d(motion_plan.qb.X.t, motion_plan.qb.X.xp)
-				# print 'bias by ', motion_plan.qb_offset
+				print 'bias by ', motion_plan.qb_offset
 				
 				self.Robot.P6c.world_X_base = motion_plan.qb_offset.copy()
 				self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
-				self.Robot.P6c.world_X_base_offset = np.zeros((6,1))#self.Robot.P6c.world_X_base.copy()
+				self.Robot.P6c.world_X_base_offset = np.zeros((6,1))
+				self.Robot.P6c.world_X_base_offset[0] =  self.Robot.P6c.world_X_base[0]
+				self.Robot.P6c.world_X_base_offset[1] =  self.Robot.P6c.world_X_base[1]
 
 				self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
 				self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
