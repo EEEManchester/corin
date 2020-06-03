@@ -197,7 +197,7 @@ if __name__ == "__main__":
 	motion = arg["motion"]
 	sleep_time = arg["delay"]
 	# niter = 2
-
+	print motion
 	## Select default joints
 	if motion == 'chimney_nom':
 		pose_x = 0.299

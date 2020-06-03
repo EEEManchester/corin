@@ -628,8 +628,10 @@ class CorinManager:
 					# 										BODY_HEIGHT, 0., 0., 0.]).reshape(6,1)
 					# self.Robot.P6c.world_X_base_offset = np.array([map_offset[0], map_offset[1],
 					# 											0.,0.,0.,0.]).reshape(6,1)
-					# temp_pos = np.array([0.,0.15,0.322,1.13,0.,0.]).reshape((6,1))
-					temp_pos = self.Robot.P6c.world_X_base.copy()
+					# RVIZ
+					temp_pos = np.array([0.,0.,0.322,1.13,0.,0.]).reshape((6,1))
+					# GAZEBO
+					# temp_pos = self.Robot.P6c.world_X_base.copy()
 					self.Robot.P6c.world_X_base = np.array([map_offset[0], map_offset[1], 
 															temp_pos.item(2), temp_pos.item(3), 0., 0.]).reshape(6,1)
 					self.Robot.P6c.world_X_base_offset = np.array([map_offset[0], map_offset[1]-temp_pos.item(1),
@@ -637,8 +639,9 @@ class CorinManager:
 					# print self.Robot.P6c.world_X_base.flatten()
 					self.Robot.P6d.world_X_base = self.Robot.P6c.world_X_base.copy()
 					self.Robot.XHc.update_world_X_base(self.Robot.P6c.world_X_base)
+					self.Robot.XHd.update_world_X_base(self.Robot.P6d.world_X_base)
 					self.Robot.init_robot_stance(STANCE_TYPE)
-
+					
 				if self.interface != "robotis":
 					qd, tXj_error = self.Robot.task_X_joint()
 					for i in range(0,10):

@@ -258,17 +258,17 @@ class LegClass:
 			self.Joint.qpd = self.KDL.leg_IK(xp, self.number, True)
 
 		## Limit sudden change based on singularity		
-		dsing = self.KDL.singularity_approach(self.Joint.qpd)
-		qerror = self.Joint.qpd - prev_qpd
-		epsilon = 8e-6
-		UL = 0.001
-		if dsing < epsilon:
-			sgn = [np.sign(i) for i in self.Joint.qpd]
-			for i in range(3):
-				if abs(qerror[i]) > UL:
-					self.Joint.qpd[i] = prev_qpd[i] - sgn[i]*UL
-				else:
-					self.Joint.qpd[i] = prev_qpd[i] + qerror[i]
+		# dsing = self.KDL.singularity_approach(self.Joint.qpd)
+		# qerror = self.Joint.qpd - prev_qpd
+		# epsilon = 8e-6
+		# UL = 0.001
+		# if dsing < epsilon:
+		# 	sgn = [np.sign(i) for i in self.Joint.qpd]
+		# 	for i in range(3):
+		# 		if abs(qerror[i]) > UL:
+		# 			self.Joint.qpd[i] = prev_qpd[i] - sgn[i]*UL
+		# 		else:
+		# 			self.Joint.qpd[i] = prev_qpd[i] + qerror[i]
 
 		if (self.Joint.qpd is not None):
 			self.XHd.update_foot_X_coxa(self.Joint.qpd) 	# updates coxa_X_foot as well

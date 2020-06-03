@@ -153,8 +153,8 @@ class RobotController(CorinManager):
 				v3cv = base_path.X.xv[i].reshape(3,1);
 				v3ca = base_path.X.xa[i].reshape(3,1);
 
-				# v3wp = base_path.W.xp[i].reshape(3,1) 	# Straight line walking
-				v3wp = base_path.W.xp[i].reshape(3,1) + wXbase_offset[3:6];	# CORNERING: base trajectory relative to world frame
+				v3wp = base_path.W.xp[i].reshape(3,1) 	# Straight line walking
+				# v3wp = base_path.W.xp[i].reshape(3,1) + wXbase_offset[3:6];	# CORNERING: base trajectory relative to world frame
 				v3wv = base_path.W.xv[i].reshape(3,1);
 				v3wa = base_path.W.xa[i].reshape(3,1);
 			else:
@@ -343,7 +343,7 @@ class RobotController(CorinManager):
 								self.Robot.Leg[j].XHd.base_X_foot = mX(np.linalg.inv(self.Robot.Leg[j].XH_world_X_base),
 																		self.Robot.Leg[j].XHd.world_X_foot)
 								## TEMP - Reactive planning using nominal_planning.py
-								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
+								self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_AEP
 								## TEMP - Stability
 								# self.Robot.Leg[j].XHd.base_X_foot = self.Robot.Leg[j].XHd.base_X_NRP
 								# self.Robot.Leg[j].XHd.base_X_foot[1,3] += 0.05
@@ -379,6 +379,9 @@ class RobotController(CorinManager):
 							sn1 = np.array([0., 0., 1.])
 							sn2 = np.array([0., 0., 1.])
 							print 'norm error'
+							## TEMP: wall straight
+							sn2 = np.array([0.,-1.,0.]) if j<3 else np.array([0.,0.,1.])
+							sn1 = sn2.copy()
 						
 						## Updates to actual foot position (without Q_COMPENSATION)
 						self.Robot.Leg[j].XHc.coxa_X_foot[0:3,3:4] = self.Robot.Leg[j].KDL.leg_FK(self.Robot.Leg[j].Joint.qpc)
