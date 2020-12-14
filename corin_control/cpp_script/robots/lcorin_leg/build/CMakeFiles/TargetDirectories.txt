@@ -1,7 +1,0 @@
-/home/wilson/catkin_ws/src/lcorin/lcorin_control/cpp_script/robots/lcorin_leg/build/CMakeFiles/install.dir
-/home/wilson/catkin_ws/src/lcorin/lcorin_control/cpp_script/robots/lcorin_leg/build/CMakeFiles/list_install_components.dir
-/home/wilson/catkin_ws/src/lcorin/lcorin_control/cpp_script/robots/lcorin_leg/build/CMakeFiles/rebuild_cache.dir
-/home/wilson/catkin_ws/src/lcorin/lcorin_control/cpp_script/robots/lcorin_leg/build/CMakeFiles/iitgenlcorin_leg.dir
-/home/wilson/catkin_ws/src/lcorin/lcorin_control/cpp_script/robots/lcorin_leg/build/CMakeFiles/edit_cache.dir
-/home/wilson/catkin_ws/src/lcorin/lcorin_control/cpp_script/robots/lcorin_leg/build/CMakeFiles/install/strip.dir
-/home/wilson/catkin_ws/src/lcorin/lcorin_control/cpp_script/robots/lcorin_leg/build/CMakeFiles/install/local.dir

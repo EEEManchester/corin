@@ -121,7 +121,7 @@ class PathGenerator():
 		# return TrajectoryPoints(x_out), TrajectoryPoints(w_out)	# convert to TrajectoryPoints format
 		return Trajectory6D((x_out,w_out))
 
-	def generate_leg_path(self, sp, ep, snorm, phase=1, reflex=False, ctime=2.0, tn=0.1, type='trapezoidal'):
+	def generate_leg_path(self, sp, ep, snorm, phase=1, reflex=False, ctime=2.0, tn=0.1, type='parabolic'):
 		""" Generate leg trajectory (Re^3) based on phase and type 			"""
 		""" First:  introduce via points for transfer phase trajectory
 			Second: generate the spline based on the new array of points 	"""

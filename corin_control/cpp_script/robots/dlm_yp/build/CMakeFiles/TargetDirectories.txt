@@ -1,7 +1,0 @@
-/home/wilson/catkin_ws/src/lcorin/lcorin_control/cpp_script/robots/dlm_yp/build/CMakeFiles/rebuild_cache.dir
-/home/wilson/catkin_ws/src/lcorin/lcorin_control/cpp_script/robots/dlm_yp/build/CMakeFiles/install.dir
-/home/wilson/catkin_ws/src/lcorin/lcorin_control/cpp_script/robots/dlm_yp/build/CMakeFiles/list_install_components.dir
-/home/wilson/catkin_ws/src/lcorin/lcorin_control/cpp_script/robots/dlm_yp/build/CMakeFiles/iitgendlm_yp.dir
-/home/wilson/catkin_ws/src/lcorin/lcorin_control/cpp_script/robots/dlm_yp/build/CMakeFiles/install/strip.dir
-/home/wilson/catkin_ws/src/lcorin/lcorin_control/cpp_script/robots/dlm_yp/build/CMakeFiles/install/local.dir
-/home/wilson/catkin_ws/src/lcorin/lcorin_control/cpp_script/robots/dlm_yp/build/CMakeFiles/edit_cache.dir
