@@ -12,7 +12,7 @@ class StabilityMargin():
 		self.sm = np.zeros(2) 	# current stability margin
 
 	def support_leg_identification(self, leg_phase):
-		""" Identifies front and rear legs in support phase """ 
+		""" Identifies front and rear legs in support phase """
 		p_state = []
 
 		## Front SM
@@ -50,17 +50,17 @@ class StabilityMargin():
 		""" computes longitudinal stability margin 						"""
 		""" Input  : 1) p -> array of foot positions: world_base_X_foot
 				 	 2) leg_phase -> a list on the phase of legs
-			Output : array of the front and rear magnitude of vector 
+			Output : array of the front and rear magnitude of vector
 						perpendicular to support edge					"""
 
 		## Define Variables ##
 		sm = np.zeros(2)
 		pf = self.support_leg_identification(leg_phase)
-		
+
 		for i in range(0,2):
 			p1 = p[pf[0+i*2]]
 			p2 = p[pf[1+i*2]]
-			
+
 			v_lr  = p2 - p1 												# support edge vector
 			p_p   = ( np.dot(-p1,v_lr)/np.linalg.norm(v_lr)**2 )*v_lr 		# foot vector projected onto support edge
 			p_f   = p1 + p_p  												# rejection vector from base

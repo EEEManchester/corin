@@ -95,7 +95,7 @@ def initial_stance(STANCE_WIDTH, BODY_HEIGHT, type="flat", TETA_F=20, TETA_R=-20
         LEG_STANCE[3] = np.array([ V_RS_H*np.cos(-TETA_F*np.pi/180), V_RS_H*np.sin(-TETA_F*np.pi/180), V_RS_HEIGH ])
         LEG_STANCE[4] = np.array([ V_RS_WIDTH, 0, V_RS_HEIGH])
         LEG_STANCE[5] = np.array([ V_RS_H*np.cos( TETA_F*np.pi/180), V_RS_H*np.sin( TETA_F*np.pi/180), V_RS_HEIGH ])
-        
+
 
         # LEG_STANCE[0] = np.array([ V_LS_WIDTH*np.cos(TETA_F*np.pi/180), V_LS_WIDTH*np.sin(TETA_F*np.pi/180), V_LS_HEIGH ])
         # LEG_STANCE[1] = np.array([ V_LS_WIDTH*np.cos((40-TETA_F)*np.pi/180), 0, V_LS_HEIGH ])
@@ -113,7 +113,7 @@ def initial_stance(STANCE_WIDTH, BODY_HEIGHT, type="flat", TETA_F=20, TETA_R=-20
 
 # def set_step_stroke(tx_bXl, rot_bXl, leg_stance, d_clear, stroke_default=0.1):
 #     """ Sets the size of step stroke """
-    
+
 #     p_base_X_foot_0 = np.array([tx_bXl[0][0], tx_bXl[0][1], 0.]) + mX(rot_Z(np.deg2rad(rot_bXl[0])),leg_stance[0])
 #     p_base_X_foot_1 = np.array([tx_bXl[1][0], tx_bXl[1][1], 0.]) + mX(rot_Z(np.deg2rad(rot_bXl[1])),leg_stance[1])
 

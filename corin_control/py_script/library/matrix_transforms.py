@@ -3,7 +3,7 @@
 import numpy as np
 import math
 
-""" Transformation and matrix operation for arrays 
+""" Transformation and matrix operation for arrays
 	Some functions adopted from Christoph Gohlke
 """
 __version__ = '1.0'
@@ -58,7 +58,7 @@ def v3_X_m(v3a):
 
 def mX(a, b, c=None, d=None, e=None):
 	""" multiplies 2D array in matrix style """
-	
+
 	try:
 		if (c is None):
 			return np.dot(a,b)
@@ -119,7 +119,7 @@ def SO3_selection(qsnorm, axis):
         ei[1,1] = qsnorm.item(1);  # y selection
     elif (axis=='z'):
         ei[2,2] = qsnorm.item(2);  # z selection
-    
+
     return ei
 
 def rotation_xyz(qarr):

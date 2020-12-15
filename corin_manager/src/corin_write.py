@@ -43,16 +43,7 @@ class CorinManager:
 		# self.control_mode_.publish("DirectControlMode")
 
 	def publish_joint(self, radian, rads):
-		# # ROS JointState
-		# qp.name.append(str('rr_q3'))
-		# qp.position.append(radian)
-		# qp.velocity.append(0.)
-		# qp.effort.append(0.)
-		#
-		# qp.header.stamp = rospy.get_rostime()
-		#
-		# self.mm_joint_pub_.publish(qp)
-
+		# The joint state used in the simulations is published from here
 		## Direct Control
 		value_of_0_radian_position_      = 2048
 		value_of_min_radian_position_    = 0
@@ -98,6 +89,11 @@ if __name__ == "__main__":
 	# dqp.name.append(str('lf_q1'))
 	# dqp.position.append(0.5)
 	# dqp.velocity.append(0.0)
+	# dqp.velocity.append(1.0)
+	# dqp.velocity.append(2.0)
+	# dqp.velocity.append(5.0)
+	# dqp.velocity.append(2.5.0)
+	# dqp.velocity.append(0.0)
 	# dqp.effort.append(0.0)
 	# manager.mm_joint_pub_.publish(dqp)
 
@@ -121,6 +117,8 @@ if __name__ == "__main__":
 	# dqp.joint_name.append(str('rr_q3')) 	# joint names to append
 	# dqp.value.append(int(150)) 				# value to append
 	# dqp.value.append(int(2700))
+	# dqp.value.append(int(50))
+	# dqp.value.append(int(10000))
 	#
 	# manager.sync_pub_.publish(dqp)
 

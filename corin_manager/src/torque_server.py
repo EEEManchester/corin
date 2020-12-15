@@ -25,7 +25,7 @@ class CorinManager:
 		robot_file = rospy.get_param("robot_file_path")
 
 		try:
-			file = open(robot_file, 'r') 
+			file = open(robot_file, 'r')
 		except:
 			rospy.logwarn('File does not exist!')
 			return
@@ -38,7 +38,7 @@ class CorinManager:
 				s = s.replace('[','')
 				s = s.replace(']','')
 			s = s.strip()
-			
+
 			if (s=="port info"):
 				start_joint = True
 
@@ -55,13 +55,13 @@ class CorinManager:
 				s = s.replace(']','')
 				s = s.replace('|','')
 			s = s.strip()
-			
+
 			sline = s.split()
 			if sline:
 				if "/dev/" in sline[0]:
 					joint_list[joint_count] = sline[2]
 					joint_count += 1
-			
+
 			if (s=="device info"):
 				end_joints = True
 
@@ -82,7 +82,7 @@ class CorinManager:
 
 		##***************** SUBSCRIBERS ***************##
 		# self.joint_sub_	= rospy.Subscriber('/robotis/present_joint_states', JointState, self.joint_state_callback, queue_size=5)
-		
+
 		##***************** SERVICES ***************##
 		# start only if non-empty
 		if (self.joint):
@@ -95,7 +95,7 @@ class CorinManager:
 
 	def set_torque(self, req):
 		torque_enable = 0;
-		
+
 		if (req.enable == True):
 			torque_enable = 1
 			rospy.loginfo("Enabling Torque...")
@@ -107,12 +107,12 @@ class CorinManager:
 
 		dqp = SyncWriteItem()
 		dqp.item_name = str("torque_enable") 	# Address to start writing to
-		
+
 		# set joint name
 		for i in self.joint:
 			dqp.joint_name.append(self.joint[i])
-		
-		# set torque value 
+
+		# set torque value
 		for i in range(0,18):
 			dqp.value.append(int(torque_enable))	# value to append
 
@@ -134,6 +134,3 @@ if __name__ == "__main__":
 	tdelay = 0.1
 
 	rospy.spin()
-
-	
-	

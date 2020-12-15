@@ -26,7 +26,7 @@ w_cob = np.array([.0,.0,.0])
 for q in range(0,91,10):
 	qr = np.deg2rad(q)
 	xd = np.array([0.0, (1-np.cos(qr))*COXA_Y, (np.sin(qr))*COXA_Y])
-	
+
 	x_cob = np.vstack(( x_cob, xd ))
 	w_cob = np.vstack(( w_cob, np.array([qr,0.0,0.0]) ))
 
@@ -47,7 +47,12 @@ def func1(a, xlist):
 a = np.array([0.2,-0.1,-0.1])
 b = np.array([0.2, 0.1,-0.1])
 
+#Testing  with changing the value of the initial foothold
 initial_foothold  = [np.zeros(3)]*3
+# initial_foothold  = [np.ones(3)]*1
+# initial_foothold  = [np.ones(3)]*1.5
+# initial_foothold  = [np.ones(3)]*2.2
+# initial_foothold  = [np.ones(3)]*4
 # initial_foothold[0] = np.array([1,2,3])
 # initial_foothold[1] = np.array([4,5,6])
 # initial_foothold[2] = np.array([7,8,9])
@@ -104,7 +109,7 @@ world_ground_X_femur = mX(world_ground_X_base, Leg_base_X_femur)
 qr = 0.128
 hy = world_ground_X_femur[2,3] - L3 - 0. 		# h_femur_X_tibia
 yy = np.sqrt(L2**2 - hy**2) 					# world horizontal distance from femur to foot
-by = np.cos(qr)*(COXA_Y + L1) 				# world horizontal distance from base to femur 
+by = np.cos(qr)*(COXA_Y + L1) 				# world horizontal distance from base to femur
 sy = by + yy									# y_base_X_foot - leg frame
 py = sy*np.sin(np.deg2rad(ROT_BASE_X_LEG[5]+LEG_OFFSET[5])) 	# y_base_X_foot - world frame
 
@@ -149,7 +154,7 @@ w_cob = np.array([qi, 0., 0.])
 for i in range(1, len(qrange)):
 	qr = np.deg2rad(qrange[i])
 	xd = xi + np.array([(np.cos(qr))*delta_x[0],
-									(np.cos(qr))*delta_x[1], 
+									(np.cos(qr))*delta_x[1],
 									(1-np.sin(qr))*delta_x[2]])
 
 	x_cob = np.vstack(( x_cob, np.round(xd,3) ))
@@ -163,7 +168,7 @@ base_path = PathGenerator.generate_base_path(x_cob, w_cob, 0.1)
 def fu(radius=None):
 	# if (radius is None):
 	# 	radius = STEP_STROKE/2.
-	# else: 
+	# else:
 	# 	pass
 	radius = STEP_STROKE/2. if (radius is None) else radius
 	# print 'radius ', radius
@@ -201,7 +206,7 @@ def in_hull(points, x):
     # print c
     # lp = linprog(c, A_ub=A, b_ub=b)
     # # lp = linprog(c, A_eq=A, b_eq=b)
-    # print lp 
+    # print lp
     # return lp.x
 
 # n_points = 4#10000
@@ -291,7 +296,7 @@ rmax = float(np.amax(tscale))
 tsp = tscale/rmax
 # print 'sizeL', tsp.shape
 
-a = np.nan_to_num(float('NaN')) 
+a = np.nan_to_num(float('NaN'))
 
 
 sp = (0,0)
@@ -328,7 +333,7 @@ for i in range(1,end):
 				point_list.append(sp)
 
 nphase = 6
-Q_BASE = 20. 
+Q_BASE = 20.
 qrange = range(0,int(Q_BASE), 6)
 print qrange
 delta_q = (20-0)/(len(qrange)-1)

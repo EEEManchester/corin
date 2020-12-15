@@ -116,52 +116,17 @@ if __name__ == "__main__":
 
 	contact_manager = ContactForce()
 	print "Contact Force node Initiated"
-	
+
 	while not rospy.is_shutdown():
 		contact_manager.publish()
 		contact_manager.rate.sleep()
 
-# def joint_state_callback(q):
-# 	force_jac = np.matrix(np.zeros((3,6)))
-# 	force_gaz = np.matrix(np.zeros((3,6)))
 
-# 	sum_force_gaz = np.matrix(np.zeros((3,1)))
-# 	sum_force_jac = np.matrix(np.zeros((3,1)))
-
-# 	tau_eff = np.zeros((3,1))
-# 	# offset to deal with extra joints
-# 	if (len(q.name)==18):
-# 		offset = 0
-# 	else:
-# 		offset = 1
-
-# 	for i in range(0,6):
-# 		qp = q.position[offset+i*3:offset+(i*3)+3]
-# 		qt = q.effort[offset+i*3:offset+(i*3)+3]
-
-# 		if (contact_state[i] == True):
-
-# 			## gazebo GRF sensor
-# 			force_gaz[:,i] = kdl.FK_SO3(qp, contact_force[:,i])
-
-# 			## estimated GRF
-# 			R_conv = np.array([ [-1.,0.,0.],[0.,-1.,0.],[0.,0.,-1.] ])
-
-# 			tau_cmp = kdl.gravity_matrix(np.array(qp))
-# 			tau_eff = tau_cmp - np.array(qt)
-# 			force_jac[:,i] = np.dot(R_conv, np.linalg.solve( kdl.jacobian_transpose(np.array(qp)), (tau_eff.reshape(3,1))))
-
-# 			if (i==3): print force_jac[:,3]
-# 			## convert foot force from hip to base frame
-# 			if (i < 3):
-# 				force_gaz[:,i] = np.dot( tf.rotation_matrix(np.pi/2.0,Z_AXIS)[:3, :3], force_gaz[:,i])
-# 				force_jac[:,i] = np.dot( tf.rotation_matrix(np.pi/2.0,Z_AXIS)[:3, :3], force_jac[:,i])
-# 			elif (i >=3):
-# 				force_gaz[:,i] = np.dot( tf.rotation_matrix(-np.pi/2.0,Z_AXIS)[:3, :3], force_gaz[:,i])
-# 				force_jac[:,i] = np.dot( tf.rotation_matrix(-np.pi/2.0,Z_AXIS)[:3, :3], force_jac[:,i])
-
-# 			## sum of forces
-# 			sum_force_gaz = sum_force_gaz + force_gaz[:,i]
-# 			sum_force_jac = sum_force_jac + force_jac[:,i]
-
-# 		hw = kdl.singularity_approach(np.array(qp))
+#Testing=====================================================================
+# self.contact_lf_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/lf', ContactsState, self.contact_callback)
+# self.contact_lm_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/lm', ContactsState, self.contact_callback)
+# self.contact_lr_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/lr', ContactsState, self.contact_callback)
+#
+# self.contact_rf_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/rf', ContactsState, self.contact_callback)
+# self.contact_rm_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/rm', ContactsState, self.contact_callback)
+# self.contact_rr_sub_ = rospy.Subscriber(ROBOT_NS + '/foot_wrench/rr', ContactsState, self.contact_callback)

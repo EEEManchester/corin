@@ -25,9 +25,9 @@ class SplineGenerator:
 
 		for i in range(0,len(self.t0)+2*self.p+1):
 			if (i<=self.p):
-				self.U[i] = self.t0.item(0) 
+				self.U[i] = self.t0.item(0)
 			elif (i>=self.p and i<len(self.t0)+self.p):
-				self.U[i] = (self.t0.item(i-self.p)+self.t0.item(i-self.p-1))/2.0 
+				self.U[i] = (self.t0.item(i-self.p)+self.t0.item(i-self.p-1))/2.0
 			else:
 				self.U[i] = self.t0.item(-1)
 
@@ -70,7 +70,7 @@ class SplineGenerator:
 		Du = np.zeros((matrix_size,matrix_size))
 		a  = np.zeros((matrix_size,matrix_size))
 		Ders = np.zeros((3,matrix_size))
-		
+
 		Du[0][0] = 1.0;
 
 		for j in range(1,p+1):
@@ -126,7 +126,7 @@ class SplineGenerator:
 					except ZeroDivisionError:
 						a[s2][j] = 0.0
 					d += a[s2][j] * Du[rk+j][pk];
-					
+
 				if (r <= pk):
 					try:
 						a[s2][k] = float(-a[s1][k-1]) / float(Du[pk+1][r]);
@@ -136,7 +136,7 @@ class SplineGenerator:
 
 				Ders[k][r] = d;
 				j = s1; s1 = s2; s2 = j;
-			
+
 		r = p;
 
 		for k in range(1,n+1):
@@ -155,8 +155,8 @@ class SplineGenerator:
 
 		for z in range(0,z_max):
 			# check to prevent u = umax
-			if (U[-1]==self.t0[z]):		
-				u = self.t0[z] - 0.001	
+			if (U[-1]==self.t0[z]):
+				u = self.t0[z] - 0.001
 			else:
 				u = self.t0[z]
 
@@ -164,24 +164,24 @@ class SplineGenerator:
 
 			# order of derivatives & offset for stacking
 			if (z==0.0 or z==z_max-1):
-				n = 2;	offset = 3; 			
+				n = 2;	offset = 3;
 			else:
 				n = 0;	offset = 1;
 
 			temp = self.DersBasisFunction(u, U, self.p, i, n) 	# compute control point
-			
+
 			# Stack into matrix A
 			if (z==z_max-1):
 				for y in range(offset-1,0,-1):
 					for q in range(0,5):
 						A[row_counter][z+q] = temp[y][q]
-					
+
 					row_counter+=1
 			else:
 				for y in range(0,offset):
 					for q in range(0,5):
 						A[row_counter][z+q] = temp[y][q]
-					
+
 					row_counter+=1
 
 		A[-1][-1] = 1.0 	# first and last element always unity
@@ -189,10 +189,10 @@ class SplineGenerator:
 		# print A.shape, C.shape
 		try:
 			P = linalg.solve(A,self.C.getT(),check_finite=False) 		# control points
-		except: 
+		except:
 			print 'no points found!'
 		return P
-	
+
 	def evaluate_spline(self, u, P, n_knot, d=1):
 		""" Spline function for given time t """
 
@@ -204,7 +204,7 @@ class SplineGenerator:
 		i = self.whichSpan(u, self.U, n_knot, self.p);
 		# print 'going into basis func ', u
 		A =	self.DersBasisFunction(u, self.U, self.p, i)
-		
+
 		for k in range(0,d): 	#/* For each components of the B-spline*/
 			sp.append(0)
 			sv.append(0)
@@ -213,15 +213,15 @@ class SplineGenerator:
 				sp[k] = sp[k] + P[i-self.p+j][k]*A[0][j];
 				sv[k] = sv[k] + P[i-self.p+j][k]*A[1][j];
 				sa[k] = sa[k] + P[i-self.p+j][k]*A[2][j];
-		
+
 		return sp, sv, sa
 
 	def spline_generation(self, x, t, tn):
 		""" computes b-spline given via points and time interval 	"""
-		""" Input:  a) C  -> 2D array - positions (x,y,z) 					
+		""" Input:  a) C  -> 2D array - positions (x,y,z)
 			 		b) t  -> Time interval for each via point
-					c) tn -> Output spline time interval			""" 
-		""" Ouput: Tuple of 2D list - 
+					c) tn -> Output spline time interval			"""
+		""" Ouput: Tuple of 2D list -
 								(time,position,velocity, acceleration)	"""
 		self.t0 = t
 		self.C  = x
@@ -232,33 +232,33 @@ class SplineGenerator:
 		cp = [] 	# output position array
 		cv = [] 	# output velocity array
 		ca = [] 	# output array array
-		
+
 		## Evaluate spline
 		for i in np.linspace(0,t[-1],(t[-1]-0)/tn+1):
 			t1, t2, t3 = self.evaluate_spline(i, P, n_knot, 3)
 
-			ct.append(i) 
-			cp.append(t1) 
-			cv.append(t2) 
-			ca.append(t3) 
-		
+			ct.append(i)
+			cp.append(t1)
+			cv.append(t2)
+			ca.append(t3)
+
 		return ct,cp,cv,ca
 
 	def point_interpolation(self, cpath, ctime):
 		""" expand input array size for bspline computation """
 
 		C  = np.zeros((3,len(cpath)+4))
-		
+
 		for i in range(0,3):
 			k = 0
 			for j in range(self.p-1,C.shape[1]-self.p+1):
 				C[i][j] = cpath.item(j-(self.p-2),i)
 				k += 1
-		
+
 		for i in range(0,3):
 			C[i][0] = cpath[0][i]
 			C[i][-1] = cpath[-1][i]
-		
+
 		return np.matrix(C)
 
 	def compute_time_intervals(self, q):
@@ -269,15 +269,15 @@ class SplineGenerator:
 
 	def generate_spline(self, x, t=None, tn=0.1):
 		""" 	Compute spline using via points only	"""
-		
+
 		## Set t if undefined
 		if (t is None):
 			t = self.compute_time_intervals(x)
 
 		C = self.point_interpolation(x, t)		# determine C
-		
+
 		return self.spline_generation(C, t, tn)
-		
+
 
 ## ================================================================================================ ##
 ## 												TESTING 											##
@@ -291,7 +291,7 @@ x_com = np.vstack((x_com,np.array([0.01, 0.2, BODY_HEIGHT])))
 x_com = np.vstack((x_com,np.array([0.30, 0.05, 0.15])))
 x_com = np.vstack((x_com,np.array([1.35, 0.05, 0.15])))
 x_com = np.vstack((x_com,np.array([1.0, 0.5, BODY_HEIGHT+0.05])))
-t_com = np.array([0.0,1,2,3,4,8,10]) 
+t_com = np.array([0.0,1,2,3,4,8,10])
 
 # spliner = SplineGenerator()
 # x_out  = spliner.generate_spline(x_com)

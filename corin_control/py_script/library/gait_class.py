@@ -21,7 +21,7 @@ class GaitClass:
 
 		# States
 		self.cs = [0]*6	# current 
-		self.ds = [0]*6	# desired 
+		self.ds = [0]*6	# desired
 		self.ps = [0]*6	# previous
 
 		self.__initialise__()
@@ -126,17 +126,17 @@ class GaitClass:
 			self.gd = -1
 		elif (self.gd == -1):
 			self.gd = 1
-	
+
 	def set_step_stroke(self, leg_stance, d_clear, stroke_default=0.1):
 		""" Sets the size of step stroke """
-		
+
 		p_base_X_foot_0 = np.array([TRN_BASE_X_LEG[0][0], TRN_BASE_X_LEG[0][1], 0.]) + mX(rot_Z(np.deg2rad(ROT_BASE_X_LEG[0])),leg_stance[0])
 		p_base_X_foot_1 = np.array([TRN_BASE_X_LEG[1][0], TRN_BASE_X_LEG[1][1], 0.]) + mX(rot_Z(np.deg2rad(ROT_BASE_X_LEG[1])),leg_stance[1])
-		
+
 		# Compute pitch
 		nrp_pitch = p_base_X_foot_0 - p_base_X_foot_1
 		x_pitch = (nrp_pitch[0] - d_clear)/2.
-		
+
 		# Set stroke
 		self.step_stroke = 2*x_pitch if (stroke_default/2 > x_pitch) else stroke_default
 
@@ -149,7 +149,7 @@ gait = GaitClass(3)
 leg = 1
 # for i in range(0, len(gait.phases)):
 # 	print 'checking: ', gait.phases[i]
-	
+
 # 	if (gait.phases[i][leg] == 1):
 # 		print 'found: ', gait.phases[i]
 # for i in range(0,3):

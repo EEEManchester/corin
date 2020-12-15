@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """ Grid Map Builder
-""" 
+"""
 
 import sys; sys.dont_write_bytecode = True
 import os.path
@@ -15,13 +15,15 @@ import math
 from fractions import Fraction
 from collections import OrderedDict 	# remove duplicates
 
+#Class used to create a grip from the paassed map, and used to create
+#the position of the feet and the trajectory in the planner
 class GridMap:
 	def __init__(self,map_name):
 		self.resolution	= 0.03	# size of cell, (m) - TARGET: 0.03
 		self.map_size_m = (0,0) # set map size
 		self.map_size_g = (0,0) # set map size
 		# self.map_trunc  = (2,2) # cells to truncate
-		
+
 		## Illustrations
 		self.G_free = nx.Graph()
 		self.G_wall = nx.Graph()
@@ -55,10 +57,10 @@ class GridMap:
 						map_hole = map_list['Map'][map_name]['hole']
 					except:
 						pass
-					
+
 					map_sz_tuple = (map_size['sx'],map_size['sy'])
 					return map_sz_tuple, map_wall, map_hole
-				
+
 				else:
 					print 'Error: Map ', map_name, ' has not been found!'
 					return None
@@ -70,7 +72,7 @@ class GridMap:
 
 		# Get map details
 		self.map_size_m, map_wall, map_hole = self.__load_map__(map_name)
-		
+
 		# determine number of grids
 		gridx = int(math.ceil(self.map_size_m[0]/self.resolution))
 		gridy = int(math.ceil(self.map_size_m[1]/self.resolution))
@@ -78,7 +80,7 @@ class GridMap:
 		# initiate graph instances
 		self.Map = nx.grid_graph(dim=[gridy, gridx]) 	# world grid map
 		self.map_size_g = (gridx, gridy)
-		
+
 		# set default attribute for nodes
 		nx.set_node_attributes(self.Map, {e: 0 for e in self.Map.nodes()}, 'height') # cell height
 		nx.set_node_attributes(self.Map, {e: np.array([0.,0.,1.]) for e in self.Map.nodes()}, 'norm') 	# surface normal
@@ -91,9 +93,6 @@ class GridMap:
 		self.__set_surface_normal__()
 
 		self.set_illustrations()
-		# add moore edges
-		# self.Map = self.set_moore_edge(self.Map)		
-		# self.Map = self.remove_edges(self.Map)
 
 		print 'Initialised Map - '
 		print '\tGrid  : ', gridx, 'x', gridy
@@ -110,11 +109,11 @@ class GridMap:
 
 			dx = c2[0] - c1[0]
 			dy = c2[1] - c1[1]
-			
-			if (obstacle == 'wall'): 
+
+			if (obstacle == 'wall'):
 				height = obs_list[w]['sh']
 				snorm  = np.array([0.,0.,1.])
-			
+
 			elif (obstacle == 'hole'):
 				height = obs_list[w]['sh']
 				snorm  = np.array([0.,0.,1.])
@@ -142,7 +141,7 @@ class GridMap:
 		for e in self.Map.nodes():
 			# Normals for wall
 			if (self.Map.nodes[e]['height'] > 0.):
-				""" check in a circle starting from front if its wall, 
+				""" check in a circle starting from front if its wall,
 					side without wall is surface normal direction 		"""
 				try:
 					if (self.Map.nodes[tuple(map(sum, zip(e, (1,0))))]['height'] <= 0.):
@@ -154,44 +153,44 @@ class GridMap:
 						self.Map.nodes[e]['norm'] = np.array([0.,1.,0.])
 				except:
 					pass
-				try:	
+				try:
 					if (self.Map.nodes[tuple(map(sum, zip(e, (-1,0))))]['height'] <= 0.):
 						self.Map.nodes[e]['norm'] = np.array([-1.,0.,0.])
 				except:
-					pass	
-				try:	
+					pass
+				try:
 					if (self.Map.nodes[tuple(map(sum, zip(e, (0,-1))))]['height'] <= 0.):
 						self.Map.nodes[e]['norm'] = np.array([0.,-1.,0.])
 				except:
-					pass	
-				
+					pass
+
 			# Normals for ground
 			elif (self.Map.nodes[e]['height'] == 0.):
 				self.Map.nodes[e]['norm'] = np.array([0.,0.,1.])
-				
+
 			# Normal for holes
 			elif (self.Map.nodes[e]['height'] < 0.):
 				self.Map.nodes[e]['norm'] = np.array([0.,0.,1.])
 
 	def get_cell(self, info, p, j=0):
 		""" Returns cell characteristic at point p (in m) """
-		
+
 		# Convert cell location to grid format
 		try:
 			if (j < 3):
 				grid_p = (int(np.floor(p[0]/self.resolution)), int(np.ceil(p[1]/self.resolution)))
 			else:
 				grid_p = (int(np.floor(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
-		except ValueError:	
+		except ValueError:
 			print 'get_cell ValueError: ', p, j
 		# if (j==1 or j==0):
 		# 	print 'get cell ', j, grid_p
 		# Return cell characteristic
 		return self.get_index(info, grid_p)
-		
+
 	def get_index(self, info, p):
 		""" Returns cell characteristic at index p """
-		
+
 		# Return cell characteristic
 		try:
 			return self.Map.nodes[p][info]
@@ -275,7 +274,7 @@ class GridMap:
 		return (lw_dist,lw_len), (rw_dist, rw_len)
 
 	def get_path_to_nparray(self, path, p_start):
-		""" converts grid path to cartesian path, 
+		""" converts grid path to cartesian path,
 			relative to starting point 				"""
 		""" Input: 	path -> graph path
 					p_start -> starting position
@@ -311,7 +310,7 @@ class GridMap:
 			elif (self.Map.nodes[e]['height'] < 0):
 				i_hole.append(e)
 
-		self.G_wall = nx.path_graph(i_wall) 	
+		self.G_wall = nx.path_graph(i_wall)
 		self.G_hole = nx.path_graph(i_hole)
 
 	def set_moore_edge(self, G):
@@ -337,21 +336,21 @@ class GridMap:
 				pass
 
 		G.add_edges_from(aedge) 	# add edges to map
-		
+
 	def set_edge_cost(self, G):
 		""" assign cost to body graph edges 			"""
 		""" cost 1: diagonal > vertical/horizontal edges"""
 		""" cost 2: change in motion 					"""
 		""" cost 3: change in bodypose 					"""
 
-		## variables ##	
-		
+		## variables ##
+
 		# search for all edges
 		for e in G.edges():
 			# reset cost variables
 			cost_dist 	= 0 	# von-neumann or moore edge
 			cost_motion = 0		# change in motion primitive
-			cost_d_bh	= 0		# change in body height			
+			cost_d_bh	= 0		# change in body height
 			cost_d_qr	= 0		# change in body roll
 			cost_d_qp	= 0		# change in body pitch
 			cost_d_qy	= 0		# change in body yaw
@@ -395,26 +394,26 @@ class GridMap:
 				# consider only if robot is between walls
 				if (ldist[0] >=0 and rdist[0] >=0):
 					if (ldist[1] > rdist[1]):	# left wall longer
-						cost_d_lgw = ldist[0] 	
+						cost_d_lgw = ldist[0]
 					else:						# right wall longer
 						cost_d_lgw = rdist[0]
 			## Sum of cost
 			G.edges[e]['cost'] = cost_dist + cost_motion + (cost_d_bh + cost_d_qr + cost_d_qp + cost_d_qy) + cost_d_lgw*0.01
 
 		# nx.set_edge_attributes(G, 1, 'cost') 	# set cost based on vertical distance to next cell
-		
+
 	def remove_edges(self, G):
 		""" remove edges with obstacles """
 
 		e_init = G.number_of_edges()	# determine number of edges
 		r_edge = [] 					# list for edges to remove
-		
+
 		for e in G.edges():
 			# if either cell contains obstacles, remove edge
-			if (self.Map.nodes[e[0]]['height']!= 0 or self.Map.nodes[e[1]]['height']!=0): 
+			if (self.Map.nodes[e[0]]['height']!= 0 or self.Map.nodes[e[1]]['height']!=0):
 				# stack into list to remove
 				r_edge.append(e)
-				
+
 		for i in range(0,len(r_edge)):
 			G.remove_edge(r_edge[i][0],r_edge[i][1])
 
@@ -497,7 +496,7 @@ class GridMap:
 			sp = (int(np.round(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
 		elif (j == 5):
 			sp = (int(np.ceil(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
-		
+
 		# sets direction based on feet
 		if (j < 3):
 			direction = 'ccw'
@@ -505,7 +504,7 @@ class GridMap:
 		else:
 			direction = 'cw'
 			# sp = (int(np.floor(p[0]/self.resolution)), int(np.floor(p[1]/self.resolution)))
-		
+
 		for i in range(1,end):
 			if (direction == 'cw'):
 				# sp = move_left(sp, end, i)
@@ -580,6 +579,8 @@ class GridMap:
 	def graph_representation(self, gpath=None):
 		""" Plots graph functions """
 
+		bool test = false
+
 		# dictionary of node names->positions
 		p_map  = dict(zip(self.Map, self.Map))
 		p_wall = dict(zip(self.G_wall, self.G_wall))
@@ -599,20 +600,21 @@ class GridMap:
 		ax = nx.draw_networkx(self.Map, p_map, with_labels=labels, node_size=nsize, node_color='0.9', width=0.0, alpha=1.0, node_shape="s");
 		# Wall
 		nx.draw_networkx(self.G_wall, p_wall, with_labels=labels, node_size=nsize, node_color='#ff0000', width=0.0, node_shape="s");
-		# Holes 
+		# Holes
 		nx.draw_networkx(self.G_hole, p_hole, with_labels=labels, node_size=nsize, node_color='#663300', width=0.0, node_shape="s");
 
+		if test:
 		# Motion primitives
-		# nx.draw_networkx(self.GM_walk,m_walk,with_labels=labels,node_size=nsize, node_color='#ff6600',	width=0.0);
-		# nx.draw_networkx(self.GM_wall,m_wall,with_labels=labels,node_size=nsize, node_color='#00ccff',	width=0.0);
-		# nx.draw_networkx(self.GM_chim,m_chim,with_labels=labels,node_size=nsize, node_color='#66ff00',	width=0.0);
+			nx.draw_networkx(self.GM_walk,m_walk,with_labels=labels,node_size=nsize, node_color='#ff6600',	width=0.0);
+			nx.draw_networkx(self.GM_wall,m_wall,with_labels=labels,node_size=nsize, node_color='#00ccff',	width=0.0);
+			nx.draw_networkx(self.GM_chim,m_chim,with_labels=labels,node_size=nsize, node_color='#66ff00',	width=0.0);
 
 		# Feasible path - single point
 		if (gpath is not None):
 			p_path = dict(zip(gpath, gpath))
 			if (type(gpath) == list):
 				gpath = nx.path_graph(gpath)
-		
+
 			nx.draw_networkx(gpath, p_path, with_labels=labels, node_size=10, node_color='#ff33ff', edge_color='#ff33ff', alpha=1.0, width=1.0);
 
 		# else:
@@ -635,7 +637,7 @@ class GridMap:
 		# mng = plt.get_current_fig_manager()
 		# mng.resize(*mng.window.maxsize())
 		plt.tight_layout()
-		plt.show() 
+		plt.show()
 		# fig_manager.resize(*fig_manager.window.maxsize())
 ## ================================================================================================ ##
 ## 												TESTING 											##
@@ -646,5 +648,3 @@ class GridMap:
 # gmap.graph_representation()
 
 # [(20, 5), (20, 6), (21, 6), (21, 5), (20, 5), (19, 5), (19, 6), (19, 7), (20, 7), (21, 7), (21, 6), (21, 5), (20, 5), (19, 5), (20, 5), (21, 5)]
-
-

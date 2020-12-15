@@ -29,7 +29,7 @@ class PathGenerator():
 
 	def __init__(self):
 		self.base_path = Trajectory6D() 		# class for 6D path storage
-		
+
 	def reset_static_elements(self, v_max=None, w_max=None):
 		if (v_max is None and w_max is None):
 			self.V_MAX = BASE_MAX_LINEAR_VELOCITY
@@ -40,7 +40,7 @@ class PathGenerator():
 
 	def compute_no_via_points(self, via_points):
 		""" generate unit time interval for spline if unspecified or modified	"""
-		
+
 		point_size = len(via_points) 		# determine number of via points
 		time_array = np.zeros(point_size) 	# create an array of via points size
 
@@ -52,7 +52,7 @@ class PathGenerator():
 		""" generate linear or angular points if unspecified """
 
 		## no. of items in array
-		xsize = x_cob.size 	
+		xsize = x_cob.size
 		wsize = w_cob.size
 
 		## Generate empty array if either not defined or unequal size
@@ -67,7 +67,7 @@ class PathGenerator():
 			x_cob = np.array([.0,.0,.0])
 			for i in range(0,wsize/3-1):
 				x_cob = np.vstack((x_cob,np.array([0., 0., 0.])))
-		
+
 		# create array of time for via points
 		if (t_cob is None):
 			t_cob = self.compute_no_via_points(x_cob)
@@ -78,20 +78,20 @@ class PathGenerator():
 
 	def generate_base_path(self, x_cob, w_cob, tn, t_cob=None):
 		""" Generate body trajectory (Re^6) and modify to be within velocity limit 	"""
-		""" Size of x_cob & w_cob needs to be the same otherwise the array with 
+		""" Size of x_cob & w_cob needs to be the same otherwise the array with
 			the smaller size will be ignored and set to zero 						"""
 		""" Input: 	1) x_cob -> array of via points for linear translation
-					2) w_cob -> array of via points for angular rotations 
-					3) tn -> path sampling rate	
+					2) w_cob -> array of via points for angular rotations
+					3) tn -> path sampling rate
 			Output:	BaseTrajectory() array of linear translation and angular
 					rotation points 												"""
 
 		SplineGenerator = Bspline.SplineGenerator()	# biezer spline generator
-		# SplineGenerator = Pspline.SplineGenerator() # cubic polynomial spline generator 
+		# SplineGenerator = Pspline.SplineGenerator() # cubic polynomial spline generator
 
 		# generate linear or angular via points if size mismatch
 		x_cob, w_cob, t_cob = self.auto_generate_points(x_cob, w_cob, t_cob)
-		
+
 		# generate spline based on unit time interval between via points
 		x_out = SplineGenerator.generate_spline(x_cob, t_cob, tn)
 		w_out = SplineGenerator.generate_spline(w_cob, t_cob, tn)
@@ -100,7 +100,7 @@ class PathGenerator():
 		v_max = np.amax(x_out[2])
 		v_min = np.amin(x_out[2])
 		v_max = v_max if (abs(v_max) > abs(v_min)) else abs(v_min)
-		
+
 		if (v_max > self.V_MAX):
 			print 'Maximum linear velocity exceeded, modifying... '
 			ndiv  = v_max/self.V_MAX		# determine number of divisions to reduce by
@@ -108,7 +108,7 @@ class PathGenerator():
 			# regenerate spline
 			x_out = SplineGenerator.generate_spline(x_cob, t_cob, tn)
 			w_out = SplineGenerator.generate_spline(w_cob, t_cob, tn)
-			
+
 		# check if base angular velocity exceeds limit
 		w_max = np.amax(w_out[2])
 		w_min = np.amin(w_out[2])
@@ -121,7 +121,7 @@ class PathGenerator():
 			# regenerate spline
 			x_out = SplineGenerator.generate_spline(x_cob, t_cob, tn)
 			w_out = SplineGenerator.generate_spline(w_cob, t_cob, tn)
-			
+
 
 		self.base_path = Trajectory6D((x_out,w_out))
 		# return TrajectoryPoints(x_out), TrajectoryPoints(w_out)	# convert to TrajectoryPoints format
@@ -132,21 +132,21 @@ class PathGenerator():
 		""" Generate via points for leg trajectory (Re^3) 				"""
 		""" Input: 	1) sp -> starting position (Re^3)
 					2) ep -> end position (Re^3)
-					3) snorm -> surface normal in unit vector (Re^3) 
+					3) snorm -> surface normal in unit vector (Re^3)
 								wrt to leg frame
 					4) phase -> leg phase: 1 = transfer, 0 = support
 					5) reflex -> boolean for triggering reflex
 					6) ctime -> duration of trajectory
-					7) type -> spline shape 
+					7) type -> spline shape
 			Output:	Array of via points and time intervals				"""
 
 		## Define Variables ##
 		cpx = sp.copy()		# cartesian position
 		sh  = STEP_HEIGHT  	# step height for transfer phase
-		
+
 		## 1) Set via points according to phase
-		if (phase==1):						
-			## Transfer phase 
+		if (phase==1):
+			## Transfer phase
 
 			# vector from origin to travel path midpoint
 			if (type=='parabolic'):
@@ -180,7 +180,7 @@ class PathGenerator():
 
 			# stack final point into array
 			cpx = np.vstack((cpx, ep))
-			
+
 		elif (phase==0):
 			## Support phase - direct interpolation
 			tdiv = np.array([0, ctime])
@@ -196,12 +196,12 @@ class PathGenerator():
 		""" Generate via points for leg trajectory (Re^3) 				"""
 		""" Input: 	1) sp -> starting position (Re^3)
 					2) ep -> end position (Re^3)
-					3) snorm -> surface normal in unit vector (Re^3) 
+					3) snorm -> surface normal in unit vector (Re^3)
 								wrt to leg frame
 					4) phase -> leg phase: 1 = transfer, 0 = support
 					5) reflex -> boolean for triggering reflex
 					6) ctime -> duration of trajectory
-					7) type -> spline shape 
+					7) type -> spline shape
 			Output:	Array of via points and time intervals				"""
 
 		## Define Variables ##
@@ -210,8 +210,8 @@ class PathGenerator():
 		hl  = 0.5
 
 		## 1) Set via points according to phase
-		if (phase==1):						
-			## Transfer phase 
+		if (phase==1):
+			## Transfer phase
 
 			# vector from origin to travel path midpoint
 			if (type=='parabolic'):
@@ -246,10 +246,10 @@ class PathGenerator():
 			for i in range(4,0,-1):
 				pl = ep + sn2*(i*sh*hl/4)
 				cpx = np.vstack((cpx, pl))
-			
+
 			# stack final point into array
 			cpx = np.vstack((cpx, ep))
-			
+
 		elif (phase==0):
 			## Support phase - direct interpolation
 			tdiv = np.array([0, ctime])
@@ -290,6 +290,11 @@ sp = np.array([0.0, 0.30, -0.1])
 ep = np.array([0.0, 0.35,  0.1 ])
 
 phase = 1
+if phase ==2 :
+	sn1 = np.array([0.,0.,1.])
+	sn2 = np.array([0.,-5,5])
+	sp = np.array([0.0, 30, -1])
+	ep = np.array([0.0, 35,  1 ])
 ### Test scripts
 planner = PathGenerator()
 # cxp, tdiv = planner.interpolate_leg_path(sp, ep, (sn1+sn2)/2, phase, False, GAIT_TPHASE)
@@ -305,14 +310,15 @@ planner = PathGenerator()
 
 x_cob = np.array([.0,.0,BODY_HEIGHT])
 w_cob = np.array([.0,.0,.0])
-# x_cob = np.vstack((x_cob,np.array([0.2, 0.0, BODY_HEIGHT+0.05])))
-# x_cob = np.vstack((x_cob,np.array([0.3, 0.5, BODY_HEIGHT])))
-# x_cob = np.vstack((x_cob,np.array([0.1, 0.0, BODY_HEIGHT-0.05])))
-# x_cob = np.vstack((x_cob,np.array([0.7, 0.0, BODY_HEIGHT+0.12])))
+if phase ==2 :
+	x_cob = np.vstack((x_cob,np.array([0.2, 0.0, BODY_HEIGHT+0.05])))
+	x_cob = np.vstack((x_cob,np.array([0.3, 0.5, BODY_HEIGHT])))
+	x_cob = np.vstack((x_cob,np.array([0.1, 0.0, BODY_HEIGHT-0.05])))
+	x_cob = np.vstack((x_cob,np.array([0.7, 0.0, BODY_HEIGHT+0.12])))
 
-# w_cob = np.vstack((w_cob,np.array([1.0,.0,.0])))
-# w_cob = np.vstack((w_cob,np.array([1.0,.0,.0])))
-# w_cob = np.vstack((w_cob,np.array([1.0,.0,.0])))
+	w_cob = np.vstack((w_cob,np.array([1.0,.0,.0])))
+	w_cob = np.vstack((w_cob,np.array([1.0,.0,.0])))
+	w_cob = np.vstack((w_cob,np.array([1.0,.0,.0])))
 
 x_cob = np.vstack((x_cob,np.array([0. , -0.04, BODY_HEIGHT])))
 # w_cob = np.vstack((w_cob,np.array([-0.2, -0.1, 0.])))
@@ -359,7 +365,7 @@ w_cob  = np.array([.0,.0,.0])
 for q in range(10,91,10):
 	qr = np.deg2rad(q)
 	xd = np.array([0.0, (1.-np.cos(qr))*tran_y, (np.sin(qr))*tran_z])
-	
+
 	x_cob = np.vstack(( x_cob, xd ))
 	w_cob = np.vstack(( w_cob, np.array([qr,0.0,0.0]) ))
 

@@ -1,5 +1,11 @@
 # Corin
 
+##Bart's Testing Branch
+
+This branch contains modifications generated in the process of understanding the code and shaping it into something that I could use to develop my research.
+
+To start a new line of development using the Corin's code, this branch is most probably *not* the best option. 
+
 ## Overview
 
 This is a python library with [ROS] interface to control the Corin hexapod. There are some C++ tools but these are not used.
@@ -38,7 +44,7 @@ To build these packages:
     cd ../
     catkin_make
 
-The other packages depend additionally on the [ROS] standard installation. 
+The other packages depend additionally on the [ROS] standard installation.
 
 #### Building
 
@@ -54,7 +60,7 @@ To build from source, clone the latest version from this repository into your ca
 This repository consists of following packages:
 
 * ***corin*** is the meta-package for the Corin library.
-* ***corin_control*** implements the algorithms of the Corin library. 
+* ***corin_control*** implements the algorithms of the Corin library.
 * ***corin_description*** contains the urdf description of Corin and the RViZ visualizer launch file.
 * ***corin_gazebo*** contains the launch file for the gazebo simulator and the different worlds.
 * ***corin_manager*** is the node to interface with the Dynamixel motors on Corin using ROBOTIS-Framework package.
@@ -96,8 +102,8 @@ This node launches the Gazebo simulator with the Corin hexapod. The default sett
 
 ### corin_description
 
-This node launches the RViZ visualizer. The visualizer allows visualisation of robot states, maps, markers, etc. The difference to Gazebo is that there is no physics engine running, and is commonly used to visualise the actual robot states. Currently, it has been setup to be used as a visualizer for evaluating motion planning algorithms rather than viewing the actual robot state. 
+This node launches the RViZ visualizer. The visualizer allows visualisation of robot states, maps, markers, etc. The difference to Gazebo is that there is no physics engine running, and is commonly used to visualise the actual robot states. Currently, it has been setup to be used as a visualizer for evaluating motion planning algorithms rather than viewing the actual robot state.
 
 ### corin_control
 
-This package is the robot's core controller. The launch files in this package is used to control the robot's joints in Gazebo. 
+This package is the robot's core controller. The launch files in this package is used to control the robot's joints in Gazebo.

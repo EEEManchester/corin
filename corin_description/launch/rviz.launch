@@ -10,6 +10,8 @@
 	<!-- Load the URDF into the ROS Parameter Server -->
   	<param name="robot_description"
    	 command="$(find xacro)/xacro --inorder '$(find corin_description)/robots/Corin_fixed.urdf.xacro'"/>
+		 <!-- command="$(find xacro)/xacro inorder '$(find corin_description)/robots/Corin_model.urdf.xacro'"/> -->
+		 <!-- command="$(find xacro)/xacro inorder '$(find corin_description)/robots/Test.urdf.xacro'"/> -->
 	<param name="publish_frequency" value="400" /> <!-- Hz -->
 
 	<!-- publish the joint and robot states -->
