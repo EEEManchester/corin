@@ -1,6 +1,6 @@
 # Corin
 
-##Bart's Testing Branch
+## Bart's Testing Branch
 
 This branch contains modifications generated in the process of understanding the code and shaping it into something that I could use to develop my research.
 
