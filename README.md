@@ -6,7 +6,7 @@ This is a python library with [ROS] interface to control the Corin hexapod. Ther
 
 Features:
 
-* **ROS interface:** The robot and the core modules of the library interfaces to ROS. A number of library functions are able to run independantly.
+* **ROS interface:** The robot and the core modules of the library interfaces to ROS. A number of library functions are able to run independently.
 * **Visualizations:** The robot can be visualised in RViZ and Gazebo.
 * **Physics Engine:** The gazebo simulator enables evaluation of motion control algorithms in real-world scenarios.
 
@@ -23,7 +23,7 @@ The source code is released under a proprietary software license and should not 
 
 ### Library Dependencies
 
-The following libraries are used:
+The following libraries are used (installed via pip):
 
     cvxopt
     cython
@@ -53,9 +53,13 @@ The other packages depend additionally on the [ROS] standard installation.
 To build from source, clone the latest version from this repository into your catkin workspace and compile the package using
 
     cd catkin_ws/src
-    git clone https://wilsonz91@bitbucket.org/wilsonz91/corin.git
+    git clone https://github.com/EEEManchester/corin.git
     cd ../
     catkin_make
+
+Don't forget to check out to the master branch using
+
+    git checkout master
 
 ### Packages Overview
 
@@ -65,7 +69,7 @@ This repository consists of following packages:
 * ***corin_control*** implements the algorithms of the Corin library. 
 * ***corin_description*** contains the urdf description of Corin and the RViZ visualizer launch file.
 * ***corin_gazebo*** contains the launch file for the gazebo simulator and the different worlds.
-* ***corin_manager*** is the node to interface with the Dynamixel motors on Corin using ROBOTIS-Framework package.
+* ***corin_joint_manager*** is the node to interface with the Dynamixel motors on Corin using ROBOTIS-Framework package.
 * ***corin_rviz_plugin*** is an [RViz] plugin for user control interface.
 
 ## Usage
@@ -79,7 +83,7 @@ To control the robot's joints using position controller in Gazebo:
 
         roslaunch corin_control position_control.launch
 
-To run a prescripted motion:
+To run a pre-scripted motion:
 
         rosrun corin_control main.py
 
@@ -104,7 +108,7 @@ This node launches the Gazebo simulator with the Corin hexapod. The default sett
 
 ### corin_description
 
-This node launches the RViZ visualizer. The visualizer allows visualisation of robot states, maps, markers, etc. The difference to Gazebo is that there is no physics engine running, and is commonly used to visualise the actual robot states. Currently, it has been setup to be used as a visualizer for evaluating motion planning algorithms rather than viewing the actual robot state. 
+This node launches the RViZ visualizer. The visualizer allows visualisation of robot states, maps, markers, etc. The difference to Gazebo is that there is no physics engine running, and is commonly used to visualise the actual robot states. Currently, it has been set up to be used as a visualizer for evaluating motion planning algorithms rather than viewing the actual robot state. 
 
 ### corin_control
 

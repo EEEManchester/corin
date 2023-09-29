@@ -30,7 +30,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   trajectory_msgs
   visualization_msgs
-  grid_planner_core
+  #grid_planner_core
+  # NOTE:   Originally grid_planner_core was not commented out. This resulted in build errors as catkin failed to locate the package. Upon commenting this out for testing, the build succeeded and strangely grid_planner_core was built also. I'm unsure why this is, but since it seemed to work I am leaving this commented out for now. -DSJ
 )
 #add dynamic reconfigure api
 #find_package(catkin REQUIRED dynamic_reconfigure)

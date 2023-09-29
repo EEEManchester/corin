@@ -9,11 +9,11 @@ Dynamixel: The communication employs the use of Sync Write/Read, allowing contro
 To control the robot's joints using position controller for:
 ### Gazebo
 
-        roslaunch corin_manager corin_manager.launch
+        roslaunch corin_joint_manager joint_manager.launch
 
 ### DYNAMIXEL
 
-        roslaunch corin_manager corin_manager.launch gazebo:=false
+        roslaunch corin_joint_manager joint_manager.launch gazebo:=false
 
 ## Dynamixel
 ### Convenience Function

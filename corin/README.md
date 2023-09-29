@@ -1,6 +1,6 @@
 Metapackage of Corin controller and planner.
 
 Author: Wei Cheah
-Maintainer: Wei Cheah, wei.cheah@manchester.ac.uk
+Maintainer: Daniel Johnson, daniel.johnson-2@manchester.ac.uk
 With contributions by: Hassan Khalili
-Affiliation: Robotics for Extreme Environmente Labaratory, University of Manchester
+Affiliation: Centre for Robotics and AI, University of Manchester
