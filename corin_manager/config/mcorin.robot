@@ -3,8 +3,8 @@ control_cycle = 5   # milliseconds
 
 [ port info ]
 # PORT NAME  | BAUDRATE | DEFAULT JOINT
-/dev/ttyUSB0 | 1000000  | lf_q1_joint
 /dev/ttyUSB0 | 1000000  | lf_q2_joint
+/dev/ttyUSB0 | 1000000  | lf_q1_joint
 /dev/ttyUSB0 | 1000000  | lf_q3_joint
 
 /dev/ttyUSB0 | 1000000  | lm_q1_joint

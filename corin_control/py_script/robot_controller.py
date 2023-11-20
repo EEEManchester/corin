@@ -36,7 +36,7 @@ class CorinManager:
 
 		self.resting   = False 	# Flag indicating robot standing or resting
 		self.on_start  = False 	# variable for resetting to leg suspended in air
-		self.interface = "gazebo"	# interface to control: gazebo, rviz or robotis hardware
+		self.interface = "robotis"	# interface to control: gazebo, rviz or robotis hardware
 		self.control_mode = "normal" # run controller in various mode: 1) normal, 2) fast
 
 		self.__initialise__()
@@ -487,6 +487,7 @@ class CorinManager:
 		## User input: Returns if path rejected
 		print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 		key_input = raw_input('Execute Path? (Accept-y Reject-n) : ')
+		# key_input = 'y'
 		if (key_input.lower() == 'n'):
 			return
 

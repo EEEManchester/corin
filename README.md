@@ -25,6 +25,7 @@ The following libraries may be required (try running first and see if the follow
     qpsolvers
     ROBOTIS-framework
     DynamixelSDK
+    networkX
 
 To build the last two:
 

@@ -48,38 +48,38 @@ class KDL():
 
 	def leg_IK(self, p=None):
 
-		try:
-			x = p[0];	y = p[1];	z = p[2];
-			
-			q1 = np.arctan2(y,x)
+		# try:
+		x = p[0];	y = p[1];	z = p[2];
+		
+		q1 = np.arctan2(y,x)
 
-			# Adding the square of element (1,4) & (2,4) in inv(H01)*Psym = T12*T23
-			c3  = ( (x*np.cos(q1) + y*np.sin(q1) - L1)**2 + z**2 -L3**2-L2**2 )/(2*L2*L3);
-			a3  = 1.0-c3**2
-			if (a3 < 0):
-				raise Exception, "Negative value encountered for ", p
-			s3  = np.sqrt(1.0-c3**2);
-			q3t = [np.arctan2(s3,c3), np.arctan2(-s3,c3)];
+		# Adding the square of element (1,4) & (2,4) in inv(H01)*Psym = T12*T23
+		c3  = ( (x*np.cos(q1) + y*np.sin(q1) - L1)**2 + z**2 -L3**2-L2**2 )/(2*L2*L3);
+		a3  = 1.0-c3**2
+		if (a3 < 0):
+			raise Exception, "Negative value encountered for "+str(p)
+		s3  = np.sqrt(1.0-c3**2);
+		q3t = [np.arctan2(s3,c3), np.arctan2(-s3,c3)];
 
-			if (q3t[0] < 0):
-				q3 = q3t[0];
-			else:
-				q3 = q3t[1];
+		if (q3t[0] < 0):
+			q3 = q3t[0];
+		else:
+			q3 = q3t[1];
 
-			# Dividing the element (1,4) & (2,4) in inv(H01)*Psym = T12*T23
-			xp = x*np.cos(q1) + np.sin(q1)*y - L1;
-			yp = z;
-			q2t = [np.arctan2(yp,xp) - np.arctan2(L3*np.sin(q3), L2+L3*np.cos(q3)), np.arctan2(yp,xp) - np.arctan2(L3*np.sin(q3), L2+L3*np.cos(q3))];
+		# Dividing the element (1,4) & (2,4) in inv(H01)*Psym = T12*T23
+		xp = x*np.cos(q1) + np.sin(q1)*y - L1;
+		yp = z;
+		q2t = [np.arctan2(yp,xp) - np.arctan2(L3*np.sin(q3), L2+L3*np.cos(q3)), np.arctan2(yp,xp) - np.arctan2(L3*np.sin(q3), L2+L3*np.cos(q3))];
 
-			if (q2t[0] < 0):
-				q2 = q2t[0];
-			else:
-				q2 = q2t[1];
-			#return q2
-			return np.array([q1, q2, q3])
-		except Exception, e:
-			print 'KDL-IK(): ', e
-			return None
+		if (q2t[0] < 0):
+			q2 = q2t[0];
+		else:
+			q2 = q2t[1];
+		#return q2
+		return np.array([q1, q2, q3])
+		# except Exception, e:
+		# 	print 'KDL-IK(): ', e
+		# 	return None
 
 	def check_singularity(self, q=None):
 		""" checks if robot configuration is singular 			"""

@@ -47,7 +47,7 @@ ROT_BASE_X_RF = -50.
 ROT_BASE_X_RM = -90.
 ROT_BASE_X_RR = -130.
 
-ROT_BASE_X_LEG = [50.,90.,130.,-50.,-90.,-130]
+ROT_BASE_X_LEG = [50.,90.,130.,-50.,-90.,-130.]
 TRN_BASE_X_LEG = [	(COXA_X,COXA_Y) ,(0.,COXA_Y) ,(-COXA_X,COXA_Y),\
 					(COXA_X,-COXA_Y),(0.,-COXA_Y),(-COXA_X,-COXA_Y)]
 
@@ -80,11 +80,11 @@ CTR_INTV 	= 1./CTR_RATE 	# controller interval for robot, s
 ##                       Gait parameters 	 						##
 ## ================================================================ ##
 
-GAIT_TYPE 	 = 1 		# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
+GAIT_TYPE 	 = 4 		# type 1=wave, 2=ripple, 3=tetrapod, 4=tripod
 BODY_HEIGHT  = 0.1		# ori: 0.10, chimney: 0.0
 STANCE_WIDTH = 0.21		# ori: 0.21, chimney: 0.27, 0.31 for tripod
-STEP_STROKE  = 0.09		# step size, x, 	default 0.07
-STEP_HEIGHT  = 0.06 		# step height, z 	default 0.05
+STEP_STROKE  = 0.07		# step size, x, 	default 0.07 - 0.09
+STEP_HEIGHT  = 0.05 		# step height, z 	default 0.05
 GAIT_TPHASE	 = 2.0 		# period per gait phase
 
 BASE_MAX_LINEAR_VELOCITY  = 0.025	# maximum base velocity, m/s - walking: 0.025
