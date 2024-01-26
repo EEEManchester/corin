@@ -486,8 +486,8 @@ class CorinManager:
 
 		## User input: Returns if path rejected
 		print '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
-		key_input = raw_input('Execute Path? (Accept-y Reject-n) : ')
-		# key_input = 'y'
+		# key_input = raw_input('Execute Path? (Accept-y Reject-n) : ')
+		key_input = 'y'
 		if (key_input.lower() == 'n'):
 			return
 

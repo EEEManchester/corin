@@ -11,7 +11,7 @@ class ControlInterface:
 	def __init__(self):
 		self.mode  = 1 								# 1: pose, 2: walk
 		self.reset_flag = False
-
+		self.distance_to_walk=0.5 # distance to move in each of the demo actions (meters) (DOESNT WORK)
 		self.__initialise__()
 
 	def __initialise__(self):
@@ -110,24 +110,27 @@ class ControlInterface:
 
 	def walk_front(self, x_cob, w_cob):
 		self.mode  = 2
-		# x_cob = np.vstack((x_cob,np.array([10, 0., 0.])))
-		x_cob = np.vstack((x_cob,np.array([0.1, 0., 0.])))
+		x_cob = np.vstack((x_cob,np.array([self.distance_to_walk, 0., 0.])))
+		# x_cob = np.vstack((x_cob,np.array([0.1, 0., 0.])))
 		w_cob = np.vstack((w_cob,np.array([0.0, 0., 0.])))
 		return x_cob, w_cob, self.mode
 
 	def walk_back(self, x_cob, w_cob):
 		self.mode  = 2
-		x_cob = np.vstack((x_cob,np.array([-0.4, 0.0, 0.])))
+		x_cob = np.vstack((x_cob,np.array([-self.distance_to_walk, 0.0, 0.])))
+		# x_cob = np.vstack((x_cob,np.array([-0.4, 0.0, 0.])))
 		return x_cob, w_cob, self.mode
 
 	def walk_right(self, x_cob, w_cob):
 		self.mode  = 2
-		x_cob = np.vstack((x_cob,np.array([0.0, -0.5, 0.])))
+		x_cob = np.vstack((x_cob,np.array([0.0, -self.distance_to_walk, 0.])))
+		# x_cob = np.vstack((x_cob,np.array([0.0, -0.5, 0.])))
 		return x_cob, w_cob, self.mode
 
 	def walk_left(self, x_cob, w_cob):
 		self.mode  = 2
-		x_cob = np.vstack((x_cob,np.array([0.0, 0.5, 0.])))
+		x_cob = np.vstack((x_cob,np.array([0.0, self.distance_to_walk, 0.])))
+		# x_cob = np.vstack((x_cob,np.array([0.0, 0.5, 0.])))
 		return x_cob, w_cob, self.mode
 
 	def rotate(self, x_cob, w_cob):
