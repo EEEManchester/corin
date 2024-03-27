@@ -22,8 +22,8 @@ if __name__ == "__main__":
 
 	while not rospy.is_shutdown():
 
-		manager.action_interface()
-		rospy.set_param('bodypose', True)
+		# manager.action_interface()
+		# rospy.set_param('bodypose', True)
 
 		manager.action_interface()
 		rospy.set_param('walkforward', True)
@@ -31,8 +31,8 @@ if __name__ == "__main__":
 		manager.action_interface()
 		rospy.set_param('walkleft', True)
 
-		manager.action_interface()
-		rospy.set_param('bodypose', True)
+		# manager.action_interface()
+		# rospy.set_param('bodypose', True)
 
 		manager.action_interface()
 		rospy.set_param('walkback', True)
