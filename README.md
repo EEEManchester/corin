@@ -1,5 +1,5 @@
 # Corin
-Branch for requested sideways walking.
+Branch for simple demonstrations of Corin. Based on the simple_demo branch, but with some changes. If in doubt, this is the one that should be used. Everything after this line is Wei's original readme and may not be accurate.
 
 The source code is released under a proprietary software license and should not be released to any person without the author's permission.
 
