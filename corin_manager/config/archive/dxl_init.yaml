@@ -1,0 +1,341 @@
+lf_q1 :   # MX-64
+   return_delay_time     : 0    # item name : value
+   operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 2700
+   min_position_limit    : 1300
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000    # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
+
+lf_q2 :   # MX-64
+   return_delay_time     : 03500
+   operating_mode        : 3
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 3500
+   min_position_limit    : 595
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000   # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
+
+lf_q3 :   # MX-64
+   return_delay_time     : 0
+   operating_mode        : 3
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 3855
+   min_position_limit    : 240
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000   # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
+
+lm_q1 :   # MX-64
+   return_delay_time     : 0    # item name : value
+   operating_mode        : 4    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 2700
+   min_position_limit    : 1300
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000    # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
+
+lm_q2 :   # MX-64
+   return_delay_time     : 03500
+   operating_mode        : 5
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 3500
+   min_position_limit    : 595
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000   # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
+
+lm_q3 :   # MX-64
+   return_delay_time     : 0
+   operating_mode        : 6
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 3855
+   min_position_limit    : 240
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000   # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
+
+lr_q1 :   # MX-64
+   return_delay_time     : 0    # item name : value
+   operating_mode        : 4    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 2700
+   min_position_limit    : 1300
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000    # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
+
+lr_q2 :   # MX-64
+   return_delay_time     : 03500
+   operating_mode        : 5
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 3500
+   min_position_limit    : 595
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000   # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
+
+lr_q3 :   # MX-64
+   return_delay_time     : 0
+   operating_mode        : 6
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 3855
+   min_position_limit    : 240
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000   # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
+
+rf_q1 :   # MX-64
+   return_delay_time     : 0    # item name : value
+   operating_mode        : 4    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 2700
+   min_position_limit    : 1300
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000    # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
+
+rf_q2 :   # MX-64
+   return_delay_time     : 03500
+   operating_mode        : 5
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 3500
+   min_position_limit    : 595
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000   # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
+
+rf_q3 :   # MX-64
+   return_delay_time     : 0
+   operating_mode        : 6
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 3855
+   min_position_limit    : 240
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000   # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
+
+rm_q1 :   # MX-64
+   return_delay_time     : 0    # item name : value
+   operating_mode        : 4    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 2700
+   min_position_limit    : 1300
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000    # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
+
+rm_q2 :   # MX-64
+   return_delay_time     : 03500
+   operating_mode        : 5
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 3500
+   min_position_limit    : 595
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000   # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
+
+rm_q3 :   # MX-64
+   return_delay_time     : 0
+   operating_mode        : 6
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 3855
+   min_position_limit    : 240
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000   # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
+
+rr_q1 :   # MX-64
+   return_delay_time     : 0    # item name : value
+   operating_mode        : 4    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 2700
+   min_position_limit    : 1300
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000    # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
+
+rr_q2 :   # MX-64
+   return_delay_time     : 03500
+   operating_mode        : 5
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 3500
+   min_position_limit    : 595
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000   # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
+
+rr_q3 :   # MX-64
+   return_delay_time     : 0
+   operating_mode        : 6
+   shutdown              : 20
+   homing_offset         : 0
+   max_position_limit    : 3855
+   min_position_limit    : 240
+   velocity_limit        : 300
+   goal_position         : 2048   # 0-4095
+   goal_current          : 1941   # 0-1941
+   goal_velocity         : 1000   # 0-1023
+   position_p_gain       : 850    # 0-16383
+   position_i_gain       : 0      # 0-16383
+   position_d_gain       : 0      # 0-16383
+   velocity_p_gain       : 100
+   velocity_i_gain       : 1920
+   profile_velocity      : 50
+   profile_acceleration  : 0
