@@ -1,0 +1,61 @@
+Getting the demo to run:
+
+1. Set the robot up properly. The device needs to be connected to power (12v, preferably via the supply reserved for Corin contained in its crate) and to the PC via the two numbered USB tethers. Make sure that the robot is sitting in a wide open space on a flat surface, as once the demo starts it will stand and begin moving. These motions are not possible on corin's normal pedastal, it must be on the ground.
+2. Open a terminal and log in as root (sudo bash)
+3. Deactivate any conda environment which may start (conda deactivate)
+4. Source the corin files (source catkin_ws/devel/setup.bash)
+5. Start the manager (roslaunch corin_manager corin_manager.launch)
+
+Potential Problem:
+You may see, at this point, an error in the terminal saying:
+
+"PORT [/dev/ttyUSB0] SETUP ERROR! (baudrate: 1000000)
+[corin_manager_node-2] process has died"
+
+or words to that effect. If you scroll up, you may also see:
+"/dev/ttyUSB0 added. (baudrate: 1000000)
+[PortHandlerLinux::SetupPort] Error opening serial port!
+/dev/ttyUSB0 added. (baudrate: 1000000)
+[PortHandlerLinux::SetupPort] Error opening serial port!
+/dev/ttyUSB0 added. (baudrate: 1000000)
+[PortHandlerLinux::SetupPort] Error opening serial port!
+/dev/ttyUSB0 added. (baudrate: 1000000)
+[PortHandlerLinux::SetupPort] Error opening serial port!
+..."
+
+for several lines. This happens when comms with the motor aren't being established properly, and can be caused by a number of things. 
+Step one should always be to kill the process, power down the robot, unplug the USB's, wait a moment, and try again. Take care to plug
+USB 1 in first, then USB 2. The OS assigns numbers to the devices based on the order in which they are connected, and plugging them in the other way round can cause the above issue because the manager cant find motors with the right IDs on the devices its checking for them.
+
+This can also happen because the Dynamixels are configured on the wrong baud rate. You can open the Dybamixel wizard on a windows device to set it if thats the case.
+
+Other Potential Problen:
+
+You may see:
+"[ERROR] [1710770880.069201067]: JOINT[lf_q3_joint] does NOT respond!!
+[ERROR] [1710770880.147725925]: JOINT[lm_q1_joint] does NOT respond!!
+[ERROR] [1710770880.226279075]: JOINT[lm_q2_joint] does NOT respond!!
+[ERROR] [1710770880.304833681]: JOINT[lm_q3_joint] does NOT respond!!
+[ERROR] [1710770880.383378695]: JOINT[lr_q1_joint] does NOT respond!!
+[ERROR] [1710770880.461927172]: JOINT[lr_q2_joint] does NOT respond!!
+..."
+
+This occurs if the motors are not active, or not communicating. If everything is plugged in, this can happed due to lose connections inside the robot. Unplugging everything, jiggling the cables, and retrying the on/off switch on the robot can help with this. Keep trying things and checking connections untill the red light on the motors flases on startup again. Then resume this guide.
+
+Other Potential Problem:
+
+If you see:
+"[ERROR] [1711543041.006099738]: Creating timer thread failed!!
+[corin_manager_node-2] process has died [pid 3077, exit code 255, cmd /home/daniel/catkin_ws/devel/lib/corin_manager/corin_manager __name:=corin_manager_node __log:=/home/daniel/.ros/log/bafa47f4-ec36-11ee-90d6-74de2b19df3a/corin_manager_node-2.log].
+log file: /home/daniel/.ros/log/bafa47f4-ec36-11ee-90d6-74de2b19df3a/corin_manager_node-2*.log"
+
+This is because the terminal lacks the permissions to open the timer thread. This is probably because you have forgotten step 2. Try sudo bash, and repeat.
+
+6. Assuming that the above problem does not occur, the robot should assume its "sleeping" pose (all legs folded up above the torso, torso on the ground)
+7. Open another terminal and deactivate conda again.
+8. On this terminal, source the corin code again
+9. This time, run the corin controller (rosrun corin_control main.py)
+10. This should cause the robot to stand up, and begin executing the corin demo loop.
+
+The demo loop is defined in home/daniel/catkin_ws/src/corin/corin_control/py_script/main.py, changes to the move sequence can be made there
+and it can also be modified to take instructions directly from a user via ros params
