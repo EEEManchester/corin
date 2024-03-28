@@ -1,6 +1,6 @@
 lf_q1_joint :   # MX-64
    return_delay_time     : 0    # item name : value
-   operating_mode        : 1    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
+   operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 2700   #  57.3 deg
@@ -19,7 +19,7 @@ lf_q1_joint :   # MX-64
 
 lf_q2_joint :   # MX-64
    return_delay_time     : 0
-   operating_mode        : 1
+   operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 3500   #  127 deg
@@ -38,7 +38,7 @@ lf_q2_joint :   # MX-64
 
 lf_q3_joint :   # MX-64
    return_delay_time     : 0
-   operating_mode        : 1
+   operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 3868   #  160 deg
@@ -57,7 +57,7 @@ lf_q3_joint :   # MX-64
 
 lm_q1_joint :   # MX-64
    return_delay_time     : 0    # item name : value
-   operating_mode        : 1    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
+   operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 2594   #  48 deg
@@ -76,7 +76,7 @@ lm_q1_joint :   # MX-64
 
 lm_q2_joint :   # MX-64
    return_delay_time     : 0
-   operating_mode        : 1
+   operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 3500   #  127 deg
@@ -95,7 +95,7 @@ lm_q2_joint :   # MX-64
 
 lm_q3_joint :   # MX-64
    return_delay_time     : 0
-   operating_mode        : 1
+   operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 3868   #  160 deg
@@ -114,7 +114,7 @@ lm_q3_joint :   # MX-64
 
 lr_q1_joint :   # MX-64
    return_delay_time     : 0    # item name : value
-   operating_mode        : 1    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
+   operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 2685   #  56.0 deg
@@ -133,7 +133,7 @@ lr_q1_joint :   # MX-64
 
 lr_q2_joint :   # MX-64
    return_delay_time     : 0
-   operating_mode        : 1
+   operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 3500   #  127 deg
@@ -152,7 +152,7 @@ lr_q2_joint :   # MX-64
 
 lr_q3_joint :   # MX-64
    return_delay_time     : 0
-   operating_mode        : 1
+   operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 3868   #  160 deg
@@ -171,7 +171,7 @@ lr_q3_joint :   # MX-64
 
 rf_q1_joint :   # MX-64
    return_delay_time     : 0    # item name : value
-   operating_mode        : 1    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
+   operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 2700   #  57.3 deg
@@ -190,7 +190,7 @@ rf_q1_joint :   # MX-64
 
 rf_q2_joint :   # MX-64
    return_delay_time     : 0
-   operating_mode        : 1
+   operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 3500   #  127 deg
@@ -209,7 +209,7 @@ rf_q2_joint :   # MX-64
 
 rf_q3_joint :   # MX-64
    return_delay_time     : 0
-   operating_mode        : 1
+   operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 3868   #  160 deg
@@ -228,7 +228,7 @@ rf_q3_joint :   # MX-64
 
 rm_q1_joint :   # MX-64
    return_delay_time     : 0    # item name : value
-   operating_mode        : 1    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
+   operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 2594   #  48 deg
@@ -247,7 +247,7 @@ rm_q1_joint :   # MX-64
 
 rm_q2_joint :   # MX-64
    return_delay_time     : 0
-   operating_mode        : 1
+   operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 3500   #  127 deg
@@ -266,7 +266,7 @@ rm_q2_joint :   # MX-64
 
 rm_q3_joint :   # MX-64
    return_delay_time     : 0
-   operating_mode        : 1
+   operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 3868   #  160 deg
@@ -285,7 +285,7 @@ rm_q3_joint :   # MX-64
 
 rr_q1_joint :   # MX-64
    return_delay_time     : 0    # item name : value
-   operating_mode        : 1    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
+   operating_mode        : 3    # 0: current; 1: velocity; 3: position; 5: current base position; 20: pwm
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 2685   #  56.0 deg
@@ -304,7 +304,7 @@ rr_q1_joint :   # MX-64
 
 rr_q2_joint :   # MX-64
    return_delay_time     : 0
-   operating_mode        : 1
+   operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 3500   #  127 deg
@@ -323,7 +323,7 @@ rr_q2_joint :   # MX-64
 
 rr_q3_joint :   # MX-64
    return_delay_time     : 0
-   operating_mode        : 1
+   operating_mode        : 3
    shutdown              : 20
    homing_offset         : 0
    max_position_limit    : 3868   #  160 deg
