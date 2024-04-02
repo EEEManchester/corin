@@ -2,6 +2,7 @@
 
 import rospy
 from robotis_controller_msgs.msg import SyncWriteMultiFloat
+from cpp.build.lib_Legged_Robotics_CPP_BINDINGS import DQ_CorinHexapod
 
 class basic_rospy_test_class:
     def __init__(self):
