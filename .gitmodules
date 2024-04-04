@@ -1,3 +1,0 @@
-[submodule "dqrobotics_legged_robots_build"]
-	path = cpp/dqrobotics_legged_robots_build
-	url = https://github.com/DanSJohnson/dqrobotics_legged_robots_build
