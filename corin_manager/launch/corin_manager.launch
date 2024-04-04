@@ -25,4 +25,53 @@
 
     <!-- Robot Model & TF -->
     <!-- <include file="$(find thormang3_description)/launch/thormang3_mpc.launch"/> -->
+
+  <node name="force_sensor_1" pkg="variense_fse103" type="fse103_node" output="screen">
+  	<param name="sensor_id" value="1" />
+  	<param name="serial_number" value="103E75F69C" />
+  	<param name="rate" value="200" />
+	<param name="filter_bandwidth" value="10" />
+	<param name="init_on_start" value="true" />
+  </node>
+
+  <node name="force_sensor_2" pkg="variense_fse103" type="fse103_node" output="screen">
+  	<param name="sensor_id" value="2" />
+  	<param name="serial_number" value="103EAA8876" />
+  	<param name="rate" value="200" />
+	<param name="filter_bandwidth" value="10" />
+	<param name="init_on_start" value="true" />
+  </node>
+
+  <node name="force_sensor_3" pkg="variense_fse103" type="fse103_node" output="screen">
+  	<param name="sensor_id" value="3" />
+  	<param name="serial_number" value="1033459B0E" />
+  	<param name="rate" value="200" />
+	<param name="filter_bandwidth" value="10" />
+	<param name="init_on_start" value="true" />
+  </node>
+
+  <node name="force_sensor_4" pkg="variense_fse103" type="fse103_node" output="screen">
+  	<param name="sensor_id" value="4" />
+  	<param name="serial_number" value="10328F2886" />
+  	<param name="rate" value="200" />
+	<param name="filter_bandwidth" value="10" />
+	<param name="init_on_start" value="true" />
+  </node>
+
+  <node name="force_sensor_5" pkg="variense_fse103" type="fse103_node" output="screen">
+  	<param name="sensor_id" value="5" />
+  	<param name="serial_number" value="1032C4115B" />
+  	<param name="rate" value="200" />
+	<param name="filter_bandwidth" value="10" />
+	<param name="init_on_start" value="true" />
+  </node>
+
+  <node name="force_sensor_6" pkg="variense_fse103" type="fse103_node" output="screen">
+  	<param name="sensor_id" value="6" />
+  	<param name="serial_number" value="1033459CE1" />
+  	<param name="rate" value="200" />
+	<param name="filter_bandwidth" value="10" />
+	<param name="init_on_start" value="true" />
+  </node>
+
 </launch>

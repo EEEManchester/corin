@@ -11,16 +11,21 @@ The corin manager node must be launched first in order to establish communicatio
 ```
 sudo bash
 conda deactivate
-source catkin_ws/devel/setup.bash
+source ~/catkin_ws/devel/setup.bash
 roslaunch corin_manager corin_manager.launch
 ```
 
 Once the manager node is setup, in a new terminal execute:
 ```
+source ~/catkin_ws/devel/setup.bash
 conda activate Corin2024
-source catkin_ws/devel/setup.bash
-python catkin_ws/src/corin/test.py
+python ~/catkin_ws/src/corin/test.py
 ```
 
 ## Using ROS and Conda
-The conda environment `Corin2024` has been augmented using Rick Staa's [Ros Conda Wrapper](https://github.com/rickstaa/.ros_conda_wrapper) to allow it to communicate with the ROS install already present on the Corin workstation.
+The conda environment `Corin2024` has been augmented using Rick Staa's [Ros Conda Wrapper](https://github.com/rickstaa/.ros_conda_wrapper) to allow it to communicate with the ROS install already present on the Corin workstation. This can sometimes be a tense relationship, and the two don't always play nice together. This tension can sometimes manifest as the test script failing to import rospy, or to import bound C++ objects. When this happens, deactivate all conda environments in that terminal (including base) and then re-run:
+```
+source ~/catkin_ws/devel/setup.bash
+conda activate Corin2024
+```
+and then run the test script, which should execute without issue.
